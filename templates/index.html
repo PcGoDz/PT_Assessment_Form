@@ -6,189 +6,132 @@
 <title>PT Assessment System</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
-
-  :root {
-    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0ede8;
-    --border: #d8d4cc; --border-strong: #b8b2a8;
-    --text: #1a1916; --text-muted: #6b6760; --text-faint: #9b9790;
-    --accent: #1a4a8a; --accent-light: #e8eef8; --accent-mid: #4a7ac8;
-    --danger: #c0392b; --danger-light: #fdf0ee;
-    --success: #1a6b3a; --success-light: #eaf4ee;
-    --warn: #8a5a00; --warn-light: #fdf5e0;
-    --radius: 6px; --radius-lg: 10px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
-
-  /* LAYOUT */
-  .app-shell { display: grid; grid-template-columns: 230px 1fr; grid-template-rows: 52px 1fr; min-height: 100vh; }
-
-  /* TOPBAR */
-  .topbar { grid-column: 1/-1; background: var(--accent); color: white; display: flex; align-items: center; padding: 0 20px; gap: 14px; }
-  .topbar-logo { font-weight: 600; font-size: 15px; letter-spacing: 0.02em; }
-  .topbar-sep { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
-  .topbar-sub { font-size: 12px; color: rgba(255,255,255,0.6); }
-  .topbar-actions { margin-left: auto; display: flex; gap: 8px; }
-  .tbtn { padding: 6px 13px; border-radius: var(--radius); font-size: 12px; font-weight: 500; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-family: inherit; transition: background 0.15s; }
-  .tbtn:hover { background: rgba(255,255,255,0.22); }
-  .tbtn.primary { background: white; color: var(--accent); border-color: white; }
-  .tbtn.primary:hover { background: #e8eef8; }
-  .tbtn.danger { border-color: rgba(255,100,80,0.5); }
-  .tbtn.danger:hover { background: rgba(255,80,60,0.2); }
-
-  /* SIDEBAR */
-  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 16px 0; overflow-y: auto; display: flex; flex-direction: column; }
-  .sidebar-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); padding: 0 14px 6px; font-weight: 500; }
-  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 14px; cursor: pointer; font-size: 13px; color: var(--text-muted); border-left: 3px solid transparent; transition: all 0.12s; user-select: none; }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
-  .nav-item.soon { opacity: 0.4; cursor: not-allowed; }
-  .nav-item.soon:hover { background: none; color: var(--text-muted); }
-  .nav-icon { font-size: 14px; width: 16px; text-align: center; flex-shrink: 0; }
-  .nav-badge { margin-left: auto; font-size: 10px; background: var(--accent-light); color: var(--accent); padding: 1px 6px; border-radius: 10px; font-weight: 600; }
-  .nav-divider { height: 1px; background: var(--border); margin: 10px 0; }
-
-  /* RECORDS PANEL */
-  .records-panel { padding: 10px; border-top: 1px solid var(--border); margin-top: auto; }
-  .records-panel h4 { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 8px; font-weight: 500; }
-  .record-item { display: flex; flex-direction: column; padding: 7px 8px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); margin-bottom: 5px; cursor: pointer; transition: all 0.12s; }
-  .record-item:hover { border-color: var(--accent-mid); background: var(--accent-light); }
-  .record-name { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .record-meta { font-size: 10px; color: var(--text-faint); margin-top: 1px; }
-  .record-del { align-self: flex-end; font-size: 10px; color: var(--text-faint); background: none; border: none; cursor: pointer; padding: 0; }
-  .record-del:hover { color: var(--danger); }
-  .no-records { font-size: 11px; color: var(--text-faint); font-style: italic; text-align: center; padding: 8px 0; }
-
-  /* MAIN */
-  .main { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 18px; }
-
-  /* CARD */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
-  .card-header { background: var(--surface2); border-bottom: 1px solid var(--border); padding: 11px 18px; display: flex; align-items: center; gap: 10px; }
-  .card-header h2 { font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: 0.03em; text-transform: uppercase; }
-  .sec-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-faint); background: var(--border); padding: 2px 6px; border-radius: 3px; }
-  .card-body { padding: 18px; }
-
-  /* STATUS BAR */
-  .status-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 10px 18px; display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow); }
-  .status-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
-  .sdot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); }
-  .spacer { flex: 1; }
-  .progress-wrap { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted); }
-  .progress-bar { width: 110px; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
-
-  /* FORMS */
-  .fg { display: grid; gap: 14px; }
-  .fg.c2 { grid-template-columns: 1fr 1fr; }
-  .fg.c3 { grid-template-columns: 1fr 1fr 1fr; }
-  .fg.c4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
-  .field label .req { color: var(--danger); }
-  input[type=text], input[type=date], input[type=number], select, textarea {
-    font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--text);
-    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 7px 9px; width: 100%; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  input:focus, select:focus, textarea:focus { border-color: var(--accent-mid); box-shadow: 0 0 0 3px rgba(74,122,200,0.12); background: white; }
-  textarea { resize: vertical; min-height: 70px; }
-
-  .radio-group, .check-group { display: flex; flex-wrap: wrap; gap: 7px; }
-  .radio-group label, .check-group label {
-    display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text);
-    text-transform: none; letter-spacing: 0; cursor: pointer; font-weight: 400;
-    padding: 5px 11px; border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--bg); transition: all 0.12s; user-select: none;
-  }
-  .radio-group label:hover, .check-group label:hover { border-color: var(--accent-mid); background: var(--accent-light); }
-  .radio-group input[type=radio], .check-group input[type=checkbox] { width: auto; padding: 0; background: none; border: none; box-shadow: none; accent-color: var(--accent); }
-
-  /* PAIN SCORE */
-  .pain-score-box { display: flex; flex-direction: column; gap: 5px; }
-  .pain-scale { display: flex; gap: 10px; align-items: center; }
-  .pain-scale input[type=range] { flex: 1; padding: 0; background: none; border: none; box-shadow: none; accent-color: var(--accent); cursor: pointer; }
-  .pain-val { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; min-width: 30px; text-align: center; }
-  .pain-val.low { color: var(--success); }
-  .pain-val.mid { color: var(--warn); }
-  .pain-val.high { color: var(--danger); }
-
-  /* IRRITABILITY */
-  .irr-chips { display: flex; gap: 7px; }
-  .irr-chip { padding: 5px 15px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg); color: var(--text-muted); font-family: inherit; transition: all 0.12s; user-select: none; }
-  .irr-chip[data-val="High"].sel { background: var(--danger-light); border-color: var(--danger); color: var(--danger); font-weight: 500; }
-  .irr-chip[data-val="Medium"].sel { background: var(--warn-light); border-color: var(--warn); color: var(--warn); font-weight: 500; }
-  .irr-chip[data-val="Low"].sel { background: var(--success-light); border-color: var(--success); color: var(--success); font-weight: 500; }
-
-  /* BODY CHART */
-  .body-chart-wrap { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: start; }
-  .body-figures { display: flex; gap: 10px; }
-  .fig-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .fig-label { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; }
-  svg.bsvg { cursor: crosshair; display: block; }
-  svg.bsvg .hit { fill: transparent; }
-  svg.bsvg .hit:hover { fill: rgba(74,122,200,0.08); }
-  .chart-controls { display: flex; flex-direction: column; gap: 14px; }
-  .pain-type-sel { display: flex; flex-wrap: wrap; gap: 5px; }
-  .pt-chip { padding: 4px 11px; border-radius: 16px; font-size: 12px; font-weight: 500; border: 1.5px solid var(--border); background: var(--bg); cursor: pointer; font-family: inherit; color: var(--text-muted); transition: all 0.12s; user-select: none; }
-  .pt-chip.a-ache   { background:#e8eef8; border-color:#4a7ac8; color:#1a4a8a; }
-  .pt-chip.a-sharp  { background:#fdf0ee; border-color:#c0392b; color:#8b2219; }
-  .pt-chip.a-numb   { background:#f0edf8; border-color:#7b5ea7; color:#4a2d7a; }
-  .pt-chip.a-burn   { background:#fdf5e0; border-color:#c87a00; color:#7a4a00; }
-  .pt-chip.a-refer  { background:#edf8ee; border-color:#2a8a4a; color:#1a5a2a; }
-  .pt-chip.a-tender { background:#fdf0f8; border-color:#b84a8a; color:#7a1a5a; }
-  .marker-list { display: flex; flex-direction: column; gap: 3px; max-height: 220px; overflow-y: auto; }
-  .marker-item { display: flex; align-items: center; gap: 7px; padding: 6px 9px; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--border); font-size: 12px; }
-  .mdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-  .mnum { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-faint); min-width: 16px; }
-  .mzone { flex: 1; color: var(--text); }
-  .mtype { font-size: 11px; color: var(--text-muted); }
-  .mdel { margin-left: auto; background: none; border: none; cursor: pointer; color: var(--text-faint); font-size: 13px; padding: 0 2px; }
-  .mdel:hover { color: var(--danger); }
-  .empty-hint { font-size: 12px; color: var(--text-faint); font-style: italic; padding: 8px 0; }
-
-  /* NEURO TABLE */
-  .neuro-grid { display: grid; grid-template-columns: 120px 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .nc { background: var(--surface); padding: 7px 10px; font-size: 12px; }
-  .nc.hdr { background: var(--surface2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
-  .nc.rlabel { font-weight: 500; color: var(--text-muted); }
-  .nc input { padding: 4px 6px; font-size: 12px; background: transparent; border: 1px solid transparent; min-height: unset; }
-  .nc input:focus { background: white; border-color: var(--accent-mid); }
-
-  /* OBS */
-  .obs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .obs-section h4 { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-
-  /* UTIL */
-  .btn-sm { font-family: inherit; font-size: 11px; padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); cursor: pointer; color: var(--text-muted); transition: all 0.12s; }
-  .btn-sm:hover { background: var(--surface2); color: var(--text); }
-  .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
-  .list-header span { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-
-  /* TOAST */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: white; padding: 10px 18px; border-radius: var(--radius-lg); font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 999; }
-  .toast.show { opacity: 1; }
-  .toast.ok { background: var(--success); }
-  .toast.err { background: var(--danger); }
-
-  @media print {
-    .topbar, .sidebar, .status-bar { display: none; }
-    .app-shell { display: block; }
-    .main { padding: 0; gap: 12px; }
-    .card { box-shadow: none; page-break-inside: avoid; }
-    body { background: white; }
-  }
+  :root{--bg:#f5f4f0;--surface:#fff;--surface2:#f0ede8;--border:#d8d4cc;--text:#1a1916;--text-muted:#6b6760;--text-faint:#9b9790;--accent:#1a4a8a;--accent-light:#e8eef8;--accent-mid:#4a7ac8;--danger:#c0392b;--danger-light:#fdf0ee;--success:#1a6b3a;--success-light:#eaf4ee;--warn:#8a5a00;--warn-light:#fdf5e0;--radius:6px;--radius-lg:10px;--shadow:0 1px 3px rgba(0,0,0,0.08);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;height:100vh;overflow:hidden;}
+  .shell{display:grid;grid-template-columns:230px 1fr;grid-template-rows:52px 1fr;height:100vh;}
+  .topbar{grid-column:1/-1;background:var(--accent);color:white;display:flex;align-items:center;padding:0 20px;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+  .topbar-logo{font-weight:600;font-size:15px;letter-spacing:0.02em;}
+  .topbar-sep{width:1px;height:20px;background:rgba(255,255,255,0.2);}
+  .topbar-sub{font-size:12px;color:rgba(255,255,255,0.6);}
+  .topbar-actions{margin-left:auto;display:flex;gap:8px;}
+  .tbtn{padding:6px 13px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:white;font-family:inherit;transition:background 0.15s;}
+  .tbtn:hover{background:rgba(255,255,255,0.22);}
+  .tbtn.primary{background:white;color:var(--accent);border-color:white;}
+  .tbtn.primary:hover{background:#e8eef8;}
+  .tbtn.danger{border-color:rgba(255,100,80,0.5);}
+  .tbtn.danger:hover{background:rgba(255,80,60,0.2);}
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;padding:14px 0;}
+  .sidebar-label{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);padding:0 14px 6px;font-weight:500;}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;font-size:13px;color:var(--text-muted);border-left:3px solid transparent;transition:all 0.12s;user-select:none;}
+  .nav-item:hover{background:var(--surface2);color:var(--text);}
+  .nav-item.active{background:var(--accent-light);color:var(--accent);border-left-color:var(--accent);font-weight:500;}
+  .nav-item.soon{opacity:0.4;cursor:not-allowed;}
+  .nav-item.soon:hover{background:none;color:var(--text-muted);}
+  .nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+  .nav-badge{margin-left:auto;font-size:10px;background:var(--accent-light);color:var(--accent);padding:1px 6px;border-radius:10px;font-weight:600;}
+  .nav-divider{height:1px;background:var(--border);margin:10px 0;}
+  .records-panel{padding:10px;border-top:1px solid var(--border);margin-top:auto;}
+  .records-panel h4{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-faint);margin-bottom:8px;font-weight:500;}
+  .record-item{display:flex;flex-direction:column;padding:7px 8px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg);margin-bottom:5px;cursor:pointer;transition:all 0.12s;}
+  .record-item:hover{border-color:var(--accent-mid);background:var(--accent-light);}
+  .record-name{font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .record-meta{font-size:10px;color:var(--text-faint);margin-top:1px;}
+  .record-del{font-size:10px;color:var(--text-faint);background:none;border:none;cursor:pointer;padding:0;margin-top:3px;text-align:left;}
+  .record-del:hover{color:var(--danger);}
+  .no-records{font-size:11px;color:var(--text-faint);font-style:italic;text-align:center;padding:8px 0;}
+  .main{overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:18px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+  .card-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:11px 18px;display:flex;align-items:center;gap:10px;}
+  .card-header h2{font-size:12px;font-weight:600;color:var(--text);letter-spacing:0.03em;text-transform:uppercase;}
+  .sec-num{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-faint);background:var(--border);padding:2px 6px;border-radius:3px;}
+  .card-body{padding:18px;}
+  .status-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:10px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);}
+  .sdot{width:7px;height:7px;border-radius:50%;background:var(--success);}
+  .spacer{flex:1;}
+  .progress-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);}
+  .progress-bar{width:110px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 0.3s;}
+  .fg{display:grid;gap:14px;}
+  .fg.c2{grid-template-columns:1fr 1fr;}
+  .fg.c3{grid-template-columns:1fr 1fr 1fr;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11px;font-weight:500;color:var(--text-muted);letter-spacing:0.04em;text-transform:uppercase;}
+  .req{color:var(--danger);}
+  input[type=text],input[type=date],input[type=number],select,textarea{font-family:'IBM Plex Sans',sans-serif;font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;width:100%;outline:none;transition:border-color 0.15s,box-shadow 0.15s;}
+  input:focus,select:focus,textarea:focus{border-color:var(--accent-mid);box-shadow:0 0 0 3px rgba(74,122,200,0.12);background:white;}
+  textarea{resize:vertical;min-height:70px;}
+  select{cursor:pointer;}
+  .radio-group,.check-group{display:flex;flex-wrap:wrap;gap:7px;}
+  .radio-group label,.check-group label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text);text-transform:none;letter-spacing:0;cursor:pointer;font-weight:400;padding:5px 11px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);transition:all 0.12s;user-select:none;}
+  .radio-group label:hover,.check-group label:hover{border-color:var(--accent-mid);background:var(--accent-light);}
+  .radio-group input[type=radio],.check-group input[type=checkbox]{width:auto;padding:0;background:none;border:none;box-shadow:none;accent-color:var(--accent);}
+  .derived-info{display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;}
+  .derived-badge{font-size:12px;padding:3px 9px;border-radius:var(--radius);background:var(--success-light);color:var(--success);border:1px solid var(--success);font-weight:500;}
+  .derived-badge.hidden{display:none;}
+  .pain-score-box{display:flex;flex-direction:column;gap:6px;}
+  .pain-scale-row{display:flex;align-items:center;gap:8px;}
+  .pain-scale-row input[type=range]{flex:1;padding:0;background:none;border:none;box-shadow:none;accent-color:var(--accent);cursor:pointer;height:20px;}
+  .pain-val{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:500;min-width:36px;text-align:center;transition:color 0.2s;}
+  .pv-low{color:var(--success);}
+  .pv-mid{color:var(--warn);}
+  .pv-high{color:var(--danger);}
+  .irr-chips{display:flex;gap:7px;}
+  .irr-chip{padding:5px 15px;border-radius:20px;font-size:12px;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:var(--text-muted);font-family:inherit;transition:all 0.12s;user-select:none;}
+  .irr-chip.sel-High{background:var(--danger-light);border-color:var(--danger);color:var(--danger);font-weight:500;}
+  .irr-chip.sel-Medium{background:var(--warn-light);border-color:var(--warn);color:var(--warn);font-weight:500;}
+  .irr-chip.sel-Low{background:var(--success-light);border-color:var(--success);color:var(--success);font-weight:500;}
+  .surgery-row{display:none;align-items:center;gap:10px;margin-top:8px;}
+  .surgery-row.show{display:flex;}
+  .body-chart-wrap{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;}
+  .body-figures{display:flex;gap:12px;}
+  .fig-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .fig-label{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;}
+  svg.bsvg{cursor:crosshair;display:block;border:1px solid var(--border);border-radius:var(--radius);background:white;}
+  svg.bsvg .hit{fill:transparent;}
+  svg.bsvg .hit:hover{fill:rgba(74,122,200,0.1);}
+  .chart-controls{display:flex;flex-direction:column;gap:14px;}
+  .pain-type-sel{display:flex;flex-wrap:wrap;gap:5px;}
+  .pt-chip{padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:inherit;color:var(--text-muted);transition:all 0.12s;user-select:none;}
+  .pt-chip.active{border-width:2px;}
+  .ptype-ache.active{background:#e8eef8;border-color:#4a7ac8;color:#1a4a8a;}
+  .ptype-sharp.active{background:#fdf0ee;border-color:#c0392b;color:#8b2219;}
+  .ptype-numb.active{background:#f0edf8;border-color:#7b5ea7;color:#4a2d7a;}
+  .ptype-burn.active{background:#fdf5e0;border-color:#c87a00;color:#7a4a00;}
+  .ptype-refer.active{background:#edf8ee;border-color:#2a8a4a;color:#1a5a2a;}
+  .ptype-tender.active{background:#fdf0f8;border-color:#b84a8a;color:#7a1a5a;}
+  .marker-list{display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;}
+  .marker-item{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--radius);background:var(--bg);border:1px solid var(--border);font-size:12px;}
+  .mdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .mnum{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-faint);min-width:16px;}
+  .mzone{flex:1;color:var(--text);}
+  .mtype{font-size:11px;color:var(--text-muted);}
+  .mdel{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:13px;padding:0 2px;line-height:1;}
+  .mdel:hover{color:var(--danger);}
+  .empty-hint{font-size:12px;color:var(--text-faint);font-style:italic;padding:8px 0;}
+  .neuro-grid{display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .nc{background:var(--surface);padding:7px 10px;font-size:12px;}
+  .nc.hdr{background:var(--surface2);font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);}
+  .nc.rl{font-weight:500;color:var(--text-muted);}
+  .nc input{padding:4px 6px;font-size:12px;background:transparent;border:1px solid transparent;min-height:unset;}
+  .nc input:focus{background:white;border-color:var(--accent-mid);}
+  .btn-sm{font-family:inherit;font-size:11px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);cursor:pointer;color:var(--text-muted);transition:all 0.12s;}
+  .btn-sm:hover{background:var(--surface2);color:var(--text);}
+  .list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+  .list-header span{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:white;padding:10px 18px;border-radius:var(--radius-lg);font-size:13px;opacity:0;transition:opacity 0.2s;pointer-events:none;z-index:999;}
+  .toast.show{opacity:1;}
+  .toast.ok{background:var(--success);}
+  .toast.err{background:var(--danger);}
+  @media print{.topbar,.sidebar,.status-bar{display:none;}body{height:auto;overflow:auto;}.shell{display:block;}.main{padding:0;gap:12px;overflow:visible;}.card{box-shadow:none;page-break-inside:avoid;}}
 </style>
 </head>
 <body>
-<div class="app-shell">
-
-  <!-- TOPBAR -->
+<div class="shell">
   <header class="topbar">
     <div class="topbar-logo">PT Assessment System</div>
     <div class="topbar-sep"></div>
-    <div class="topbar-sub">KKM Physiotherapy Dept</div>
+    <div class="topbar-sub">KKM Physiotherapy Dept &mdash; fisio/b.pen.14/Pind.1/2019</div>
     <div class="topbar-actions">
       <button class="tbtn" onclick="newForm()">+ New</button>
       <button class="tbtn" onclick="window.print()">Print / PDF</button>
@@ -196,80 +139,66 @@
       <button class="tbtn primary" onclick="saveRecord()">Save Record</button>
     </div>
   </header>
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-label">Assessment Forms</div>
-    <div class="nav-item active"><span class="nav-icon">🦴</span> Musculoskeletal <span class="nav-badge">MS</span></div>
+    <div class="nav-item active"><span class="nav-icon">&#129460;</span> Musculoskeletal <span class="nav-badge">MS</span></div>
     <div class="nav-divider"></div>
     <div class="sidebar-label">Planned</div>
-    <div class="nav-item soon"><span class="nav-icon">🔗</span> Spine</div>
-    <div class="nav-item soon"><span class="nav-icon">🫀</span> Cardiorespiratory</div>
-    <div class="nav-item soon"><span class="nav-icon">⚖️</span> Obesity</div>
-    <div class="nav-item soon"><span class="nav-icon">🧠</span> Neurological</div>
+    <div class="nav-item soon"><span class="nav-icon">&#128279;</span> Spine</div>
+    <div class="nav-item soon"><span class="nav-icon">&#129728;</span> Cardiorespiratory</div>
+    <div class="nav-item soon"><span class="nav-icon">&#9878;</span> Obesity</div>
+    <div class="nav-item soon"><span class="nav-icon">&#129504;</span> Neurological</div>
     <div class="nav-divider"></div>
     <div class="sidebar-label">Jump To</div>
-    <div class="nav-item" onclick="go('s-patient')"><span class="nav-icon">👤</span> Patient Info</div>
-    <div class="nav-item" onclick="go('s-dx')"><span class="nav-icon">📋</span> Diagnosis</div>
-    <div class="nav-item" onclick="go('s-pain')"><span class="nav-icon">📊</span> Pain Score</div>
-    <div class="nav-item" onclick="go('s-chart')"><span class="nav-icon">🗺️</span> Body Chart</div>
-    <div class="nav-item" onclick="go('s-hx')"><span class="nav-icon">📖</span> History</div>
-    <div class="nav-item" onclick="go('s-sq')"><span class="nav-icon">❓</span> Special Qs</div>
-    <div class="nav-item" onclick="go('s-obs')"><span class="nav-icon">👁️</span> Observation</div>
-    <div class="nav-item" onclick="go('s-neuro')"><span class="nav-icon">⚡</span> Neuro Test</div>
-    <div class="nav-item" onclick="go('s-palp')"><span class="nav-icon">🖐️</span> Palpation</div>
-    <div class="nav-item" onclick="go('s-mov')"><span class="nav-icon">🔄</span> Movement</div>
-    <div class="nav-item" onclick="go('s-plan')"><span class="nav-icon">🎯</span> PT Plan</div>
+    <div class="nav-item" onclick="go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+    <div class="nav-item" onclick="go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+    <div class="nav-item" onclick="go('s-pain')"><span class="nav-icon">&#128202;</span> Pain Score</div>
+    <div class="nav-item" onclick="go('s-chart')"><span class="nav-icon">&#128506;</span> Body Chart</div>
+    <div class="nav-item" onclick="go('s-hx')"><span class="nav-icon">&#128214;</span> History</div>
+    <div class="nav-item" onclick="go('s-sq')"><span class="nav-icon">&#10067;</span> Special Qs</div>
+    <div class="nav-item" onclick="go('s-obs')"><span class="nav-icon">&#128065;</span> Observation</div>
+    <div class="nav-item" onclick="go('s-neuro')"><span class="nav-icon">&#9889;</span> Neuro Test</div>
+    <div class="nav-item" onclick="go('s-palp')"><span class="nav-icon">&#128400;</span> Palpation</div>
+    <div class="nav-item" onclick="go('s-mov')"><span class="nav-icon">&#128260;</span> Movement</div>
+    <div class="nav-item" onclick="go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression</div>
     <div class="nav-divider"></div>
-
-    <!-- SAVED RECORDS PANEL -->
     <div class="records-panel">
       <h4>Saved Records</h4>
       <div id="records-list"><div class="no-records">No records yet</div></div>
     </div>
   </aside>
-
-  <!-- MAIN -->
   <main class="main">
-
-    <!-- STATUS -->
     <div class="status-bar">
-      <div class="status-item"><div class="sdot"></div>Musculoskeletal Assessment &mdash; <strong>fisio/b.pen.14/Pind.1/2019</strong></div>
+      <div class="sdot"></div>
+      <span style="font-size:12px;color:var(--text-muted);">Musculoskeletal Assessment</span>
       <div class="spacer"></div>
-      <div class="progress-wrap">
-        Completion &nbsp;
-        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
-        <span id="prog-pct">0%</span>
-      </div>
+      <div class="progress-wrap">Completion &nbsp;<div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div><span id="prog-pct">0%</span></div>
     </div>
 
     <!-- 01 PATIENT INFO -->
     <div class="card" id="s-patient">
       <div class="card-header"><span class="sec-num">01</span><h2>Patient Information</h2></div>
       <div class="card-body">
-        <div class="fg c3">
-          <div class="field" style="grid-column:span 2;">
-            <label>Full Name <span class="req">*</span></label>
-            <input type="text" id="pt-name" placeholder="Patient full name" oninput="updateProgress()">
-          </div>
+        <div class="fg">
           <div class="field">
-            <label>Date <span class="req">*</span></label>
-            <input type="date" id="pt-date" oninput="updateProgress()">
-          </div>
-          <div class="field">
-            <label>Age</label>
-            <input type="number" id="pt-age" placeholder="Years" min="0" max="130">
-          </div>
-          <div class="field">
-            <label>Sex</label>
+            <label>Patient Type</label>
             <div class="radio-group">
-              <label><input type="radio" name="pt-sex" value="M"> Male</label>
-              <label><input type="radio" name="pt-sex" value="F"> Female</label>
+              <label><input type="radio" name="pt-type" value="local" checked onchange="onPtTypeChange()"> Malaysian (NRIC)</label>
+              <label><input type="radio" name="pt-type" value="foreign" onchange="onPtTypeChange()"> Foreign (Passport)</label>
             </div>
           </div>
-          <div class="field">
-            <label>RN / IC No. <span class="req">*</span></label>
-            <input type="text" id="pt-rn" placeholder="Registration / IC number" oninput="updateProgress()">
+          <div class="fg c2">
+            <div class="field" style="grid-column:span 2"><label>Full Name <span class="req">*</span></label><input type="text" id="pt-name" placeholder="Patient full name" oninput="updateProgress()"></div>
+            <div class="field" id="nric-field">
+              <label>NRIC No. <span class="req">*</span> <span style="font-weight:400;text-transform:none;font-size:10px">(12 digits, no dashes)</span></label>
+              <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="onNricInput(this.value)">
+              <div class="derived-info"><span class="derived-badge hidden" id="derived-dob"></span><span class="derived-badge hidden" id="derived-gender"></span></div>
+            </div>
+            <div class="field" id="passport-field" style="display:none"><label>Passport No. <span class="req">*</span></label><input type="text" id="pt-passport" placeholder="Passport number" oninput="updateProgress()"></div>
+            <div class="field"><label>Assessment Date <span class="req">*</span></label><input type="date" id="pt-date" oninput="updateProgress()"></div>
+            <div class="field"><label>Date of Birth</label><input type="date" id="pt-dob"></div>
+            <div class="field"><label>Age</label><input type="number" id="pt-age" placeholder="Years" min="0" max="130"></div>
+            <div class="field"><label>Sex</label><div class="radio-group"><label><input type="radio" name="pt-sex" value="M"> Male</label><label><input type="radio" name="pt-sex" value="F"> Female</label></div></div>
           </div>
         </div>
       </div>
@@ -280,69 +209,39 @@
       <div class="card-header"><span class="sec-num">02</span><h2>Diagnosis &amp; Doctor's Management</h2></div>
       <div class="card-body">
         <div class="fg c2">
-          <div class="field">
-            <label>Diagnosis <span class="req">*</span></label>
-            <textarea id="pt-diagnosis" placeholder="Working diagnosis from referring doctor..." oninput="updateProgress()"></textarea>
-          </div>
+          <div class="field" style="grid-column:span 2"><label>Diagnosis <span class="req">*</span></label><textarea id="pt-diagnosis" placeholder="Working diagnosis from referring doctor..." oninput="updateProgress()"></textarea></div>
           <div class="field">
             <label>Doctor's Management</label>
-            <textarea id="pt-mgmt" placeholder="Prescribed management / referral instructions..."></textarea>
+            <select id="dr-mgmt" onchange="onMgmtChange()"><option value="">&#8212; Select &#8212;</option><option value="Conservative">Conservative</option><option value="Surgical">Surgical</option></select>
+            <div class="surgery-row" id="surgery-row"><span style="font-size:12px;color:var(--text-muted);white-space:nowrap">Surgery date:</span><input type="date" id="surgery-date" style="flex:1"></div>
           </div>
-          <div class="field" style="grid-column:span 2;">
-            <label>Problem</label>
-            <textarea id="pt-problem" placeholder="Main presenting problem..." style="min-height:52px;"></textarea>
-          </div>
+          <div class="field"><label>Problem</label><textarea id="pt-problem" placeholder="Main presenting problem..." style="min-height:52px"></textarea></div>
         </div>
       </div>
     </div>
 
-    <!-- 03 PAIN ASSESSMENT -->
+    <!-- 03 PAIN -->
     <div class="card" id="s-pain">
       <div class="card-header"><span class="sec-num">03</span><h2>Pain Assessment</h2></div>
       <div class="card-body">
         <div class="fg">
           <div class="fg c2">
             <div class="pain-score-box">
-              <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">PRE-treatment Score (VAS 0–10)</label>
-              <div class="pain-scale">
-                <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="updPain('pre',this.value)">
-                <div class="pain-val low" id="pv-pre">0</div>
-              </div>
+              <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&#8211;10)</label>
+              <div class="pain-scale-row"><span style="font-size:11px;color:var(--text-faint)">0</span><input type="range" id="pain-pre" min="0" max="10" value="0" step="1"><span style="font-size:11px;color:var(--text-faint)">10</span><div class="pain-val pv-low" id="pv-pre">0</div></div>
             </div>
             <div class="pain-score-box">
-              <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;">POST-treatment Score (VAS 0–10)</label>
-              <div class="pain-scale">
-                <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="updPain('post',this.value)">
-                <div class="pain-val low" id="pv-post">0</div>
-              </div>
+              <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&#8211;10)</label>
+              <div class="pain-scale-row"><span style="font-size:11px;color:var(--text-faint)">0</span><input type="range" id="pain-post" min="0" max="10" value="0" step="1"><span style="font-size:11px;color:var(--text-faint)">10</span><div class="pain-val pv-low" id="pv-post">0</div></div>
             </div>
           </div>
           <div class="fg c2">
-            <div class="field">
-              <label>Nature of Pain</label>
-              <input type="text" id="pain-nature" placeholder="e.g. dull ache, sharp, throbbing, burning...">
-            </div>
-            <div class="field">
-              <label>24-Hour Behaviour</label>
-              <input type="text" id="pain-24hr" placeholder="e.g. worse in morning, constant, intermittent...">
-            </div>
-            <div class="field">
-              <label>Aggravating Factors (Agg.)</label>
-              <input type="text" id="pain-agg" placeholder="e.g. walking, prolonged sitting, bending...">
-            </div>
-            <div class="field">
-              <label>Easing Factors (Ease)</label>
-              <input type="text" id="pain-ease" placeholder="e.g. rest, heat, elevation...">
-            </div>
+            <div class="field"><label>Nature of Pain</label><select id="pain-nature"><option value="">&#8212; Select &#8212;</option><option>Sharp</option><option>Dull aching</option><option>Burning</option><option>Throbbing / Pulsating</option><option>Shooting</option><option>Tingling / Pins &amp; needles</option><option>Cramping</option><option>Gnawing</option><option>Stiffness / Tightness</option><option>Tenderness</option><option>Mixed (describe in notes)</option></select></div>
+            <div class="field"><label>24-Hour Behaviour</label><select id="pain-24hr"><option value="">&#8212; Select &#8212;</option><option>Constant</option><option>Intermittent</option><option>Worse in morning</option><option>Worse in evening</option><option>Worse with activity</option><option>Worse at rest</option><option>Nocturnal</option></select></div>
+            <div class="field"><label>Aggravating Factors</label><input type="text" id="pain-agg" placeholder="e.g. walking, prolonged sitting, bending..."></div>
+            <div class="field"><label>Easing Factors</label><input type="text" id="pain-ease" placeholder="e.g. rest, heat, elevation..."></div>
           </div>
-          <div class="field">
-            <label>Irritability</label>
-            <div class="irr-chips">
-              <button class="irr-chip" data-val="High" onclick="selIrr(this)">High</button>
-              <button class="irr-chip" data-val="Medium" onclick="selIrr(this)">Medium</button>
-              <button class="irr-chip" data-val="Low" onclick="selIrr(this)">Low</button>
-            </div>
-          </div>
+          <div class="field"><label>Irritability</label><div class="irr-chips"><button class="irr-chip" id="irr-High" onclick="pickIrr('High')">High</button><button class="irr-chip" id="irr-Medium" onclick="pickIrr('Medium')">Medium</button><button class="irr-chip" id="irr-Low" onclick="pickIrr('Low')">Low</button></div></div>
         </div>
       </div>
     </div>
@@ -353,103 +252,68 @@
       <div class="card-body">
         <div class="body-chart-wrap">
           <div class="body-figures">
-            <!-- ANTERIOR -->
             <div class="fig-wrap">
               <div class="fig-label">Anterior</div>
-              <svg class="bsvg" width="115" height="285" viewBox="0 0 115 285" id="svg-ant">
-                <g id="m-ant"></g>
-                <g stroke="#9b9790" stroke-width="1.1" fill="none" opacity="0.55">
-                  <circle cx="57" cy="19" r="13"/>
-                  <line x1="57" y1="32" x2="57" y2="98"/>
-                  <line x1="57" y1="46" x2="23" y2="78"/>
-                  <line x1="57" y1="46" x2="91" y2="78"/>
-                  <line x1="23" y1="78" x2="18" y2="107"/>
-                  <line x1="91" y1="78" x2="96" y2="107"/>
-                  <rect x="33" y="98" width="48" height="50" rx="3"/>
-                  <line x1="33" y1="148" x2="27" y2="213"/>
-                  <line x1="81" y1="148" x2="87" y2="213"/>
-                  <line x1="27" y1="213" x2="23" y2="280"/>
-                  <line x1="87" y1="213" x2="91" y2="280"/>
-                  <text x="4" y="144" font-size="7.5" fill="#9b9790" font-family="IBM Plex Sans,sans-serif">R</text>
-                  <text x="104" y="144" font-size="7.5" fill="#9b9790" font-family="IBM Plex Sans,sans-serif">L</text>
+              <svg class="bsvg" id="svg-ant" width="120" height="290" viewBox="0 0 120 290">
+                <g id="markers-ant"></g>
+                <g stroke="#bbb" stroke-width="1.2" fill="none">
+                  <circle cx="60" cy="20" r="14"/><line x1="60" y1="34" x2="60" y2="105"/><line x1="60" y1="50" x2="24" y2="82"/><line x1="60" y1="50" x2="96" y2="82"/><line x1="24" y1="82" x2="18" y2="112"/><line x1="96" y1="82" x2="102" y2="112"/><rect x="36" y="105" width="48" height="52" rx="3"/><line x1="36" y1="157" x2="29" y2="222"/><line x1="84" y1="157" x2="91" y2="222"/><line x1="29" y1="222" x2="24" y2="285"/><line x1="91" y1="222" x2="96" y2="285"/>
+                  <text x="5" y="150" font-size="8" fill="#bbb" font-family="sans-serif">R</text><text x="108" y="150" font-size="8" fill="#bbb" font-family="sans-serif">L</text>
                 </g>
-                <rect class="hit" x="44" y="6" width="26" height="26" rx="13" data-zone="Head" data-view="ant"/>
-                <rect class="hit" x="26" y="32" width="62" height="18" rx="3" data-zone="Neck / Shoulder" data-view="ant"/>
-                <rect class="hit" x="6" y="44" width="21" height="52" rx="3" data-zone="L arm" data-view="ant"/>
-                <rect class="hit" x="88" y="44" width="21" height="52" rx="3" data-zone="R arm" data-view="ant"/>
-                <rect class="hit" x="31" y="50" width="53" height="48" rx="3" data-zone="Chest" data-view="ant"/>
-                <rect class="hit" x="31" y="96" width="53" height="53" rx="3" data-zone="Abdomen" data-view="ant"/>
-                <rect class="hit" x="7" y="96" width="19" height="36" rx="3" data-zone="L forearm" data-view="ant"/>
-                <rect class="hit" x="89" y="96" width="19" height="36" rx="3" data-zone="R forearm" data-view="ant"/>
-                <rect class="hit" x="31" y="148" width="21" height="65" rx="3" data-zone="L thigh" data-view="ant"/>
-                <rect class="hit" x="62" y="148" width="21" height="65" rx="3" data-zone="R thigh" data-view="ant"/>
-                <rect class="hit" x="23" y="212" width="19" height="68" rx="3" data-zone="L leg" data-view="ant"/>
-                <rect class="hit" x="73" y="212" width="19" height="68" rx="3" data-zone="R leg" data-view="ant"/>
+                <rect class="hit" x="46" y="6"   width="28" height="28" rx="14" data-zone="Head"               data-view="ant"/>
+                <rect class="hit" x="26" y="34"  width="68" height="18" rx="3"  data-zone="Neck / Shoulder"    data-view="ant"/>
+                <rect class="hit" x="4"  y="48"  width="23" height="56" rx="3"  data-zone="L arm"              data-view="ant"/>
+                <rect class="hit" x="93" y="48"  width="23" height="56" rx="3"  data-zone="R arm"              data-view="ant"/>
+                <rect class="hit" x="33" y="54"  width="54" height="52" rx="3"  data-zone="Chest"              data-view="ant"/>
+                <rect class="hit" x="33" y="103" width="54" height="56" rx="3"  data-zone="Abdomen"            data-view="ant"/>
+                <rect class="hit" x="4"  y="100" width="22" height="40" rx="3"  data-zone="L forearm"          data-view="ant"/>
+                <rect class="hit" x="94" y="100" width="22" height="40" rx="3"  data-zone="R forearm"          data-view="ant"/>
+                <rect class="hit" x="33" y="157" width="23" height="65" rx="3"  data-zone="L thigh"            data-view="ant"/>
+                <rect class="hit" x="64" y="157" width="23" height="65" rx="3"  data-zone="R thigh"            data-view="ant"/>
+                <rect class="hit" x="22" y="220" width="21" height="66" rx="3"  data-zone="L leg"              data-view="ant"/>
+                <rect class="hit" x="77" y="220" width="21" height="66" rx="3"  data-zone="R leg"              data-view="ant"/>
               </svg>
             </div>
-            <!-- POSTERIOR -->
             <div class="fig-wrap">
               <div class="fig-label">Posterior</div>
-              <svg class="bsvg" width="115" height="285" viewBox="0 0 115 285" id="svg-post">
-                <g id="m-post"></g>
-                <g stroke="#9b9790" stroke-width="1.1" fill="none" opacity="0.55">
-                  <circle cx="57" cy="19" r="13"/>
-                  <line x1="57" y1="32" x2="57" y2="98"/>
-                  <line x1="57" y1="46" x2="23" y2="78"/>
-                  <line x1="57" y1="46" x2="91" y2="78"/>
-                  <line x1="23" y1="78" x2="18" y2="107"/>
-                  <line x1="91" y1="78" x2="96" y2="107"/>
-                  <rect x="33" y="98" width="48" height="50" rx="3"/>
-                  <line x1="33" y1="148" x2="27" y2="213"/>
-                  <line x1="81" y1="148" x2="87" y2="213"/>
-                  <line x1="27" y1="213" x2="23" y2="280"/>
-                  <line x1="87" y1="213" x2="91" y2="280"/>
-                  <text x="4" y="144" font-size="7.5" fill="#9b9790" font-family="IBM Plex Sans,sans-serif">R</text>
-                  <text x="104" y="144" font-size="7.5" fill="#9b9790" font-family="IBM Plex Sans,sans-serif">L</text>
+              <svg class="bsvg" id="svg-post" width="120" height="290" viewBox="0 0 120 290">
+                <g id="markers-post"></g>
+                <g stroke="#bbb" stroke-width="1.2" fill="none">
+                  <circle cx="60" cy="20" r="14"/><line x1="60" y1="34" x2="60" y2="105"/><line x1="60" y1="50" x2="24" y2="82"/><line x1="60" y1="50" x2="96" y2="82"/><line x1="24" y1="82" x2="18" y2="112"/><line x1="96" y1="82" x2="102" y2="112"/><rect x="36" y="105" width="48" height="52" rx="3"/><line x1="36" y1="157" x2="29" y2="222"/><line x1="84" y1="157" x2="91" y2="222"/><line x1="29" y1="222" x2="24" y2="285"/><line x1="91" y1="222" x2="96" y2="285"/>
+                  <text x="5" y="150" font-size="8" fill="#bbb" font-family="sans-serif">R</text><text x="108" y="150" font-size="8" fill="#bbb" font-family="sans-serif">L</text>
                 </g>
-                <rect class="hit" x="44" y="6" width="26" height="26" rx="13" data-zone="Head (post)" data-view="post"/>
-                <rect class="hit" x="26" y="32" width="62" height="18" rx="3" data-zone="Neck (post)" data-view="post"/>
-                <rect class="hit" x="6" y="44" width="21" height="52" rx="3" data-zone="L arm (post)" data-view="post"/>
-                <rect class="hit" x="88" y="44" width="21" height="52" rx="3" data-zone="R arm (post)" data-view="post"/>
-                <rect class="hit" x="31" y="50" width="53" height="48" rx="3" data-zone="Upper back" data-view="post"/>
-                <rect class="hit" x="31" y="96" width="53" height="53" rx="3" data-zone="Lumbar / Lower back" data-view="post"/>
-                <rect class="hit" x="7" y="96" width="19" height="36" rx="3" data-zone="L forearm (post)" data-view="post"/>
-                <rect class="hit" x="89" y="96" width="19" height="36" rx="3" data-zone="R forearm (post)" data-view="post"/>
-                <rect class="hit" x="31" y="148" width="21" height="65" rx="3" data-zone="L hamstring" data-view="post"/>
-                <rect class="hit" x="62" y="148" width="21" height="65" rx="3" data-zone="R hamstring" data-view="post"/>
-                <rect class="hit" x="23" y="212" width="19" height="68" rx="3" data-zone="L calf" data-view="post"/>
-                <rect class="hit" x="73" y="212" width="19" height="68" rx="3" data-zone="R calf" data-view="post"/>
+                <rect class="hit" x="46" y="6"   width="28" height="28" rx="14" data-zone="Head (post)"        data-view="post"/>
+                <rect class="hit" x="26" y="34"  width="68" height="18" rx="3"  data-zone="Neck (post)"        data-view="post"/>
+                <rect class="hit" x="4"  y="48"  width="23" height="56" rx="3"  data-zone="L arm (post)"       data-view="post"/>
+                <rect class="hit" x="93" y="48"  width="23" height="56" rx="3"  data-zone="R arm (post)"       data-view="post"/>
+                <rect class="hit" x="33" y="54"  width="54" height="52" rx="3"  data-zone="Upper back"         data-view="post"/>
+                <rect class="hit" x="33" y="103" width="54" height="56" rx="3"  data-zone="Lumbar / Lower back" data-view="post"/>
+                <rect class="hit" x="4"  y="100" width="22" height="40" rx="3"  data-zone="L forearm (post)"   data-view="post"/>
+                <rect class="hit" x="94" y="100" width="22" height="40" rx="3"  data-zone="R forearm (post)"   data-view="post"/>
+                <rect class="hit" x="33" y="157" width="23" height="65" rx="3"  data-zone="L hamstring"        data-view="post"/>
+                <rect class="hit" x="64" y="157" width="23" height="65" rx="3"  data-zone="R hamstring"        data-view="post"/>
+                <rect class="hit" x="22" y="220" width="21" height="66" rx="3"  data-zone="L calf"             data-view="post"/>
+                <rect class="hit" x="77" y="220" width="21" height="66" rx="3"  data-zone="R calf"             data-view="post"/>
               </svg>
             </div>
           </div>
-
-          <!-- CHART CONTROLS -->
           <div class="chart-controls">
             <div>
-              <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px;">Pain Type</div>
-              <div class="pain-type-sel">
-                <button class="pt-chip a-ache" data-type="ache" onclick="selType(this)">Ache</button>
-                <button class="pt-chip" data-type="sharp" onclick="selType(this)">Sharp</button>
-                <button class="pt-chip" data-type="numb" onclick="selType(this)">Numbness</button>
-                <button class="pt-chip" data-type="burn" onclick="selType(this)">Burning</button>
-                <button class="pt-chip" data-type="refer" onclick="selType(this)">Referred</button>
-                <button class="pt-chip" data-type="tender" onclick="selType(this)">Tenderness</button>
+              <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click figure</div>
+              <div class="pain-type-sel" id="ptype-sel">
+                <button class="pt-chip ptype-ache active" data-ptype="ache">Ache</button>
+                <button class="pt-chip ptype-sharp"       data-ptype="sharp">Sharp</button>
+                <button class="pt-chip ptype-numb"        data-ptype="numb">Numbness</button>
+                <button class="pt-chip ptype-burn"        data-ptype="burn">Burning</button>
+                <button class="pt-chip ptype-refer"       data-ptype="refer">Referred</button>
+                <button class="pt-chip ptype-tender"      data-ptype="tender">Tenderness</button>
               </div>
             </div>
-            <div style="font-size:11px;color:var(--text-faint);font-style:italic;">Click on the figure to place markers</div>
             <div>
-              <div class="list-header">
-                <span>Marked Locations</span>
-                <button class="btn-sm" onclick="clearMarkers()">Clear all</button>
-              </div>
-              <div class="marker-list" id="marker-list">
-                <div class="empty-hint" id="empty-hint">No markers yet</div>
-              </div>
+              <div class="list-header"><span>Marked Locations</span><button class="btn-sm" onclick="clearAllMarkers()">Clear all</button></div>
+              <div class="marker-list" id="marker-list"><div class="empty-hint" id="empty-hint">No markers yet</div></div>
             </div>
-            <div class="field">
-              <label>Body Chart Notes</label>
-              <textarea id="chart-notes" placeholder="Distribution, peripheralisation, centralisation..." style="min-height:56px;"></textarea>
-            </div>
+            <div class="field"><label>Body Chart Notes</label><textarea id="chart-notes" placeholder="Distribution, peripheralisation, centralisation..." style="min-height:56px"></textarea></div>
           </div>
         </div>
       </div>
@@ -460,14 +324,8 @@
       <div class="card-header"><span class="sec-num">05</span><h2>History</h2></div>
       <div class="card-body">
         <div class="fg c2">
-          <div class="field">
-            <label>Current History <span class="req">*</span></label>
-            <textarea id="hx-current" placeholder="Onset, mechanism of injury, course of symptoms, previous treatment..." style="min-height:95px;" oninput="updateProgress()"></textarea>
-          </div>
-          <div class="field">
-            <label>Past History</label>
-            <textarea id="hx-past" placeholder="Previous episodes, surgery, relevant medical history..." style="min-height:95px;"></textarea>
-          </div>
+          <div class="field"><label>Current History <span class="req">*</span></label><textarea id="hx-current" placeholder="Onset, mechanism of injury, course of symptoms..." style="min-height:95px" oninput="updateProgress()"></textarea></div>
+          <div class="field"><label>Past History</label><textarea id="hx-past" placeholder="Previous episodes, relevant medical history..." style="min-height:95px"></textarea></div>
         </div>
       </div>
     </div>
@@ -478,20 +336,14 @@
       <div class="card-body">
         <div class="fg c2">
           <div class="field"><label>General Health</label><input type="text" id="sq-health" placeholder="General health status..."></div>
-          <div class="field"><label>PMHX / Surgery</label><input type="text" id="sq-pmhx" placeholder="Past medical & surgical history..."></div>
+          <div class="field"><label>Past Medical History (PMHX)</label><input type="text" id="sq-pmhx" placeholder="Diabetes, HTN, heart disease, cancer..."></div>
+          <div class="field"><label>Surgical History</label><input type="text" id="sq-surgery" placeholder="Previous surgeries, dates, sites..."></div>
           <div class="field"><label>Investigation</label><input type="text" id="sq-invest" placeholder="X-ray, MRI, blood tests, EMG..."></div>
           <div class="field"><label>Medication</label><input type="text" id="sq-med" placeholder="Current medications..."></div>
-          <div class="field"><label>Occupation / Recreation</label><input type="text" id="sq-occ" placeholder="Job type, hobbies, physical demands..."></div>
+          <div class="field"><label>Occupation</label><input type="text" id="sq-occ" placeholder="Job title, physical demands, work hours..."></div>
+          <div class="field"><label>Recreation / Hobbies</label><input type="text" id="sq-rec" placeholder="Sports, hobbies, physical activities..."></div>
           <div class="field"><label>Social History</label><input type="text" id="sq-social" placeholder="Living situation, support, dependents..."></div>
-          <div class="field" style="grid-column:span 2;">
-            <label>Pacemaker / Hearing Aid</label>
-            <div class="radio-group">
-              <label><input type="radio" name="pacemaker" value="No"> No</label>
-              <label><input type="radio" name="pacemaker" value="Pacemaker"> Pacemaker</label>
-              <label><input type="radio" name="pacemaker" value="HearingAid"> Hearing Aid</label>
-              <label><input type="radio" name="pacemaker" value="Both"> Both</label>
-            </div>
-          </div>
+          <div class="field" style="grid-column:span 2"><label>Pacemaker / Hearing Aid</label><div class="radio-group"><label><input type="radio" name="pacemaker" value="No" checked> No</label><label><input type="radio" name="pacemaker" value="Pacemaker"> Pacemaker</label><label><input type="radio" name="pacemaker" value="HearingAid"> Hearing Aid</label><label><input type="radio" name="pacemaker" value="Both"> Both</label></div></div>
         </div>
       </div>
     </div>
@@ -500,45 +352,24 @@
     <div class="card" id="s-obs">
       <div class="card-header"><span class="sec-num">07</span><h2>Observation</h2></div>
       <div class="card-body">
-        <div class="obs-grid">
-          <div class="obs-section">
-            <h4>General</h4>
-            <textarea id="obs-general" placeholder="Posture, gait, affect, guarding, antalgic lean, use of aids..." style="min-height:95px;" oninput="updateProgress()"></textarea>
-          </div>
-          <div class="obs-section">
-            <h4>Local</h4>
-            <textarea id="obs-local" placeholder="Swelling, erythema, skin changes, muscle wasting, deformity, scar..." style="min-height:95px;"></textarea>
-          </div>
+        <div class="fg c2">
+          <div class="field"><label>General <span class="req">*</span></label><textarea id="obs-general" placeholder="Posture, gait, affect, guarding, antalgic lean, use of aids..." style="min-height:95px" oninput="updateProgress()"></textarea></div>
+          <div class="field"><label>Local</label><textarea id="obs-local" placeholder="Swelling, erythema, skin changes, muscle wasting, deformity, scar..." style="min-height:95px"></textarea></div>
         </div>
       </div>
     </div>
 
-    <!-- 08 NEUROLOGICAL TEST -->
+    <!-- 08 NEUROLOGICAL -->
     <div class="card" id="s-neuro">
       <div class="card-header"><span class="sec-num">08</span><h2>Neurological Test</h2></div>
       <div class="card-body">
         <div class="neuro-grid">
-          <div class="nc hdr"></div>
-          <div class="nc hdr">Left</div>
-          <div class="nc hdr">Right</div>
-          <div class="nc hdr">Level / Notes</div>
-          <div class="nc rlabel">Sensation</div>
-          <div class="nc"><input type="text" placeholder="Normal / ↓ / Absent"></div>
-          <div class="nc"><input type="text" placeholder="Normal / ↓ / Absent"></div>
-          <div class="nc"><input type="text" placeholder="Dermatomal level..."></div>
-          <div class="nc rlabel">Reflex</div>
-          <div class="nc"><input type="text" placeholder="+/++/+++/-"></div>
-          <div class="nc"><input type="text" placeholder="+/++/+++/-"></div>
-          <div class="nc"><input type="text" placeholder="e.g. L4 patellar, S1 Achilles..."></div>
-          <div class="nc rlabel">Motor</div>
-          <div class="nc"><input type="text" placeholder="Grade 0–5"></div>
-          <div class="nc"><input type="text" placeholder="Grade 0–5"></div>
-          <div class="nc"><input type="text" placeholder="Myotome / movement tested..."></div>
+          <div class="nc hdr"></div><div class="nc hdr">Left</div><div class="nc hdr">Right</div><div class="nc hdr">Level / Notes</div>
+          <div class="nc rl">Sensation</div><div class="nc"><input type="text" id="neuro-sens-l" placeholder="Normal / &#8595; / Absent"></div><div class="nc"><input type="text" id="neuro-sens-r" placeholder="Normal / &#8595; / Absent"></div><div class="nc"><input type="text" id="neuro-sens-n" placeholder="Dermatomal level..."></div>
+          <div class="nc rl">Reflex</div><div class="nc"><input type="text" id="neuro-ref-l" placeholder="+/++/+++/-"></div><div class="nc"><input type="text" id="neuro-ref-r" placeholder="+/++/+++/-"></div><div class="nc"><input type="text" id="neuro-ref-n" placeholder="e.g. L4 patellar, S1 Achilles..."></div>
+          <div class="nc rl">Motor</div><div class="nc"><input type="text" id="neuro-mot-l" placeholder="Grade 0&#8211;5"></div><div class="nc"><input type="text" id="neuro-mot-r" placeholder="Grade 0&#8211;5"></div><div class="nc"><input type="text" id="neuro-mot-n" placeholder="Myotome tested..."></div>
         </div>
-        <div style="margin-top:12px;" class="field">
-          <label>Neurological Notes</label>
-          <textarea id="neuro-notes" placeholder="SLR, SLUMP, ULT, Babinski, clonus, additional findings..." style="min-height:56px;"></textarea>
-        </div>
+        <div style="margin-top:12px" class="field"><label>Neurological Notes</label><textarea id="neuro-notes" placeholder="SLR, SLUMP, ULT, Babinski, clonus..." style="min-height:56px"></textarea></div>
       </div>
     </div>
 
@@ -547,7 +378,7 @@
       <div class="card-header"><span class="sec-num">09</span><h2>Palpation</h2></div>
       <div class="card-body">
         <div class="fg c2">
-          <div class="field"><label>Tenderness</label><textarea id="palp-tender" placeholder="Location, grade (0–3)..."></textarea></div>
+          <div class="field"><label>Tenderness</label><textarea id="palp-tender" placeholder="Location, grade (0&#8211;3)..."></textarea></div>
           <div class="field"><label>Temperature / Skin</label><input type="text" id="palp-temp" placeholder="Warm / Cool / Normal, skin turgor..."></div>
           <div class="field"><label>Muscle / Soft Tissue</label><textarea id="palp-muscle" placeholder="Spasm, tightness, trigger points..."></textarea></div>
           <div class="field"><label>Joint / Bony</label><textarea id="palp-joint" placeholder="Joint line tenderness, bony landmarks, deformity..."></textarea></div>
@@ -560,298 +391,241 @@
       <div class="card-header"><span class="sec-num">10</span><h2>Movement Assessment</h2></div>
       <div class="card-body">
         <div class="fg c2">
-          <div class="field"><label>Active ROM (AROM)</label><textarea id="mov-arom" placeholder="Range, pain arc, end feel — e.g. Flex 0–80° (pain at 60°)..." style="min-height:85px;"></textarea></div>
-          <div class="field"><label>Passive ROM (PROM)</label><textarea id="mov-prom" placeholder="Overpressure, end feel, pain response..." style="min-height:85px;"></textarea></div>
+          <div class="field"><label>Active ROM (AROM)</label><textarea id="mov-arom" placeholder="Range, pain arc, end feel..." style="min-height:85px"></textarea></div>
+          <div class="field"><label>Passive ROM (PROM)</label><textarea id="mov-prom" placeholder="Overpressure, end feel, pain response..." style="min-height:85px"></textarea></div>
           <div class="field"><label>Resisted / Muscle Strength</label><textarea id="mov-resist" placeholder="Isometric resistance, grade, pain provocation..."></textarea></div>
-          <div class="field"><label>Functional Movement</label><textarea id="mov-func" placeholder="Squat, step, reaching — functional limitations..."></textarea></div>
+          <div class="field"><label>Functional Movement</label><textarea id="mov-func" placeholder="Squat, step, reaching &#8212; functional limitations..."></textarea></div>
         </div>
       </div>
     </div>
 
-    <!-- 11 PT PLAN -->
+    <!-- 11 PT IMPRESSION -->
     <div class="card" id="s-plan">
-      <div class="card-header"><span class="sec-num">11</span><h2>PT Diagnosis &amp; Treatment Plan</h2></div>
+      <div class="card-header"><span class="sec-num">11</span><h2>PT Impression &amp; Treatment Plan</h2></div>
       <div class="card-body">
         <div class="fg c2">
-          <div class="field"><label>PT Diagnosis</label><textarea id="plan-dx" placeholder="Clinical reasoning, PT diagnosis..."></textarea></div>
-          <div class="field"><label>Short-Term Goals (STG)</label><textarea id="plan-stg" placeholder="Goals within 2–4 weeks..."></textarea></div>
+          <div class="field"><label>PT Impression</label><textarea id="plan-impression" placeholder="Clinical reasoning summary, physiotherapy impression..."></textarea></div>
+          <div class="field"><label>Short-Term Goals (STG)</label><textarea id="plan-stg" placeholder="Goals within 2&#8211;4 weeks..."></textarea></div>
           <div class="field"><label>Long-Term Goals (LTG)</label><textarea id="plan-ltg" placeholder="Functional rehabilitation goals..."></textarea></div>
           <div class="field"><label>Treatment Plan</label><textarea id="plan-tx" placeholder="Modalities, exercises, manual therapy, HEP, frequency..."></textarea></div>
-          <div class="field" style="grid-column:span 2;"><label>Remarks / Precautions</label><textarea id="plan-remarks" placeholder="Precautions, contraindications, red flags, referral..." style="min-height:52px;"></textarea></div>
+          <div class="field" style="grid-column:span 2"><label>Remarks / Precautions</label><textarea id="plan-remarks" placeholder="Precautions, contraindications, red flags, referral..." style="min-height:52px"></textarea></div>
         </div>
       </div>
     </div>
 
-    <div style="height:20px;"></div>
+    <div style="height:24px"></div>
   </main>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script>
-// ── MARKER STATE ────────────────────────────────────────
-const MC = { ache:'#4a7ac8', sharp:'#c0392b', numb:'#7b5ea7', burn:'#c87a00', refer:'#2a8a4a', tender:'#b84a8a' };
-const ML = { ache:'Ache', sharp:'Sharp', numb:'Numbness', burn:'Burning', refer:'Referred', tender:'Tenderness' };
-let selType = 'ache', markers = [], nextId = 1, currentRecordId = null;
+var MCOLORS={ache:'#4a7ac8',sharp:'#c0392b',numb:'#7b5ea7',burn:'#c87a00',refer:'#2a8a4a',tender:'#b84a8a'};
+var MLABELS={ache:'Ache',sharp:'Sharp',numb:'Numbness',burn:'Burning',refer:'Referred',tender:'Tenderness'};
+var activePType='ache',mList=[],mCounter=1,currentId=null;
 
-// ── PAIN TYPE ──────────────────────────────────────────
-function selType(btn) {
-  document.querySelectorAll('.pt-chip').forEach(c => c.className = 'pt-chip');
-  btn.className = 'pt-chip a-' + btn.dataset.type;
-  selType = btn.dataset.type;
-}
-
-// ── IRRITABILITY ───────────────────────────────────────
-function selIrr(btn) {
-  document.querySelectorAll('.irr-chip').forEach(c => c.classList.remove('sel'));
-  btn.classList.add('sel');
-}
-
-// ── PAIN SCORE ─────────────────────────────────────────
-function updPain(t, v) {
-  const el = document.getElementById('pv-' + t);
-  el.textContent = v;
-  el.className = 'pain-val ' + (+v <= 3 ? 'low' : +v <= 6 ? 'mid' : 'high');
-}
-
-// ── BODY CHART ─────────────────────────────────────────
-function getSvgXY(svg, e) {
-  const r = svg.getBoundingClientRect(), vb = svg.viewBox.baseVal;
-  return { x: (e.clientX - r.left) * (vb.width / r.width), y: (e.clientY - r.top) * (vb.height / r.height) };
-}
-function getZone(svg, x, y) {
-  let z = 'Body';
-  svg.querySelectorAll('.hit').forEach(h => {
-    if (x >= +h.getAttribute('x') && x <= +h.getAttribute('x') + +h.getAttribute('width') &&
-        y >= +h.getAttribute('y') && y <= +h.getAttribute('y') + +h.getAttribute('height')) z = h.dataset.zone;
-  });
-  return z;
-}
-function addMarker(svg, view, e) {
-  const {x,y} = getSvgXY(svg, e);
-  const zone = getZone(svg, x, y);
-  const id = nextId++, color = MC[selType];
-  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
-  const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r','6');
-  c.setAttribute('fill',color); c.setAttribute('fill-opacity','0.9');
-  c.setAttribute('stroke','white'); c.setAttribute('stroke-width','1.5');
-  const t = document.createElementNS('http://www.w3.org/2000/svg','text');
-  t.setAttribute('x',x); t.setAttribute('y',y+3.5); t.setAttribute('text-anchor','middle');
-  t.setAttribute('font-size','6'); t.setAttribute('fill','white'); t.setAttribute('font-weight','600');
-  t.setAttribute('font-family','IBM Plex Mono,monospace'); t.textContent = id;
-  g.appendChild(c); g.appendChild(t);
-  svg.querySelector('#m-'+view).appendChild(g);
-  markers.push({id, x:Math.round(x), y:Math.round(y), zone, type:selType, view, el:g});
-  renderMarkers();
-}
-['ant','post'].forEach(v => {
-  const svg = document.getElementById('svg-'+v);
-  svg.addEventListener('click', e => addMarker(svg, v, e));
+// pain type chips
+document.getElementById('ptype-sel').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-ptype]');if(!btn)return;
+  document.querySelectorAll('#ptype-sel .pt-chip').forEach(function(c){c.classList.remove('active');});
+  btn.classList.add('active');activePType=btn.dataset.ptype;
 });
-function renderMarkers() {
-  const list = document.getElementById('marker-list');
-  const hint = document.getElementById('empty-hint');
-  list.innerHTML = '';
-  if (!markers.length) { hint.style.display=''; list.appendChild(hint); return; }
-  hint.style.display = 'none';
-  markers.forEach(m => {
-    const d = document.createElement('div'); d.className = 'marker-item';
-    d.innerHTML = `<div class="mdot" style="background:${MC[m.type]}"></div><span class="mnum">#${m.id}</span><span class="mzone">${m.zone}</span><span class="mtype">${ML[m.type]}</span><button class="mdel" onclick="delMarker(${m.id})">&#x2715;</button>`;
+
+// VAS sliders
+document.getElementById('pain-pre').addEventListener('input',function(){setPain('pre',this.value);});
+document.getElementById('pain-post').addEventListener('input',function(){setPain('post',this.value);});
+function setPain(id,v){var n=parseInt(v),el=document.getElementById('pv-'+id);el.textContent=n;el.className='pain-val '+(n<=3?'pv-low':n<=6?'pv-mid':'pv-high');}
+
+// irritability
+function pickIrr(val){
+  document.querySelectorAll('.irr-chip').forEach(function(c){c.className='irr-chip';});
+  document.getElementById('irr-'+val).classList.add('sel-'+val);
+}
+
+// patient type
+function onPtTypeChange(){
+  var local=document.querySelector('[name=pt-type]:checked').value==='local';
+  document.getElementById('nric-field').style.display=local?'':'none';
+  document.getElementById('passport-field').style.display=local?'none':'';
+  if(!local){document.getElementById('derived-dob').classList.add('hidden');document.getElementById('derived-gender').classList.add('hidden');}
+}
+
+// NRIC derive
+function onNricInput(val){
+  var c=val.replace(/\D/g,'');
+  var db=document.getElementById('derived-dob'),dg=document.getElementById('derived-gender');
+  if(c.length<12){db.classList.add('hidden');dg.classList.add('hidden');return;}
+  var yy=c.substring(0,2),mm=c.substring(2,4),dd=c.substring(4,6);
+  var yr=parseInt(yy)<=parseInt(new Date().getFullYear().toString().substring(2))?'20'+yy:'19'+yy;
+  var dobStr=yr+'-'+mm+'-'+dd;
+  document.getElementById('pt-dob').value=dobStr;
+  var today=new Date(),dob=new Date(dobStr);
+  var age=today.getFullYear()-dob.getFullYear();
+  if(today.getMonth()<dob.getMonth()||(today.getMonth()===dob.getMonth()&&today.getDate()<dob.getDate()))age--;
+  document.getElementById('pt-age').value=age;
+  db.textContent='DOB: '+dd+'/'+mm+'/'+yr;db.classList.remove('hidden');
+  var last=parseInt(c.charAt(11)),gender=last%2===1?'Male':'Female';
+  dg.textContent='Gender: '+gender;dg.classList.remove('hidden');
+  var r=document.querySelector('[name=pt-sex][value="'+(gender==='Male'?'M':'F')+'"]');if(r)r.checked=true;
+  updateProgress();
+}
+
+// mgmt dropdown
+function onMgmtChange(){
+  var v=document.getElementById('dr-mgmt').value;
+  document.getElementById('surgery-row').className='surgery-row'+(v==='Surgical'?' show':'');
+}
+
+// body chart
+function getSvgPt(svg,e){
+  var r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;
+  return{x:(e.clientX-r.left)*(vb.width/r.width),y:(e.clientY-r.top)*(vb.height/r.height)};
+}
+function getZone(svg,x,y){
+  var hits=svg.querySelectorAll('.hit'),zone='Body';
+  for(var i=hits.length-1;i>=0;i--){
+    var h=hits[i],hx=parseFloat(h.getAttribute('x')),hy=parseFloat(h.getAttribute('y')),hw=parseFloat(h.getAttribute('width')),hh=parseFloat(h.getAttribute('height'));
+    if(x>=hx&&x<=hx+hw&&y>=hy&&y<=hy+hh){zone=h.dataset.zone;break;}
+  }
+  return zone;
+}
+function placeMarker(svg,view,e){
+  var pt=getSvgPt(svg,e),zone=getZone(svg,pt.x,pt.y),id=mCounter++,color=MCOLORS[activePType];
+  var ns='http://www.w3.org/2000/svg',g=document.createElementNS(ns,'g');
+  var c=document.createElementNS(ns,'circle');
+  c.setAttribute('cx',pt.x);c.setAttribute('cy',pt.y);c.setAttribute('r','7');
+  c.setAttribute('fill',color);c.setAttribute('fill-opacity','0.88');c.setAttribute('stroke','white');c.setAttribute('stroke-width','1.5');
+  var t=document.createElementNS(ns,'text');
+  t.setAttribute('x',pt.x);t.setAttribute('y',pt.y+4);t.setAttribute('text-anchor','middle');
+  t.setAttribute('font-size','7');t.setAttribute('font-weight','700');t.setAttribute('fill','white');t.setAttribute('font-family','sans-serif');
+  t.textContent=id;
+  g.appendChild(c);g.appendChild(t);
+  svg.querySelector('#markers-'+view).appendChild(g);
+  mList.push({id:id,zone:zone,type:activePType,view:view,x:Math.round(pt.x),y:Math.round(pt.y),el:g});
+  renderMList();
+}
+document.getElementById('svg-ant').addEventListener('click',function(e){placeMarker(this,'ant',e);});
+document.getElementById('svg-post').addEventListener('click',function(e){placeMarker(this,'post',e);});
+
+function renderMList(){
+  var list=document.getElementById('marker-list'),hint=document.getElementById('empty-hint');
+  list.innerHTML='';
+  if(!mList.length){hint.style.display='';list.appendChild(hint);return;}
+  hint.style.display='none';
+  mList.forEach(function(m){
+    var d=document.createElement('div');d.className='marker-item';
+    d.innerHTML='<div class="mdot" style="background:'+MCOLORS[m.type]+'"></div><span class="mnum">#'+m.id+'</span><span class="mzone">'+m.zone+'</span><span class="mtype">'+MLABELS[m.type]+'</span><button class="mdel" onclick="removeMarker('+m.id+')">&#x2715;</button>';
     list.appendChild(d);
   });
 }
-function delMarker(id) {
-  const i = markers.findIndex(m => m.id === id);
-  if (i < 0) return;
-  markers[i].el.remove(); markers.splice(i,1); renderMarkers();
+function removeMarker(id){var i=mList.findIndex(function(m){return m.id===id;});if(i<0)return;mList[i].el.remove();mList.splice(i,1);renderMList();}
+function clearAllMarkers(){mList.forEach(function(m){m.el.remove();});mList=[];renderMList();}
+
+// nav
+function go(id){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+
+// progress
+function updateProgress(){
+  var checks=[
+    document.getElementById('pt-name').value.trim(),
+    document.getElementById('pt-date').value.trim(),
+    (document.getElementById('pt-nric').value.trim()||document.getElementById('pt-passport').value.trim()),
+    document.getElementById('pt-diagnosis').value.trim(),
+    document.getElementById('hx-current').value.trim(),
+    document.getElementById('obs-general').value.trim(),
+    mList.length>0?'1':''
+  ];
+  var filled=checks.filter(Boolean).length,pct=Math.round(filled/checks.length*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
 }
-function clearMarkers() { markers.forEach(m => m.el.remove()); markers = []; renderMarkers(); }
 
-// ── NAVIGATION ─────────────────────────────────────────
-function go(id) { document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'}); }
-
-// ── PROGRESS ───────────────────────────────────────────
-function updateProgress() {
-  const keys = ['pt-name','pt-date','pt-rn','pt-diagnosis','hx-current','obs-general'];
-  const filled = keys.filter(k => document.getElementById(k)?.value?.trim()).length + (markers.length ? 1 : 0);
-  const pct = Math.round(filled / (keys.length + 1) * 100);
-  document.getElementById('prog-fill').style.width = pct + '%';
-  document.getElementById('prog-pct').textContent = pct + '%';
-}
-
-// ── COLLECT FORM DATA ─────────────────────────────────
-function collectData() {
-  const neuroInputs = document.querySelectorAll('.nc input');
-  return {
-    id: currentRecordId,
-    meta: { form: 'MS', ref: 'fisio/b.pen.14/Pind.1/2019', saved: new Date().toISOString() },
-    patient: {
-      name: document.getElementById('pt-name').value,
-      date: document.getElementById('pt-date').value,
-      age: document.getElementById('pt-age').value,
-      sex: document.querySelector('[name=pt-sex]:checked')?.value || '',
-      rn: document.getElementById('pt-rn').value
-    },
-    diagnosis: document.getElementById('pt-diagnosis').value,
-    management: document.getElementById('pt-mgmt').value,
-    problem: document.getElementById('pt-problem').value,
-    pain: {
-      pre: document.getElementById('pain-pre').value,
-      post: document.getElementById('pain-post').value,
-      nature: document.getElementById('pain-nature').value,
-      agg: document.getElementById('pain-agg').value,
-      ease: document.getElementById('pain-ease').value,
-      behaviour24: document.getElementById('pain-24hr').value,
-      irritability: document.querySelector('.irr-chip.sel')?.dataset.val || ''
-    },
-    bodyChart: { markers: markers.map(m => ({id:m.id,zone:m.zone,type:m.type,view:m.view,x:m.x,y:m.y})), notes: document.getElementById('chart-notes').value },
-    history: { current: document.getElementById('hx-current').value, past: document.getElementById('hx-past').value },
-    specialQuestions: {
-      health: document.getElementById('sq-health').value, pmhx: document.getElementById('sq-pmhx').value,
-      investigation: document.getElementById('sq-invest').value, medication: document.getElementById('sq-med').value,
-      occupation: document.getElementById('sq-occ').value, social: document.getElementById('sq-social').value,
-      pacemaker: document.querySelector('[name=pacemaker]:checked')?.value || 'No'
-    },
-    neurological: {
-      sensation: { left: neuroInputs[0]?.value, right: neuroInputs[1]?.value, notes: neuroInputs[2]?.value },
-      reflex:    { left: neuroInputs[3]?.value, right: neuroInputs[4]?.value, notes: neuroInputs[5]?.value },
-      motor:     { left: neuroInputs[6]?.value, right: neuroInputs[7]?.value, notes: neuroInputs[8]?.value },
-      extraNotes: document.getElementById('neuro-notes').value
-    },
-    observation: { general: document.getElementById('obs-general').value, local: document.getElementById('obs-local').value },
-    palpation: {
-      tenderness: document.getElementById('palp-tender').value, temperature: document.getElementById('palp-temp').value,
-      muscle: document.getElementById('palp-muscle').value, joint: document.getElementById('palp-joint').value
-    },
-    movement: {
-      arom: document.getElementById('mov-arom').value, prom: document.getElementById('mov-prom').value,
-      resisted: document.getElementById('mov-resist').value, functional: document.getElementById('mov-func').value
-    },
-    plan: {
-      dx: document.getElementById('plan-dx').value, stg: document.getElementById('plan-stg').value,
-      ltg: document.getElementById('plan-ltg').value, treatment: document.getElementById('plan-tx').value,
-      remarks: document.getElementById('plan-remarks').value
-    }
+// collect
+function collectData(){
+  return{
+    id:currentId,
+    meta:{form:'MS',ref:'fisio/b.pen.14/Pind.1/2019',saved:new Date().toISOString()},
+    patient:{type:document.querySelector('[name=pt-type]:checked')?.value||'local',name:document.getElementById('pt-name').value,nric:document.getElementById('pt-nric').value,passport:document.getElementById('pt-passport').value,dob:document.getElementById('pt-dob').value,date:document.getElementById('pt-date').value,age:document.getElementById('pt-age').value,sex:document.querySelector('[name=pt-sex]:checked')?.value||''},
+    diagnosis:document.getElementById('pt-diagnosis').value,
+    management:{type:document.getElementById('dr-mgmt').value,surgeryDate:document.getElementById('surgery-date').value},
+    problem:document.getElementById('pt-problem').value,
+    pain:{pre:document.getElementById('pain-pre').value,post:document.getElementById('pain-post').value,nature:document.getElementById('pain-nature').value,behaviour24:document.getElementById('pain-24hr').value,agg:document.getElementById('pain-agg').value,ease:document.getElementById('pain-ease').value,irritability:document.querySelector('.irr-chip.sel-High')?'High':document.querySelector('.irr-chip.sel-Medium')?'Medium':document.querySelector('.irr-chip.sel-Low')?'Low':''},
+    bodyChart:{markers:mList.map(function(m){return{id:m.id,zone:m.zone,type:m.type,view:m.view,x:m.x,y:m.y};}),notes:document.getElementById('chart-notes').value},
+    history:{current:document.getElementById('hx-current').value,past:document.getElementById('hx-past').value},
+    specialQuestions:{health:document.getElementById('sq-health').value,pmhx:document.getElementById('sq-pmhx').value,surgery:document.getElementById('sq-surgery').value,investigation:document.getElementById('sq-invest').value,medication:document.getElementById('sq-med').value,occupation:document.getElementById('sq-occ').value,recreation:document.getElementById('sq-rec').value,social:document.getElementById('sq-social').value,pacemaker:document.querySelector('[name=pacemaker]:checked')?.value||'No'},
+    neurological:{sensation:{left:document.getElementById('neuro-sens-l').value,right:document.getElementById('neuro-sens-r').value,notes:document.getElementById('neuro-sens-n').value},reflex:{left:document.getElementById('neuro-ref-l').value,right:document.getElementById('neuro-ref-r').value,notes:document.getElementById('neuro-ref-n').value},motor:{left:document.getElementById('neuro-mot-l').value,right:document.getElementById('neuro-mot-r').value,notes:document.getElementById('neuro-mot-n').value},notes:document.getElementById('neuro-notes').value},
+    observation:{general:document.getElementById('obs-general').value,local:document.getElementById('obs-local').value},
+    palpation:{tenderness:document.getElementById('palp-tender').value,temperature:document.getElementById('palp-temp').value,muscle:document.getElementById('palp-muscle').value,joint:document.getElementById('palp-joint').value},
+    movement:{arom:document.getElementById('mov-arom').value,prom:document.getElementById('mov-prom').value,resisted:document.getElementById('mov-resist').value,functional:document.getElementById('mov-func').value},
+    plan:{impression:document.getElementById('plan-impression').value,stg:document.getElementById('plan-stg').value,ltg:document.getElementById('plan-ltg').value,treatment:document.getElementById('plan-tx').value,remarks:document.getElementById('plan-remarks').value}
   };
 }
 
-// ── POPULATE FORM ─────────────────────────────────────
-function populateForm(d) {
-  clearForm(true);
-  currentRecordId = d.id || null;
-  const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val || ''; };
-  set('pt-name', d.patient?.name); set('pt-date', d.patient?.date); set('pt-age', d.patient?.age); set('pt-rn', d.patient?.rn);
-  if (d.patient?.sex) { const r = document.querySelector(`[name=pt-sex][value="${d.patient.sex}"]`); if (r) r.checked = true; }
-  set('pt-diagnosis', d.diagnosis); set('pt-mgmt', d.management); set('pt-problem', d.problem);
-  if (d.pain) {
-    const pre = d.pain.pre || 0, post = d.pain.post || 0;
-    document.getElementById('pain-pre').value = pre; updPain('pre', pre);
-    document.getElementById('pain-post').value = post; updPain('post', post);
-    set('pain-nature', d.pain.nature); set('pain-agg', d.pain.agg); set('pain-ease', d.pain.ease); set('pain-24hr', d.pain.behaviour24);
-    if (d.pain.irritability) { const b = document.querySelector(`.irr-chip[data-val="${d.pain.irritability}"]`); if (b) selIrr(b); }
+function sf(id,v){var e=document.getElementById(id);if(e)e.value=v||'';}
+function populateForm(d){
+  clearForm(true);currentId=d.id||null;
+  if(d.patient){
+    var tr=document.querySelector('[name=pt-type][value="'+(d.patient.type||'local')+'"]');if(tr){tr.checked=true;onPtTypeChange();}
+    sf('pt-name',d.patient.name);sf('pt-nric',d.patient.nric);sf('pt-passport',d.patient.passport);sf('pt-dob',d.patient.dob);sf('pt-date',d.patient.date);sf('pt-age',d.patient.age);
+    var sr=document.querySelector('[name=pt-sex][value="'+d.patient.sex+'"]');if(sr)sr.checked=true;
   }
-  set('chart-notes', d.bodyChart?.notes);
-  set('hx-current', d.history?.current); set('hx-past', d.history?.past);
-  if (d.specialQuestions) {
-    set('sq-health', d.specialQuestions.health); set('sq-pmhx', d.specialQuestions.pmhx);
-    set('sq-invest', d.specialQuestions.investigation); set('sq-med', d.specialQuestions.medication);
-    set('sq-occ', d.specialQuestions.occupation); set('sq-social', d.specialQuestions.social);
-    if (d.specialQuestions.pacemaker) { const r = document.querySelector(`[name=pacemaker][value="${d.specialQuestions.pacemaker}"]`); if (r) r.checked = true; }
+  sf('pt-diagnosis',d.diagnosis);sf('pt-problem',d.problem);
+  if(d.management){sf('dr-mgmt',d.management.type);onMgmtChange();sf('surgery-date',d.management.surgeryDate);}
+  if(d.pain){
+    document.getElementById('pain-pre').value=d.pain.pre||0;setPain('pre',d.pain.pre||0);
+    document.getElementById('pain-post').value=d.pain.post||0;setPain('post',d.pain.post||0);
+    sf('pain-nature',d.pain.nature);sf('pain-24hr',d.pain.behaviour24);sf('pain-agg',d.pain.agg);sf('pain-ease',d.pain.ease);
+    if(d.pain.irritability)pickIrr(d.pain.irritability);
   }
-  const ni = document.querySelectorAll('.nc input');
-  if (d.neurological) {
-    if (ni[0]) ni[0].value = d.neurological.sensation?.left || '';
-    if (ni[1]) ni[1].value = d.neurological.sensation?.right || '';
-    if (ni[2]) ni[2].value = d.neurological.sensation?.notes || '';
-    if (ni[3]) ni[3].value = d.neurological.reflex?.left || '';
-    if (ni[4]) ni[4].value = d.neurological.reflex?.right || '';
-    if (ni[5]) ni[5].value = d.neurological.reflex?.notes || '';
-    if (ni[6]) ni[6].value = d.neurological.motor?.left || '';
-    if (ni[7]) ni[7].value = d.neurological.motor?.right || '';
-    if (ni[8]) ni[8].value = d.neurological.motor?.notes || '';
-    set('neuro-notes', d.neurological.extraNotes);
-  }
-  set('obs-general', d.observation?.general); set('obs-local', d.observation?.local);
-  if (d.palpation) { set('palp-tender', d.palpation.tenderness); set('palp-temp', d.palpation.temperature); set('palp-muscle', d.palpation.muscle); set('palp-joint', d.palpation.joint); }
-  if (d.movement) { set('mov-arom', d.movement.arom); set('mov-prom', d.movement.prom); set('mov-resist', d.movement.resisted); set('mov-func', d.movement.functional); }
-  if (d.plan) { set('plan-dx', d.plan.dx); set('plan-stg', d.plan.stg); set('plan-ltg', d.plan.ltg); set('plan-tx', d.plan.treatment); set('plan-remarks', d.plan.remarks); }
+  sf('chart-notes',d.bodyChart&&d.bodyChart.notes);sf('hx-current',d.history&&d.history.current);sf('hx-past',d.history&&d.history.past);
+  if(d.specialQuestions){sf('sq-health',d.specialQuestions.health);sf('sq-pmhx',d.specialQuestions.pmhx);sf('sq-surgery',d.specialQuestions.surgery);sf('sq-invest',d.specialQuestions.investigation);sf('sq-med',d.specialQuestions.medication);sf('sq-occ',d.specialQuestions.occupation);sf('sq-rec',d.specialQuestions.recreation);sf('sq-social',d.specialQuestions.social);var pr=document.querySelector('[name=pacemaker][value="'+d.specialQuestions.pacemaker+'"]');if(pr)pr.checked=true;}
+  if(d.neurological){sf('neuro-sens-l',d.neurological.sensation&&d.neurological.sensation.left);sf('neuro-sens-r',d.neurological.sensation&&d.neurological.sensation.right);sf('neuro-sens-n',d.neurological.sensation&&d.neurological.sensation.notes);sf('neuro-ref-l',d.neurological.reflex&&d.neurological.reflex.left);sf('neuro-ref-r',d.neurological.reflex&&d.neurological.reflex.right);sf('neuro-ref-n',d.neurological.reflex&&d.neurological.reflex.notes);sf('neuro-mot-l',d.neurological.motor&&d.neurological.motor.left);sf('neuro-mot-r',d.neurological.motor&&d.neurological.motor.right);sf('neuro-mot-n',d.neurological.motor&&d.neurological.motor.notes);sf('neuro-notes',d.neurological.notes);}
+  if(d.observation){sf('obs-general',d.observation.general);sf('obs-local',d.observation.local);}
+  if(d.palpation){sf('palp-tender',d.palpation.tenderness);sf('palp-temp',d.palpation.temperature);sf('palp-muscle',d.palpation.muscle);sf('palp-joint',d.palpation.joint);}
+  if(d.movement){sf('mov-arom',d.movement.arom);sf('mov-prom',d.movement.prom);sf('mov-resist',d.movement.resisted);sf('mov-func',d.movement.functional);}
+  if(d.plan){sf('plan-impression',d.plan.impression);sf('plan-stg',d.plan.stg);sf('plan-ltg',d.plan.ltg);sf('plan-tx',d.plan.treatment);sf('plan-remarks',d.plan.remarks);}
   updateProgress();
 }
 
-// ── SAVE ──────────────────────────────────────────────
-async function saveRecord() {
-  const data = collectData();
-  try {
-    const r = await fetch('/api/records', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
-    const j = await r.json();
-    if (j.success) { currentRecordId = j.id; showToast('Record saved', 'ok'); loadRecordsList(); }
-    else showToast('Save failed', 'err');
-  } catch { showToast('Error saving', 'err'); }
+async function saveRecord(){
+  try{var res=await fetch('/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(collectData())});var j=await res.json();if(j.success){currentId=j.id;showToast('Record saved','ok');loadRecordsList();}else showToast('Save failed','err');}
+  catch(e){showToast('Error: '+e.message,'err');}
+}
+async function loadRecord(id){
+  try{var res=await fetch('/api/records/'+id);var d=await res.json();populateForm(d);showToast('Record loaded','ok');}
+  catch(e){showToast('Load failed','err');}
+}
+async function deleteRecord(id,e){
+  e.stopPropagation();if(!confirm('Delete this record?'))return;
+  await fetch('/api/records/'+id,{method:'DELETE'});
+  if(currentId===id)newForm();loadRecordsList();showToast('Deleted','ok');
+}
+async function loadRecordsList(){
+  try{var res=await fetch('/api/records');var records=await res.json();var list=document.getElementById('records-list');
+  if(!records.length){list.innerHTML='<div class="no-records">No records yet</div>';return;}
+  list.innerHTML=records.map(function(r){return'<div class="record-item" onclick="loadRecord('+r.id+')">'+'<div class="record-name">'+(r.patient_name||'(no name)')+'</div>'+'<div class="record-meta">'+(r.patient_date||'')+' &bull; MS</div>'+'<button class="record-del" onclick="deleteRecord('+r.id+',event)">&#x2715; delete</button>'+'</div>';}).join('');}
+  catch(e){}
 }
 
-// ── LOAD RECORD ───────────────────────────────────────
-async function loadRecord(id) {
-  try {
-    const r = await fetch('/api/records/' + id);
-    const d = await r.json();
-    populateForm(d);
-    showToast('Record loaded', 'ok');
-  } catch { showToast('Load failed', 'err'); }
+function newForm(){clearForm(false);}
+function clearForm(silent){
+  if(!silent&&!confirm('Clear all fields?'))return;
+  document.querySelectorAll('input[type=text],input[type=date],input[type=number],textarea').forEach(function(el){el.value='';});
+  document.querySelectorAll('input[type=radio]').forEach(function(el){el.checked=false;});
+  document.querySelector('[name=pt-type][value=local]').checked=true;
+  document.querySelector('[name=pacemaker][value=No]').checked=true;
+  onPtTypeChange();
+  document.getElementById('pain-pre').value=0;setPain('pre',0);
+  document.getElementById('pain-post').value=0;setPain('post',0);
+  document.getElementById('dr-mgmt').value='';document.getElementById('surgery-row').className='surgery-row';
+  document.querySelectorAll('.irr-chip').forEach(function(c){c.className='irr-chip';});
+  document.getElementById('derived-dob').classList.add('hidden');document.getElementById('derived-gender').classList.add('hidden');
+  clearAllMarkers();currentId=null;updateProgress();
 }
 
-// ── DELETE RECORD ─────────────────────────────────────
-async function deleteRecord(id, e) {
-  e.stopPropagation();
-  if (!confirm('Delete this record?')) return;
-  await fetch('/api/records/' + id, { method: 'DELETE' });
-  if (currentRecordId === id) newForm();
-  loadRecordsList();
-  showToast('Record deleted', 'ok');
-}
+function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type?' '+type:'');setTimeout(function(){t.className='toast';},2200);}
 
-// ── RECORDS LIST ──────────────────────────────────────
-async function loadRecordsList() {
-  try {
-    const r = await fetch('/api/records');
-    const records = await r.json();
-    const list = document.getElementById('records-list');
-    if (!records.length) { list.innerHTML = '<div class="no-records">No records yet</div>'; return; }
-    list.innerHTML = records.map(r => `
-      <div class="record-item" onclick="loadRecord(${r.id})">
-        <div class="record-name">${r.patient_name || '(no name)'}</div>
-        <div class="record-meta">${r.patient_date || ''} &bull; ${r.form_type}</div>
-        <button class="record-del" onclick="deleteRecord(${r.id}, event)">&#x2715; delete</button>
-      </div>
-    `).join('');
-  } catch {}
-}
-
-// ── NEW / CLEAR ────────────────────────────────────────
-function newForm() { clearForm(false); }
-function clearForm(silent = false) {
-  if (!silent && !confirm('Clear all fields?')) return;
-  document.querySelectorAll('input[type=text],input[type=date],input[type=number],textarea').forEach(el => el.value = '');
-  document.querySelectorAll('input[type=radio],input[type=checkbox]').forEach(el => el.checked = false);
-  document.getElementById('pain-pre').value = 0; updPain('pre', 0);
-  document.getElementById('pain-post').value = 0; updPain('post', 0);
-  document.querySelectorAll('.irr-chip').forEach(c => c.classList.remove('sel'));
-  clearMarkers();
-  currentRecordId = null;
-  updateProgress();
-}
-
-// ── TOAST ──────────────────────────────────────────────
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show ' + type;
-  setTimeout(() => t.className = 'toast', 2200);
-}
-
-// ── INIT ──────────────────────────────────────────────
-document.getElementById('pt-date').value = new Date().toISOString().split('T')[0];
-loadRecordsList();
-updateProgress();
+document.getElementById('pt-date').value=new Date().toISOString().split('T')[0];
+document.querySelector('[name=pacemaker][value=No]').checked=true;
+loadRecordsList();updateProgress();
 </script>
 </body>
 </html>
