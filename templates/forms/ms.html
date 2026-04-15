@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block form_name %}Musculoskeletal Assessment{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128202;</span> Pain Score</div>
+<div class="nav-item" onclick="Main.go('s-chart')"><span class="nav-icon">&#128506;</span> Body Chart</div>
+<div class="nav-item" onclick="Main.go('s-hx')"><span class="nav-icon">&#128214;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-sq')"><span class="nav-icon">&#10067;</span> Special Qs</div>
+<div class="nav-item" onclick="Main.go('s-obs')"><span class="nav-icon">&#128065;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-neuro')"><span class="nav-icon">&#9889;</span> Neuro Test</div>
+<div class="nav-item" onclick="Main.go('s-palp')"><span class="nav-icon">&#128400;</span> Palpation</div>
+<div class="nav-item" onclick="Main.go('s-mov')"><span class="nav-icon">&#128260;</span> Movement</div>
+<div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- 01 PATIENT INFO -->
+<div class="card" id="s-patient">
+  <div class="card-header">
+    <span class="sec-num">01</span>
+    <h2>Patient Information</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="Form.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="Form.onPtTypeChange()"> Foreign (Passport)</label>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="Form.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <input type="text" id="pt-country" placeholder="e.g. Indonesia, Bangladesh, Myanmar...">
+        </div>
+        <div class="field">
+          <label>Assessment Date <span class="req">*</span></label>
+          <input type="date" id="pt-date">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pt-age" placeholder="Years" min="0" max="130">
+        </div>
+        <div class="field" id="sex-field" style="display:none">
+          <label>Sex <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="pt-sex" value="M"> Male</label>
+            <label><input type="radio" name="pt-sex" value="F"> Female</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 DIAGNOSIS -->
+<div class="card" id="s-dx">
+  <div class="card-header">
+    <span class="sec-num">02</span>
+    <h2>Diagnosis &amp; Doctor's Management</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Diagnosis <span class="req">*</span></label>
+        <textarea id="pt-diagnosis" placeholder="Working diagnosis from referring doctor..."></textarea>
+      </div>
+      <div class="field">
+        <label>Doctor's Management</label>
+        <select id="dr-mgmt" onchange="Form.onMgmtChange()">
+          <option value="">&#8212; Select &#8212;</option>
+          <option value="Conservative">Conservative</option>
+          <option value="Surgical">Surgical</option>
+        </select>
+        <div class="surgery-row" id="surgery-row">
+          <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">Surgery date:</span>
+          <input type="date" id="surgery-date" style="flex:1">
+        </div>
+      </div>
+      <div class="field">
+        <label>Problem</label>
+        <textarea id="pt-problem" placeholder="Main presenting problem..." style="min-height:52px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 PAIN -->
+<div class="card" id="s-pain">
+  <div class="card-header">
+    <span class="sec-num">03</span>
+    <h2>Pain Assessment</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="fg c2">
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="Form.setPain('pre', this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-pre">0</div>
+          </div>
+        </div>
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="Form.setPain('post', this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-post">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Nature of Pain</label>
+          <select id="pain-nature">
+            <option value="">&#8212; Select &#8212;</option>
+            <option>Sharp</option>
+            <option>Dull aching</option>
+            <option>Burning</option>
+            <option>Throbbing / Pulsating</option>
+            <option>Shooting</option>
+            <option>Tingling / Pins &amp; needles</option>
+            <option>Cramping</option>
+            <option>Gnawing</option>
+            <option>Stiffness / Tightness</option>
+            <option>Tenderness</option>
+            <option>Mixed (describe in notes)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>24-Hour Behaviour</label>
+          <select id="pain-24hr">
+            <option value="">&#8212; Select &#8212;</option>
+            <option>Constant</option>
+            <option>Intermittent</option>
+            <option>Worse in morning</option>
+            <option>Worse in evening</option>
+            <option>Worse with activity</option>
+            <option>Worse at rest</option>
+            <option>Nocturnal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aggravating Factors</label>
+          <input type="text" id="pain-agg" placeholder="e.g. walking, prolonged sitting, bending...">
+        </div>
+        <div class="field">
+          <label>Easing Factors</label>
+          <input type="text" id="pain-ease" placeholder="e.g. rest, heat, elevation...">
+        </div>
+      </div>
+      <div class="field">
+        <label>Irritability</label>
+        <div class="irr-chips">
+          <button class="irr-chip" id="irr-High"   onclick="Form.pickIrr('High')">High</button>
+          <button class="irr-chip" id="irr-Medium" onclick="Form.pickIrr('Medium')">Medium</button>
+          <button class="irr-chip" id="irr-Low"    onclick="Form.pickIrr('Low')">Low</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 BODY CHART -->
+<div class="card" id="s-chart">
+  <div class="card-header">
+    <span class="sec-num">04</span>
+    <h2>Body Chart</h2>
+  </div>
+  <div class="card-body">
+    <div class="body-chart-wrap">
+      <div class="body-figures">
+        <div class="fig-wrap">
+          <div class="fig-label">Anterior</div>
+          <svg class="bsvg" id="svg-ant" width="120" height="290" viewBox="0 0 120 290">
+            <g id="markers-ant"></g>
+            <g stroke="#bbb" stroke-width="1.2" fill="none">
+              <circle cx="60" cy="20" r="14"/>
+              <line x1="60" y1="34" x2="60" y2="105"/>
+              <line x1="60" y1="50" x2="24" y2="82"/>
+              <line x1="60" y1="50" x2="96" y2="82"/>
+              <line x1="24" y1="82" x2="18" y2="112"/>
+              <line x1="96" y1="82" x2="102" y2="112"/>
+              <rect x="36" y="105" width="48" height="52" rx="3"/>
+              <line x1="36" y1="157" x2="29" y2="222"/>
+              <line x1="84" y1="157" x2="91" y2="222"/>
+              <line x1="29" y1="222" x2="24" y2="285"/>
+              <line x1="91" y1="222" x2="96" y2="285"/>
+              <text x="5" y="150" font-size="8" fill="#bbb" font-family="sans-serif">R</text>
+              <text x="108" y="150" font-size="8" fill="#bbb" font-family="sans-serif">L</text>
+            </g>
+            <rect class="hit" x="46" y="6"   width="28" height="28" rx="14" data-zone="Head"            data-view="ant"/>
+            <rect class="hit" x="26" y="34"  width="68" height="18" rx="3"  data-zone="Neck / Shoulder" data-view="ant"/>
+            <rect class="hit" x="4"  y="48"  width="23" height="56" rx="3"  data-zone="L arm"           data-view="ant"/>
+            <rect class="hit" x="93" y="48"  width="23" height="56" rx="3"  data-zone="R arm"           data-view="ant"/>
+            <rect class="hit" x="33" y="54"  width="54" height="52" rx="3"  data-zone="Chest"           data-view="ant"/>
+            <rect class="hit" x="33" y="103" width="54" height="56" rx="3"  data-zone="Abdomen"         data-view="ant"/>
+            <rect class="hit" x="4"  y="100" width="22" height="40" rx="3"  data-zone="L forearm"       data-view="ant"/>
+            <rect class="hit" x="94" y="100" width="22" height="40" rx="3"  data-zone="R forearm"       data-view="ant"/>
+            <rect class="hit" x="33" y="157" width="23" height="65" rx="3"  data-zone="L thigh"         data-view="ant"/>
+            <rect class="hit" x="64" y="157" width="23" height="65" rx="3"  data-zone="R thigh"         data-view="ant"/>
+            <rect class="hit" x="22" y="220" width="21" height="66" rx="3"  data-zone="L leg"           data-view="ant"/>
+            <rect class="hit" x="77" y="220" width="21" height="66" rx="3"  data-zone="R leg"           data-view="ant"/>
+          </svg>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-label">Posterior</div>
+          <svg class="bsvg" id="svg-post" width="120" height="290" viewBox="0 0 120 290">
+            <g id="markers-post"></g>
+            <g stroke="#bbb" stroke-width="1.2" fill="none">
+              <circle cx="60" cy="20" r="14"/>
+              <line x1="60" y1="34" x2="60" y2="105"/>
+              <line x1="60" y1="50" x2="24" y2="82"/>
+              <line x1="60" y1="50" x2="96" y2="82"/>
+              <line x1="24" y1="82" x2="18" y2="112"/>
+              <line x1="96" y1="82" x2="102" y2="112"/>
+              <rect x="36" y="105" width="48" height="52" rx="3"/>
+              <line x1="36" y1="157" x2="29" y2="222"/>
+              <line x1="84" y1="157" x2="91" y2="222"/>
+              <line x1="29" y1="222" x2="24" y2="285"/>
+              <line x1="91" y1="222" x2="96" y2="285"/>
+              <text x="5" y="150" font-size="8" fill="#bbb" font-family="sans-serif">R</text>
+              <text x="108" y="150" font-size="8" fill="#bbb" font-family="sans-serif">L</text>
+            </g>
+            <rect class="hit" x="46" y="6"   width="28" height="28" rx="14" data-zone="Head (post)"       data-view="post"/>
+            <rect class="hit" x="26" y="34"  width="68" height="18" rx="3"  data-zone="Neck (post)"       data-view="post"/>
+            <rect class="hit" x="4"  y="48"  width="23" height="56" rx="3"  data-zone="L arm (post)"      data-view="post"/>
+            <rect class="hit" x="93" y="48"  width="23" height="56" rx="3"  data-zone="R arm (post)"      data-view="post"/>
+            <rect class="hit" x="33" y="54"  width="54" height="52" rx="3"  data-zone="Upper back"        data-view="post"/>
+            <rect class="hit" x="33" y="103" width="54" height="56" rx="3"  data-zone="Lumbar / Lower back" data-view="post"/>
+            <rect class="hit" x="4"  y="100" width="22" height="40" rx="3"  data-zone="L forearm (post)"  data-view="post"/>
+            <rect class="hit" x="94" y="100" width="22" height="40" rx="3"  data-zone="R forearm (post)"  data-view="post"/>
+            <rect class="hit" x="33" y="157" width="23" height="65" rx="3"  data-zone="L hamstring"       data-view="post"/>
+            <rect class="hit" x="64" y="157" width="23" height="65" rx="3"  data-zone="R hamstring"       data-view="post"/>
+            <rect class="hit" x="22" y="220" width="21" height="66" rx="3"  data-zone="L calf"            data-view="post"/>
+            <rect class="hit" x="77" y="220" width="21" height="66" rx="3"  data-zone="R calf"            data-view="post"/>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-controls">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click figure</div>
+          <div class="pain-type-sel" id="ptype-sel">
+            <button class="pt-chip ptype-ache active" data-ptype="ache">Ache</button>
+            <button class="pt-chip ptype-sharp"       data-ptype="sharp">Sharp</button>
+            <button class="pt-chip ptype-numb"        data-ptype="numb">Numbness</button>
+            <button class="pt-chip ptype-burn"        data-ptype="burn">Burning</button>
+            <button class="pt-chip ptype-refer"       data-ptype="refer">Referred</button>
+            <button class="pt-chip ptype-tender"      data-ptype="tender">Tenderness</button>
+          </div>
+        </div>
+        <div>
+          <div class="list-header">
+            <span>Marked Locations</span>
+            <button class="btn-sm" onclick="BodyChart.clearAll()">Clear all</button>
+          </div>
+          <div class="marker-list" id="marker-list">
+            <div class="empty-hint" id="empty-hint">No markers yet</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Body Chart Notes</label>
+          <textarea id="chart-notes" placeholder="Distribution, peripheralisation, centralisation..." style="min-height:56px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 HISTORY -->
+<div class="card" id="s-hx">
+  <div class="card-header">
+    <span class="sec-num">05</span>
+    <h2>History</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Current History <span class="req">*</span></label>
+        <textarea id="hx-current" placeholder="Onset, mechanism of injury, course of symptoms..." style="min-height:95px"></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="hx-past" placeholder="Previous episodes, relevant medical history..." style="min-height:95px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 SPECIAL QUESTIONS -->
+<div class="card" id="s-sq">
+  <div class="card-header">
+    <span class="sec-num">06</span>
+    <h2>Special Questions</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>General Health</label><input type="text" id="sq-health" placeholder="General health status..."></div>
+      <div class="field"><label>Past Medical History (PMHX)</label><input type="text" id="sq-pmhx" placeholder="Diabetes, HTN, heart disease, cancer..."></div>
+      <div class="field"><label>Surgical History</label><input type="text" id="sq-surgery" placeholder="Previous surgeries, dates, sites..."></div>
+      <div class="field"><label>Investigation</label><input type="text" id="sq-invest" placeholder="X-ray, MRI, blood tests, EMG..."></div>
+      <div class="field"><label>Medication</label><input type="text" id="sq-med" placeholder="Current medications..."></div>
+      <div class="field"><label>Occupation</label><input type="text" id="sq-occ" placeholder="Job title, physical demands, work hours..."></div>
+      <div class="field"><label>Recreation / Hobbies</label><input type="text" id="sq-rec" placeholder="Sports, hobbies, physical activities..."></div>
+      <div class="field"><label>Social History</label><input type="text" id="sq-social" placeholder="Living situation, support, dependents..."></div>
+      <div class="field" style="grid-column:span 2">
+        <label>Pacemaker / Hearing Aid</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pacemaker" value="No"> No</label>
+          <label><input type="radio" name="pacemaker" value="Pacemaker"> Pacemaker</label>
+          <label><input type="radio" name="pacemaker" value="HearingAid"> Hearing Aid</label>
+          <label><input type="radio" name="pacemaker" value="Both"> Both</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 OBSERVATION -->
+<div class="card" id="s-obs">
+  <div class="card-header">
+    <span class="sec-num">07</span>
+    <h2>Observation</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>General <span class="req">*</span></label>
+        <textarea id="obs-general" placeholder="Posture, gait, affect, guarding, antalgic lean, use of aids..." style="min-height:95px"></textarea>
+      </div>
+      <div class="field">
+        <label>Local</label>
+        <textarea id="obs-local" placeholder="Swelling, erythema, skin changes, muscle wasting, deformity, scar..." style="min-height:95px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 NEUROLOGICAL -->
+<div class="card" id="s-neuro">
+  <div class="card-header">
+    <span class="sec-num">08</span>
+    <h2>Neurological Test</h2>
+  </div>
+  <div class="card-body">
+    <div class="neuro-grid">
+      <div class="nc hdr"></div>
+      <div class="nc hdr">Left</div>
+      <div class="nc hdr">Right</div>
+      <div class="nc hdr">Level / Notes</div>
+      <div class="nc rl">Sensation</div>
+      <div class="nc"><input type="text" id="neuro-sens-l" placeholder="Normal / reduced / absent"></div>
+      <div class="nc"><input type="text" id="neuro-sens-r" placeholder="Normal / reduced / absent"></div>
+      <div class="nc"><input type="text" id="neuro-sens-n" placeholder="Dermatomal level..."></div>
+      <div class="nc rl">Reflex</div>
+      <div class="nc"><input type="text" id="neuro-ref-l" placeholder="+/++/+++/-"></div>
+      <div class="nc"><input type="text" id="neuro-ref-r" placeholder="+/++/+++/-"></div>
+      <div class="nc"><input type="text" id="neuro-ref-n" placeholder="e.g. L4 patellar, S1 Achilles..."></div>
+      <div class="nc rl">Motor</div>
+      <div class="nc"><input type="text" id="neuro-mot-l" placeholder="Grade 0-5"></div>
+      <div class="nc"><input type="text" id="neuro-mot-r" placeholder="Grade 0-5"></div>
+      <div class="nc"><input type="text" id="neuro-mot-n" placeholder="Myotome tested..."></div>
+    </div>
+    <div style="margin-top:12px" class="field">
+      <label>Neurological Notes</label>
+      <textarea id="neuro-notes" placeholder="SLR, SLUMP, ULT, Babinski, clonus..." style="min-height:56px"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 09 PALPATION -->
+<div class="card" id="s-palp">
+  <div class="card-header">
+    <span class="sec-num">09</span>
+    <h2>Palpation</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Tenderness</label><textarea id="palp-tender" placeholder="Location, grade (0-3)..."></textarea></div>
+      <div class="field"><label>Temperature / Skin</label><input type="text" id="palp-temp" placeholder="Warm / Cool / Normal, skin turgor..."></div>
+      <div class="field"><label>Muscle / Soft Tissue</label><textarea id="palp-muscle" placeholder="Spasm, tightness, trigger points..."></textarea></div>
+      <div class="field"><label>Joint / Bony</label><textarea id="palp-joint" placeholder="Joint line tenderness, bony landmarks, deformity..."></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 MOVEMENT -->
+<div class="card" id="s-mov">
+  <div class="card-header">
+    <span class="sec-num">10</span>
+    <h2>Movement Assessment</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Active ROM (AROM)</label><textarea id="mov-arom" placeholder="Range, pain arc, end feel..." style="min-height:85px"></textarea></div>
+      <div class="field"><label>Passive ROM (PROM)</label><textarea id="mov-prom" placeholder="Overpressure, end feel, pain response..." style="min-height:85px"></textarea></div>
+      <div class="field"><label>Resisted / Muscle Strength</label><textarea id="mov-resist" placeholder="Isometric resistance, grade, pain provocation..."></textarea></div>
+      <div class="field"><label>Functional Movement</label><textarea id="mov-func" placeholder="Squat, step, reaching - functional limitations..."></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- 11 PT IMPRESSION -->
+<div class="card" id="s-plan">
+  <div class="card-header">
+    <span class="sec-num">11</span>
+    <h2>PT Impression &amp; Treatment Plan</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>PT Impression</label><textarea id="plan-impression" placeholder="Clinical reasoning summary, physiotherapy impression..."></textarea></div>
+      <div class="field"><label>Short-Term Goals (STG)</label><textarea id="plan-stg" placeholder="Goals within 2-4 weeks..."></textarea></div>
+      <div class="field"><label>Long-Term Goals (LTG)</label><textarea id="plan-ltg" placeholder="Functional rehabilitation goals..."></textarea></div>
+      <div class="field"><label>Treatment Plan</label><textarea id="plan-tx" placeholder="Modalities, exercises, manual therapy, HEP, frequency..."></textarea></div>
+      <div class="field" style="grid-column:span 2">
+        <label>Remarks / Precautions</label>
+        <textarea id="plan-remarks" placeholder="Precautions, contraindications, red flags, referral..." style="min-height:52px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
