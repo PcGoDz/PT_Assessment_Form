@@ -1,7 +1,4 @@
-# pt_assessment.spec
 import os
-from PyInstaller.utils.hooks import collect_data_files
-
 block_cipher = None
 
 a = Analysis(
@@ -11,32 +8,17 @@ a = Analysis(
     datas=[
         ('templates', 'templates'),
         ('static', 'static'),
+        ('database.py', '.'),
     ],
     hiddenimports=['flask', 'jinja2', 'werkzeug', 'click', 'itsdangerous'],
     hookspath=[],
     runtime_hooks=[],
     excludes=[],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
     cipher=block_cipher,
 )
-
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
-
 exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
+    pyz, a.scripts, a.binaries, a.zipfiles, a.datas, [],
     name='PT_Assessment',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=True,
-    icon=None,
+    debug=False, strip=False, upx=True, console=True, icon=None,
 )

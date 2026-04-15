@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PT Assessment System</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+<style>
+.draft-banner {
+  display: none;
+  background: var(--warn-light);
+  border-bottom: 1px solid var(--warn);
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--warn);
+  display: none;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.draft-banner.show { display: flex; }
+.draft-banner-msg { flex: 1; font-weight: 500; }
+.draft-btn {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: 1.5px solid var(--warn); font-family: inherit;
+  background: none; color: var(--warn); transition: all 0.12s;
+}
+.draft-btn.restore { background: var(--warn); color: white; }
+.draft-btn:hover { opacity: 0.8; }
+.draft-dot {
+  display: none;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--warn); flex-shrink: 0;
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="topbar">
+    <div class="topbar-logo">PT Assessment System</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-sub">KKM Physiotherapy Dept &mdash; fisio/b.pen.14/Pind.1/2019</div>
+    <div class="topbar-actions">
+      <button class="tbtn" onclick="Main.newForm()">+ New</button>
+      <button class="tbtn" onclick="window.print()">Print / PDF</button>
+      <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
+      <button class="tbtn primary" onclick="Main.saveRecord()">Save Record</button>
+    </div>
+  </header>
+
+  <div id="draft-banner" style="display:none;background:var(--warn-light);border-bottom:1px solid var(--warn);padding:8px 20px;font-size:12px;color:var(--warn);align-items:center;gap:12px;flex-shrink:0;">
+    <span id="draft-banner-msg" style="flex:1;font-weight:500;"></span>
+    <button onclick="Main.restoreDraft()" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid var(--warn);font-family:inherit;background:var(--warn);color:white;margin-right:4px;">Restore</button>
+    <button onclick="Main.dismissDraft()" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid var(--warn);font-family:inherit;background:none;color:var(--warn);">Dismiss</button>
+  </div>
+  <div class="content-area">
+
+    <aside class="sidebar">
+      <div class="sidebar-label">Assessment Forms</div>
+      {% block sidebar_forms %}
+      <div class="nav-item active">
+        <span class="nav-icon">&#129460;</span> Musculoskeletal
+        <span class="nav-badge">MS</span>
+      </div>
+      {% endblock %}
+
+      <div class="nav-divider"></div>
+      <div class="sidebar-label">Planned</div>
+      <div class="nav-item soon"><span class="nav-icon">&#128279;</span> Spine</div>
+      <div class="nav-item soon"><span class="nav-icon">&#129728;</span> Cardiorespiratory</div>
+      <div class="nav-item soon"><span class="nav-icon">&#9878;</span> Obesity</div>
+      <div class="nav-item soon"><span class="nav-icon">&#129504;</span> Neurological</div>
+
+      <div class="nav-divider"></div>
+      <div class="sidebar-label">Jump To</div>
+      {% block sidebar_nav %}{% endblock %}
+
+      <div class="nav-divider"></div>
+      <div class="records-panel">
+        <h4>Saved Records</h4>
+        <div id="records-list"><div class="no-records">No records yet</div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      {% block content %}{% endblock %}
+      <div style="height:60px"></div>
+    </main>
+
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="sdot"></div>
+  <span style="font-size:12px;color:var(--text-muted);">{% block form_name %}Assessment{% endblock %}</span>
+  <div id="draft-indicator" style="display:none;font-size:11px;color:var(--warn);display:none;align-items:center;gap:4px;">
+    <div style="width:6px;height:6px;border-radius:50%;background:var(--warn);"></div>
+    draft saved
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <span id="prog-pct">0%</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/bodychart.js"></script>
+<script src="/static/js/form.js"></script>
+<script src="/static/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
