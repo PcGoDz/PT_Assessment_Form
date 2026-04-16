@@ -31,6 +31,11 @@ const API = {
     const res = await fetch('/api/records/' + id, { method: 'DELETE' });
     if (!res.ok) throw new Error('Failed to delete record');
     return res.json();
+  },
+
+  exportPdf(id) {
+    // Opens PDF in new tab / triggers download
+    window.open('/api/export/' + id + '/pdf', '_blank');
   }
 
 };

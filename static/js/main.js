@@ -134,7 +134,10 @@ const Main = (function () {
         return '<div class="record-item" onclick="Main.loadRecord(' + r.id + ')">'
           + '<div class="record-name">' + (r.patient_name || '(no name)') + '</div>'
           + '<div class="record-meta">' + (r.patient_date || '') + ' &bull; ' + r.form_type + '</div>'
+          + '<div style="display:flex;gap:6px;margin-top:3px;">'
+          + '<button class="record-del" onclick="API.exportPdf(' + r.id + ');event.stopPropagation()">&#x21E9; PDF</button>'
           + '<button class="record-del" onclick="Main.deleteRecord(' + r.id + ',event)">&#x2715; delete</button>'
+          + '</div>'
           + '</div>';
       }).join('');
     } catch (e) {
@@ -240,6 +243,7 @@ const Main = (function () {
   // ── Init ──────────────────────────────────────
   function init() {
     BodyChart.init();
+    MovementTable.init();
 
     document.getElementById('pt-date').value = new Date().toISOString().split('T')[0];
 
@@ -260,6 +264,32 @@ const Main = (function () {
     });
   }
 
+  // ── Export PDF — auto-save if needed then export ─
+  async function exportPdf(id) {
+    if (!id) {
+      // Try auto-save first
+      var name = document.getElementById('pt-name').value.trim();
+      var date = document.getElementById('pt-date').value.trim();
+      if (!name && !date) {
+        showToast('Fill in patient details before exporting', 'err');
+        return;
+      }
+      try {
+        showToast('Saving before export...', '');
+        var data = Form.collect(currentId);
+        var j    = await API.saveRecord(data);
+        currentId = j.id;
+        markClean();
+        loadRecordsList();
+        API.exportPdf(currentId);
+      } catch (e) {
+        showToast('Save failed: ' + e.message, 'err');
+      }
+      return;
+    }
+    API.exportPdf(id);
+  }
+
   return {
     init:           init,
     go:             go,
@@ -271,7 +301,9 @@ const Main = (function () {
     clearForm:      clearForm,
     showToast:      showToast,
     restoreDraft:   restoreDraft,
-    dismissDraft:   dismissDraft
+    dismissDraft:   dismissDraft,
+    exportPdf:      exportPdf,
+    getCurrentId:   function() { return currentId; }
   };
 
 })();

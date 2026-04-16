@@ -123,15 +123,15 @@ const BodyChart = (function () {
   function renderList() {
     var list = document.getElementById('marker-list');
     var hint = document.getElementById('empty-hint');
+    if (!list) return;
     list.innerHTML = '';
 
     if (!markers.length) {
-      hint.style.display = '';
-      list.appendChild(hint);
+      if (hint) { hint.style.display = ''; list.appendChild(hint); }
       return;
     }
 
-    hint.style.display = 'none';
+    if (hint) hint.style.display = 'none';
     markers.forEach(function (m) {
       var div = document.createElement('div');
       div.className = 'marker-item';

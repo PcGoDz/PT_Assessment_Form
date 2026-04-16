@@ -151,9 +151,11 @@ const Form = (function () {
         joint:       gv('palp-joint')
       },
       movement: {
-        arom:      gv('mov-arom'),
-        prom:      gv('mov-prom'),
-        resisted:  gv('mov-resist'),
+        table:     MovementTable.getData(),
+        accessory: gv('mov-accessory'),
+        special:   gv('mov-special'),
+        clearing:  gv('mov-clearing'),
+        muscle:    gv('mov-muscle'),
         functional:gv('mov-func')
       },
       plan: {
@@ -241,10 +243,12 @@ const Form = (function () {
     }
 
     if (d.movement) {
-      sv('mov-arom',    d.movement.arom);
-      sv('mov-prom',    d.movement.prom);
-      sv('mov-resist',  d.movement.resisted);
-      sv('mov-func',    d.movement.functional);
+      MovementTable.loadData(d.movement.table || []);
+      sv('mov-accessory', d.movement.accessory);
+      sv('mov-special',   d.movement.special);
+      sv('mov-clearing',  d.movement.clearing);
+      sv('mov-muscle',    d.movement.muscle);
+      sv('mov-func',      d.movement.functional);
     }
 
     if (d.plan) {
@@ -279,6 +283,7 @@ const Form = (function () {
     document.getElementById('sex-field').style.display     = 'none';
     document.getElementById('country-field').style.display = 'none';
     BodyChart.clearAll();
+    MovementTable.clear();
   }
 
   return {

@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 10mm 12mm 10mm 12mm;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 9pt;
+    color: #000;
+    background: white;
+  }
+
+  /* ── HEADER ── */
+  .form-ref {
+    text-align: right;
+    font-size: 7.5pt;
+    margin-bottom: 2mm;
+  }
+  .form-title {
+    text-align: center;
+    margin-bottom: 3mm;
+  }
+  .form-title p {
+    font-size: 10pt;
+    font-weight: bold;
+    line-height: 1.4;
+  }
+
+  /* ── PATIENT BAR ── */
+  .patient-bar {
+    border: 1px solid #000;
+    border-bottom: none;
+    padding: 2mm 3mm;
+    font-size: 8.5pt;
+    display: flex;
+    gap: 4mm;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .patient-bar span { white-space: nowrap; }
+  .patient-bar .val {
+    border-bottom: 1px solid #000;
+    min-width: 30mm;
+    display: inline-block;
+    padding-bottom: 0.5mm;
+  }
+  .patient-bar .val-long { min-width: 55mm; }
+
+  /* ── TWO COLUMN MAIN ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 47% 53%;
+    border: 1px solid #000;
+  }
+
+  /* LEFT COLUMN */
+  .col-left { border-right: 1px solid #000; }
+  .col-right {}
+
+  .section {
+    border-bottom: 1px solid #000;
+    padding: 2mm 3mm;
+    min-height: 18mm;
+  }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-weight: bold;
+    font-size: 8.5pt;
+    margin-bottom: 1.5mm;
+    display: block;
+  }
+  .section-content {
+    font-size: 8.5pt;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  /* Body chart section */
+  .body-chart-section {
+    border-bottom: 1px solid #000;
+    padding: 2mm 2mm;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4mm;
+    min-height: 70mm;
+  }
+  .body-fig-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1mm;
+  }
+  .body-fig-label {
+    font-size: 7pt;
+    text-align: center;
+  }
+  .body-fig-lr {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 7pt;
+    padding: 0 2mm;
+  }
+
+  /* Pain score */
+  .pain-score-row {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    margin-bottom: 1mm;
+  }
+  .pain-score-row .ps-label {
+    font-size: 8pt;
+    font-weight: bold;
+    min-width: 12mm;
+  }
+  .pain-box {
+    border: 1px solid #000;
+    width: 20mm;
+    height: 6mm;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 2mm;
+    font-size: 8.5pt;
+  }
+
+  /* Neuro table */
+  .neuro-table { width: 100%; border-collapse: collapse; margin-top: 1mm; }
+  .neuro-table td {
+    border: none;
+    padding: 0.5mm 0;
+    font-size: 8pt;
+    vertical-align: top;
+  }
+  .neuro-table .nl { font-weight: normal; width: 22mm; }
+  .neuro-table .nv { border-bottom: 1px solid #aaa; padding-left: 1mm; }
+
+  /* ── PAGE 2 ── */
+  .page-break { page-break-before: always; }
+
+  .page2-header {
+    border: 1px solid #000;
+    border-bottom: none;
+    padding: 1.5mm 3mm;
+    font-size: 7.5pt;
+    text-align: right;
+  }
+
+  /* Movement table */
+  .mov-section {
+    border: 1px solid #000;
+    border-bottom: none;
+    padding: 2mm 3mm;
+  }
+  .mov-section-label {
+    font-weight: bold;
+    font-size: 8.5pt;
+    margin-bottom: 2mm;
+  }
+  .mov-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.5pt;
+  }
+  .mov-table th {
+    border: 1px solid #000;
+    padding: 1mm 2mm;
+    font-weight: bold;
+    font-size: 7.5pt;
+    background: #f0f0f0;
+    text-align: center;
+  }
+  .mov-table td {
+    border: 1px solid #000;
+    padding: 1.5mm 2mm;
+    font-size: 8pt;
+    vertical-align: top;
+    min-height: 8mm;
+  }
+  .mov-empty-row td { height: 8mm; }
+
+  /* Page 2 bottom grid */
+  .p2-grid {
+    display: grid;
+    grid-template-columns: 50% 50%;
+    border: 1px solid #000;
+    border-top: none;
+  }
+  .p2-cell {
+    padding: 2mm 3mm;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #000;
+    min-height: 25mm;
+  }
+  .p2-cell:nth-child(even) { border-right: none; }
+  .p2-cell:last-child { border-bottom: none; }
+  .p2-cell:nth-last-child(2) { border-bottom: none; }
+  .p2-label {
+    font-weight: bold;
+    font-size: 8.5pt;
+    margin-bottom: 1.5mm;
+    display: block;
+  }
+  .p2-content {
+    font-size: 8.5pt;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  /* Sign/stamp */
+  .sign-row {
+    border: 1px solid #000;
+    border-top: none;
+    padding: 3mm 3mm;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8mm;
+    align-items: flex-end;
+    font-size: 8.5pt;
+  }
+  .sign-block { text-align: center; }
+  .sign-line {
+    border-bottom: 1px solid #000;
+    min-width: 50mm;
+    margin-bottom: 1mm;
+    height: 12mm;
+  }
+
+  /* body chart markers legend */
+  .marker-legend {
+    margin-top: 2mm;
+    font-size: 7pt;
+  }
+  .marker-legend-row { display: flex; align-items: center; gap: 2mm; margin-bottom: 0.5mm; }
+  .marker-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 1                                         -->
+<!-- ══════════════════════════════════════════════ -->
+
+<div class="form-ref">fisio / b.pen. 14 / Pind. 1 / 2019</div>
+
+<div class="form-title">
+  <p>KEMENTERIAN KESIHATAN MALAYSIA</p>
+  <p>PHYSIOTHERAPY DEPARTMENT</p>
+  <p>MUSCULOSKELETAL &nbsp;ASSESSMENT FORM</p>
+</div>
+
+<div class="patient-bar">
+  <span>Name :&nbsp;<span class="val val-long">{{ patient.name }}</span></span>
+  <span>Age:&nbsp;<span class="val">{{ patient.age }}</span></span>
+  <span>Sex:&nbsp;
+    {% if patient.type == 'local' %}
+      {% if patient.nric and patient.nric|length == 12 %}
+        {{ 'M' if (patient.nric[-1]|int % 2 == 1) else 'F' }}
+      {% else %}
+        M / F
+      {% endif %}
+    {% else %}
+      {{ patient.sex or 'M / F' }}
+    {% endif %}
+  </span>
+  <span>RN /IC :&nbsp;<span class="val">{{ patient.nric or patient.passport }}</span></span>
+  <span>Date :&nbsp;<span class="val">{{ patient.date }}</span></span>
+</div>
+
+<div class="main-grid">
+
+  <!-- LEFT COLUMN -->
+  <div class="col-left">
+
+    <div class="section" style="min-height:20mm">
+      <span class="section-label">DIAGNOSIS</span>
+      <div class="section-content">{{ diagnosis or '' }}</div>
+    </div>
+
+    <div class="section" style="min-height:16mm">
+      <span class="section-label">DOCTOR'S MANAGEMENT</span>
+      <div class="section-content">{{ management.type or '' }}{% if management.surgeryDate %} — Surgery date: {{ management.surgeryDate }}{% endif %}</div>
+    </div>
+
+    <div class="section" style="min-height:14mm">
+      <span class="section-label">PROBLEM</span>
+      <div class="section-content">{{ problem or '' }}</div>
+    </div>
+
+    <div class="section" style="min-height:42mm">
+      <div class="pain-score-row">
+        <span class="ps-label">PAIN SCORE :</span>
+        <span style="font-size:8pt">PRE</span>
+        <span class="pain-box">{{ pain.pre or '' }}</span>
+        <span style="font-size:8pt;margin-left:3mm">POST</span>
+        <span class="pain-box">{{ pain.post or '' }}</span>
+      </div>
+      <div style="height:2mm"></div>
+      <div class="section-content" style="font-size:8pt">
+        <div>Nature : {{ pain.nature or '' }}</div>
+        <div>Agg. : {{ pain.agg or '' }}</div>
+        <div>Ease : {{ pain.ease or '' }}</div>
+        <div>24 hrs. : {{ pain.behaviour24 or '' }}</div>
+        <div style="margin-top:2mm">Irritability: <strong>{{ pain.irritability or 'High / Medium/ Low' }}</strong></div>
+      </div>
+    </div>
+
+    <div class="section" style="min-height:55mm">
+      <span class="section-label">SPECIAL QUESTION</span>
+      <div class="section-content" style="font-size:8pt">
+        <div>General Health : {{ sq.health or '' }}</div>
+        <div style="margin-top:1mm">PMHX / Surgery : {{ sq.pmhx or '' }}{% if sq.surgery %} / {{ sq.surgery }}{% endif %}</div>
+        <div style="margin-top:1mm">Investigation : {{ sq.investigation or '' }}</div>
+        <div style="margin-top:1mm">Medication : {{ sq.medication or '' }}</div>
+        <div style="margin-top:1mm">Occupation / Recreation: {{ sq.occupation or '' }}{% if sq.recreation %} / {{ sq.recreation }}{% endif %}</div>
+        <div style="margin-top:3mm">Social History: {{ sq.social or '' }}</div>
+        <div style="margin-top:5mm">Pacemaker/ Hearing aid: &nbsp;
+          {% if sq.pacemaker and sq.pacemaker != 'No' %}
+            <strong>{{ sq.pacemaker }}</strong>
+          {% else %}
+            Yes / No
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="col-right">
+
+    <!-- Body chart -->
+    <div class="body-chart-section">
+      <div class="body-fig-wrap">
+        <div class="body-fig-label">Anterior</div>
+        <svg width="105" height="250" viewBox="0 0 130 310" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#333" stroke-width="1.2" fill="white">
+            <ellipse cx="65" cy="18" rx="13" ry="16"/>
+            <rect x="59" y="32" width="12" height="10"/>
+            <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+            <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+            <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+            <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+            <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+            <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+            <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+            <ellipse cx="24" cy="153" rx="8" ry="10"/>
+            <ellipse cx="106" cy="153" rx="8" ry="10"/>
+            <path d="M42,115 Q38,120 36,130 Q34,140 38,148 Q50,154 65,154 Q80,154 92,148 Q96,140 94,130 Q92,120 88,115 Z"/>
+            <path d="M38,148 Q32,160 30,178 Q28,196 30,212 Q36,218 44,216 Q50,200 52,182 Q54,164 50,150 Z"/>
+            <path d="M92,148 Q98,160 100,178 Q102,196 100,212 Q94,218 86,216 Q80,200 78,182 Q76,164 80,150 Z"/>
+            <ellipse cx="37" cy="219" rx="9" ry="8"/>
+            <ellipse cx="93" cy="219" rx="9" ry="8"/>
+            <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+            <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+            <path d="M28,278 Q24,284 24,292 Q28,300 38,300 Q46,300 48,292 Q48,284 46,278 Z"/>
+            <path d="M102,278 Q106,284 106,292 Q102,300 92,300 Q84,300 82,292 Q82,284 84,278 Z"/>
+          </g>
+          <!-- Markers from body chart -->
+          {% for m in body_chart_markers %}
+            {% if m.view == 'ant' %}
+              <circle cx="{{ m.x * 130/130 }}" cy="{{ m.y * 310/310 }}" r="5"
+                fill="{{ marker_colors[m.type] }}" fill-opacity="0.85"
+                stroke="white" stroke-width="1.2"/>
+              <text x="{{ m.x }}" y="{{ m.y + 3.5 }}"
+                text-anchor="middle" font-size="5" fill="white" font-weight="bold"
+                font-family="Arial">{{ m.id }}</text>
+            {% endif %}
+          {% endfor %}
+          <text x="6" y="172" font-size="9" fill="#666" font-family="Arial">R</text>
+          <text x="118" y="172" font-size="9" fill="#666" font-family="Arial">L</text>
+        </svg>
+        <div class="body-fig-lr"><span>Right</span><span>Left</span></div>
+      </div>
+
+      <div class="body-fig-wrap">
+        <div class="body-fig-label">Posterior</div>
+        <svg width="105" height="250" viewBox="0 0 130 310" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#333" stroke-width="1.2" fill="white">
+            <ellipse cx="65" cy="18" rx="13" ry="16"/>
+            <rect x="59" y="32" width="12" height="10"/>
+            <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+            <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+            <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+            <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+            <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+            <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+            <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+            <ellipse cx="24" cy="153" rx="8" ry="10"/>
+            <ellipse cx="106" cy="153" rx="8" ry="10"/>
+            <path d="M42,115 Q38,122 36,132 Q34,144 40,150 Q52,156 65,156 Q78,156 90,150 Q96,144 94,132 Q92,122 88,115 Z"/>
+            <path d="M40,150 Q32,162 30,180 Q28,198 32,214 Q38,220 46,218 Q52,202 54,184 Q56,166 50,152 Z"/>
+            <path d="M90,150 Q98,162 100,180 Q102,198 98,214 Q92,220 84,218 Q78,202 76,184 Q74,166 80,152 Z"/>
+            <ellipse cx="37" cy="219" rx="9" ry="8"/>
+            <ellipse cx="93" cy="219" rx="9" ry="8"/>
+            <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+            <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+            <path d="M34,278 Q28,282 26,290 Q30,298 40,300 Q48,300 48,290 Q48,282 46,278 Z"/>
+            <path d="M96,278 Q102,282 104,290 Q100,298 90,300 Q82,300 82,290 Q82,282 84,278 Z"/>
+          </g>
+          {% for m in body_chart_markers %}
+            {% if m.view == 'post' %}
+              <circle cx="{{ m.x }}" cy="{{ m.y }}" r="5"
+                fill="{{ marker_colors[m.type] }}" fill-opacity="0.85"
+                stroke="white" stroke-width="1.2"/>
+              <text x="{{ m.x }}" y="{{ m.y + 3.5 }}"
+                text-anchor="middle" font-size="5" fill="white" font-weight="bold"
+                font-family="Arial">{{ m.id }}</text>
+            {% endif %}
+          {% endfor %}
+          <text x="6" y="172" font-size="9" fill="#666" font-family="Arial">R</text>
+          <text x="118" y="172" font-size="9" fill="#666" font-family="Arial">L</text>
+        </svg>
+        <div class="body-fig-lr"><span>Left</span><span>Right</span></div>
+      </div>
+    </div>
+
+    <!-- Body chart marker legend -->
+    {% if body_chart_markers %}
+    <div style="padding:1mm 3mm;border-bottom:1px solid #000;font-size:7pt;">
+      {% for m in body_chart_markers %}
+        <span style="margin-right:4mm;">
+          <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:{{ marker_colors[m.type] }};vertical-align:middle;"></span>
+          #{{ m.id }} {{ m.zone }} ({{ m.type }})
+        </span>
+      {% endfor %}
+      {% if body_chart.notes %}
+        <div style="margin-top:1mm;font-style:italic;">{{ body_chart.notes }}</div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="section" style="min-height:18mm">
+      <span class="section-label">CURRENT HISTORY</span>
+      <div class="section-content">{{ history.current or '' }}</div>
+    </div>
+
+    <div class="section" style="min-height:18mm">
+      <span class="section-label">PAST HISTORY</span>
+      <div class="section-content">{{ history.past or '' }}</div>
+    </div>
+
+    <div class="section" style="min-height:20mm">
+      <span class="section-label">NEUROLOGICAL TEST:</span>
+      <table class="neuro-table">
+        <tr>
+          <td class="nl">Sensation:</td>
+          <td class="nv">L: {{ neurological.sensation.left or '' }} &nbsp;&nbsp; R: {{ neurological.sensation.right or '' }} &nbsp;&nbsp; {{ neurological.sensation.notes or '' }}</td>
+        </tr>
+        <tr><td colspan="2" style="height:1mm"></td></tr>
+        <tr>
+          <td class="nl">Reflex :</td>
+          <td class="nv">L: {{ neurological.reflex.left or '' }} &nbsp;&nbsp; R: {{ neurological.reflex.right or '' }} &nbsp;&nbsp; {{ neurological.reflex.notes or '' }}</td>
+        </tr>
+        <tr><td colspan="2" style="height:1mm"></td></tr>
+        <tr>
+          <td class="nl">Motor</td>
+          <td class="nv">L: {{ neurological.motor.left or '' }} &nbsp;&nbsp; R: {{ neurological.motor.right or '' }} &nbsp;&nbsp; {{ neurological.motor.notes or '' }}</td>
+        </tr>
+        {% if neurological.notes %}
+        <tr>
+          <td colspan="2" style="padding-top:1mm;font-size:7.5pt;font-style:italic;">{{ neurological.notes }}</td>
+        </tr>
+        {% endif %}
+      </table>
+    </div>
+
+    <div class="section" style="min-height:18mm">
+      <span class="section-label">OBSERVATION ( general &amp; local )</span>
+      <div class="section-content">
+        {% if observation.general %}General: {{ observation.general }}{% endif %}
+        {% if observation.local %}<br>Local: {{ observation.local }}{% endif %}
+      </div>
+    </div>
+
+    <div class="section" style="min-height:16mm;border-bottom:none;">
+      <span class="section-label">PALPATION</span>
+      <div class="section-content">
+        {% if palpation.tenderness %}Tenderness: {{ palpation.tenderness }}<br>{% endif %}
+        {% if palpation.temperature %}Temperature: {{ palpation.temperature }}<br>{% endif %}
+        {% if palpation.muscle %}Muscle/Soft tissue: {{ palpation.muscle }}<br>{% endif %}
+        {% if palpation.joint %}Joint/Bony: {{ palpation.joint }}{% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- PAGE 2                                         -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="page-break"></div>
+
+<div class="page2-header">fisio / b.pen. 14 / Pind. 1 / 2019 &nbsp;|&nbsp; {{ patient.name }} &nbsp;|&nbsp; {{ patient.date }}</div>
+
+<!-- MOVEMENT TABLE -->
+<div class="mov-section">
+  <div class="mov-section-label">MOVEMENT:</div>
+  <table class="mov-table">
+    <thead>
+      <tr>
+        <th style="width:18%">JOINT</th>
+        <th style="width:14%">SIDE</th>
+        <th style="width:12%">MOVEMENT</th>
+        <th style="width:10%">ACTIVE</th>
+        <th style="width:12%">PAIN (ACTIVE)</th>
+        <th style="width:10%">PASSIVE</th>
+        <th style="width:12%">PAIN (PASSIVE)</th>
+        <th style="width:12%">RESISTED</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if movement.table %}
+        {% for row in movement.table %}
+        <tr>
+          <td>{{ row.joint or '' }}</td>
+          <td>{{ row.side or '' }}</td>
+          <td>{{ row.plane or '' }}</td>
+          <td>{{ row.activeRom or '' }}</td>
+          <td>{{ row.activePain or '' }}</td>
+          <td>{{ row.passiveRom or '' }}</td>
+          <td>{{ row.passivePain or '' }}</td>
+          <td>{{ row.resisted or '' }}</td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr class="mov-empty-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="mov-empty-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr class="mov-empty-row"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- P2 GRID -->
+<div class="p2-grid">
+
+  <div class="p2-cell">
+    <span class="p2-label">MUSCLE STRENGTH</span>
+    <div class="p2-content">{{ movement.muscle or '' }}</div>
+  </div>
+
+  <div class="p2-cell">
+    <span class="p2-label">PHYSIOTHERAPIST'S IMPRESSION</span>
+    <div class="p2-content">{{ plan.impression or '' }}</div>
+  </div>
+
+  <div class="p2-cell">
+    <span class="p2-label">ACCESSORY MOVEMENT</span>
+    <div class="p2-content">{{ movement.accessory or '' }}</div>
+  </div>
+
+  <div class="p2-cell">
+    <span class="p2-label">SHORT TERM GOALS</span>
+    <div class="p2-content">{{ plan.stg or '' }}</div>
+  </div>
+
+  <div class="p2-cell">
+    <span class="p2-label">CLEARING TESTS / OTHER JOINT</span>
+    <div class="p2-content">{{ movement.clearing or '' }}</div>
+  </div>
+
+  <div class="p2-cell">
+    <span class="p2-label">LONG TERM GOALS</span>
+    <div class="p2-content">{{ plan.ltg or '' }}</div>
+  </div>
+
+  <div class="p2-cell">
+    <span class="p2-label">SPECIAL TESTS / MEASUREMENTS</span>
+    <div class="p2-content">{{ movement.special or '' }}</div>
+  </div>
+
+  <div class="p2-cell">
+    <span class="p2-label">PLAN OF TREATMENT</span>
+    <div class="p2-content">{{ plan.treatment or '' }}</div>
+  </div>
+
+</div>
+
+<!-- SIGN / STAMP -->
+<div class="sign-row">
+  <div class="sign-block">
+    <div class="sign-line"></div>
+    <div style="font-size:8pt">Attending Physiotherapist: ………………………………</div>
+  </div>
+  <div class="sign-block" style="text-align:right">
+    <div style="font-size:8pt;margin-bottom:1mm">Date: _______________</div>
+    <div style="font-size:8pt">Sign &amp; Stamp</div>
+  </div>
+</div>
+
+</body>
+</html>
