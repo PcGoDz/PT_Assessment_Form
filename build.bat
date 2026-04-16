@@ -11,7 +11,7 @@ if errorlevel 1 (
     exit /b 1
 )
 echo Installing dependencies...
-pip install flask pyinstaller --quiet
+pip install flask pyinstaller reportlab --quiet
 echo.
 echo Building executable...
 python -m PyInstaller pt_assessment.spec --distpath dist --workpath build --noconfirm

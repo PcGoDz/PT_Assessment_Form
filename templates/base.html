@@ -32,6 +32,72 @@
   width: 7px; height: 7px; border-radius: 50%;
   background: var(--warn); flex-shrink: 0;
 }
+/* ── MOVEMENT TABLE ──────────────────────────── */
+.mov-table-wrap { overflow-x: auto; }
+.mov-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.mov-table th {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 7px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.mov-table td {
+  border: 1px solid var(--border);
+  padding: 3px 4px;
+  vertical-align: middle;
+}
+.mov-cell-input {
+  width: 100%;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  padding: 4px 5px;
+  outline: none;
+  min-width: 80px;
+}
+.mov-cell-input:focus {
+  background: var(--accent-light);
+  border-radius: 3px;
+}
+.mov-cell-input option { font-size: 12px; }
+.mov-del-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 2px 5px;
+  line-height: 1;
+}
+.mov-del-btn:hover { color: var(--danger); }
+.mov-add-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 14px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.12s;
+  margin-top: 8px;
+}
+.mov-add-btn:hover {
+  border-color: var(--accent-mid);
+  color: var(--accent);
+  background: var(--accent-light);
+}
 </style>
 </head>
 <body>
@@ -43,7 +109,8 @@
     <div class="topbar-sub">KKM Physiotherapy Dept &mdash; fisio/b.pen.14/Pind.1/2019</div>
     <div class="topbar-actions">
       <button class="tbtn" onclick="Main.newForm()">+ New</button>
-      <button class="tbtn" onclick="window.print()">Print / PDF</button>
+      <button class="tbtn" onclick="window.print()">Print</button>
+      <button class="tbtn" onclick="Main.exportPdf(Main.getCurrentId())" id="btn-export-pdf">Export KKM PDF</button>
       <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
       <button class="tbtn primary" onclick="Main.saveRecord()">Save Record</button>
     </div>
@@ -107,6 +174,7 @@
 <div class="toast" id="toast"></div>
 
 <script src="/static/js/api.js"></script>
+<script src="/static/js/movement_table.js"></script>
 <script src="/static/js/bodychart.js"></script>
 <script src="/static/js/form.js"></script>
 <script src="/static/js/main.js"></script>

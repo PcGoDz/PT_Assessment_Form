@@ -2,7 +2,7 @@ import sys
 import os
 import threading
 import webbrowser
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 from database import init_db, save_record, list_records, load_record, delete_record
 
 
@@ -71,6 +71,27 @@ def api_delete(record_id):
     if not ok:
         return jsonify({'error': err}), 500
     return jsonify({'success': True})
+
+
+# ── PDF Export ──────────────────────────────────────────────────
+@app.route('/api/export/<int:record_id>/pdf', methods=['GET'])
+def export_pdf(record_id):
+    data, err = load_record(DB_PATH, record_id)
+    if err:
+        return jsonify({'error': err}), 404
+    try:
+        from pdf_generator import generate_ms_pdf
+        pdf_bytes = generate_ms_pdf(data)
+        patient  = data.get('patient', {})
+        name     = (patient.get('name') or 'record').replace(' ', '_')
+        date     = patient.get('date') or 'nodate'
+        filename = f"PT_MS_{name}_{date}.pdf"
+        response = make_response(pdf_bytes)
+        response.headers['Content-Type']        = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # ── Launch ───────────────────────────────────────────────────────
