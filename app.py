@@ -80,7 +80,7 @@ def export_pdf(record_id):
     if err:
         return jsonify({'error': err}), 404
     try:
-        from pdf_generator import generate_ms_pdf
+        from pdf_ms import generate_ms_pdf
         pdf_bytes = generate_ms_pdf(data)
         patient  = data.get('patient', {})
         name     = (patient.get('name') or 'record').replace(' ', '_')

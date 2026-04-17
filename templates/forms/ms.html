@@ -517,3 +517,18 @@
 </div>
 
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var FM = 'MS';
+  ClinicalTemplates.addButton('obs-general',      FM, 'observation');
+  ClinicalTemplates.addButton('obs-local',        FM, 'observation');
+  ClinicalTemplates.addButton('palp-tender',      FM, 'palpation');
+  ClinicalTemplates.addButton('plan-impression',  FM, 'impression');
+  ClinicalTemplates.addButton('plan-stg',         FM, 'stg');
+  ClinicalTemplates.addButton('plan-ltg',         FM, 'ltg');
+  ClinicalTemplates.addButton('plan-tx',          FM, 'treatment');
+});
+</script>
+{% endblock %}

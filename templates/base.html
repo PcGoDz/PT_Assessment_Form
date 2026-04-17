@@ -110,6 +110,7 @@
     <div class="topbar-actions">
       <button class="tbtn" onclick="Main.newForm()">+ New</button>
       <button class="tbtn" onclick="window.print()">Print</button>
+      <button class="tbtn" onclick="Main.copyToMpis()" title="Copy plain text for MPIS">Copy to MPIS</button>
       <button class="tbtn" onclick="Main.exportPdf(Main.getCurrentId())" id="btn-export-pdf">Export KKM PDF</button>
       <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
       <button class="tbtn primary" onclick="Main.saveRecord()">Save Record</button>
@@ -177,6 +178,7 @@
 <script src="/static/js/movement_table.js"></script>
 <script src="/static/js/bodychart.js"></script>
 <script src="/static/js/form.js"></script>
+<script src="/static/js/clinical_templates.js"></script>
 <script src="/static/js/main.js"></script>
 {% block extra_js %}{% endblock %}
 </body>

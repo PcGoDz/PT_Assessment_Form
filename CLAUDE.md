@@ -149,14 +149,18 @@ Each row = one joint, one movement plane, one side:
 
 ## Session Notes
 
-### HIS Integration (to be updated)
-Miruya is observing HIS implementation at dept. Will brief on:
-- File formats accepted (PDF? image? HL7? proprietary?)
-- File size limits
-- Whether it has an API or manual upload only
-- Vendor and IT contact
+### HIS Integration — MPIS
+System name: **MPIS (Malaysian Patient Information System)**
+- Web-based system
+- Input method: one plain text box, fully manual, no file upload
+- Format: plain text only — no markdown, no formatting, no character limit confirmed
+- No API access, no structured fields for PT notes
 
-Update this section once briefed.
+**Implementation decision:**
+- PDF export kept for physical filing and KKM audit compliance
+- Added "Copy to MPIS" button — formats assessment as clean plain text, copies to clipboard
+- Workflow: fill form → Copy to MPIS → paste into MPIS text box. Done.
+- No auto-save required before copy (reads from current form state directly)
 
 ### GPT Code Review (addressed)
 GPT reviewed the code and raised valid points. Status:
