@@ -10,6 +10,8 @@ a = Analysis(
         ('static', 'static'),
         ('database.py', '.'),
         ('pdf_generator.py', '.'),
+        ('pdf_base.py', '.'),
+        ('pdf_ms.py', '.'),
         ('templates/pdf', 'templates/pdf'),
     ],
     hiddenimports=['flask', 'jinja2', 'werkzeug', 'click', 'itsdangerous', 'reportlab', 'reportlab.pdfgen', 'reportlab.platypus', 'reportlab.lib'],
