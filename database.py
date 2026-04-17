@@ -38,20 +38,57 @@ def init_db(db_path):
     conn.close()
 
 
+# ── Per-form required fields ──────────────────────────────
+# Add new form types here as needed. 'common' rules always run.
+REQUIRED_FIELDS = {
+    'common': [
+        ('patient.name',    'Patient name is required'),
+        ('patient.date',    'Assessment date is required'),
+    ],
+    'MS': [
+        ('diagnosis',       'Diagnosis is required'),
+    ],
+    'SPINE': [
+        ('diagnosis',       'Diagnosis is required'),
+    ],
+    'GERIATRIC': [
+        ('diagnosis',       'Diagnosis is required'),
+    ],
+}
+
+
 def validate_record(data):
-    errors = []
+    """Validate a record. form_type is read from data.meta.form."""
+    errors  = []
     patient = data.get('patient', {})
-    if not patient.get('name', '').strip():
-        errors.append('Patient name is required')
-    if not patient.get('date', '').strip():
-        errors.append('Assessment date is required')
+    meta    = data.get('meta', {})
+    form_type = meta.get('form', 'MS')
+
+    # Common rules — apply to all forms
+    for field, msg in REQUIRED_FIELDS.get('common', []):
+        parts = field.split('.')
+        val   = data
+        for p in parts:
+            val = val.get(p, {}) if isinstance(val, dict) else {}
+        if not str(val).strip():
+            errors.append(msg)
+
+    # NRIC / passport — always required regardless of form
     pt_type = patient.get('type', 'local')
     if pt_type == 'local' and not patient.get('nric', '').strip():
         errors.append('NRIC is required for Malaysian patients')
     if pt_type == 'foreign' and not patient.get('passport', '').strip():
         errors.append('Passport number is required for foreign patients')
-    if not data.get('diagnosis', '').strip():
-        errors.append('Diagnosis is required')
+
+    # Form-specific rules
+    for field, msg in REQUIRED_FIELDS.get(form_type, []):
+        parts = field.split('.')
+        val   = data
+        for p in parts:
+            val = val.get(p, {}) if isinstance(val, dict) else {}
+        if not str(val).strip():
+            errors.append(msg)
+
     return errors
 
 
