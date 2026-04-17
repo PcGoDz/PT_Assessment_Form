@@ -16,16 +16,26 @@ const Main = (function () {
 
   // ── Progress bar ──────────────────────────────
   function updateProgress() {
-    var checks = [
-      document.getElementById('pt-name').value.trim(),
-      document.getElementById('pt-date').value.trim(),
-      (document.getElementById('pt-nric').value.trim() ||
-       document.getElementById('pt-passport').value.trim()),
-      document.getElementById('pt-diagnosis').value.trim(),
-      document.getElementById('hx-current').value.trim(),
-      document.getElementById('obs-general').value.trim(),
-      BodyChart.getData().length > 0 ? '1' : ''
-    ];
+    // Use fields registered by the active form, fallback to sensible defaults
+    var fields = (typeof FormBase !== 'undefined' && FormBase.getProgressFields().length)
+      ? FormBase.getProgressFields()
+      : ['pt-name','pt-date','pt-diagnosis'];
+
+    var checks = fields.map(function(f) {
+      // Support pipe-separated OR fields e.g. 'pt-nric|pt-passport'
+      if (f.indexOf('|') >= 0) {
+        return f.split('|').some(function(id) {
+          var el = document.getElementById(id);
+          return el && el.value.trim();
+        }) ? '1' : '';
+      }
+      var el = document.getElementById(f);
+      return el ? el.value.trim() : '';
+    });
+    // Body chart markers always count
+    if (typeof BodyChart !== 'undefined') {
+      checks.push(BodyChart.getData().length > 0 ? '1' : '');
+    }
     var filled = checks.filter(Boolean).length;
     var pct    = Math.round(filled / checks.length * 100);
     document.getElementById('prog-fill').style.width = pct + '%';
@@ -51,7 +61,7 @@ const Main = (function () {
 
   function saveDraft() {
     try {
-      var data = Form.collect(currentId);
+      var data = window.ActiveForm.collect(currentId);
       var name = data.patient && data.patient.name;
       var date = data.patient && data.patient.date;
       if (!name && !date) return;
@@ -100,7 +110,7 @@ const Main = (function () {
       var raw = localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       var draft = JSON.parse(raw);
-      Form.reset();
+      window.ActiveForm.reset();
       currentId = draft.data.id || null;
       Form.populate(draft.data);
       updateProgress();
@@ -148,7 +158,7 @@ const Main = (function () {
   // ── Save ──────────────────────────────────────
   async function saveRecord() {
     try {
-      var data = Form.collect(currentId);
+      var data = window.ActiveForm.collect(currentId);
       var j    = await API.saveRecord(data);
       currentId = j.id;
       markClean();
@@ -167,9 +177,9 @@ const Main = (function () {
     }
     try {
       var data = await API.loadRecord(id);
-      Form.reset();
+      window.ActiveForm.reset();
       currentId = data.id || id;
-      Form.populate(data);
+      window.ActiveForm.populate(data);
       markClean();
       updateProgress();
       showToast('Record loaded', 'ok');
@@ -198,7 +208,7 @@ const Main = (function () {
     var date = document.getElementById('pt-date').value.trim();
     if (name || date) {
       try {
-        var data = Form.collect(currentId);
+        var data = window.ActiveForm.collect(currentId);
         var j    = await API.saveRecord(data);
         currentId = j.id;
         showToast('Saved — ready for next patient', 'ok');
@@ -207,7 +217,7 @@ const Main = (function () {
         if (!confirm('Auto-save failed: ' + e.message + '\n\nClear anyway?')) return;
       }
     }
-    Form.reset();
+    window.ActiveForm.reset();
     currentId = null;
     markClean();
     updateProgress();
@@ -216,7 +226,7 @@ const Main = (function () {
   // ── Clear — wipe only, confirm first ──────────
   function clearForm(silent) {
     if (!silent && !confirm('Clear all fields without saving?')) return;
-    Form.reset();
+    window.ActiveForm.reset();
     currentId = null;
     markClean();
     updateProgress();
@@ -266,7 +276,7 @@ const Main = (function () {
 
   // ── Copy to clipboard (MPIS plain text) ──────────
   async function copyToMpis() {
-    var data = Form.collect(currentId);
+    var data = window.ActiveForm.collect(currentId);
     var p    = data.patient || {};
     var pain = data.pain    || {};
     var sq   = data.specialQuestions || {};
@@ -413,7 +423,7 @@ const Main = (function () {
       }
       try {
         showToast('Saving before export...', '');
-        var data = Form.collect(currentId);
+        var data = window.ActiveForm.collect(currentId);
         var j    = await API.saveRecord(data);
         currentId = j.id;
         markClean();
