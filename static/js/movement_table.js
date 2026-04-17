@@ -40,15 +40,16 @@ const MovementTable = (function () {
   function addRow(prefill) {
     var id = rowCounter++;
     rows.push({
-      id:       id,
-      joint:    (prefill && prefill.joint)    || '',
-      side:     (prefill && prefill.side)     || '',
-      plane:    (prefill && prefill.plane)    || '',
-      activeRom:(prefill && prefill.activeRom)|| '',
-      activePain:(prefill && prefill.activePain)|| '',
-      passiveRom:(prefill && prefill.passiveRom)|| '',
-      passivePain:(prefill && prefill.passivePain)|| '',
-      resisted: (prefill && prefill.resisted) || ''
+      id:         id,
+      joint:      (prefill && prefill.joint)      || '',
+      jointOther: (prefill && prefill.jointOther)  || '',
+      side:       (prefill && prefill.side)        || '',
+      plane:      (prefill && prefill.plane)       || '',
+      activeRom:  (prefill && prefill.activeRom)   || '',
+      activePain: (prefill && prefill.activePain)  || '',
+      passiveRom: (prefill && prefill.passiveRom)  || '',
+      passivePain:(prefill && prefill.passivePain) || '',
+      resisted:   (prefill && prefill.resisted)    || ''
     });
     renderTable();
   }
@@ -70,8 +71,14 @@ const MovementTable = (function () {
     }
 
     tbody.innerHTML = rows.map(function (r) {
+      var jointCell = makeSelect('joint', r.id, JOINTS, r.joint)
+        + (r.joint === 'Other (specify)'
+            ? makeInput('jointOther', r.id, r.jointOther, 'Specify joint...')
+            : '<span data-other-hint="' + r.id + '" style="display:none">'
+              + makeInput('jointOther', r.id, r.jointOther, 'Specify joint...')
+              + '</span>');
       return '<tr data-rid="' + r.id + '">'
-        + '<td>' + makeSelect('joint', r.id, JOINTS, r.joint) + '</td>'
+        + '<td style="min-width:180px">' + jointCell + '</td>'
         + '<td>' + makeSelect('side', r.id, SIDES, r.side) + '</td>'
         + '<td>' + makeSelect('plane', r.id, PLANES, r.plane) + '</td>'
         + '<td>' + makeInput('activeRom', r.id, r.activeRom, '0-°') + '</td>'
@@ -82,6 +89,17 @@ const MovementTable = (function () {
         + '<td><button class="mov-del-btn" onclick="MovementTable.deleteRow(' + r.id + ')">&#x2715;</button></td>'
         + '</tr>';
     }).join('');
+
+    // Wire up joint "Other" visibility
+    tbody.querySelectorAll('[data-field="joint"]').forEach(function (sel) {
+      var rid  = parseInt(sel.dataset.rid);
+      function toggleOther() {
+        var hint = tbody.querySelector('[data-other-hint="' + rid + '"]');
+        if (hint) hint.style.display = sel.value === 'Other (specify)' ? '' : 'none';
+      }
+      sel.addEventListener('change', toggleOther);
+      toggleOther();
+    });
 
     // Attach change listeners
     tbody.querySelectorAll('select, input').forEach(function (el) {
@@ -107,7 +125,7 @@ const MovementTable = (function () {
   function syncFromDOM() {
     var tbody = document.getElementById('mov-tbody');
     if (!tbody) return;
-    tbody.querySelectorAll('[data-rid]').forEach(function (el) {
+    tbody.querySelectorAll('[data-rid][data-field]').forEach(function (el) {
       var rid   = parseInt(el.dataset.rid);
       var field = el.dataset.field;
       var row   = rows.find(function (r) { return r.id === rid; });
@@ -120,7 +138,10 @@ const MovementTable = (function () {
     syncFromDOM();
     return rows.map(function (r) {
       return {
-        joint:      r.joint,
+        joint:      r.joint === 'Other (specify)' && r.jointOther
+                      ? r.jointOther
+                      : r.joint,
+        jointOther: r.jointOther,
         side:       r.side,
         plane:      r.plane,
         activeRom:  r.activeRom,
