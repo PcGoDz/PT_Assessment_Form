@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PT Assessment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    /* ── HOME-SPECIFIC STYLES ── */
+    .home-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    .home-topbar {
+      background: var(--accent);
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 14px;
+      height: 52px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .home-topbar-logo { font-weight: 600; font-size: 15px; }
+    .home-topbar-sep  { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+    .home-topbar-sub  { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .home-topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    .home-main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+    }
+    .stat-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── SEARCH + ACTION BAR ── */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .search-wrap {
+      flex: 1;
+      position: relative;
+    }
+    .search-icon { display: none; }
+    .search-input {
+      width: 100%;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-input:focus {
+      border-color: var(--accent-mid);
+      box-shadow: 0 0 0 3px rgba(74,122,200,0.12);
+    }
+    .search-input::placeholder { color: var(--text-faint); }
+
+    /* ── PATIENT TABLE ── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .table-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .table-count {
+      font-size: 11px;
+      color: var(--text-faint);
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .pt-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .pt-table th {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+      padding: 10px 18px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      white-space: nowrap;
+    }
+    .pt-table td {
+      padding: 12px 18px;
+      font-size: 13px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .pt-table tr:last-child td { border-bottom: none; }
+    .pt-table tbody tr {
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .pt-table tbody tr:hover { background: var(--accent-light); }
+
+    .pt-name { font-weight: 500; }
+    .pt-id   { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-muted); }
+    .ep-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 500;
+    }
+    .ep-badge.active   { background: var(--success-light); color: var(--success); }
+    .ep-badge.inactive { background: var(--surface2); color: var(--text-faint); }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-faint);
+    }
+    .empty-icon { font-size: 32px; margin-bottom: 10px; }
+    .empty-title { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    .empty-sub { font-size: 12px; }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      position: relative;
+      animation: modal-in 0.18s ease;
+    }
+    @keyframes modal-in {
+      from { transform: translateY(-12px); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    .modal-close {
+      position: absolute;
+      top: 14px; right: 16px;
+      background: none; border: none;
+      font-size: 18px; cursor: pointer;
+      color: var(--text-faint);
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+
+    /* Form picker cards */
+    .form-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .form-card {
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--bg);
+      position: relative;
+    }
+    .form-card:hover:not(.soon) {
+      border-color: var(--accent-mid);
+      background: var(--accent-light);
+    }
+    .form-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+    .form-card.soon {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .form-card-icon { font-size: 22px; margin-bottom: 6px; }
+    .form-card-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .form-card-sub  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .form-card-badge {
+      position: absolute;
+      top: 8px; right: 8px;
+      font-size: 9px;
+      background: var(--border);
+      color: var(--text-faint);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    /* Patient form fields */
+    .modal-fields { display: flex; flex-direction: column; gap: 12px; }
+    .modal-field  { display: flex; flex-direction: column; gap: 4px; }
+    .modal-field label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .modal-field input, .modal-field select {
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 13px;
+      padding: 7px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .modal-field input:focus, .modal-field select:focus {
+      border-color: var(--accent-mid);
+      box-shadow: 0 0 0 3px rgba(74,122,200,0.12);
+    }
+    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+    /* ── PATIENT DETAIL PANEL ── */
+    .detail-panel {
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .detail-panel.open { display: flex; }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .back-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.12s;
+    }
+    .back-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .patient-info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      border-left: 4px solid var(--accent);
+    }
+    .patient-avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .patient-details { flex: 1; }
+    .patient-fullname { font-size: 16px; font-weight: 600; color: var(--text); }
+    .patient-meta     { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+    .patient-id-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: var(--radius);
+      color: var(--text-muted);
+    }
+
+    /* Episodes list */
+    .episodes-grid { display: flex; flex-direction: column; gap: 10px; }
+    .episode-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .episode-card:hover {
+      border-color: var(--accent-mid);
+      box-shadow: 0 2px 8px rgba(74,122,200,0.1);
+    }
+    .ep-icon {
+      width: 38px; height: 38px;
+      border-radius: var(--radius);
+      background: var(--accent-light);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .ep-info { flex: 1; }
+    .ep-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .ep-meta  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .ep-stats { display: flex; gap: 12px; font-size: 11px; color: var(--text-faint); }
+    .ep-arrow { color: var(--text-faint); font-size: 16px; }
+    .ep-actions { display:flex; gap:6px; align-items:center; }
+    .ep-action-btn {
+      font-size:10px; padding:3px 8px; border-radius:10px;
+      border:1px solid var(--border); background:none;
+      cursor:pointer; font-family:inherit; color:var(--text-muted);
+      transition:all 0.12s;
+    }
+    .ep-action-btn:hover { background:var(--surface2); color:var(--text); }
+    .ep-action-btn.danger:hover { border-color:var(--danger); color:var(--danger); }
+    .ep-action-btn.success:hover { border-color:var(--success); color:var(--success); }
+
+    .status-pill {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+    .status-active     { background: var(--success-light); color: var(--success); }
+    .status-discharged { background: var(--surface2); color: var(--text-faint); }
+    .status-on-hold    { background: var(--warn-light); color: var(--warn); }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-ghost {
+      padding: 8px 16px;
+      background: none;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--text); color: white;
+      padding: 10px 20px; border-radius: 30px;
+      font-size: 13px; opacity: 0;
+      transition: opacity 0.2s; pointer-events: none;
+      z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+    .toast.ok  { background: var(--success); }
+    .toast.err { background: var(--danger); }
+
+    /* ── DARK MODE ── */
+    body.dark .home-topbar { background: #1e2a3e; }
+    body.dark .search-input { background: var(--surface); }
+    body.dark .modal { background: var(--surface); }
+    body.dark .form-card { background: var(--surface2); }
+    body.dark .modal-field input,
+    body.dark .modal-field select { background: var(--surface2); color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="home-shell">
+  <header class="home-topbar">
+    <div class="home-topbar-logo">PT Assessment System</div>
+    <div class="home-topbar-sep"></div>
+    <div class="home-topbar-sub">KKM Physiotherapy Dept</div>
+    <div class="home-topbar-actions">
+      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">&#9790;</button>
+      <button class="btn-primary" onclick="openNewPatientModal()">+ New Patient</button>
+    </div>
+  </header>
+
+  <main class="home-main">
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total Patients</div>
+        <div class="stat-value" id="stat-patients">—</div>
+        <div class="stat-sub">registered</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active Episodes</div>
+        <div class="stat-value" id="stat-active">—</div>
+        <div class="stat-sub">ongoing</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Assessments</div>
+        <div class="stat-value" id="stat-assessments">—</div>
+        <div class="stat-sub">total records</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Follow-up Notes</div>
+        <div class="stat-value" id="stat-soaps">—</div>
+        <div class="stat-sub">SOAP notes</div>
+      </div>
+    </div>
+
+    <!-- Patient list view -->
+    <div id="list-view">
+      <div class="search-bar">
+        <div class="search-wrap">
+          <input type="text" class="search-input" id="search-input"
+            placeholder="Search by patient name or IC / passport number..."
+            oninput="onSearch(this.value)">
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Patients</span>
+          <span class="table-count" id="table-count">—</span>
+        </div>
+        <div id="patient-table-wrap">
+          <div class="empty-state">
+            <div class="empty-icon">&#128100;</div>
+            <div class="empty-title">No patients yet</div>
+            <div class="empty-sub">Click "+ New Patient" to register the first patient</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Patient detail view -->
+    <div id="detail-view" class="detail-panel">
+      <!-- Breadcrumb + context banner -->
+      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius);padding:8px 14px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:16px;">&#128100;</span>
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);margin-bottom:1px;">Patient Record</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)" id="breadcrumb-name">—</div>
+        </div>
+        <div style="margin-left:auto;font-size:11px;color:var(--accent-mid);cursor:pointer;" onclick="showList()">&#8592; Back to all patients</div>
+      </div>
+
+      <div class="detail-header">
+        <button class="back-btn" onclick="showList()">&#8592; All Patients</button>
+        <div style="flex:1"></div>
+        <button class="btn-primary" onclick="openNewEpisodeModal()">+ New Episode / Referral</button>
+      </div>
+
+      <div class="patient-info-card" id="patient-info-card">
+        <div class="patient-avatar" id="pt-avatar">?</div>
+        <div class="patient-details">
+          <div class="patient-fullname" id="pt-fullname">—</div>
+          <div class="patient-meta" id="pt-meta">—</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <div class="patient-id-badge" id="pt-id-badge">—</div>
+          <div style="font-size:11px;color:var(--text-faint);">Click an episode below or add a new one</div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Episodes / Referrals</span>
+          <span class="table-count" id="episode-count">—</span>
+        </div>
+        <div id="episodes-wrap">
+          <div class="empty-state">
+            <div class="empty-icon">&#128203;</div>
+            <div class="empty-title">No episodes yet</div>
+            <div class="empty-sub">Click "+ New Episode" to start the first referral</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modal: New Patient -->
+<div class="modal-backdrop" id="modal-new-patient">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-new-patient')">&#x2715;</button>
+    <div class="modal-title">Register New Patient</div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Patient Type</label>
+        <select id="np-type" onchange="onNpTypeChange()">
+          <option value="local">Malaysian (NRIC)</option>
+          <option value="foreign">Foreign (Passport)</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Full Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="np-name" placeholder="Patient full name">
+      </div>
+      <div class="modal-row">
+        <div class="modal-field" id="np-nric-field">
+          <label>NRIC <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="np-nric" placeholder="12 digits" maxlength="12" oninput="onNpNric(this.value)">
+        </div>
+        <div class="modal-field" id="np-passport-field" style="display:none">
+          <label>Passport No. <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="np-passport" placeholder="Passport number">
+        </div>
+        <div class="modal-field">
+          <label>Date of Birth</label>
+          <input type="date" id="np-dob">
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field" id="np-sex-field">
+          <label>Sex</label>
+          <select id="np-sex">
+            <option value="">— Select —</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="modal-field" id="np-country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="np-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option><option>Myanmar</option>
+              <option>Philippines</option><option>Thailand</option>
+              <option>Vietnam</option><option>Cambodia</option>
+              <option>Laos</option><option>Brunei</option>
+              <option>Singapore</option><option>Timor-Leste</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option><option>India</option>
+              <option>Pakistan</option><option>Nepal</option>
+              <option>Sri Lanka</option><option>Afghanistan</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option><option>Taiwan</option>
+              <option>Japan</option><option>South Korea</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option>Saudi Arabia</option><option>Yemen</option>
+              <option>Iraq</option><option>Iran</option><option>Syria</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Australia</option><option>United Kingdom</option>
+              <option>United States</option><option>Other (not listed)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-new-patient')">Cancel</button>
+      <button class="btn-primary" onclick="submitNewPatient()">Register Patient</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: New Episode -->
+<div class="modal-backdrop" id="modal-new-episode">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-new-episode')">&#x2715;</button>
+    <div class="modal-title">New Episode / Referral</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+      Select assessment form type for this referral
+    </div>
+    <div class="form-picker" id="form-picker">
+      <div class="form-card selected" data-form="MS" onclick="selectForm(this)">
+        <div class="form-card-icon">&#129460;</div>
+        <div class="form-card-name">Musculoskeletal</div>
+        <div class="form-card-sub">Peripheral joints, ROM, strength</div>
+      </div>
+      <div class="form-card soon" data-form="SPINE">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128279;</div>
+        <div class="form-card-name">Spine</div>
+        <div class="form-card-sub">Cervical, thoracic, lumbar</div>
+      </div>
+      <div class="form-card soon" data-form="GERIATRIC">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#9878;</div>
+        <div class="form-card-name">Geriatric</div>
+        <div class="form-card-sub">Balance, mobility, falls</div>
+      </div>
+      <div class="form-card soon" data-form="CARDIO">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#129728;</div>
+        <div class="form-card-name">Cardiorespiratory</div>
+        <div class="form-card-sub">Pulmonary, cardiac rehab</div>
+      </div>
+    </div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Referral Date</label>
+        <input type="date" id="ep-referral-date">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-new-episode')">Cancel</button>
+      <button class="btn-primary" onclick="submitNewEpisode()">Start Episode</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Discharge Episode -->
+<div class="modal-backdrop" id="modal-discharge">
+  <div class="modal" style="max-width:420px">
+    <button class="modal-close" onclick="closeModal('modal-discharge')">&#x2715;</button>
+    <div class="modal-title">Discharge Patient</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+      Select reason for discharge. This can be reversed by reactivating the episode.
+    </div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Discharge Reason</label>
+        <select id="dc-reason" onchange="onDcReasonChange()">
+          <option value="">— Select reason —</option>
+          <option value="Discharged (goals met)">Discharged — Goals met</option>
+          <option value="Defaulted">Defaulted (missed appointments)</option>
+          <option value="Deceased">Deceased</option>
+          <option value="Transferred / Moved">Transferred / Moved away</option>
+          <option value="Referred elsewhere">Referred elsewhere</option>
+          <option value="Self-discharged">Self-discharged (against advice)</option>
+          <option value="Other">Other (specify)</option>
+        </select>
+      </div>
+      <div class="modal-field" id="dc-other-field" style="display:none">
+        <label>Specify Reason</label>
+        <input type="text" id="dc-other" placeholder="Enter reason...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-discharge')">Cancel</button>
+      <button class="btn-primary" style="background:var(--danger)" onclick="submitDischarge()">Discharge</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Patient not found -->
+<div class="modal-backdrop" id="modal-not-found">
+  <div class="modal" style="max-width:360px;text-align:center">
+    <div style="font-size:32px;margin-bottom:10px">&#128100;</div>
+    <div class="modal-title" style="text-align:center">Patient Not Found</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px">
+      No patient found matching "<span id="not-found-query"></span>".<br>
+      Would you like to register a new patient?
+    </div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn-ghost" onclick="closeModal('modal-not-found')">Cancel</button>
+      <button class="btn-primary" onclick="closeModal('modal-not-found');openNewPatientModal()">Register New Patient</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────
+var currentPatientId = null;
+var searchTimer      = null;
+var selectedForm     = 'MS';
+
+// ── Dark mode ─────────────────────────────────────────
+function initDark() {
+  if (localStorage.getItem('pt_dark') === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = '\u2600';
+  }
+}
+function toggleDark() {
+  var isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('pt_dark', isDark ? '1' : '0');
+  document.getElementById('dark-toggle').textContent = isDark ? '\u2600' : '\u263E';
+}
+
+// ── Toast ─────────────────────────────────────────────
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(function() { t.className = 'toast'; }, 2400);
+}
+
+// ── Modal helpers ─────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-backdrop').forEach(function(el) {
+  el.addEventListener('click', function(e) {
+    if (e.target === el) el.classList.remove('open');
+  });
+});
+
+// ── New Patient Modal ─────────────────────────────────
+function openNewPatientModal() {
+  // Clear fields
+  ['np-name','np-nric','np-passport','np-dob'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('np-type').value = 'local';
+  document.getElementById('np-sex').value = '';
+  onNpTypeChange();
+  openModal('modal-new-patient');
+  setTimeout(function() { document.getElementById('np-name').focus(); }, 100);
+}
+
+function onNpTypeChange() {
+  var local = document.getElementById('np-type').value === 'local';
+  document.getElementById('np-nric-field').style.display    = local ? '' : 'none';
+  document.getElementById('np-passport-field').style.display= local ? 'none' : '';
+  document.getElementById('np-sex-field').style.display     = local ? 'none' : '';
+  document.getElementById('np-country-field').style.display = local ? 'none' : '';
+}
+
+function onNpNric(val) {
+  var c = val.replace(/\D/g, '');
+  if (c.length < 12) return;
+  var yy = c.substring(0,2), mm = c.substring(2,4), dd = c.substring(4,6);
+  var thisYY = new Date().getFullYear() % 100;
+  var yr = parseInt(yy) <= thisYY ? '20'+yy : '19'+yy;
+  document.getElementById('np-dob').value = yr+'-'+mm+'-'+dd;
+  var last = parseInt(c.charAt(11));
+  document.getElementById('np-sex').value = last % 2 === 1 ? 'M' : 'F';
+}
+
+async function submitNewPatient() {
+  var name = document.getElementById('np-name').value.trim();
+  if (!name) { showToast('Patient name is required', 'err'); return; }
+  var type = document.getElementById('np-type').value;
+  var nric = document.getElementById('np-nric').value.trim();
+  var pass = document.getElementById('np-passport').value.trim();
+  if (type === 'local' && !nric) { showToast('NRIC is required', 'err'); return; }
+  if (type === 'foreign' && !pass) { showToast('Passport is required', 'err'); return; }
+
+  try {
+    var res = await fetch('/api/patients', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: name, type: type, nric: nric, passport: pass,
+        dob: document.getElementById('np-dob').value,
+        sex: document.getElementById('np-sex').value,
+        country: (document.getElementById('np-country') || {}).value || ''
+      })
+    });
+    var j = await res.json();
+    if (!res.ok) { showToast(j.error || 'Failed', 'err'); return; }
+    closeModal('modal-new-patient');
+    showToast('Patient registered', 'ok');
+    loadStats();
+    openPatient(j.id);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+// ── New Episode Modal ─────────────────────────────────
+function openNewEpisodeModal() {
+  selectedForm = 'MS';
+  document.querySelectorAll('.form-card').forEach(function(c) {
+    c.classList.toggle('selected', c.dataset.form === 'MS');
+  });
+  document.getElementById('ep-referral-date').value =
+    new Date().toISOString().split('T')[0];
+  openModal('modal-new-episode');
+}
+
+// Store current patient data for pre-filling form
+var currentPatientData = null;
+
+function selectForm(el) {
+  if (el.classList.contains('soon')) return;
+  document.querySelectorAll('.form-card').forEach(function(c) {
+    c.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  selectedForm = el.dataset.form;
+}
+
+async function submitNewEpisode() {
+  if (!currentPatientId) return;
+  var refDate = document.getElementById('ep-referral-date').value;
+  try {
+    var res = await fetch('/api/patients/' + currentPatientId + '/episodes', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ form_type: selectedForm, referral_date: refDate })
+    });
+    var j = await res.json();
+    if (!res.ok) { showToast(j.error || 'Failed', 'err'); return; }
+    closeModal('modal-new-episode');
+    showToast('Episode created', 'ok');
+    // Go straight to the form, pass patient_id for pre-fill
+    window.location.href = '/form/' + selectedForm.toLowerCase() +
+      '?episode_id=' + j.id + '&patient_id=' + currentPatientId;
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+// ── Search ────────────────────────────────────────────
+function onSearch(val) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(function() { doSearch(val); }, 300);
+}
+
+async function doSearch(q) {
+  try {
+    var res     = await fetch('/api/patients/search?q=' + encodeURIComponent(q));
+    var results = await res.json();
+    renderPatientTable(results);
+
+    // If search has text and zero results, offer to create
+    if (q.trim() && results.length === 0) {
+      document.getElementById('not-found-query').textContent = q.trim();
+      openModal('modal-not-found');
+    }
+  } catch(e) {
+    console.error('search error', e);
+  }
+}
+
+// ── Render patient table ──────────────────────────────
+function renderPatientTable(patients) {
+  var wrap  = document.getElementById('patient-table-wrap');
+  var count = document.getElementById('table-count');
+  count.textContent = patients.length + ' patient' + (patients.length !== 1 ? 's' : '');
+
+  if (!patients.length) {
+    wrap.innerHTML =
+      '<div class="empty-state">' +
+      '<div class="empty-icon">&#128100;</div>' +
+      '<div class="empty-title">No patients found</div>' +
+      '<div class="empty-sub">Try a different name or IC number</div>' +
+      '</div>';
+    return;
+  }
+
+  var rows = patients.map(function(p) {
+    var id    = p.ic || p.passport || '&mdash;';
+    var epCnt = p.episode_count || 0;
+    var last  = p.last_visit ? p.last_visit.substring(0,10) : '&mdash;';
+    return '<tr data-patient-id="' + p.id + '" class="pt-row">' +
+      '<td><div class="pt-name">' + esc(p.name) + '</div></td>' +
+      '<td><div class="pt-id">' + esc(id) + '</div></td>' +
+      '<td>' + (p.dob || '&mdash;') + '</td>' +
+      '<td>' + (p.sex === 'M' ? 'Male' : p.sex === 'F' ? 'Female' : '&mdash;') + '</td>' +
+      '<td><span class="ep-badge ' + (epCnt > 0 ? 'active' : 'inactive') + '">' +
+        epCnt + ' episode' + (epCnt !== 1 ? 's' : '') +
+      '</span></td>' +
+      '<td>' + last + '</td>' +
+      '</tr>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<table class="pt-table">' +
+    '<thead><tr>' +
+    '<th>Name</th><th>IC / Passport</th><th>DOB</th>' +
+    '<th>Sex</th><th>Episodes</th><th>Last Visit</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+
+// ── Open patient detail ───────────────────────────────
+async function openPatient(id) {
+  currentPatientId = id;
+  try {
+    var res     = await fetch('/api/patients/' + id);
+    var patient = await res.json();
+
+    // Fill patient info card
+    var initials = (patient.name || '?').split(' ').map(function(w) {
+      return w[0];
+    }).slice(0,2).join('').toUpperCase();
+    document.getElementById('pt-avatar').textContent       = initials;
+    document.getElementById('pt-fullname').textContent     = patient.name;
+    document.getElementById('breadcrumb-name').textContent = patient.name;
+    currentPatientData = patient; // store for form pre-fill
+
+    var sex = patient.sex === 'M' ? 'Male' : patient.sex === 'F' ? 'Female' : '';
+    var meta = [sex, patient.dob, patient.country].filter(Boolean).join(' · ');
+    document.getElementById('pt-meta').textContent    = meta || 'No additional info';
+    document.getElementById('pt-id-badge').textContent =
+      patient.ic || patient.passport || 'No ID';
+
+    // Load episodes
+    loadEpisodes(id);
+
+    // Switch views
+    document.getElementById('list-view').style.display = 'none';
+    document.getElementById('detail-view').classList.add('open');
+  } catch(e) {
+    showToast('Could not load patient', 'err');
+  }
+}
+
+async function loadEpisodes(patientId) {
+  try {
+    var res      = await fetch('/api/patients/' + patientId + '/episodes');
+    var episodes = await res.json();
+    var wrap     = document.getElementById('episodes-wrap');
+    var count    = document.getElementById('episode-count');
+
+    count.textContent = episodes.length + ' episode' + (episodes.length !== 1 ? 's' : '');
+
+    if (!episodes.length) {
+      wrap.innerHTML =
+        '<div class="empty-state">' +
+        '<div class="empty-icon">&#128203;</div>' +
+        '<div class="empty-title">No episodes yet</div>' +
+        '<div class="empty-sub">Click &quot;+ New Episode / Referral&quot; (top right) to begin the first assessment</div>' +
+        '</div>';
+      return;
+    }
+
+    wrap.innerHTML = episodes.map(function(ep) {
+      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric' }[ep.form_type] || ep.form_type;
+      var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;' }[ep.form_type] || '&#128203;';
+      var rawStatus  = ep.status || 'active';
+      var statusBase = rawStatus.split('|')[0];  // strip reason
+      var statusReason = rawStatus.includes('|') ? rawStatus.split('|')[1] : '';
+      var statusCls  = 'status-' + statusBase.replace(/\s+/g,'-').toLowerCase();
+      var hasAssess = ep.has_assessment > 0;
+      var soaps     = ep.soap_count || 0;
+
+      var isActive = statusBase === 'active';
+      var actionBtn = isActive
+        ? '<button class="ep-action-btn danger" onclick="openDischargeModal(' + ep.id + ',event)" title="Discharge">Discharge</button>'
+        : '<button class="ep-action-btn success" onclick="reactivateEpisode(' + ep.id + ',event)" title="Reactivate">Reactivate</button>';
+
+      return '<div class="episode-card" onclick="' + (isActive ? 'openEpisode(' + ep.id + ')' : '') + '"' +
+        (isActive ? '' : ' style="opacity:0.65;cursor:default"') + '>' +
+        '<div class="ep-icon">' + icon + '</div>' +
+        '<div class="ep-info">' +
+          '<div class="ep-title">' + formLabel + ' Assessment</div>' +
+          '<div class="ep-meta">Referral: ' + (ep.referral_date || '&mdash;') + '</div>' +
+          '<div class="ep-stats">' +
+            '<span>' + (hasAssess ? '&#10003; Assessment recorded' : '&#9711; No assessment yet') + '</span>' +
+            '<span>' + soaps + ' follow-up note' + (soaps !== 1 ? 's' : '') + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="ep-actions">' +
+          actionBtn +
+          '<span class="status-pill ' + statusCls + '" title="' + statusReason + '">' + statusBase + '</span>' +
+        '</div>' +
+        (isActive ? '<span class="ep-arrow">&#8250;</span>' : '') +
+        '</div>';
+    }).join('');
+  } catch(e) {
+    console.error('loadEpisodes error', e);
+  }
+}
+
+function openEpisode(episodeId) {
+  window.location.href = '/form/ms?episode_id=' + episodeId;
+}
+
+// ── Show list / back ──────────────────────────────────
+function showList() {
+  currentPatientId = null;
+  document.getElementById('detail-view').classList.remove('open');
+  document.getElementById('list-view').style.display = 'block';
+  doSearch(document.getElementById('search-input').value);
+}
+
+// ── Stats ─────────────────────────────────────────────
+async function loadStats() {
+  try {
+    var res   = await fetch('/api/stats');
+    var stats = await res.json();
+    document.getElementById('stat-patients').textContent    = stats.patients    || 0;
+    document.getElementById('stat-active').textContent      = stats.episodes    || 0;
+    document.getElementById('stat-assessments').textContent = stats.assessments || 0;
+    document.getElementById('stat-soaps').textContent       = stats.soaps       || 0;
+  } catch(e) {
+    console.error('loadStats error', e);
+  }
+}
+
+// ── Escape HTML ───────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// ── Discharge ─────────────────────────────────────────
+var dischargeEpisodeId = null;
+
+function onDcReasonChange() {
+  var val = document.getElementById('dc-reason').value;
+  document.getElementById('dc-other-field').style.display =
+    val === 'Other' ? '' : 'none';
+}
+
+function openDischargeModal(episodeId, e) {
+  e.stopPropagation();
+  dischargeEpisodeId = episodeId;
+  document.getElementById('dc-reason').value = '';
+  document.getElementById('dc-other').value  = '';
+  document.getElementById('dc-other-field').style.display = 'none';
+  openModal('modal-discharge');
+}
+
+async function submitDischarge() {
+  var reason = document.getElementById('dc-reason').value;
+  if (!reason) { showToast('Please select a reason', 'err'); return; }
+  if (reason === 'Other') {
+    var other = document.getElementById('dc-other').value.trim();
+    if (!other) { showToast('Please specify the reason', 'err'); return; }
+    reason = 'Other: ' + other;
+  }
+  try {
+    var res = await fetch('/api/episodes/' + dischargeEpisodeId + '/status', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status: 'discharged', reason: reason })
+    });
+    if (!res.ok) { showToast('Failed to discharge', 'err'); return; }
+    closeModal('modal-discharge');
+    showToast('Episode discharged', 'ok');
+    loadEpisodes(currentPatientId);
+    loadStats();
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+async function reactivateEpisode(episodeId, e) {
+  e.stopPropagation();
+  if (!confirm('Reactivate this episode?')) return;
+  try {
+    var res = await fetch('/api/episodes/' + episodeId + '/status', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status: 'active' })
+    });
+    if (!res.ok) { showToast('Failed to reactivate', 'err'); return; }
+    showToast('Episode reactivated', 'ok');
+    loadEpisodes(currentPatientId);
+    loadStats();
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+// ── Event delegation for patient rows ────────────────
+document.getElementById('patient-table-wrap').addEventListener('click', function(e) {
+  var row = e.target.closest('.pt-row');
+  if (row && row.dataset.patientId) {
+    openPatient(parseInt(row.dataset.patientId));
+  }
+});
+
+// ── Init ──────────────────────────────────────────────
+initDark();
+loadStats();
+doSearch('');
+
+// Set today's date on episode modal
+document.getElementById('ep-referral-date').value =
+  new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
