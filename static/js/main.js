@@ -267,6 +267,7 @@ const Main = (function () {
     updateProgress();
     setupDirtyWarning();
     checkForDraft();
+    initDark();
 
     document.querySelector('.main').addEventListener('input', function () {
       markDirty();
@@ -437,6 +438,22 @@ const Main = (function () {
     API.exportPdf(id);
   }
 
+  // ── Dark mode ────────────────────────────────
+  function initDark() {
+    if (localStorage.getItem('pt_dark') === '1') {
+      document.body.classList.add('dark');
+      var btn = document.getElementById('dark-toggle');
+      if (btn) btn.textContent = '\u2600'; // sun
+    }
+  }
+
+  function toggleDark() {
+    var isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('pt_dark', isDark ? '1' : '0');
+    var btn = document.getElementById('dark-toggle');
+    if (btn) btn.textContent = isDark ? '\u2600' : '\u263E'; // sun/moon
+  }
+
   return {
     init:           init,
     go:             go,
@@ -451,7 +468,8 @@ const Main = (function () {
     dismissDraft:   dismissDraft,
     exportPdf:      exportPdf,
     getCurrentId:   function() { return currentId; },
-    copyToMpis:     copyToMpis
+    copyToMpis:     copyToMpis,
+    toggleDark:     toggleDark
   };
 
 })();
