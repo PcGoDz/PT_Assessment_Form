@@ -108,12 +108,22 @@
     <div class="topbar-sep"></div>
     <div class="topbar-sub">KKM Physiotherapy Dept &mdash; fisio/b.pen.14/Pind.1/2019</div>
     <div class="topbar-actions">
+      <!-- Nav group: episode-only buttons injected here by form_ms.js -->
+      <div id="topbar-nav-group" style="display:flex;gap:6px;align-items:center;"></div>
+      <div class="tbtn-sep" id="topbar-nav-sep" style="display:none"></div>
+
+      <!-- Destructive group -->
       <button class="tbtn" onclick="Main.newForm()">+ New</button>
+      <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
+      <div class="tbtn-sep"></div>
+
+      <!-- Utility group -->
       <button class="dark-toggle" id="dark-toggle" onclick="Main.toggleDark()" title="Toggle dark mode">&#9790;</button>
-      <button class="tbtn" onclick="window.print()">Print</button>
       <button class="tbtn" onclick="Main.copyToMpis()" title="Copy plain text for MPIS">Copy to MPIS</button>
       <button class="tbtn" onclick="Main.exportPdf(Main.getCurrentId())" id="btn-export-pdf">Export KKM PDF</button>
-      <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
+      <div class="tbtn-sep"></div>
+
+      <!-- Primary action -->
       <button class="tbtn primary" onclick="Main.saveRecord()">Save Record</button>
     </div>
   </header>
@@ -142,8 +152,14 @@
       <div class="nav-item soon"><span class="nav-icon">&#129504;</span> Neurological</div>
 
       <div class="nav-divider"></div>
-      <div class="sidebar-label">Jump To</div>
-      {% block sidebar_nav %}{% endblock %}
+      <div class="sidebar-label" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding-right:14px;"
+           onclick="toggleJumpTo()" title="Toggle Jump To">
+        Jump To
+        <span id="jumpto-arrow" style="font-size:9px;transition:transform 0.2s;">&#9650;</span>
+      </div>
+      <div id="jumpto-nav">
+        {% block sidebar_nav %}{% endblock %}
+      </div>
 
       <div class="nav-divider"></div>
       <div class="records-panel">
@@ -182,5 +198,27 @@
 <script src="/static/js/clinical_templates.js"></script>
 <script src="/static/js/main.js"></script>
 {% block extra_js %}{% endblock %}
+<script>
+// ── Sidebar Jump To toggle ─────────────────────────────
+function toggleJumpTo() {
+  var nav    = document.getElementById('jumpto-nav');
+  var arrow  = document.getElementById('jumpto-arrow');
+  if (!nav) return;
+  var collapsed = nav.style.display === 'none';
+  nav.style.display   = collapsed ? '' : 'none';
+  arrow.style.transform = collapsed ? '' : 'rotate(180deg)';
+  localStorage.setItem('pt_jumpto_collapsed', collapsed ? '0' : '1');
+}
+
+// Restore state on load
+(function() {
+  if (localStorage.getItem('pt_jumpto_collapsed') === '1') {
+    var nav   = document.getElementById('jumpto-nav');
+    var arrow = document.getElementById('jumpto-arrow');
+    if (nav)   nav.style.display    = 'none';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  }
+})();
+</script>
 </body>
 </html>

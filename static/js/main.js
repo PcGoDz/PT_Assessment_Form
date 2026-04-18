@@ -468,6 +468,7 @@ const Main = (function () {
     dismissDraft:   dismissDraft,
     exportPdf:      exportPdf,
     getCurrentId:   function() { return currentId; },
+    get isDirty()   { return isDirty; },
     copyToMpis:     copyToMpis,
     toggleDark:     toggleDark
   };
