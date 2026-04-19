@@ -1,0 +1,940 @@
+{% extends "base.html" %}
+
+{% block form_name %}Geriatric Assessment{% endblock %}
+
+{% block sidebar_forms %}
+<div class="nav-item" onclick="window.location.href='/'">
+  <span class="nav-icon">&#129460;</span> Musculoskeletal
+</div>
+<div class="nav-item" onclick="window.location.href='/'">
+  <span class="nav-icon">&#128279;</span> Spine
+</div>
+<div class="nav-item active">
+  <span class="nav-icon">&#129728;</span> Geriatric
+  <span class="nav-badge">GR</span>
+</div>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+<div class="nav-item" onclick="Main.go('s-complaint')"><span class="nav-icon">&#128172;</span> Complaint</div>
+<div class="nav-item" onclick="Main.go('s-subjective')"><span class="nav-icon">&#128214;</span> Subjective</div>
+<div class="nav-item" onclick="Main.go('s-chart')"><span class="nav-icon">&#128506;</span> Body Chart</div>
+<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128202;</span> Pain</div>
+<div class="nav-item" onclick="Main.go('s-objective')"><span class="nav-icon">&#128065;</span> Objective</div>
+<div class="nav-item" onclick="Main.go('s-outcome')"><span class="nav-icon">&#128200;</span> Outcome Measures</div>
+<div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- 01 PATIENT INFO -->
+<div class="card" id="s-patient">
+  <div class="card-header"><span class="sec-num">01</span><h2>Patient Information</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Full Name <span class="req">*</span></label>
+        <input type="text" id="pt-name" placeholder="Patient full name">
+      </div>
+
+      <!-- NRIC / Passport shown read-only, derived from registration -->
+      <div class="field" id="nric-field">
+        <label>NRIC No.</label>
+        <input type="text" id="pt-nric" placeholder="Auto-filled from registration" readonly style="background:var(--surface2);color:var(--muted)">
+        <div class="derived-info">
+          <span class="derived-badge hidden" id="derived-dob"></span>
+          <span class="derived-badge hidden" id="derived-gender"></span>
+        </div>
+      </div>
+      <div class="field" id="passport-field" style="display:none">
+        <label>Passport No.</label>
+        <input type="text" id="pt-passport" placeholder="Auto-filled from registration" readonly style="background:var(--surface2);color:var(--muted)">
+      </div>
+
+      <div class="field">
+        <label>Date of Birth</label>
+        <input type="date" id="pt-dob" readonly style="background:var(--surface2);color:var(--muted)">
+      </div>
+      <div class="field">
+        <label>Age</label>
+        <input type="number" id="pt-age" placeholder="Years" min="0" max="130" readonly style="background:var(--surface2);color:var(--muted)">
+      </div>
+      <div class="field">
+        <label>Sex</label>
+        <input type="text" id="pt-sex-display" placeholder="Auto-filled" readonly style="background:var(--surface2);color:var(--muted)">
+        <!-- hidden radio for collect/populate compat -->
+        <div style="display:none">
+          <input type="radio" name="pt-sex" value="M" id="pt-sex-m">
+          <input type="radio" name="pt-sex" value="F" id="pt-sex-f">
+        </div>
+      </div>
+      <!-- hidden pt-type radio for FormBase compat -->
+      <div style="display:none">
+        <input type="radio" name="pt-type" value="local" id="pt-type-local" checked>
+        <input type="radio" name="pt-type" value="foreign" id="pt-type-foreign">
+      </div>
+      <div class="field">
+        <label>Date of Assessment <span class="req">*</span></label>
+        <input type="date" id="pt-date">
+      </div>
+      <div class="field">
+        <label>RN / IC</label>
+        <input type="text" id="pt-rn" placeholder="Registration number">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 DIAGNOSIS -->
+<div class="card" id="s-dx">
+  <div class="card-header"><span class="sec-num">02</span><h2>Diagnosis &amp; Management</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Doctor's Diagnosis</label>
+        <textarea id="dx-diagnosis" placeholder="e.g. Stroke (R), OA knee, Parkinson's disease..."></textarea>
+      </div>
+      <div class="field">
+        <label>Doctor's Management</label>
+        <div class="radio-group" style="margin-bottom:8px">
+          <label><input type="radio" name="dx-mgmt-type" value="Conservative" onchange="GeriatricForm.onMgmtChange(this.value)"> Conservative</label>
+          <label><input type="radio" name="dx-mgmt-type" value="Surgical" onchange="GeriatricForm.onMgmtChange(this.value)"> Surgical</label>
+        </div>
+        <div id="dx-surgical-block" style="display:none;margin-top:6px">
+          <div class="fg c2" style="gap:8px">
+            <div class="field" style="margin:0">
+              <label>Surgery Date</label>
+              <input type="date" id="dx-surgery-date">
+            </div>
+            <div class="field" style="margin:0">
+              <label>Surgery Details</label>
+              <input type="text" id="dx-surgery-details" placeholder="Procedure / area...">
+            </div>
+          </div>
+          <div style="margin-top:6px">
+            <label><input type="checkbox" id="dx-surgery-no-info" onchange="GeriatricForm.onSurgeryNoInfo(this.checked)"> Patient declined to disclose surgery details</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 COMPLAINT & HISTORY -->
+<div class="card" id="s-complaint">
+  <div class="card-header"><span class="sec-num">03</span><h2>Patient Complaint &amp; History</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Current Complaint / Problem</label>
+        <textarea id="hx-complaint" placeholder="Main reason for physiotherapy referral..."></textarea>
+      </div>
+      <div class="field">
+        <label>Current History</label>
+        <textarea id="hx-current" placeholder="Onset, progression, related symptoms, previous treatment..."></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="hx-past" placeholder="Relevant past medical events..."></textarea>
+      </div>
+
+      <!-- Falls History -->
+      <div class="field">
+        <label>Falls History — H/O Fall in Past 1 Year</label>
+        <div class="radio-group" style="margin-bottom:8px">
+          <label><input type="radio" name="fall-hx" value="Yes" onchange="GeriatricForm.onFallHx(this.value)"> Yes</label>
+          <label><input type="radio" name="fall-hx" value="No"  onchange="GeriatricForm.onFallHx(this.value)"> No</label>
+        </div>
+        <div id="fall-detail-block" style="display:none">
+          <label style="font-size:12px;color:var(--muted);font-weight:500">Consequence of Fall</label>
+          <div class="check-group" style="margin:4px 0 6px">
+            <label><input type="checkbox" id="fall-fracture"> Fracture</label>
+            <label><input type="checkbox" id="fall-hospitalised"> Hospitalised</label>
+            <label><input type="checkbox" id="fall-fear"> Fear of Falling</label>
+            <label><input type="checkbox" id="fall-injury"> Soft Tissue Injury</label>
+            <label><input type="checkbox" id="fall-none" onchange="GeriatricForm.onFallNone(this.checked)"> No Injury</label>
+          </div>
+          <input type="text" id="fall-consequence-other" placeholder="Other consequence...">
+        </div>
+      </div>
+
+      <!-- Walking Aids -->
+      <div class="field">
+        <label>Walking Aids</label>
+        <div class="check-group">
+          <label><input type="checkbox" id="aid-none"> None</label>
+          <label><input type="checkbox" id="aid-frame"> Walking Frame</label>
+          <label><input type="checkbox" id="aid-quadripod"> Quadripod</label>
+          <label><input type="checkbox" id="aid-stick"> Stick</label>
+          <label><input type="checkbox" id="aid-wheelchair"> Wheelchair</label>
+        </div>
+        <input type="text" id="aid-others" placeholder="Other walking aid..." style="margin-top:6px">
+      </div>
+
+      <!-- Incontinence -->
+      <div class="field">
+        <label>Incontinence</label>
+        <div class="fg c2" style="gap:10px;margin-bottom:8px">
+          <div>
+            <span style="font-size:12px;color:var(--muted);font-weight:500">Bladder</span>
+            <div class="radio-group" style="margin-top:4px">
+              <label><input type="radio" name="incon-bladder" value="Yes" onchange="GeriatricForm.onIncon()"> Yes</label>
+              <label><input type="radio" name="incon-bladder" value="No"  onchange="GeriatricForm.onIncon()"> No</label>
+            </div>
+          </div>
+          <div>
+            <span style="font-size:12px;color:var(--muted);font-weight:500">Bowel</span>
+            <div class="radio-group" style="margin-top:4px">
+              <label><input type="radio" name="incon-bowel" value="Yes" onchange="GeriatricForm.onIncon()"> Yes</label>
+              <label><input type="radio" name="incon-bowel" value="No"  onchange="GeriatricForm.onIncon()"> No</label>
+            </div>
+          </div>
+        </div>
+        <div class="check-group">
+          <label><input type="checkbox" id="incon-stress"> Stress</label>
+          <label><input type="checkbox" id="incon-urge"> Urge</label>
+          <label><input type="checkbox" id="incon-mixed"> Mixed</label>
+        </div>
+      </div>
+
+      <!-- Diaper / Dominant Hand / Cognitive -->
+      <div class="field">
+        <label>Wear Diapers</label>
+        <div class="radio-group" style="margin-bottom:6px">
+          <label><input type="radio" name="diaper" value="Yes" onchange="GeriatricForm.onDiaper('Yes')"> Yes</label>
+          <label><input type="radio" name="diaper" value="No"  onchange="GeriatricForm.onDiaper('No')"> No</label>
+        </div>
+        <div class="check-group">
+          <label><input type="checkbox" id="diaper-day"> Day</label>
+          <label><input type="checkbox" id="diaper-night"> Night</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Dominant Hand</label>
+        <div class="radio-group">
+          <label><input type="radio" name="dominant-hand" value="Right"> Right</label>
+          <label><input type="radio" name="dominant-hand" value="Left"> Left</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cognitive Impairment</label>
+        <div class="radio-group" style="margin-bottom:6px">
+          <label><input type="radio" name="cognitive" value="Yes"> Yes</label>
+          <label><input type="radio" name="cognitive" value="No"> No</label>
+        </div>
+        <input type="text" id="cognitive-test" placeholder="MMSE / Mini COG score / notes...">
+      </div>
+
+      <div class="field">
+        <label>Communication Impairment</label>
+        <div class="radio-group">
+          <label><input type="radio" name="communication" value="None"> None</label>
+          <label><input type="radio" name="communication" value="Expressive"> Expressive</label>
+          <label><input type="radio" name="communication" value="Receptive"> Receptive</label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Sensory Deficits</label>
+        <div class="check-group">
+          <label><input type="checkbox" id="deficit-visual"> Visual Field Deficit</label>
+          <label><input type="checkbox" id="deficit-hearing"> Hearing Deficit</label>
+        </div>
+      </div>
+
+      <!-- Assistive Devices -->
+      <div class="field">
+        <label>Assistive Devices</label>
+        <div class="check-group">
+          <label><input type="checkbox" id="device-pacemaker"> Pacemaker</label>
+          <label><input type="checkbox" id="device-hearing-aid"> Hearing Aid</label>
+          <label><input type="checkbox" id="device-spectacles"> Spectacles</label>
+          <label><input type="checkbox" id="device-dentures"> Dentures</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 SUBJECTIVE ASSESSMENT -->
+<div class="card" id="s-subjective">
+  <div class="card-header"><span class="sec-num">04</span><h2>Subjective Assessment</h2></div>
+  <div class="card-body">
+    <div class="fg">
+
+      <!-- Medical History -->
+      <div class="field">
+        <label>Medical History — tick all that apply</label>
+        <div class="check-group">
+          <label><input type="checkbox" id="med-hpt"> HPT</label>
+          <label><input type="checkbox" id="med-dm"> DM</label>
+          <label><input type="checkbox" id="med-ccf"> CCF</label>
+          <label><input type="checkbox" id="med-ihd"> IHD</label>
+          <label><input type="checkbox" id="med-pvd"> PVD</label>
+          <label><input type="checkbox" id="med-copd"> COPD</label>
+          <label><input type="checkbox" id="med-dementia"> Dementia</label>
+          <label><input type="checkbox" id="med-pd"> Parkinson's (PD)</label>
+          <label><input type="checkbox" id="med-cva-rt"> Old CVA (RT)</label>
+          <label><input type="checkbox" id="med-cva-lt"> Old CVA (LT)</label>
+          <label><input type="checkbox" id="med-oa"> OA</label>
+          <label><input type="checkbox" id="med-fracture"> Fracture</label>
+        </div>
+      </div>
+
+      <div class="fg c2">
+        <div class="field">
+          <label>Social History</label>
+          <textarea id="subj-social" placeholder="Family support, carer status, home responsibilities, living situation..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Previous Surgery</label>
+          <div class="radio-group" style="margin-bottom:6px">
+            <label><input type="radio" name="prev-surgery" value="Yes"> Yes</label>
+            <label><input type="radio" name="prev-surgery" value="No"> No</label>
+          </div>
+          <input type="text" id="surgery-area" placeholder="Area / details e.g. Left THR 2019...">
+        </div>
+
+        <div class="field">
+          <label>Investigations (IX / MRI / X-Ray / CT Brain / BMD / BIA)</label>
+          <textarea id="subj-investigations" placeholder="Imaging type, date, relevant findings..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Medication</label>
+          <textarea id="subj-medication" placeholder="Current medications, dosage, relevance to PT..."></textarea>
+        </div>
+
+        <div class="field">
+          <label>Main Carer</label>
+          <div class="radio-group" style="flex-wrap:wrap;margin-bottom:6px">
+            <label><input type="radio" name="main-carer" value="Husband"> Husband</label>
+            <label><input type="radio" name="main-carer" value="Wife"> Wife</label>
+            <label><input type="radio" name="main-carer" value="Son"> Son</label>
+            <label><input type="radio" name="main-carer" value="Daughter"> Daughter</label>
+            <label><input type="radio" name="main-carer" value="Sibling"> Sibling</label>
+            <label><input type="radio" name="main-carer" value="Other"> Other</label>
+          </div>
+          <input type="text" id="carer-other" placeholder="Specify if other...">
+        </div>
+
+        <div class="field">
+          <label>Premorbid Mobility</label>
+          <div class="radio-group">
+            <label><input type="radio" name="premorbid-mobility" value="Independent"> Independent</label>
+            <label><input type="radio" name="premorbid-mobility" value="Semi Independent"> Semi Independent</label>
+            <label><input type="radio" name="premorbid-mobility" value="Dependent"> Dependent</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Current Mobility</label>
+          <div class="radio-group">
+            <label><input type="radio" name="current-mobility" value="Independent"> Independent</label>
+            <label><input type="radio" name="current-mobility" value="Semi Independent"> Semi Independent</label>
+            <label><input type="radio" name="current-mobility" value="Dependent"> Dependent</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Home Environment</label>
+          <div class="check-group">
+            <label><input type="checkbox" id="home-lift"> Lift</label>
+            <label><input type="checkbox" id="home-stairs"> Stairs</label>
+            <label><input type="checkbox" id="home-kerbs"> Kerbs</label>
+            <label><input type="checkbox" id="home-ground"> Ground Level</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Toilet Type</label>
+          <div class="check-group">
+            <label><input type="checkbox" id="toilet-sitting"> Sitting</label>
+            <label><input type="checkbox" id="toilet-squatting"> Squatting</label>
+            <label><input type="checkbox" id="toilet-commode"> Commode</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 BODY CHART -->
+<div class="card" id="s-chart">
+  <div class="card-header"><span class="sec-num">05</span><h2>Body Chart</h2></div>
+  <div class="card-body">
+    <div class="body-chart-wrap">
+      <div class="body-figures">
+        <div class="fig-wrap">
+          <div class="fig-label">Anterior</div>
+          <svg class="bsvg" id="svg-ant" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,120 36,130 Q34,140 38,148 Q50,154 65,154 Q80,154 92,148 Q96,140 94,130 Q92,120 88,115 Z"/>
+              <path d="M38,148 Q32,160 30,178 Q28,196 30,212 Q36,218 44,216 Q50,200 52,182 Q54,164 50,150 Z"/>
+              <path d="M92,148 Q98,160 100,178 Q102,196 100,212 Q94,218 86,216 Q80,200 78,182 Q76,164 80,150 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M28,278 Q24,284 24,292 Q28,300 38,300 Q46,300 48,292 Q48,284 46,278 Z"/>
+              <path d="M102,278 Q106,284 106,292 Q102,300 92,300 Q84,300 82,292 Q82,284 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head"             data-view="ant"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck / Shoulder"  data-view="ant"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm"            data-view="ant"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm"            data-view="ant"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Chest"            data-view="ant"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Abdomen"          data-view="ant"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm"        data-view="ant"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm"        data-view="ant"/>
+            <rect class="hit" x="34" y="150" width="34" height="68" rx="3"  data-zone="L thigh"          data-view="ant"/>
+            <rect class="hit" x="62" y="150" width="34" height="68" rx="3"  data-zone="R thigh"          data-view="ant"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L leg"            data-view="ant"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R leg"            data-view="ant"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L foot"           data-view="ant"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R foot"           data-view="ant"/>
+            <g id="markers-ant"></g>
+          </svg>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-label">Posterior</div>
+          <svg class="bsvg" id="svg-post" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,122 36,132 Q34,144 40,150 Q52,156 65,156 Q78,156 90,150 Q96,144 94,132 Q92,122 88,115 Z"/>
+              <path d="M40,150 Q32,162 30,180 Q28,198 32,214 Q38,220 46,218 Q52,202 54,184 Q56,166 50,152 Z"/>
+              <path d="M90,150 Q98,162 100,180 Q102,198 98,214 Q92,220 84,218 Q78,202 76,184 Q74,166 80,152 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M34,278 Q28,282 26,290 Q30,298 40,300 Q48,300 48,290 Q48,282 46,278 Z"/>
+              <path d="M96,278 Q102,282 104,290 Q100,298 90,300 Q82,300 82,290 Q82,282 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head (post)"          data-view="post"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck (post)"           data-view="post"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm (post)"          data-view="post"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm (post)"          data-view="post"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Upper back"            data-view="post"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Lumbar / Lower back"   data-view="post"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm (post)"      data-view="post"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm (post)"      data-view="post"/>
+            <rect class="hit" x="34" y="150" width="34" height="70" rx="3"  data-zone="L hamstring"           data-view="post"/>
+            <rect class="hit" x="62" y="150" width="34" height="70" rx="3"  data-zone="R hamstring"           data-view="post"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L calf"                data-view="post"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R calf"                data-view="post"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L heel / foot (post)"  data-view="post"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R heel / foot (post)"  data-view="post"/>
+            <g id="markers-post"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-controls">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click figure</div>
+          <div class="pain-type-sel" id="ptype-sel">
+            <button class="pt-chip ptype-ache active" data-ptype="ache">Ache</button>
+            <button class="pt-chip ptype-sharp"       data-ptype="sharp">Sharp</button>
+            <button class="pt-chip ptype-numb"        data-ptype="numb">Numbness</button>
+            <button class="pt-chip ptype-burn"        data-ptype="burn">Burning</button>
+            <button class="pt-chip ptype-refer"       data-ptype="refer">Referred</button>
+            <button class="pt-chip ptype-tender"      data-ptype="tender">Tenderness</button>
+          </div>
+        </div>
+        <div>
+          <div class="list-header">
+            <span>Marked Locations</span>
+            <button class="btn-sm" onclick="BodyChart.clearAll()">Clear all</button>
+          </div>
+          <div class="marker-list" id="marker-list">
+            <div class="empty-hint" id="empty-hint">No markers yet</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Body Chart Notes</label>
+          <textarea id="chart-notes" placeholder="Distribution, peripheralisation, centralisation..." style="min-height:56px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 PAIN -->
+<div class="card" id="s-pain">
+  <div class="card-header"><span class="sec-num">06</span><h2>Pain Assessment</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="fg c2">
+        <div class="field">
+          <label>Presence of Pain</label>
+          <div class="radio-group">
+            <label><input type="radio" name="pain-present" value="Yes" onchange="GeriatricForm.onPainPresent('Yes')"> Yes</label>
+            <label><input type="radio" name="pain-present" value="No"  onchange="GeriatricForm.onPainPresent('No')"> No</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Pain Site</label>
+          <input type="text" id="pain-site" placeholder="Location of pain...">
+        </div>
+      </div>
+
+      <!-- VAS Slider -->
+      <div id="pain-detail-block">
+        <div class="fg c2" style="margin-bottom:8px">
+          <div class="pain-score-box">
+            <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">Pain Score (VAS 0&ndash;10)</label>
+            <div class="pain-scale-row">
+              <span style="font-size:11px;color:var(--text-faint)">0</span>
+              <input type="range" id="pain-score" min="0" max="10" value="0" step="1" oninput="GeriatricForm.setPain(this.value)">
+              <span style="font-size:11px;color:var(--text-faint)">10</span>
+              <div class="pain-val pv-low" id="pv-pain">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="fg c2">
+          <div class="field">
+            <label>Nature of Pain</label>
+            <div class="radio-group">
+              <label><input type="radio" name="pain-nature" value="Constant"> Constant</label>
+              <label><input type="radio" name="pain-nature" value="Intermittent"> Intermittent</label>
+              <label><input type="radio" name="pain-nature" value="Episodic"> Episodic</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Type of Pain</label>
+            <div class="radio-group">
+              <label><input type="radio" name="pain-type" value="Sharp"> Sharp</label>
+              <label><input type="radio" name="pain-type" value="Dull"> Dull</label>
+              <label><input type="radio" name="pain-type" value="Superficial"> Superficial</label>
+              <label><input type="radio" name="pain-type" value="Deep"> Deep</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Pain History</label>
+            <div class="radio-group">
+              <label><input type="radio" name="pain-history" value="Improving"> Improving</label>
+              <label><input type="radio" name="pain-history" value="Unchanged"> Unchanged</label>
+              <label><input type="radio" name="pain-history" value="Worsened"> Worsened</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 OBJECTIVE ASSESSMENT -->
+<div class="card" id="s-objective">
+  <div class="card-header"><span class="sec-num">07</span><h2>Objective Assessment</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Posture / Gait</label>
+        <textarea id="obj-posture" placeholder="e.g. Kyphosis, Trendelenburg, shuffling gait, furniture gait, cautious gait..."></textarea>
+      </div>
+
+      <!-- Functional Mobility Grid -->
+      <div class="field" style="grid-column:span 2">
+        <label>Functional Mobility — Level of Assistance Required</label>
+        <div style="overflow-x:auto;margin-top:8px">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);min-width:100px">Task</th>
+                <th style="padding:7px 6px;background:var(--surface2);border:1px solid var(--border);text-align:center;min-width:80px">
+                  Independent<br><span style="font-weight:400;font-size:11px;color:var(--muted)">(no help)</span>
+                </th>
+                <th style="padding:7px 6px;background:var(--surface2);border:1px solid var(--border);text-align:center;min-width:80px">
+                  Supervised<br><span style="font-weight:400;font-size:11px;color:var(--muted)">(standby)</span>
+                </th>
+                <th style="padding:7px 6px;background:var(--surface2);border:1px solid var(--border);text-align:center;min-width:80px">
+                  Min Assist<br><span style="font-weight:400;font-size:11px;color:var(--muted)">(≤25% help)</span>
+                </th>
+                <th style="padding:7px 6px;background:var(--surface2);border:1px solid var(--border);text-align:center;min-width:80px">
+                  Mod Assist<br><span style="font-weight:400;font-size:11px;color:var(--muted)">(26–75%)</span>
+                </th>
+                <th style="padding:7px 6px;background:var(--surface2);border:1px solid var(--border);text-align:center;min-width:80px">
+                  Max Assist<br><span style="font-weight:400;font-size:11px;color:var(--muted)">(>75% help)</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:8px 10px;border:1px solid var(--border);font-weight:500">Bed Mobility</td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-bed" value="Ind"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-bed" value="Sup"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-bed" value="Min A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-bed" value="Mod A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-bed" value="Max A"></td>
+              </tr>
+              <tr>
+                <td style="padding:8px 10px;border:1px solid var(--border);font-weight:500">Sitting</td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-sitting" value="Ind"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-sitting" value="Sup"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-sitting" value="Min A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-sitting" value="Mod A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-sitting" value="Max A"></td>
+              </tr>
+              <tr>
+                <td style="padding:8px 10px;border:1px solid var(--border);font-weight:500">Standing</td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-standing" value="Ind"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-standing" value="Sup"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-standing" value="Min A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-standing" value="Mod A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-standing" value="Max A"></td>
+              </tr>
+              <tr>
+                <td style="padding:8px 10px;border:1px solid var(--border);font-weight:500">Transfer</td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-transfer" value="Ind"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-transfer" value="Sup"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-transfer" value="Min A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-transfer" value="Mod A"></td>
+                <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="radio" name="mob-transfer" value="Max A"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Lungs</label>
+        <textarea id="obj-lungs" placeholder="Air entry, wheeze, crepitation, breath sounds..."></textarea>
+      </div>
+      <div class="field">
+        <label>General Muscle Strength</label>
+        <textarea id="obj-strength" placeholder="Upper limb / Lower limb gross strength..."></textarea>
+      </div>
+      <div class="field">
+        <label>ROM &amp; Contracture</label>
+        <div class="radio-group" style="margin-bottom:6px">
+          <label><input type="radio" name="rom-contracture" value="Present"> Present</label>
+          <label><input type="radio" name="rom-contracture" value="Absent"> Absent</label>
+        </div>
+        <input type="text" id="rom-notes" placeholder="Affected joint / area...">
+      </div>
+      <div class="field">
+        <label>Reflex / Sensation / Proprioception</label>
+        <div class="radio-group" style="margin-bottom:6px">
+          <label><input type="radio" name="reflex-sensation" value="Intact"> Intact</label>
+          <label><input type="radio" name="reflex-sensation" value="Impaired"> Impaired</label>
+        </div>
+        <input type="text" id="reflex-notes" placeholder="Specify side / modality if impaired...">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 OUTCOME MEASURES -->
+<div class="card" id="s-outcome">
+  <div class="card-header"><span class="sec-num">08</span><h2>Outcome Measures</h2></div>
+  <div class="card-body">
+    <div style="overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);width:130px">Category</th>
+            <th style="text-align:left;padding:8px 10px;background:var(--surface2);border:1px solid var(--border)">Test</th>
+            <th style="padding:8px 10px;background:var(--surface2);border:1px solid var(--border);text-align:center;width:200px">Result</th>
+            <th style="text-align:left;padding:8px 10px;background:var(--surface2);border:1px solid var(--border)">Reference</th>
+            <th style="padding:8px 10px;background:var(--surface2);border:1px solid var(--border);text-align:center;width:60px">N/A</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- BALANCE -->
+          <tr id="om-row-berg">
+            <td rowspan="3" style="padding:8px 10px;border:1px solid var(--border);font-weight:600;vertical-align:middle;background:var(--surface2)">Balance</td>
+            <td style="padding:8px 10px;border:1px solid var(--border)">Berg Balance Scale</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <input type="number" id="om-berg" min="0" max="56" placeholder="0–56" style="width:70px;text-align:center" oninput="GeriatricForm.onBergInput(this.value)">
+                <span style="color:var(--muted);font-size:12px">/ 56</span>
+              </div>
+              <div id="om-berg-badge" style="margin-top:4px;font-size:11px;font-weight:600;text-align:center"></div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">56–41 Low · 40–21 Moderate · 0–20 High risk</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-berg" onchange="GeriatricForm.toggleNa('berg', this.checked)"></td>
+          </tr>
+          <tr id="om-row-tug">
+            <td style="padding:8px 10px;border:1px solid var(--border)">Timed Up &amp; Go (TUG)</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <input type="number" id="om-tug" min="0" step="0.1" placeholder="sec" style="width:70px;text-align:center" oninput="GeriatricForm.onTugInput(this.value)">
+                <span style="color:var(--muted);font-size:12px">sec</span>
+              </div>
+              <div id="om-tug-badge" style="margin-top:4px;font-size:11px;font-weight:600;text-align:center"></div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">≤13.5 sec Low risk · &gt;13.5 sec High risk</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-tug" onchange="GeriatricForm.toggleNa('tug', this.checked)"></td>
+          </tr>
+          <tr id="om-row-sls">
+            <td style="padding:8px 10px;border:1px solid var(--border)">Single Leg Stance</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <input type="number" id="om-sls" min="0" step="0.1" placeholder="sec" style="width:70px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">sec</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">Age norm 50–59: ~29 sec</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-sls" onchange="GeriatricForm.toggleNa('sls', this.checked)"></td>
+          </tr>
+          <!-- STRENGTH -->
+          <tr id="om-row-grip">
+            <td rowspan="2" style="padding:8px 10px;border:1px solid var(--border);font-weight:600;vertical-align:middle;background:var(--surface2)">Strength</td>
+            <td style="padding:8px 10px;border:1px solid var(--border)">Grip Strength (R / L)</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+                <input type="number" id="om-grip-r" min="0" step="0.1" placeholder="R" style="width:56px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">/</span>
+                <input type="number" id="om-grip-l" min="0" step="0.1" placeholder="L" style="width:56px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">kg</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">Frailty indicator — compare to age &amp; sex norms</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-grip" onchange="GeriatricForm.toggleNa('grip', this.checked)"></td>
+          </tr>
+          <tr id="om-row-ftsst">
+            <td style="padding:8px 10px;border:1px solid var(--border)">Chair Rising 5× (FTSST)</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <input type="number" id="om-ftsst" min="0" step="0.1" placeholder="sec" style="width:70px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">sec</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">60–69: 11.4s · 70–79: 12.6s · 80–89: 14.8s</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-ftsst" onchange="GeriatricForm.toggleNa('ftsst', this.checked)"></td>
+          </tr>
+          <!-- MOBILITY & GAIT -->
+          <tr id="om-row-ems">
+            <td rowspan="4" style="padding:8px 10px;border:1px solid var(--border);font-weight:600;vertical-align:middle;background:var(--surface2)">Mobility &amp; Gait</td>
+            <td style="padding:8px 10px;border:1px solid var(--border)">Elderly Mobility Scale (EMS)</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <input type="number" id="om-ems" min="0" max="20" placeholder="0–20" style="width:70px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">/ 20</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">14–20 Independent · 10–13 Supervision · 0–9 Dependent</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-ems" onchange="GeriatricForm.toggleNa('ems', this.checked)"></td>
+          </tr>
+          <tr id="om-row-poma">
+            <td style="padding:8px 10px;border:1px solid var(--border)">Problem Orientated Mobility Assessment</td>
+            <td style="padding:6px 10px;border:1px solid var(--border)" colspan="2">
+              <input type="text" id="om-poma" placeholder="Notes..." style="width:100%">
+            </td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-poma" onchange="GeriatricForm.toggleNa('poma', this.checked)"></td>
+          </tr>
+          <tr id="om-row-walk">
+            <td style="padding:8px 10px;border:1px solid var(--border)">3 / 6-Min Walk Test</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                <input type="number" id="om-walk" min="0" placeholder="m" style="width:70px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">m</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">Specify 3-min or 6-min in notes</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-walk" onchange="GeriatricForm.toggleNa('walk', this.checked)"></td>
+          </tr>
+          <tr id="om-row-gait">
+            <td style="padding:8px 10px;border:1px solid var(--border)">Gait Speed (10 m)</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:4px;justify-content:center;flex-wrap:wrap">
+                <input type="number" id="om-gait-sec" min="0" step="0.1" placeholder="sec" style="width:60px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">sec</span>
+                <input type="number" id="om-gait-steps" min="0" placeholder="steps" style="width:60px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">steps</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">&lt;0.8 m/s indicates fall risk</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-gait" onchange="GeriatricForm.toggleNa('gait', this.checked)"></td>
+          </tr>
+          <!-- FLEXIBILITY -->
+          <tr id="om-row-reach">
+            <td style="padding:8px 10px;border:1px solid var(--border);font-weight:600;vertical-align:middle;background:var(--surface2)">Flexibility</td>
+            <td style="padding:8px 10px;border:1px solid var(--border)">Chair Sit &amp; Reach (R / L)</td>
+            <td style="padding:6px 10px;border:1px solid var(--border);text-align:center">
+              <div style="display:flex;align-items:center;gap:4px;justify-content:center">
+                <input type="number" id="om-reach-r" step="0.1" placeholder="R" style="width:56px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">/</span>
+                <input type="number" id="om-reach-l" step="0.1" placeholder="L" style="width:56px;text-align:center">
+                <span style="color:var(--muted);font-size:12px">cm</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--muted)">Hamstring &amp; lower back flexibility</td>
+            <td style="padding:8px;border:1px solid var(--border);text-align:center"><input type="checkbox" id="om-na-reach" onchange="GeriatricForm.toggleNa('reach', this.checked)"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Outcome Measures Notes</label>
+      <textarea id="om-notes" placeholder="Additional remarks, test conditions, patient tolerance..." style="min-height:48px"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 09 PT IMPRESSION & PLAN -->
+<div class="card" id="s-plan">
+  <div class="card-header"><span class="sec-num">09</span><h2>PT Impression &amp; Plan</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>PT Impression</label>
+        <textarea id="plan-impression" placeholder="Summarize physiotherapy diagnosis based on findings..."></textarea>
+      </div>
+      <div class="field">
+        <label>Short-Term Goals (STG)</label>
+        <textarea id="plan-stg" placeholder="1–2 week goals..."></textarea>
+      </div>
+      <div class="field">
+        <label>Long-Term Goals (LTG)</label>
+        <textarea id="plan-ltg" placeholder="1–3 month goals..."></textarea>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Plan of Treatment</label>
+        <textarea id="plan-tx" placeholder="Exercise prescription, gait training, fall prevention, HEP, caregiver education..."></textarea>
+      </div>
+      <div class="field">
+        <label>Patient/Carer Agreeable to Proposed Treatment</label>
+        <div class="radio-group">
+          <label><input type="radio" name="consent-agree" value="Yes"> Yes</label>
+          <label><input type="radio" name="consent-agree" value="No"> No</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Patient Education Given</label>
+        <div class="radio-group">
+          <label><input type="radio" name="consent-edu" value="Yes"> Yes</label>
+          <label><input type="radio" name="consent-edu" value="No"> No</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/form_geriatric.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var FM = 'GERIATRIC';
+  ClinicalTemplates.addButton('plan-impression', FM, 'impression');
+  ClinicalTemplates.addButton('plan-stg',        FM, 'stg');
+  ClinicalTemplates.addButton('plan-ltg',        FM, 'ltg');
+  ClinicalTemplates.addButton('plan-tx',         FM, 'treatment');
+
+  // Pre-fill today's date
+  var today = new Date();
+  var yyyy = today.getFullYear();
+  var mm   = String(today.getMonth() + 1).padStart(2,'0');
+  var dd   = String(today.getDate()).padStart(2,'0');
+  document.getElementById('pt-date').value = yyyy + '-' + mm + '-' + dd;
+
+  var episodeId = {{ episode_id or 'null' }};
+  var patientId = {{ patient_id or 'null' }};
+
+  {% if patient %}
+  var patientData = {{ patient | tojson }};
+  FormBase.sv('pt-name',    patientData.name     || '');
+  FormBase.sv('pt-nric',    patientData.ic        || '');
+  FormBase.sv('pt-passport',patientData.passport  || '');
+  FormBase.sv('pt-dob',     patientData.dob       || '');
+  FormBase.sv('pt-rn',      patientData.ic        || patientData.passport || '');
+  if (patientData.dob) FormBase.onDobChange(patientData.dob);
+
+  // Show sex as read-only text
+  var sexMap = { M: 'Male', F: 'Female' };
+  var sexEl = document.getElementById('pt-sex-display');
+  if (sexEl) sexEl.value = sexMap[patientData.sex] || '';
+  FormBase.setRadio('pt-sex', patientData.sex || '');
+  FormBase.setRadio('pt-type', patientData.pt_type || 'local');
+
+  // Show/hide NRIC vs Passport
+  if (patientData.pt_type === 'foreign') {
+    document.getElementById('nric-field').style.display    = 'none';
+    document.getElementById('passport-field').style.display = '';
+  }
+
+  if (patientData.ic && patientData.ic.length === 12) {
+    FormBase.onNricInput(patientData.ic);
+  }
+  Main.updateProgress();
+  {% endif %}
+
+  if (episodeId) {
+    var origCollect = window.ActiveForm.collect;
+    window.ActiveForm.collect = function(currentId) {
+      var d = origCollect(currentId);
+      d.episode_id = episodeId;
+      return d;
+    };
+
+    fetch('/api/episodes/' + episodeId + '/record')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.id) {
+          window.ActiveForm.populate(data);
+          Main.setCurrentId(data.id);
+          Main.updateProgress();
+          setTimeout(function() { Main.clearDirty(); }, 100);
+        }
+      })
+      .catch(function(e) { console.warn('Could not auto-load record:', e); });
+  }
+
+  if (episodeId || patientId) {
+    var navGroup = document.getElementById('topbar-nav-group');
+    var navSep   = document.getElementById('topbar-nav-sep');
+    if (navGroup) {
+      var retBtn = document.createElement('button');
+      retBtn.className   = 'tbtn';
+      retBtn.textContent = '\u2190 Return';
+      retBtn.onclick = function() {
+        if (Main.isDirty && !confirm('You have unsaved changes. Return anyway?')) return;
+        window.location.href = '/';
+      };
+      var saveRetBtn = document.createElement('button');
+      saveRetBtn.className   = 'tbtn primary';
+      saveRetBtn.textContent = 'Save & Return';
+      saveRetBtn.onclick = async function() {
+        await Main.saveRecord();
+        setTimeout(function() { window.location.href = '/'; }, 800);
+      };
+      navGroup.appendChild(retBtn);
+      navGroup.appendChild(saveRetBtn);
+      if (navSep) navSep.style.display = '';
+    }
+  }
+});
+</script>
+{% endblock %}

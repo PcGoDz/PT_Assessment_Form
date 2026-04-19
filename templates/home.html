@@ -552,6 +552,12 @@
       <div class="detail-header">
         <button class="back-btn" onclick="showList()">&#8592; All Patients</button>
         <div style="flex:1"></div>
+        <button class="btn-ghost" id="delete-patient-btn"
+          style="color:var(--danger);border-color:var(--danger);opacity:0.7"
+          onclick="deleteCurrentPatient()"
+          title="Permanently delete this patient and all records">
+          &#128465; Delete Patient
+        </button>
         <button class="btn-primary" onclick="openNewEpisodeModal()">+ New Episode / Referral</button>
       </div>
 
@@ -616,7 +622,8 @@
         </div>
         <div class="modal-field">
           <label>Date of Birth</label>
-          <input type="date" id="np-dob">
+          <input type="date" id="np-dob" onchange="onNpDob(this.value)">
+          <small id="np-age-display" style="color:var(--muted);display:block;margin-top:2px"></small>
         </div>
       </div>
       <div class="modal-row">
@@ -688,8 +695,7 @@
         <div class="form-card-name">Spine</div>
         <div class="form-card-sub">Cervical, thoracic, lumbar</div>
       </div>
-      <div class="form-card soon" data-form="GERIATRIC">
-        <div class="form-card-badge">Soon</div>
+      <div class="form-card" data-form="GERIATRIC" onclick="selectForm(this)">
         <div class="form-card-icon">&#9878;</div>
         <div class="form-card-name">Geriatric</div>
         <div class="form-card-sub">Balance, mobility, falls</div>
@@ -815,6 +821,7 @@ function openNewPatientModal() {
   });
   document.getElementById('np-type').value = 'local';
   document.getElementById('np-sex').value = '';
+  document.getElementById('np-age-display').textContent = '';
   onNpTypeChange();
   openModal('modal-new-patient');
   setTimeout(function() { document.getElementById('np-name').focus(); }, 100);
@@ -834,9 +841,25 @@ function onNpNric(val) {
   var yy = c.substring(0,2), mm = c.substring(2,4), dd = c.substring(4,6);
   var thisYY = new Date().getFullYear() % 100;
   var yr = parseInt(yy) <= thisYY ? '20'+yy : '19'+yy;
-  document.getElementById('np-dob').value = yr+'-'+mm+'-'+dd;
+  var dobStr = yr+'-'+mm+'-'+dd;
+  document.getElementById('np-dob').value = dobStr;
+  onNpDob(dobStr);
   var last = parseInt(c.charAt(11));
   document.getElementById('np-sex').value = last % 2 === 1 ? 'M' : 'F';
+}
+
+function onNpDob(val) {
+  if (!val) return;
+  var dob = new Date(val);
+  if (isNaN(dob.getTime())) return;
+  var today = new Date();
+  var age = today.getFullYear() - dob.getFullYear();
+  if (today.getMonth() < dob.getMonth() ||
+     (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
+  if (age >= 0 && age <= 130) {
+    var el = document.getElementById('np-age-display');
+    if (el) el.textContent = 'Age: ' + age;
+  }
 }
 
 async function submitNewPatient() {
@@ -1190,6 +1213,28 @@ async function reactivateEpisode(episodeId, e) {
     if (!res.ok) { showToast('Failed to reactivate', 'err'); return; }
     showToast('Episode reactivated', 'ok');
     loadEpisodes(currentPatientId);
+    loadStats();
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+// ── Delete patient ────────────────────────────────────
+async function deleteCurrentPatient() {
+  if (!currentPatientId) return;
+  var name = document.getElementById('pt-fullname').textContent || 'this patient';
+
+  // Two-step confirmation — deliberate
+  var step1 = confirm('Delete ' + name + '? This will permanently remove ALL episodes, assessments and follow-up notes. Cannot be undone.');
+  if (!step1) return;
+
+  var step2 = confirm('FINAL WARNING: Permanently delete ' + name + ' and all their clinical records?');
+  if (!step2) return;
+
+  try {
+    var res = await fetch('/api/patients/' + currentPatientId, { method: 'DELETE' });
+    var j   = await res.json();
+    if (!res.ok) { showToast(j.error || 'Failed to delete', 'err'); return; }
+    showToast('Patient deleted', 'ok');
+    showList();
     loadStats();
   } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }

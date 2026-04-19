@@ -5,10 +5,27 @@ import webbrowser
 from flask import Flask, render_template, request, jsonify, make_response
 from database import (
     init_db, save_record, list_records, load_record, delete_record,
-    create_patient, search_patients, get_patient, update_patient,
+    create_patient, search_patients, get_patient, update_patient, delete_patient,
     create_episode, get_patient_episodes, get_episode, update_episode_status,
     get_episode_record, save_soap, get_soap_notes, delete_soap
 )
+
+
+import pdf_ms
+import pdf_spine
+import pdf_geriatric
+
+_PDF_GENERATORS = {
+    'MS':        pdf_ms.generate_episode_pdf,
+    'SPINE':     pdf_spine.generate_episode_pdf,
+    'GERIATRIC': pdf_geriatric.generate_episode_pdf,
+}
+
+_SINGLE_PDF_GENERATORS = {
+    'MS':        pdf_ms.generate_ms_pdf,
+    'SPINE':     pdf_spine.generate_spine_pdf,
+    'GERIATRIC': pdf_geriatric.generate_geriatric_pdf,
+}
 
 
 def resource_path(relative):
@@ -59,6 +76,19 @@ def form_ms():
         patient=patient)
 
 
+@app.route('/form/geriatric')
+def form_geriatric():
+    episode_id = request.args.get('episode_id', type=int)
+    patient_id = request.args.get('patient_id', type=int)
+    patient    = None
+    if patient_id:
+        patient, _ = get_patient(DB_PATH, patient_id)
+    return render_template('forms/geriatric.html',
+        episode_id=episode_id,
+        patient_id=patient_id,
+        patient=patient)
+
+
 @app.route('/form/spine')
 def form_spine():
     episode_id = request.args.get('episode_id', type=int)
@@ -99,6 +129,14 @@ def api_get_patient(patient_id):
     if err or not patient:
         return jsonify({'error': err or 'Not found'}), 404
     return jsonify(patient)
+
+
+@app.route('/api/patients/<int:patient_id>', methods=['DELETE'])
+def api_delete_patient(patient_id):
+    ok, err = delete_patient(DB_PATH, patient_id)
+    if not ok:
+        return jsonify({'error': err}), 500
+    return jsonify({'success': True})
 
 
 @app.route('/api/patients/<int:patient_id>', methods=['PUT'])
@@ -242,10 +280,11 @@ def api_episode_record(episode_id):
 @app.route('/api/episodes/<int:episode_id>/pdf', methods=['GET'])
 def export_episode_pdf(episode_id):
     try:
-        from pdf_ms import generate_episode_pdf
         ep, err = get_episode(DB_PATH, episode_id)
         if err or not ep:
             return jsonify({'error': err or 'Episode not found'}), 404
+        _form_type = ep.get('form_type', 'MS').upper()
+        generate_episode_pdf = _PDF_GENERATORS.get(_form_type, pdf_ms.generate_episode_pdf)
         assessment, _ = get_episode_record(DB_PATH, episode_id)
         soaps, _      = get_soap_notes(DB_PATH, episode_id)
         if not assessment:
@@ -278,13 +317,14 @@ def export_pdf(record_id):
     if err:
         return jsonify({'error': err}), 404
     try:
-        from pdf_ms import generate_ms_pdf
-        pdf_bytes = generate_ms_pdf(data)
-        patient   = data.get('patient', {})
-        name      = (patient.get('name') or 'record').replace(' ', '_')
-        date      = patient.get('date') or 'nodate'
-        filename  = f"PT_MS_{name}_{date}.pdf"
-        response  = make_response(pdf_bytes)
+        _form_type  = str(data.get('_form_type', 'MS')).upper()
+        _gen        = _SINGLE_PDF_GENERATORS.get(_form_type, pdf_ms.generate_ms_pdf)
+        pdf_bytes   = _gen(data)
+        patient     = data.get('patient', {})
+        name        = (patient.get('name') or 'record').replace(' ', '_')
+        date        = patient.get('date') or 'nodate'
+        filename    = f"PT_{_form_type}_{name}_{date}.pdf"
+        response    = make_response(pdf_bytes)
         response.headers['Content-Type']        = 'application/pdf'
         response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response

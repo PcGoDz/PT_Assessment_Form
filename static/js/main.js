@@ -275,6 +275,270 @@ const Main = (function () {
     });
   }
 
+
+  // ── MPIS: Spine ────────────────────────────────
+  async function copyToMpisSpine() {
+    var data = window.ActiveForm.collect(currentId);
+    var p    = data.patient || {};
+    var pain = data.pain    || {};
+    var sq   = data.specialQuestions || {};
+    var hx   = data.history || {};
+    var neuro= data.neurological || {};
+    var obs  = data.observation  || {};
+    var palp = data.palpation    || {};
+    var plan = data.plan         || {};
+    var mgmt = data.management   || {};
+    var bc   = data.bodyChart    || {};
+    var mov  = data.spineMovement || [];
+    var acc  = data.accessory    || {};
+    var nd   = data.neurodynamic || {};
+    var LN   = String.fromCharCode(10);
+    var DIV  = '==================================================';
+    var dash = '--------------------------------------------------';
+    var parts = [];
+
+    parts.push('SPINE ASSESSMENT');
+    parts.push(DIV);
+    parts.push('Name  : ' + (p.name||'') + '   Date : ' + (p.date||''));
+    if (p.type === 'local') {
+      parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+    } else {
+      parts.push('Passport : ' + (p.passport||'') + '   Country : ' + (p.country||'') + '   Age : ' + (p.age||''));
+    }
+    parts.push('');
+
+    function sec(title, val) {
+      if (!val || !String(val).trim()) return;
+      parts.push(dash); parts.push(title); parts.push(String(val).trim()); parts.push('');
+    }
+
+    sec('DIAGNOSIS', data.diagnosis);
+    sec("DOCTOR'S MANAGEMENT", (mgmt.type||'') + (mgmt.surgeryDate ? ' (Surgery: ' + mgmt.surgeryDate + ')' : ''));
+    sec('PROBLEM', data.problem);
+
+    parts.push(dash); parts.push('PAIN SCORE');
+    parts.push('PRE: ' + (pain.pre||'0') + '/10   POST: ' + (pain.post||'0') + '/10');
+    if (pain.area)         parts.push('Area         : ' + pain.area);
+    if (pain.nature)       parts.push('Nature       : ' + pain.nature);
+    if (pain.agg)          parts.push('Aggravating  : ' + pain.agg);
+    if (pain.ease)         parts.push('Easing       : ' + pain.ease);
+    if (pain.behaviour24)  parts.push('24hrs        : ' + pain.behaviour24);
+    if (pain.irritability) parts.push('Irritability : ' + pain.irritability);
+    parts.push('');
+
+    var markers = bc.markers || [];
+    if (markers.length) {
+      parts.push(dash); parts.push('BODY CHART');
+      markers.forEach(function(m) {
+        parts.push('#' + m.id + ' ' + m.zone + ' (' + m.type + ') - ' + (m.view==='ant'?'Anterior':'Posterior'));
+      });
+      if (bc.notes) parts.push('Notes: ' + bc.notes);
+      parts.push('');
+    }
+
+    sec('CURRENT HISTORY', hx.current);
+    sec('PAST HISTORY',    hx.past);
+
+    parts.push(dash); parts.push('SPECIAL QUESTIONS');
+    if (sq.health)        parts.push('General Health     : ' + sq.health);
+    if (sq.pmhx)          parts.push('PMHx               : ' + sq.pmhx);
+    if (sq.surgery)       parts.push('Surgical History   : ' + sq.surgery);
+    if (sq.investigation) parts.push('Investigation      : ' + sq.investigation);
+    if (sq.medication)    parts.push('Medication         : ' + sq.medication);
+    if (sq.ce)            parts.push('C.E                : ' + sq.ce);
+    if (sq.bedPillow)     parts.push('Bed / Pillow       : ' + sq.bedPillow);
+    if (sq.occupation)    parts.push('Occupation         : ' + sq.occupation);
+    if (sq.social)        parts.push('Social History     : ' + sq.social);
+    parts.push('Hearing aid / Pacemaker: ' + (sq.pacemaker||'No'));
+    parts.push('');
+
+    parts.push(dash); parts.push('OBSERVATION');
+    if (obs.general) parts.push('General : ' + obs.general);
+    if (obs.local)   parts.push('Local   : ' + obs.local);
+    parts.push('');
+
+    parts.push(dash); parts.push('PALPATION');
+    if (palp.tenderness)  parts.push('Tenderness  : ' + palp.tenderness);
+    if (palp.temperature) parts.push('Temperature : ' + palp.temperature);
+    if (palp.muscle)      parts.push('Muscle/ST   : ' + palp.muscle);
+    if (palp.joint)       parts.push('Joint/Bony  : ' + palp.joint);
+    parts.push('');
+
+    if (mov && mov.length) {
+      parts.push(dash); parts.push('SPINE MOVEMENT');
+      mov.forEach(function(row) {
+        if (!row.movement) return;
+        parts.push(
+          (row.movement||'') +
+          '  Active: ' + (row.activeRom||'') +
+          '  Passive: ' + (row.passiveRom||'') +
+          '  Overpressure: ' + (row.overpress||'') +
+          '  End Feel: ' + (row.endFeel||'')
+        );
+      });
+      parts.push('');
+    }
+
+    if (acc.notes) sec('ACCESSORY (PAIVM)', acc.notes);
+
+    var nd_tests = nd.tests || {};
+    var nd_lines = [];
+    ['pnf','slr','ultt1','ultt2a','ultt2b','ultt2c','slump','pkb'].forEach(function(id) {
+      var t = nd_tests[id] || {};
+      var labels = {pnf:'PNF',slr:'SLR',ultt1:'ULTT 1',ultt2a:'ULTT 2a',ultt2b:'ULTT 2b',ultt2c:'ULTT 2c',slump:'Slump',pkb:'PKB'};
+      var vals = [t.leftNeck, t.rightNeck, t.leftBack, t.rightBack].filter(Boolean);
+      if (vals.length) nd_lines.push(labels[id] + ': NL:' + (t.leftNeck||'-') + ' NR:' + (t.rightNeck||'-') + ' BL:' + (t.leftBack||'-') + ' BR:' + (t.rightBack||'-'));
+    });
+    if (nd_lines.length) {
+      parts.push(dash); parts.push('NEURODYNAMIC TEST');
+      nd_lines.forEach(function(l) { parts.push(l); });
+      if (nd.notes) parts.push('Notes: ' + nd.notes);
+      parts.push('');
+    }
+
+    var s = neuro.sensation||{}, r = neuro.reflex||{}, mo = neuro.motor||{};
+    parts.push(dash); parts.push('NEUROLOGICAL TEST');
+    parts.push('Sensation : L: ' + (s.left||'') + '  R: ' + (s.right||''));
+    parts.push('Motor     : L: ' + (mo.left||'') + '  R: ' + (mo.right||''));
+    parts.push('Reflexes  : L: ' + (r.left||'') + '  R: ' + (r.right||''));
+    parts.push('');
+
+    parts.push(dash); parts.push("PHYSIOTHERAPIST'S IMPRESSION & PLAN");
+    if (plan.impression) parts.push('Impression : ' + plan.impression);
+    if (plan.stg)        parts.push('STG        : ' + plan.stg);
+    if (plan.ltg)        parts.push('LTG        : ' + plan.ltg);
+    if (plan.treatment)  parts.push('Treatment  : ' + plan.treatment);
+    parts.push(''); parts.push(DIV);
+    parts.push('Generated by PT Assessment System');
+
+    var text = parts.join(LN);
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied! Paste into MPIS', 'ok');
+    } catch (e) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Copied! Paste into MPIS', 'ok');
+    }
+  }
+
+  // ── MPIS: Geriatric ────────────────────────────
+  async function copyToMpisGeriatric() {
+    var data = window.ActiveForm.collect(currentId);
+    var p    = data.patient || {};
+    var plan_impression = data.plan_impression || '';
+    var plan_stg  = data.plan_stg  || '';
+    var plan_ltg  = data.plan_ltg  || '';
+    var plan_tx   = data.plan_tx   || '';
+    var LN  = String.fromCharCode(10);
+    var DIV = '==================================================';
+    var dash= '--------------------------------------------------';
+    var parts = [];
+
+    parts.push('GERIATRIC ASSESSMENT');
+    parts.push(DIV);
+    parts.push('Name  : ' + (p.name||'') + '   Date : ' + (data.pt_date||p.date||''));
+    if (p.type === 'local') {
+      parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+    } else {
+      parts.push('Passport : ' + (p.passport||'') + '   Age : ' + (p.age||''));
+    }
+    parts.push('');
+
+    function sec(title, val) {
+      if (!val || !String(val).trim()) return;
+      parts.push(dash); parts.push(title); parts.push(String(val).trim()); parts.push('');
+    }
+
+    sec("DOCTOR'S DIAGNOSIS", data.dx_diagnosis);
+    sec("DOCTOR'S MANAGEMENT", data.dx_mgmt_type);
+    sec('CURRENT COMPLAINT', data.complaint);
+    sec('CURRENT HISTORY',   data.hx_current);
+    sec('PAST HISTORY',      data.hx_past);
+
+    // Falls
+    if (data.fall_hx) {
+      parts.push(dash); parts.push('FALLS HISTORY');
+      parts.push('H/O Fall Past 1 Year : ' + (data.fall_hx||''));
+      var cons = [];
+      if (data.fall_fracture)     cons.push('Fracture');
+      if (data.fall_hospitalised) cons.push('Hospitalised');
+      if (data.fall_fear)         cons.push('Fear of Falling');
+      if (data.fall_injury)       cons.push('Soft Tissue Injury');
+      if (data.fall_none)         cons.push('No Injury');
+      if (cons.length) parts.push('Consequence : ' + cons.join(', '));
+      parts.push('');
+    }
+
+    // Medical history
+    var med = [];
+    var medMap = {med_hpt:'HPT',med_dm:'DM',med_ccf:'CCF',med_ihd:'IHD',
+                  med_pvd:'PVD',med_copd:'COPD',med_dementia:'DEMENTIA',med_pd:'PD',
+                  med_cva_rt:'CVA(RT)',med_cva_lt:'CVA(LT)',med_oa:'OA',med_fracture:'FRACTURE'};
+    Object.keys(medMap).forEach(function(k) { if (data[k]) med.push(medMap[k]); });
+    if (med.length) { parts.push(dash); parts.push('MEDICAL HISTORY'); parts.push(med.join(', ')); parts.push(''); }
+
+    if (data.medication)    { parts.push(dash); parts.push('MEDICATION');    parts.push(data.medication); parts.push(''); }
+    if (data.social_hx)    { parts.push(dash); parts.push('SOCIAL HISTORY'); parts.push(data.social_hx); parts.push(''); }
+
+    parts.push(dash); parts.push('SUBJECTIVE');
+    if (data.premorbid_mobility) parts.push('Premorbid Mobility : ' + data.premorbid_mobility);
+    if (data.current_mobility)   parts.push('Current Mobility   : ' + data.current_mobility);
+    if (data.main_carer)         parts.push('Main Carer         : ' + data.main_carer);
+    if (data.cognitive)          parts.push('Cognitive Impairment: ' + data.cognitive + (data.cognitive_test ? ' (' + data.cognitive_test + ')' : ''));
+    if (data.communication)      parts.push('Communication      : ' + data.communication);
+    parts.push('');
+
+    parts.push(dash); parts.push('OBJECTIVE');
+    if (data.obj_posture)  parts.push('Posture/Gait   : ' + data.obj_posture);
+    var mobMap = {mob_bed:'Bed',mob_sitting:'Sitting',mob_standing:'Standing',mob_transfer:'Transfer'};
+    Object.keys(mobMap).forEach(function(k) {
+      if (data[k]) parts.push('Functional ' + mobMap[k] + ' : ' + data[k]);
+    });
+    if (data.obj_lungs)    parts.push('Lungs          : ' + data.obj_lungs);
+    if (data.obj_strength) parts.push('Strength       : ' + data.obj_strength);
+    parts.push('');
+
+    // Outcome measures
+    var om = [];
+    if (data.om_berg  && !data.om_na_berg)  om.push('Berg Balance Scale: ' + data.om_berg + '/56');
+    if (data.om_tug   && !data.om_na_tug)   om.push('TUG: ' + data.om_tug + ' sec');
+    if (data.om_sls   && !data.om_na_sls)   om.push('Single Leg Stance: ' + data.om_sls + ' sec');
+    if ((data.om_grip_r || data.om_grip_l) && !data.om_na_grip) om.push('Grip Strength: R:' + (data.om_grip_r||'') + ' L:' + (data.om_grip_l||'') + ' kg');
+    if (data.om_ftsst && !data.om_na_ftsst) om.push('FTSST: ' + data.om_ftsst + ' sec');
+    if (data.om_ems   && !data.om_na_ems)   om.push('Elderly Mobility Scale: ' + data.om_ems + '/20');
+    if (data.om_walk  && !data.om_na_walk)  om.push('Walk Test: ' + data.om_walk + ' m');
+    if ((data.om_gait_sec || data.om_gait_steps) && !data.om_na_gait) om.push('Gait Speed: ' + (data.om_gait_sec||'') + 's / ' + (data.om_gait_steps||'') + ' steps');
+    if ((data.om_reach_r || data.om_reach_l) && !data.om_na_reach) om.push('Sit & Reach: R:' + (data.om_reach_r||'') + ' L:' + (data.om_reach_l||'') + ' cm');
+    if (om.length) {
+      parts.push(dash); parts.push('OUTCOME MEASURES');
+      om.forEach(function(l) { parts.push(l); });
+      parts.push('');
+    }
+
+    parts.push(dash); parts.push("PHYSIOTHERAPIST'S IMPRESSION & PLAN");
+    if (plan_impression) parts.push('Impression : ' + plan_impression);
+    if (plan_stg)        parts.push('STG        : ' + plan_stg);
+    if (plan_ltg)        parts.push('LTG        : ' + plan_ltg);
+    if (plan_tx)         parts.push('Treatment  : ' + plan_tx);
+    parts.push(''); parts.push(DIV);
+    parts.push('Generated by PT Assessment System');
+
+    var text = parts.join(LN);
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied! Paste into MPIS', 'ok');
+    } catch (e) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Copied! Paste into MPIS', 'ok');
+    }
+  }
+
   // ── Copy to clipboard (MPIS plain text) ──────────
   async function copyToMpis() {
     var data = window.ActiveForm.collect(currentId);
@@ -454,6 +718,19 @@ const Main = (function () {
     if (btn) btn.textContent = isDark ? '\u2600' : '\u263E'; // sun/moon
   }
 
+
+  // ── MPIS dispatcher — picks right function by form type ──
+  async function copyToMpisAuto() {
+    var formType = 'MS';
+    try {
+      var d = window.ActiveForm.collect(currentId);
+      formType = (d._form_type || (d.meta && d.meta.form) || 'MS').toUpperCase();
+    } catch(e) { formType = 'MS'; }
+    if (formType === 'SPINE')     return copyToMpisSpine();
+    if (formType === 'GERIATRIC') return copyToMpisGeriatric();
+    return copyToMpis();
+  }
+
   return {
     init:           init,
     go:             go,
@@ -471,7 +748,10 @@ const Main = (function () {
     setCurrentId:   function(id) { currentId = id; },
     clearDirty:     function() { isDirty = false; },
     get isDirty()   { return isDirty; },
-    copyToMpis:     copyToMpis,
+    copyToMpis:          copyToMpis,
+    copyToMpisSpine:     copyToMpisSpine,
+    copyToMpisGeriatric: copyToMpisGeriatric,
+    copyToMpisAuto:      copyToMpisAuto,
     toggleDark:     toggleDark
   };
 

@@ -3,7 +3,7 @@
 
 const FormBase = (function () {
 
-  // ── Field helpers ─────────────────────────────
+  // ── Field helpers ─────────────────────────────────────
   function gv(id) {
     var el = document.getElementById(id);
     return el ? el.value : '';
@@ -25,7 +25,21 @@ const FormBase = (function () {
     if (el) el.checked = true;
   }
 
-  // ── Patient type toggle ───────────────────────
+  // ── Age calculation from DOB string ──────────────────
+  // Single shared function — called by both NRIC and DOB paths
+  function calcAgeFromDob(dobStr) {
+    if (!dobStr) return null;
+    var dob   = new Date(dobStr);
+    if (isNaN(dob.getTime())) return null;
+    var today = new Date();
+    var age   = today.getFullYear() - dob.getFullYear();
+    if (today.getMonth() < dob.getMonth() ||
+       (today.getMonth() === dob.getMonth() &&
+        today.getDate()  < dob.getDate())) age--;
+    return (age >= 0 && age <= 130) ? age : null;
+  }
+
+  // ── Patient type toggle ───────────────────────────────
   function onPtTypeChange() {
     var local = radio('pt-type') === 'local';
     document.getElementById('nric-field').style.display     = local ? '' : 'none';
@@ -38,19 +52,7 @@ const FormBase = (function () {
     }
   }
 
-  // ── DOB → Age (for foreign patients) ────────────────
-  function onDobChange(val) {
-    if (!val) return;
-    var dob   = new Date(val);
-    var today = new Date();
-    var age   = today.getFullYear() - dob.getFullYear();
-    if (today.getMonth() < dob.getMonth() ||
-       (today.getMonth() === dob.getMonth() &&
-        today.getDate() < dob.getDate())) age--;
-    if (age >= 0 && age <= 130) sv('pt-age', age);
-  }
-
-  // ── NRIC auto-derive ──────────────────────────
+  // ── NRIC auto-derive ──────────────────────────────────
   function onNricInput(val) {
     var c  = val.replace(/\D/g, '');
     var db = document.getElementById('derived-dob');
@@ -60,6 +62,7 @@ const FormBase = (function () {
       dg.classList.add('hidden');
       return;
     }
+
     var yy = c.substring(0, 2), mm = c.substring(2, 4), dd = c.substring(4, 6);
     var thisYY = new Date().getFullYear() % 100;
     var yr     = parseInt(yy) <= thisYY ? '20' + yy : '19' + yy;
@@ -67,11 +70,8 @@ const FormBase = (function () {
 
     sv('pt-dob', dobStr);
 
-    var today = new Date(), dob = new Date(dobStr);
-    var age   = today.getFullYear() - dob.getFullYear();
-    if (today.getMonth() < dob.getMonth() ||
-        (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
-    sv('pt-age', age);
+    var age = calcAgeFromDob(dobStr);
+    if (age !== null) sv('pt-age', age);
 
     db.textContent = 'DOB: ' + dd + '/' + mm + '/' + yr;
     db.classList.remove('hidden');
@@ -82,10 +82,16 @@ const FormBase = (function () {
     dg.classList.remove('hidden');
 
     setRadio('pt-sex', gender === 'Male' ? 'M' : 'F');
-    Main.updateProgress();
+    if (typeof Main !== 'undefined') Main.updateProgress();
   }
 
-  // ── Collect patient section only ──────────────
+  // ── DOB manual entry (foreign patients) ──────────────
+  function onDobChange(val) {
+    var age = calcAgeFromDob(val);
+    if (age !== null) sv('pt-age', age);
+  }
+
+  // ── Collect patient section only ──────────────────────
   function collectPatient() {
     return {
       type:     radio('pt-type') || 'local',
@@ -100,7 +106,7 @@ const FormBase = (function () {
     };
   }
 
-  // ── Populate patient section only ─────────────
+  // ── Populate patient section only ─────────────────────
   function populatePatient(p) {
     if (!p) return;
     setRadio('pt-type', p.type || 'local');
@@ -115,7 +121,7 @@ const FormBase = (function () {
     setRadio('pt-sex', p.sex);
   }
 
-  // ── Reset common patient fields ───────────────
+  // ── Reset common patient fields ───────────────────────
   function resetPatient() {
     document.querySelectorAll('input[type=text],input[type=date],input[type=number],textarea')
       .forEach(function (el) { el.value = ''; });
@@ -128,23 +134,17 @@ const FormBase = (function () {
     onPtTypeChange();
     document.getElementById('derived-dob').classList.add('hidden');
     document.getElementById('derived-gender').classList.add('hidden');
-    document.getElementById('sex-field').style.display    = 'none';
+    document.getElementById('sex-field').style.display     = 'none';
     document.getElementById('country-field').style.display = 'none';
   }
 
-  // ── Progress fields config ─────────────────────
-  // Each form sets this via FormBase.setProgressFields()
+  // ── Progress fields config ────────────────────────────
   var progressFields = [];
 
-  function setProgressFields(fields) {
-    progressFields = fields;
-  }
+  function setProgressFields(fields) { progressFields = fields; }
+  function getProgressFields()       { return progressFields; }
 
-  function getProgressFields() {
-    return progressFields;
-  }
-
-  // ── Public API ────────────────────────────────
+  // ── Public API ────────────────────────────────────────
   var api = {
     gv:               gv,
     sv:               sv,
@@ -160,7 +160,7 @@ const FormBase = (function () {
     getProgressFields:getProgressFields
   };
 
-  // Expose on window so inline HTML handlers can reach it
+  // Expose on window for inline HTML handlers
   window.FormBase = api;
   return api;
 
