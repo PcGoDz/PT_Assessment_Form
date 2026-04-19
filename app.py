@@ -41,6 +41,11 @@ def index():
     return render_template('home.html')
 
 
+@app.route('/episode/<int:episode_id>')
+def episode_detail(episode_id):
+    return render_template('episode.html', episode_id=episode_id)
+
+
 @app.route('/form/ms')
 def form_ms():
     episode_id = request.args.get('episode_id', type=int)
@@ -49,6 +54,19 @@ def form_ms():
     if patient_id:
         patient, _ = get_patient(DB_PATH, patient_id)
     return render_template('forms/ms.html',
+        episode_id=episode_id,
+        patient_id=patient_id,
+        patient=patient)
+
+
+@app.route('/form/spine')
+def form_spine():
+    episode_id = request.args.get('episode_id', type=int)
+    patient_id = request.args.get('patient_id', type=int)
+    patient    = None
+    if patient_id:
+        patient, _ = get_patient(DB_PATH, patient_id)
+    return render_template('forms/spine.html',
         episode_id=episode_id,
         patient_id=patient_id,
         patient=patient)
@@ -221,6 +239,39 @@ def api_episode_record(episode_id):
 
 
 # ── PDF Export ───────────────────────────────────────────────────
+@app.route('/api/episodes/<int:episode_id>/pdf', methods=['GET'])
+def export_episode_pdf(episode_id):
+    try:
+        from pdf_ms import generate_episode_pdf
+        ep, err = get_episode(DB_PATH, episode_id)
+        if err or not ep:
+            return jsonify({'error': err or 'Episode not found'}), 404
+        assessment, _ = get_episode_record(DB_PATH, episode_id)
+        soaps, _      = get_soap_notes(DB_PATH, episode_id)
+        if not assessment:
+            assessment = {}
+            assessment['patient'] = {
+                'name':    ep.get('patient_name',''),
+                'nric':    ep.get('ic',''),
+                'passport':ep.get('passport',''),
+                'type':    ep.get('pt_type','local'),
+                'dob':     ep.get('dob',''),
+                'sex':     ep.get('sex',''),
+                'date':    ep.get('referral_date',''),
+            }
+        pdf_bytes = generate_episode_pdf(assessment, soaps, ep)
+        name     = (ep.get('patient_name') or 'record').replace(' ','_')
+        ref_date = ep.get('referral_date') or 'nodate'
+        form     = ep.get('form_type','MS')
+        filename = f"PT_{form}_{name}_{ref_date}.pdf"
+        response = make_response(pdf_bytes)
+        response.headers['Content-Type']        = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/api/export/<int:record_id>/pdf', methods=['GET'])
 def export_pdf(record_id):
     data, err = load_record(DB_PATH, record_id)
