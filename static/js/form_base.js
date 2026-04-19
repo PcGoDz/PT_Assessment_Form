@@ -38,6 +38,18 @@ const FormBase = (function () {
     }
   }
 
+  // ── DOB → Age (for foreign patients) ────────────────
+  function onDobChange(val) {
+    if (!val) return;
+    var dob   = new Date(val);
+    var today = new Date();
+    var age   = today.getFullYear() - dob.getFullYear();
+    if (today.getMonth() < dob.getMonth() ||
+       (today.getMonth() === dob.getMonth() &&
+        today.getDate() < dob.getDate())) age--;
+    if (age >= 0 && age <= 130) sv('pt-age', age);
+  }
+
   // ── NRIC auto-derive ──────────────────────────
   function onNricInput(val) {
     var c  = val.replace(/\D/g, '');
@@ -133,18 +145,23 @@ const FormBase = (function () {
   }
 
   // ── Public API ────────────────────────────────
-  return {
+  var api = {
     gv:               gv,
     sv:               sv,
     radio:            radio,
     setRadio:         setRadio,
     onPtTypeChange:   onPtTypeChange,
     onNricInput:      onNricInput,
+    onDobChange:      onDobChange,
     collectPatient:   collectPatient,
     populatePatient:  populatePatient,
     resetPatient:     resetPatient,
     setProgressFields:setProgressFields,
     getProgressFields:getProgressFields
   };
+
+  // Expose on window so inline HTML handlers can reach it
+  window.FormBase = api;
+  return api;
 
 })();

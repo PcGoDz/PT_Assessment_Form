@@ -143,6 +143,26 @@ const ClinicalTemplates = (function () {
         'Diffuse tenderness. Reduced muscle tone. Trigger point at [muscle].',
       ],
     },
+    MS_SOAP: {
+      analysis: [
+        'Pain reduced, ROM improving, progressing well towards goals.',
+        'Minimal progress noted. Reassessing treatment approach and patient compliance.',
+        'Good functional improvement. Patient achieving short-term goals within timeframe.',
+        'Plateau noted in progress. Modifying treatment plan — increasing exercise intensity.',
+        'Pain controlled. Strength improving. Nearing discharge criteria.',
+        'Patient reporting increased pain. Review aggravating factors and modify plan.',
+        'Functionally independent with HEP. Discharge planning initiated.',
+      ],
+      plan: [
+        'Continue pain management (TENS/heat). Mobilising exercises. Strengthening. HEP.',
+        'Progress strengthening program. Reduce modality use. Increase functional training.',
+        'Modify HEP — increase difficulty. Review compliance. Reinforce home program.',
+        'Discharge planning initiated. Ensure independent with HEP before discharge.',
+        'Refer back to doctor — limited progress. Reassess medical management.',
+        'Continue current plan. Review in next session. Monitor response.',
+        'Add balance and functional training. Progress towards discharge goals.',
+      ],
+    },
   };
 
   // ── Active picker state ─────────────────────────────────

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Episode — PT Assessment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .ep-shell { min-height:100vh; display:flex; flex-direction:column; background:var(--bg); }
+
+    .ep-topbar {
+      background: var(--accent); color: white;
+      display: flex; align-items: center;
+      padding: 0 28px; gap: 14px; height: 52px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .ep-topbar-logo { font-weight:600; font-size:15px; }
+    .ep-topbar-sep  { width:1px; height:20px; background:rgba(255,255,255,0.2); }
+    .ep-topbar-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
+
+    .dark-toggle {
+      background:none; border:1.5px solid rgba(255,255,255,0.3);
+      border-radius:var(--radius); color:white; cursor:pointer;
+      font-size:15px; padding:5px 9px; line-height:1;
+    }
+    .dark-toggle:hover { background:rgba(255,255,255,0.15); }
+
+    .tbtn {
+      padding:6px 13px; border-radius:var(--radius); font-size:12px;
+      font-weight:500; cursor:pointer; border:1.5px solid rgba(255,255,255,0.3);
+      background:rgba(255,255,255,0.1); color:white; font-family:inherit;
+      transition:background 0.15s;
+    }
+    .tbtn:hover { background:rgba(255,255,255,0.22); }
+    .tbtn.primary { background:white; color:var(--accent); border-color:white; }
+    .tbtn.primary:hover { background:#e8eef8; }
+
+    .ep-main {
+      flex:1; max-width:1000px; width:100%;
+      margin:0 auto; padding:24px; display:flex;
+      flex-direction:column; gap:20px;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      font-size:12px; color:var(--text-faint);
+      display:flex; align-items:center; gap:6px;
+    }
+    .breadcrumb a {
+      color:var(--accent-mid); text-decoration:none;
+      cursor:pointer;
+    }
+    .breadcrumb a:hover { text-decoration:underline; }
+
+    /* Context banner */
+    .context-banner {
+      background:var(--accent-light); border:1px solid var(--accent-mid);
+      border-radius:var(--radius); padding:10px 16px;
+      display:flex; align-items:center; gap:12px;
+    }
+    .context-banner-icon { font-size:20px; }
+    .context-banner-label {
+      font-size:10px; font-weight:600; text-transform:uppercase;
+      letter-spacing:0.06em; color:var(--accent); margin-bottom:2px;
+    }
+    .context-banner-name { font-size:14px; font-weight:600; color:var(--text); }
+    .context-banner-meta { font-size:11px; color:var(--text-muted); }
+
+    /* Cards */
+    .card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius-lg);
+      box-shadow:0 1px 3px rgba(0,0,0,0.08);
+    }
+    .card-header {
+      background:var(--surface2); border-bottom:1px solid var(--border);
+      padding:11px 18px; display:flex; align-items:center;
+      justify-content:space-between;
+      border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .card-header h2 {
+      font-size:12px; font-weight:600; color:var(--text);
+      letter-spacing:0.03em; text-transform:uppercase;
+    }
+    .card-body { padding:18px; }
+
+    /* Assessment card */
+    .assess-card {
+      display:flex; align-items:center; gap:16px;
+      padding:16px 18px;
+    }
+    .assess-icon {
+      width:44px; height:44px; border-radius:var(--radius);
+      background:var(--accent-light); color:var(--accent);
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px; flex-shrink:0;
+    }
+    .assess-info { flex:1; }
+    .assess-title { font-size:14px; font-weight:600; color:var(--text); }
+    .assess-meta  { font-size:12px; color:var(--text-muted); margin-top:3px; }
+    .assess-diag  { font-size:12px; color:var(--text); margin-top:4px; font-style:italic; }
+
+    /* SOAP timeline */
+    .timeline { display:flex; flex-direction:column; gap:0; }
+
+    .soap-item {
+      display:flex; gap:0; position:relative;
+    }
+    .soap-item:not(:last-child) .timeline-line {
+      position:absolute; left:19px; top:38px;
+      width:2px; bottom:-1px; background:var(--border); z-index:0;
+    }
+    .timeline-dot-wrap {
+      display:flex; flex-direction:column; align-items:center;
+      flex-shrink:0; width:40px; padding-top:10px;
+    }
+    .timeline-dot {
+      width:14px; height:14px; border-radius:50%;
+      background:var(--accent); border:2px solid white;
+      box-shadow:0 0 0 2px var(--accent-mid);
+      flex-shrink:0; z-index:1; position:relative;
+    }
+    .timeline-line {
+      width:2px; flex:1; background:var(--border); margin-top:4px;
+    }
+
+    .soap-card {
+      flex:1; background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius-lg); margin-bottom:12px;
+      transition:box-shadow 0.12s;
+    }
+    .soap-card:hover { box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+
+    .soap-card-header {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px; border-bottom:1px solid var(--border);
+      background:var(--surface2);
+      border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+    }
+    .soap-session {
+      font-family:'IBM Plex Mono', monospace;
+      font-size:11px; font-weight:600;
+      background:var(--accent); color:white;
+      padding:2px 7px; border-radius:4px;
+    }
+    .soap-date { font-size:12px; color:var(--text-muted); }
+    .soap-actions { margin-left:auto; display:flex; gap:6px; }
+    .soap-btn {
+      font-size:11px; padding:3px 9px; border-radius:var(--radius);
+      border:1px solid var(--border); background:none;
+      cursor:pointer; font-family:inherit; color:var(--text-muted);
+      transition:all 0.12s;
+    }
+    .soap-btn:hover { background:var(--surface2); color:var(--text); }
+    .soap-btn.danger:hover { border-color:var(--danger); color:var(--danger); }
+
+    .soap-body { padding:14px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .soap-field-label {
+      font-size:10px; font-weight:600; text-transform:uppercase;
+      letter-spacing:0.06em; color:var(--accent); margin-bottom:4px;
+    }
+    .soap-field-content {
+      font-size:12px; color:var(--text); line-height:1.5;
+      white-space:pre-wrap; word-break:break-word;
+    }
+    .soap-field-empty { color:var(--text-faint); font-style:italic; font-size:12px; }
+
+    .empty-timeline {
+      text-align:center; padding:32px 16px;
+      color:var(--text-faint);
+    }
+    .empty-timeline-icon { font-size:28px; margin-bottom:8px; }
+    .empty-timeline-title { font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:4px; }
+    .empty-timeline-sub { font-size:12px; }
+
+    /* Modal */
+    .modal-backdrop {
+      display:none; position:fixed; inset:0;
+      background:rgba(0,0,0,0.45); z-index:200;
+      align-items:center; justify-content:center;
+    }
+    .modal-backdrop.open { display:flex; }
+    .modal {
+      background:var(--surface); border-radius:var(--radius-lg);
+      box-shadow:0 8px 40px rgba(0,0,0,0.25);
+      width:100%; max-width:560px; padding:24px;
+      position:relative; animation:modal-in 0.18s ease;
+      max-height:90vh; overflow-y:auto;
+    }
+    @keyframes modal-in {
+      from { transform:translateY(-12px); opacity:0; }
+      to   { transform:translateY(0);     opacity:1; }
+    }
+    .modal-close {
+      position:absolute; top:14px; right:16px;
+      background:none; border:none; font-size:18px;
+      cursor:pointer; color:var(--text-faint); line-height:1;
+    }
+    .modal-close:hover { color:var(--text); }
+    .modal-title { font-size:15px; font-weight:600; color:var(--text); margin-bottom:16px; }
+
+    .soap-form { display:flex; flex-direction:column; gap:14px; }
+    .soap-form-field { display:flex; flex-direction:column; gap:5px; }
+    .soap-form-label {
+      font-size:11px; font-weight:600; text-transform:uppercase;
+      letter-spacing:0.06em; color:var(--accent);
+      display:flex; align-items:center; gap:8px;
+    }
+    .soap-form-field textarea {
+      font-family:'IBM Plex Sans', sans-serif; font-size:13px;
+      padding:8px 10px; border:1px solid var(--border);
+      border-radius:var(--radius); background:var(--bg);
+      color:var(--text); resize:vertical; min-height:80px;
+      outline:none; transition:border-color 0.15s;
+    }
+    .soap-form-field textarea:focus {
+      border-color:var(--accent-mid);
+      box-shadow:0 0 0 3px rgba(74,122,200,0.12);
+      background:white;
+    }
+    .soap-form-field input[type=date] {
+      font-family:'IBM Plex Sans', sans-serif; font-size:13px;
+      padding:7px 10px; border:1px solid var(--border);
+      border-radius:var(--radius); background:var(--bg);
+      color:var(--text); outline:none;
+    }
+    .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+    .btn-primary {
+      padding:8px 16px; background:var(--accent); color:white;
+      border:none; border-radius:var(--radius); font-family:inherit;
+      font-size:13px; font-weight:500; cursor:pointer;
+    }
+    .btn-primary:hover { opacity:0.88; }
+    .btn-ghost {
+      padding:8px 16px; background:none; color:var(--text-muted);
+      border:1px solid var(--border); border-radius:var(--radius);
+      font-family:inherit; font-size:13px; cursor:pointer;
+    }
+    .btn-ghost:hover { background:var(--surface2); color:var(--text); }
+
+    /* Toast */
+    .toast {
+      position:fixed; bottom:24px; left:50%;
+      transform:translateX(-50%); background:var(--text); color:white;
+      padding:10px 20px; border-radius:30px; font-size:13px;
+      opacity:0; transition:opacity 0.2s; pointer-events:none;
+      z-index:999; white-space:nowrap;
+    }
+    .toast.show { opacity:1; }
+    .toast.ok  { background:var(--success); }
+    .toast.err { background:var(--danger); }
+
+    /* Dark mode */
+    body.dark .ep-topbar { background:#1e2a3e; }
+    body.dark .soap-form-field textarea { background:var(--surface2); color:var(--text); }
+    body.dark .soap-form-field textarea:focus { background:var(--surface); }
+    body.dark .soap-form-field input[type=date] { background:var(--surface2); color:var(--text); }
+  </style>
+</head>
+<body>
+<div class="ep-shell">
+
+  <header class="ep-topbar">
+    <div class="ep-topbar-logo">PT Assessment System</div>
+    <div class="ep-topbar-sep"></div>
+    <div id="topbar-episode-label" style="font-size:12px;color:rgba(255,255,255,0.6);">Episode</div>
+    <div class="ep-topbar-actions">
+      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">&#9790;</button>
+      <button class="tbtn" onclick="goBack()">&#8592; Patient</button>
+      <button class="tbtn" onclick="exportEpisodePdf()" title="Export full episode PDF">&#8615; Export PDF</button>
+      <button class="tbtn primary" onclick="openSoapModal()">+ Add Follow-up</button>
+    </div>
+  </header>
+
+  <main class="ep-main">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a onclick="window.location.href='/'">&#8962; Patients</a>
+      <span>&#8250;</span>
+      <a id="bc-patient" onclick="goBack()">—</a>
+      <span>&#8250;</span>
+      <span id="bc-episode">Episode</span>
+    </div>
+
+    <!-- Context banner -->
+    <div class="context-banner">
+      <div class="context-banner-icon">&#128203;</div>
+      <div>
+        <div class="context-banner-label">Episode Record</div>
+        <div class="context-banner-name" id="ctx-patient-name">—</div>
+        <div class="context-banner-meta" id="ctx-episode-meta">—</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <span class="status-pill" id="ctx-status-pill" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:3px 8px;border-radius:10px;background:var(--success-light);color:var(--success);">active</span>
+      </div>
+    </div>
+
+    <!-- Assessment card -->
+    <div class="card" id="assessment-card">
+      <div class="card-header">
+        <h2>Initial Assessment</h2>
+        <div id="assess-actions"></div>
+      </div>
+      <div id="assess-body" class="assess-card">
+        <div class="assess-icon">&#129460;</div>
+        <div class="assess-info">
+          <div class="assess-title" id="assess-title">No assessment recorded yet</div>
+          <div class="assess-meta" id="assess-meta">Start the initial assessment to begin documentation</div>
+          <div class="assess-diag" id="assess-diag"></div>
+        </div>
+        <div id="assess-btn-wrap"></div>
+      </div>
+    </div>
+
+    <!-- SOAP timeline -->
+    <div class="card">
+      <div class="card-header">
+        <h2>Follow-up Notes</h2>
+        <span id="soap-count" style="font-size:11px;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;">0 notes</span>
+      </div>
+      <div class="card-body" style="padding:16px;">
+        <div class="timeline" id="soap-timeline">
+          <div class="empty-timeline">
+            <div class="empty-timeline-icon">&#128221;</div>
+            <div class="empty-timeline-title">No follow-up notes yet</div>
+            <div class="empty-timeline-sub">Click &ldquo;+ Add Follow-up&rdquo; to record the next session</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- SOAP Modal -->
+<div class="modal-backdrop" id="soap-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    <div class="modal-title" id="soap-modal-title">Add Follow-up Note</div>
+    <div class="soap-form">
+      <input type="hidden" id="soap-edit-id">
+      <div class="soap-form-field">
+        <label style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);">Session Date <span style="color:var(--danger)">*</span></label>
+        <input type="date" id="soap-date">
+      </div>
+      <div class="soap-form-field">
+        <div class="soap-form-label">S &mdash; Subjective</div>
+        <textarea id="soap-s" placeholder="Patient's report — pain score, symptoms, functional status, patient's own words..."></textarea>
+      </div>
+      <div class="soap-form-field">
+        <div class="soap-form-label">O &mdash; Objective</div>
+        <textarea id="soap-o" placeholder="Measurements — ROM, muscle strength, VAS pre/post, special test results..."></textarea>
+      </div>
+      <div class="soap-form-field">
+        <div class="soap-form-label">
+          A &mdash; Analysis
+          <button type="button" onclick="showSoapTemplate('soap-a','analysis')"
+            style="font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--accent-mid);background:var(--accent-light);color:var(--accent);cursor:pointer;font-family:inherit;font-weight:500;">
+            + template
+          </button>
+        </div>
+        <textarea id="soap-a" placeholder="Clinical reasoning — progress towards goals, response to treatment, problems in order of priority..."></textarea>
+      </div>
+      <div class="soap-form-field">
+        <div class="soap-form-label">
+          P &mdash; Plan
+          <button type="button" onclick="showSoapTemplate('soap-p','plan')"
+            style="font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--accent-mid);background:var(--accent-light);color:var(--accent);cursor:pointer;font-family:inherit;font-weight:500;">
+            + template
+          </button>
+        </div>
+        <textarea id="soap-p" placeholder="Treatment given this session, HEP review, next session plan, discharge criteria..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="copySOAPtoMpis()" title="Copy this note to clipboard for MPIS">Copy to MPIS</button>
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveSoap()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/clinical_templates.js"></script>
+<script>
+// ── State ──────────────────────────────────────────────
+var EPISODE_ID = {{ episode_id }};
+var episode    = null;
+
+// ── Dark mode ──────────────────────────────────────────
+function initDark() {
+  if (localStorage.getItem('pt_dark') === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = '\u2600';
+  }
+}
+function toggleDark() {
+  var isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('pt_dark', isDark ? '1' : '0');
+  document.getElementById('dark-toggle').textContent = isDark ? '\u2600' : '\u263E';
+}
+
+// ── Toast ──────────────────────────────────────────────
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  setTimeout(function() { t.className = 'toast'; }, 2400);
+}
+
+// ── Modal ──────────────────────────────────────────────
+function openSoapModal(soap) {
+  document.getElementById('soap-edit-id').value = soap ? soap.id : '';
+  document.getElementById('soap-modal-title').textContent =
+    soap ? 'Edit Follow-up Note — Session ' + soap.session_no : 'Add Follow-up Note';
+  document.getElementById('soap-date').value = soap ? soap.note_date :
+    new Date().toISOString().split('T')[0];
+  document.getElementById('soap-s').value = soap ? (soap.subjective || '') : '';
+  document.getElementById('soap-o').value = soap ? (soap.objective  || '') : '';
+  document.getElementById('soap-a').value = soap ? (soap.analysis   || '') : '';
+  document.getElementById('soap-p').value = soap ? (soap.plan       || '') : '';
+  document.getElementById('soap-modal').classList.add('open');
+  setTimeout(function() { document.getElementById('soap-s').focus(); }, 100);
+}
+
+function closeModal() {
+  document.getElementById('soap-modal').classList.remove('open');
+}
+document.getElementById('soap-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── Template picker ────────────────────────────────────
+function showSoapTemplate(fieldId, category) {
+  ClinicalTemplates.show(fieldId, 'MS_SOAP', category);
+}
+
+// ── Save SOAP ──────────────────────────────────────────
+async function saveSoap() {
+  var date = document.getElementById('soap-date').value;
+  if (!date) { showToast('Date is required', 'err'); return; }
+  var soapId = document.getElementById('soap-edit-id').value;
+
+  var payload = {
+    id:         soapId ? parseInt(soapId) : null,
+    note_date:  date,
+    subjective: document.getElementById('soap-s').value,
+    objective:  document.getElementById('soap-o').value,
+    analysis:   document.getElementById('soap-a').value,
+    plan:       document.getElementById('soap-p').value,
+  };
+
+  try {
+    var res = await fetch('/api/episodes/' + EPISODE_ID + '/soap', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    var j = await res.json();
+    if (!res.ok) { showToast(j.error || 'Failed to save', 'err'); return; }
+    closeModal();
+    showToast(soapId ? 'Note updated' : 'Follow-up note saved', 'ok');
+    loadSoaps();
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+// ── Delete SOAP ────────────────────────────────────────
+async function deleteSoap(soapId) {
+  if (!confirm('Delete this follow-up note? Cannot be undone.')) return;
+  try {
+    var res = await fetch('/api/soap/' + soapId, { method: 'DELETE' });
+    if (!res.ok) { showToast('Failed to delete', 'err'); return; }
+    showToast('Note deleted', 'ok');
+    loadSoaps();
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+// ── Copy SOAP to MPIS ──────────────────────────────────
+function copySOAPtoMpis() {
+  var LN = String.fromCharCode(10);
+  var DIV = '='.repeat(50);
+  var dash = '-'.repeat(50);
+  var date = document.getElementById('soap-date').value;
+  var s    = document.getElementById('soap-s').value;
+  var o    = document.getElementById('soap-o').value;
+  var a    = document.getElementById('soap-a').value;
+  var p    = document.getElementById('soap-p').value;
+
+  var patientName = episode ? episode.patient_name : '';
+  var patientId   = episode ? (episode.ic || episode.passport || '') : '';
+  var formType    = episode ? episode.form_type : '';
+
+  var parts = [];
+  parts.push('FOLLOW-UP NOTE');
+  parts.push(DIV);
+  parts.push('Patient : ' + patientName + '   IC : ' + patientId);
+  parts.push('Date    : ' + date + '   Form: ' + formType);
+  if (s) { parts.push(dash); parts.push('S \u2014 SUBJECTIVE'); parts.push(s); }
+  if (o) { parts.push(dash); parts.push('O \u2014 OBJECTIVE');  parts.push(o); }
+  if (a) { parts.push(dash); parts.push('A \u2014 ANALYSIS');   parts.push(a); }
+  if (p) { parts.push(dash); parts.push('P \u2014 PLAN');       parts.push(p); }
+  parts.push(DIV);
+  parts.push('Generated by PT Assessment System');
+
+  var text = parts.join(LN);
+  navigator.clipboard.writeText(text).then(function() {
+    showToast('Copied! Paste into MPIS', 'ok');
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('Copied! Paste into MPIS', 'ok');
+  });
+}
+
+// ── Load episode info ──────────────────────────────────
+async function loadEpisode() {
+  try {
+    var res = await fetch('/api/episodes/' + EPISODE_ID);
+    episode  = await res.json();
+
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric'}[episode.form_type] || episode.form_type;
+
+    // Topbar
+    document.getElementById('topbar-episode-label').textContent =
+      episode.patient_name + ' \u2014 ' + formLabel;
+
+    // Breadcrumb
+    document.getElementById('bc-patient').textContent = episode.patient_name;
+    document.getElementById('bc-episode').textContent = formLabel + ' (' + (episode.referral_date||'') + ')';
+
+    // Context banner
+    document.getElementById('ctx-patient-name').textContent = episode.patient_name;
+    document.getElementById('ctx-episode-meta').textContent =
+      formLabel + ' \u00B7 Referral: ' + (episode.referral_date||'—') +
+      '\u00B7 IC: ' + (episode.ic || episode.passport || '—');
+
+    var statusBase = (episode.status||'active').split('|')[0];
+    var pill = document.getElementById('ctx-status-pill');
+    pill.textContent = statusBase;
+    if (statusBase === 'active') {
+      pill.style.background = 'var(--success-light)'; pill.style.color = 'var(--success)';
+    } else {
+      pill.style.background = 'var(--surface2)'; pill.style.color = 'var(--text-faint)';
+    }
+
+    // Load assessment
+    loadAssessment(episode);
+  } catch(e) { showToast('Could not load episode', 'err'); }
+}
+
+// ── Load assessment ────────────────────────────────────
+async function loadAssessment(ep) {
+  try {
+    var res  = await fetch('/api/episodes/' + EPISODE_ID + '/record');
+    var data = await res.json();
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric'}[ep.form_type] || ep.form_type;
+    var formPath  = '/form/' + ep.form_type.toLowerCase();
+    var btnWrap   = document.getElementById('assess-btn-wrap');
+    var actions   = document.getElementById('assess-actions');
+
+    if (data) {
+      document.getElementById('assess-title').textContent = formLabel + ' Assessment';
+      document.getElementById('assess-meta').textContent  =
+        'Recorded: ' + (data.patient && data.patient.date || '—');
+      document.getElementById('assess-diag').textContent  =
+        data.diagnosis || '';
+      btnWrap.innerHTML =
+        '<a href="' + formPath + '?episode_id=' + EPISODE_ID +
+        '&patient_id=' + ep.patient_id + '" style="text-decoration:none">' +
+        '<button class="btn-ghost" style="font-size:12px">Edit Assessment</button></a>';
+    } else {
+      document.getElementById('assess-title').textContent = 'No assessment recorded yet';
+      document.getElementById('assess-meta').textContent  = 'Start the initial ' + formLabel + ' assessment';
+      btnWrap.innerHTML =
+        '<a href="' + formPath + '?episode_id=' + EPISODE_ID +
+        '&patient_id=' + ep.patient_id + '" style="text-decoration:none">' +
+        '<button class="btn-primary" style="font-size:12px">Start Assessment</button></a>';
+    }
+  } catch(e) { console.error('loadAssessment', e); }
+}
+
+// ── Load SOAPs ─────────────────────────────────────────
+async function loadSoaps() {
+  try {
+    var res   = await fetch('/api/episodes/' + EPISODE_ID + '/soap');
+    var notes = await res.json();
+    var tl    = document.getElementById('soap-timeline');
+    var cnt   = document.getElementById('soap-count');
+
+    cnt.textContent = notes.length + ' note' + (notes.length !== 1 ? 's' : '');
+
+    if (!notes.length) {
+      tl.innerHTML =
+        '<div class="empty-timeline">' +
+        '<div class="empty-timeline-icon">&#128221;</div>' +
+        '<div class="empty-timeline-title">No follow-up notes yet</div>' +
+        '<div class="empty-timeline-sub">Click &ldquo;+ Add Follow-up&rdquo; to record the next session</div>' +
+        '</div>';
+      return;
+    }
+
+    tl.innerHTML = notes.map(function(n, i) {
+      var isLast = i === notes.length - 1;
+      var s = esc(n.subjective || ''); var o = esc(n.objective || '');
+      var a = esc(n.analysis   || ''); var p = esc(n.plan      || '');
+
+      return '<div class="soap-item">' +
+        '<div class="timeline-dot-wrap">' +
+          '<div class="timeline-dot"></div>' +
+          (!isLast ? '<div class="timeline-line"></div>' : '') +
+        '</div>' +
+        '<div class="soap-card">' +
+          '<div class="soap-card-header">' +
+            '<span class="soap-session">Session ' + n.session_no + '</span>' +
+            '<span class="soap-date">' + esc(n.note_date) + '</span>' +
+            '<div class="soap-actions">' +
+              '<button class="soap-btn" onclick=\'openSoapModal(' + JSON.stringify(n) + ')\'>Edit</button>' +
+              '<button class="soap-btn danger" onclick="deleteSoap(' + n.id + ')">Delete</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="soap-body">' +
+            '<div><div class="soap-field-label">S &mdash; Subjective</div>' +
+              '<div class="' + (s ? 'soap-field-content' : 'soap-field-empty') + '">' + (s||'Not recorded') + '</div></div>' +
+            '<div><div class="soap-field-label">O &mdash; Objective</div>' +
+              '<div class="' + (o ? 'soap-field-content' : 'soap-field-empty') + '">' + (o||'Not recorded') + '</div></div>' +
+            '<div><div class="soap-field-label">A &mdash; Analysis</div>' +
+              '<div class="' + (a ? 'soap-field-content' : 'soap-field-empty') + '">' + (a||'Not recorded') + '</div></div>' +
+            '<div><div class="soap-field-label">P &mdash; Plan</div>' +
+              '<div class="' + (p ? 'soap-field-content' : 'soap-field-empty') + '">' + (p||'Not recorded') + '</div></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) { console.error('loadSoaps', e); }
+}
+
+function exportEpisodePdf() {
+  window.open('/api/episodes/' + EPISODE_ID + '/pdf', '_blank');
+}
+
+function goBack() {
+  window.location.href = '/';
+}
+
+function esc(str) {
+  return String(str||'').replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+// ── Init ──────────────────────────────────────────────
+initDark();
+loadEpisode();
+loadSoaps();
+document.getElementById('soap-date').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>

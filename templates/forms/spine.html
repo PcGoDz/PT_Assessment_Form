@@ -1,0 +1,804 @@
+{% extends "base.html" %}
+
+{% block form_name %}Spine Assessment{% endblock %}
+
+{% block sidebar_forms %}
+<div class="nav-item" onclick="window.location.href='/'">
+  <span class="nav-icon">&#129460;</span> Musculoskeletal
+</div>
+<div class="nav-item active">
+  <span class="nav-icon">&#128279;</span> Spine
+  <span class="nav-badge">SP</span>
+</div>
+{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128202;</span> Pain Score</div>
+<div class="nav-item" onclick="Main.go('s-chart')"><span class="nav-icon">&#128506;</span> Body Chart</div>
+<div class="nav-item" onclick="Main.go('s-hx')"><span class="nav-icon">&#128214;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-sq')"><span class="nav-icon">&#10067;</span> Special Qs</div>
+<div class="nav-item" onclick="Main.go('s-obs')"><span class="nav-icon">&#128065;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-smov')"><span class="nav-icon">&#128260;</span> Spine Movement</div>
+<div class="nav-item" onclick="Main.go('s-paivm')"><span class="nav-icon">&#9881;</span> Accessory (PAIVM)</div>
+<div class="nav-item" onclick="Main.go('s-nd')"><span class="nav-icon">&#9889;</span> Neurodynamic</div>
+<div class="nav-item" onclick="Main.go('s-neuro')"><span class="nav-icon">&#129504;</span> Neuro Test</div>
+<div class="nav-item" onclick="Main.go('s-palp')"><span class="nav-icon">&#128400;</span> Palpation</div>
+<div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+{% endblock %}
+
+{% block content %}
+
+<style>
+/* Spine-specific table styles */
+.spine-table { width:100%; border-collapse:collapse; font-size:12px; }
+.spine-table th {
+  background:var(--surface2); border:1px solid var(--border);
+  padding:6px 8px; font-size:10px; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.04em; color:var(--text-muted);
+  white-space:nowrap;
+}
+.spine-table td { border:1px solid var(--border); padding:3px 4px; vertical-align:middle; }
+.spine-table td.row-label {
+  font-weight:600; font-size:12px; color:var(--text-muted);
+  background:var(--surface2); white-space:nowrap; padding:6px 10px;
+}
+.spine-cell-sel, .spine-cell-inp {
+  width:100%; font-family:'IBM Plex Sans',sans-serif; font-size:12px;
+  color:var(--text); background:transparent; border:none;
+  padding:4px 5px; outline:none;
+}
+.spine-cell-sel:focus, .spine-cell-inp:focus {
+  background:var(--accent-light); border-radius:3px;
+}
+.nd-pos  { color:var(--danger);  font-weight:600; }
+.nd-neg  { color:var(--success); font-weight:600; }
+.nd-na   { color:var(--text-faint); }
+.nd-next { color:var(--warn); font-style:italic; }
+
+/* Colour coding for select values */
+.spine-cell-sel option[value="+ve"]        { color:var(--danger); }
+.spine-cell-sel option[value="-ve"]        { color:var(--success); }
+.spine-cell-sel option[value="N/A"]        { color:var(--text-faint); }
+.spine-cell-sel option[value="Next visit"] { color:var(--warn); }
+</style>
+
+<!-- 01 PATIENT INFO -->
+<div class="card" id="s-patient">
+  <div class="card-header"><span class="sec-num">01</span><h2>Patient Information</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="Form.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="Form.onPtTypeChange()"> Foreign (Passport)</label>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="Form.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="pt-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN"><option>Indonesia</option><option>Myanmar</option><option>Philippines</option><option>Thailand</option><option>Vietnam</option><option>Cambodia</option><option>Laos</option><option>Brunei</option><option>Singapore</option><option>Timor-Leste</option></optgroup>
+            <optgroup label="South Asia"><option>Bangladesh</option><option>India</option><option>Pakistan</option><option>Nepal</option><option>Sri Lanka</option><option>Afghanistan</option></optgroup>
+            <optgroup label="Other"><option>Australia</option><option>United Kingdom</option><option>United States</option><option>Other (not listed)</option></optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Assessment Date <span class="req">*</span></label>
+          <input type="date" id="pt-date">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob" onchange="FormBase.onDobChange(this.value)">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pt-age" placeholder="Years" min="0" max="130">
+        </div>
+        <div class="field" id="sex-field" style="display:none">
+          <label>Sex</label>
+          <div class="radio-group">
+            <label><input type="radio" name="pt-sex" value="M"> Male</label>
+            <label><input type="radio" name="pt-sex" value="F"> Female</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 DIAGNOSIS -->
+<div class="card" id="s-dx">
+  <div class="card-header"><span class="sec-num">02</span><h2>Diagnosis &amp; Doctor's Management</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Diagnosis <span class="req">*</span></label>
+        <textarea id="pt-diagnosis" placeholder="e.g. L4/L5 disc prolapse with radiculopathy, Cervical spondylosis..."></textarea>
+      </div>
+      <div class="field">
+        <label>Doctor's Management</label>
+        <select id="dr-mgmt" onchange="Form.onMgmtChange()">
+          <option value="">— Select —</option>
+          <option value="Conservative">Conservative</option>
+          <option value="Surgical">Surgical</option>
+        </select>
+        <div class="surgery-row" id="surgery-row">
+          <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">Surgery date:</span>
+          <input type="date" id="surgery-date" style="flex:1">
+        </div>
+      </div>
+      <div class="field">
+        <label>Problem</label>
+        <textarea id="pt-problem" placeholder="Main presenting complaint..." style="min-height:52px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 PAIN -->
+<div class="card" id="s-pain">
+  <div class="card-header"><span class="sec-num">03</span><h2>Pain Assessment</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="fg c2">
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0–10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="Form.setPain('pre',this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-pre">0</div>
+          </div>
+        </div>
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0–10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="Form.setPain('post',this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-post">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Area</label>
+          <select id="pain-area">
+            <option value="">— Select —</option>
+            <option>Cervical</option><option>Cervical + referred to UL</option>
+            <option>Thoracic</option><option>Lumbar</option>
+            <option>Lumbar + referred to LL</option><option>Sacral / Coccyx</option>
+            <option>Multiple levels</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nature of Pain</label>
+          <select id="pain-nature">
+            <option value="">— Select —</option>
+            <option>Sharp</option><option>Dull aching</option><option>Burning</option>
+            <option>Shooting</option><option>Tingling / Pins &amp; needles</option>
+            <option>Cramping</option><option>Stiffness</option><option>Mixed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aggravating Factors</label>
+          <input type="text" id="pain-agg" placeholder="e.g. flexion, prolonged sitting, coughing...">
+        </div>
+        <div class="field">
+          <label>Easing Factors</label>
+          <input type="text" id="pain-ease" placeholder="e.g. extension, lying down, heat...">
+        </div>
+        <div class="field">
+          <label>24-Hour Behaviour</label>
+          <select id="pain-24hr">
+            <option value="">— Select —</option>
+            <option>Constant</option><option>Intermittent</option>
+            <option>Worse in morning</option><option>Worse in evening</option>
+            <option>Worse with activity</option><option>Nocturnal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Irritability</label>
+          <div class="irr-chips">
+            <button class="irr-chip" id="irr-High"   onclick="Form.pickIrr('High')">High</button>
+            <button class="irr-chip" id="irr-Medium" onclick="Form.pickIrr('Medium')">Medium</button>
+            <button class="irr-chip" id="irr-Low"    onclick="Form.pickIrr('Low')">Low</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 BODY CHART -->
+<div class="card" id="s-chart">
+  <div class="card-header"><span class="sec-num">04</span><h2>Body Chart</h2></div>
+  <div class="card-body">
+    <div class="body-chart-wrap">
+      <div class="body-figures">
+        <div class="fig-wrap">
+          <div class="fig-label">Anterior</div>
+          <svg class="bsvg" id="svg-ant" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,120 36,130 Q34,140 38,148 Q50,154 65,154 Q80,154 92,148 Q96,140 94,130 Q92,120 88,115 Z"/>
+              <path d="M38,148 Q32,160 30,178 Q28,196 30,212 Q36,218 44,216 Q50,200 52,182 Q54,164 50,150 Z"/>
+              <path d="M92,148 Q98,160 100,178 Q102,196 100,212 Q94,218 86,216 Q80,200 78,182 Q76,164 80,150 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M28,278 Q24,284 24,292 Q28,300 38,300 Q46,300 48,292 Q48,284 46,278 Z"/>
+              <path d="M102,278 Q106,284 106,292 Q102,300 92,300 Q84,300 82,292 Q82,284 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head"            data-view="ant"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck / Shoulder" data-view="ant"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm"           data-view="ant"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm"           data-view="ant"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Chest"           data-view="ant"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Abdomen"         data-view="ant"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm"       data-view="ant"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm"       data-view="ant"/>
+            <rect class="hit" x="34" y="150" width="34" height="68" rx="3"  data-zone="L thigh"         data-view="ant"/>
+            <rect class="hit" x="62" y="150" width="34" height="68" rx="3"  data-zone="R thigh"         data-view="ant"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L leg"           data-view="ant"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R leg"           data-view="ant"/>
+            <g id="markers-ant"></g>
+          </svg>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-label">Posterior</div>
+          <svg class="bsvg" id="svg-post" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,122 36,132 Q34,144 40,150 Q52,156 65,156 Q78,156 90,150 Q96,144 94,132 Q92,122 88,115 Z"/>
+              <path d="M40,150 Q32,162 30,180 Q28,198 32,214 Q38,220 46,218 Q52,202 54,184 Q56,166 50,152 Z"/>
+              <path d="M90,150 Q98,162 100,180 Q102,198 98,214 Q92,220 84,218 Q78,202 76,184 Q74,166 80,152 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M34,278 Q28,282 26,290 Q30,298 40,300 Q48,300 48,290 Q48,282 46,278 Z"/>
+              <path d="M96,278 Q102,282 104,290 Q100,298 90,300 Q82,300 82,290 Q82,282 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head (post)"          data-view="post"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck (post)"          data-view="post"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm (post)"         data-view="post"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm (post)"         data-view="post"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Upper back"           data-view="post"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Lumbar / Lower back"  data-view="post"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm (post)"     data-view="post"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm (post)"     data-view="post"/>
+            <rect class="hit" x="34" y="150" width="34" height="70" rx="3"  data-zone="L hamstring"          data-view="post"/>
+            <rect class="hit" x="62" y="150" width="34" height="70" rx="3"  data-zone="R hamstring"          data-view="post"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L calf"               data-view="post"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R calf"               data-view="post"/>
+            <g id="markers-post"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-controls">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click figure</div>
+          <div class="pain-type-sel" id="ptype-sel">
+            <button class="pt-chip ptype-ache active" data-ptype="ache">Ache</button>
+            <button class="pt-chip ptype-sharp"       data-ptype="sharp">Sharp</button>
+            <button class="pt-chip ptype-numb"        data-ptype="numb">Numbness</button>
+            <button class="pt-chip ptype-burn"        data-ptype="burn">Burning</button>
+            <button class="pt-chip ptype-refer"       data-ptype="refer">Referred</button>
+            <button class="pt-chip ptype-tender"      data-ptype="tender">Tenderness</button>
+          </div>
+        </div>
+        <div>
+          <div class="list-header">
+            <span>Marked Locations</span>
+            <button class="btn-sm" onclick="BodyChart.clearAll()">Clear all</button>
+          </div>
+          <div class="marker-list" id="marker-list">
+            <div class="empty-hint" id="empty-hint">No markers yet</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Body Chart Notes</label>
+          <textarea id="chart-notes" placeholder="Peripheralisation, centralisation, distribution..." style="min-height:56px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 HISTORY -->
+<div class="card" id="s-hx">
+  <div class="card-header"><span class="sec-num">05</span><h2>History</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Current History <span class="req">*</span></label>
+        <textarea id="hx-current" placeholder="Onset, mechanism, course of symptoms, peripheralisation/centralisation..." style="min-height:95px"></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="hx-past" placeholder="Previous episodes, recurrence, treatment, spontaneous recovery..." style="min-height:95px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 SPECIAL QUESTIONS -->
+<div class="card" id="s-sq">
+  <div class="card-header"><span class="sec-num">06</span><h2>Special Questions</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>General Health</label><input type="text" id="sq-health" placeholder="General health status..."></div>
+      <div class="field"><label>PMHx / Surgery</label><input type="text" id="sq-pmhx" placeholder="Diabetes, HTN, previous spinal surgery..."></div>
+      <div class="field" style="display:none"><input type="text" id="sq-surgery"></div>
+      <div class="field"><label>Investigation</label><input type="text" id="sq-invest" placeholder="X-ray, MRI, CT, EMG/NCS findings..."></div>
+      <div class="field"><label>Medication</label><input type="text" id="sq-med" placeholder="Current medications, NSAIDs, steroids..."></div>
+      <div class="field">
+        <label>C.E. (Cauda Equina) Screen</label>
+        <select id="sq-ce">
+          <option value="">— Screen —</option>
+          <option value="Negative — no red flags">Negative — no red flags</option>
+          <option value="Bladder dysfunction present">Bladder dysfunction present</option>
+          <option value="Bowel dysfunction present">Bowel dysfunction present</option>
+          <option value="Saddle anaesthesia present">Saddle anaesthesia present</option>
+          <option value="Bilateral LL weakness present">Bilateral LL weakness present</option>
+          <option value="Multiple CE signs — refer urgently">Multiple CE signs — refer urgently</option>
+        </select>
+      </div>
+      <div class="field"><label>Bed / Pillow</label><input type="text" id="sq-bed" placeholder="Firm/soft mattress, number of pillows, sleeping position..."></div>
+      <div class="field"><label>Occupation / Recreation</label><input type="text" id="sq-occ" placeholder="Job demands, posture at work, recreational activities..."></div>
+      <div class="field"><label>Recreation</label><input type="text" id="sq-rec" placeholder="Sports, hobbies..."></div>
+      <div class="field"><label>Social History</label><input type="text" id="sq-social" placeholder="Living situation, dependents, social support..."></div>
+      <div class="field" style="grid-column:span 2">
+        <label>Pacemaker / Hearing Aid</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pacemaker" value="No"> No</label>
+          <label><input type="radio" name="pacemaker" value="Pacemaker"> Pacemaker</label>
+          <label><input type="radio" name="pacemaker" value="HearingAid"> Hearing Aid</label>
+          <label><input type="radio" name="pacemaker" value="Both"> Both</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 OBSERVATION -->
+<div class="card" id="s-obs">
+  <div class="card-header"><span class="sec-num">07</span><h2>Observation</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>General <span class="req">*</span></label>
+        <textarea id="obs-general" placeholder="Posture (cervical lordosis, lumbar lordosis, kyphosis, scoliosis), gait, movement quality, antalgic lean..." style="min-height:95px"></textarea>
+      </div>
+      <div class="field">
+        <label>Local</label>
+        <textarea id="obs-local" placeholder="Muscle wasting, skin changes, deformity, scar, step deformity..." style="min-height:95px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 SPINE MOVEMENT -->
+<div class="card" id="s-smov">
+  <div class="card-header"><span class="sec-num">08</span><h2>Spine Movement</h2></div>
+  <div class="card-body">
+    <div style="overflow-x:auto">
+      <table class="spine-table">
+        <thead>
+          <tr>
+            <th style="min-width:130px">Movement</th>
+            <th style="min-width:90px">Active ROM</th>
+            <th style="min-width:110px">Pain (Active)</th>
+            <th style="min-width:90px">Passive ROM</th>
+            <th style="min-width:110px">Overpressure</th>
+            <th style="min-width:110px">End Feel</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set movements = [
+            ('Flexion',           'flexion'),
+            ('Extension',         'extension'),
+            ('Lat. Flex (L)',     'lateralflexionl'),
+            ('Lat. Flex (R)',     'lateralflexionr'),
+            ('Rotation (L)',      'rotationl'),
+            ('Rotation (R)',      'rotationr'),
+          ] %}
+          {% for label, key in movements %}
+          <tr>
+            <td class="row-label">{{ label }}</td>
+            <td><input type="text" class="spine-cell-inp" id="smov-active-{{ key }}" placeholder="e.g. 60°"></td>
+            <td><input type="text" class="spine-cell-inp" id="smov-apain-{{ key }}"  placeholder="Nil / end range..."></td>
+            <td><input type="text" class="spine-cell-inp" id="smov-passive-{{ key }}" placeholder="e.g. 65°"></td>
+            <td><input type="text" class="spine-cell-inp" id="smov-op-{{ key }}"     placeholder="Pain / stiff / Nil"></td>
+            <td>
+              <select class="spine-cell-sel" id="smov-ef-{{ key }}">
+                <option value="">—</option>
+                <option>Normal</option>
+                <option>Soft tissue stretch</option>
+                <option>Muscular</option>
+                <option>Bone to bone</option>
+                <option>Spasm</option>
+                <option>Empty (pain)</option>
+                <option>N/A</option>
+              </select>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 09 PAIVM / ACCESSORY -->
+<div class="card" id="s-paivm">
+  <div class="card-header"><span class="sec-num">09</span><h2>Accessory Movement — PAIVM / PPIVM</h2></div>
+  <div class="card-body">
+    <div class="fg" style="gap:18px">
+
+      <!-- Lumbar (most common) -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Lumbar Spine</div>
+        <div style="overflow-x:auto">
+          <table class="spine-table">
+            <thead><tr><th>Level</th><th>Central PA</th><th>Unilateral PA</th><th>Pain / Notes</th></tr></thead>
+            <tbody>
+              {% for lv in ['L1','L2','L3','L4','L5','S1'] %}
+              <tr>
+                <td class="row-label">{{ lv }}</td>
+                <td>
+                  <select class="spine-cell-sel" id="paivm-l-{{ lv }}-c">
+                    <option value="">—</option>
+                    <option value="Grade I">Grade I</option>
+                    <option value="Grade II">Grade II</option>
+                    <option value="Grade III">Grade III</option>
+                    <option value="Grade IV">Grade IV</option>
+                    <option value="Normal">Normal</option>
+                    <option value="N/A">N/A</option>
+                    <option value="Next visit">Next visit</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="spine-cell-sel" id="paivm-l-{{ lv }}-u">
+                    <option value="">—</option>
+                    <option value="Grade I">Grade I</option>
+                    <option value="Grade II">Grade II</option>
+                    <option value="Grade III">Grade III</option>
+                    <option value="Grade IV">Grade IV</option>
+                    <option value="Normal">Normal</option>
+                    <option value="N/A">N/A</option>
+                    <option value="Next visit">Next visit</option>
+                  </select>
+                </td>
+                <td><input type="text" class="spine-cell-inp" id="paivm-l-{{ lv }}-p" placeholder="Pain grade, symptom response..."></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cervical -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Cervical Spine</div>
+        <div style="overflow-x:auto">
+          <table class="spine-table">
+            <thead><tr><th>Level</th><th>Central PA</th><th>Unilateral PA</th><th>Pain / Notes</th></tr></thead>
+            <tbody>
+              {% for lv in ['C1','C2','C3','C4','C5','C6','C7'] %}
+              <tr>
+                <td class="row-label">{{ lv }}</td>
+                <td>
+                  <select class="spine-cell-sel" id="paivm-c-{{ lv }}-c">
+                    <option value="">—</option>
+                    <option value="Grade I">Grade I</option><option value="Grade II">Grade II</option>
+                    <option value="Grade III">Grade III</option><option value="Grade IV">Grade IV</option>
+                    <option value="Normal">Normal</option><option value="N/A">N/A</option>
+                    <option value="Next visit">Next visit</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="spine-cell-sel" id="paivm-c-{{ lv }}-u">
+                    <option value="">—</option>
+                    <option value="Grade I">Grade I</option><option value="Grade II">Grade II</option>
+                    <option value="Grade III">Grade III</option><option value="Grade IV">Grade IV</option>
+                    <option value="Normal">Normal</option><option value="N/A">N/A</option>
+                    <option value="Next visit">Next visit</option>
+                  </select>
+                </td>
+                <td><input type="text" class="spine-cell-inp" id="paivm-c-{{ lv }}-p" placeholder="Symptom response..."></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Accessory Movement Notes</label>
+        <textarea id="paivm-notes" placeholder="PPIVM findings, combined movements, quadrant test results..." style="min-height:60px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 NEURODYNAMIC TEST -->
+<div class="card" id="s-nd">
+  <div class="card-header"><span class="sec-num">10</span><h2>Neurodynamic Test</h2></div>
+  <div class="card-body">
+    <div style="overflow-x:auto;margin-bottom:14px">
+      <table class="spine-table">
+        <thead>
+          <tr>
+            <th style="min-width:100px">Test</th>
+            <th colspan="2" style="text-align:center;background:var(--accent-light);color:var(--accent)">Neck</th>
+            <th colspan="2" style="text-align:center;background:var(--success-light);color:var(--success)">Back</th>
+            <th style="min-width:140px">Notes / Findings</th>
+          </tr>
+          <tr>
+            <th></th>
+            <th style="background:var(--accent-light);color:var(--accent)">Left</th>
+            <th style="background:var(--accent-light);color:var(--accent)">Right</th>
+            <th style="background:var(--success-light);color:var(--success)">Left</th>
+            <th style="background:var(--success-light);color:var(--success)">Right</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set nd_tests = [
+            ('pnf',    'PNF',         True,  False),
+            ('slr',    'SLR',         False, True),
+            ('ultt1',  'ULTT 1',      True,  False),
+            ('ultt2a', 'ULTT 2a',     True,  False),
+            ('ultt2b', 'ULTT 2b',     True,  False),
+            ('ultt2c', 'ULTT 2c',     True,  False),
+            ('slump',  'Slump',       False, True),
+            ('pkb',    'PKB / Quad',  False, True),
+          ] %}
+          {% for tid, label, is_neck, is_back in nd_tests %}
+          <tr>
+            <td class="row-label">{{ label }}</td>
+            {% for side in ['ln','rn'] %}
+            <td style="{% if not is_neck %}background:var(--surface2);{% endif %}">
+              {% if is_neck %}
+              <select class="spine-cell-sel" id="nd-{{ tid }}-{{ side }}">
+                <option value="">—</option>
+                <option value="+ve">+ve</option>
+                <option value="-ve">-ve</option>
+                <option value="N/A">N/A</option>
+                <option value="Next visit">Next visit</option>
+              </select>
+              {% else %}
+              <span style="font-size:11px;color:var(--text-faint)">—</span>
+              <input type="hidden" id="nd-{{ tid }}-{{ side }}" value="N/A">
+              {% endif %}
+            </td>
+            {% endfor %}
+            {% for side in ['lb','rb'] %}
+            <td style="{% if not is_back %}background:var(--surface2);{% endif %}">
+              {% if is_back %}
+              <select class="spine-cell-sel" id="nd-{{ tid }}-{{ side }}">
+                <option value="">—</option>
+                <option value="+ve">+ve</option>
+                <option value="-ve">-ve</option>
+                <option value="N/A">N/A</option>
+                <option value="Next visit">Next visit</option>
+              </select>
+              {% else %}
+              <span style="font-size:11px;color:var(--text-faint)">—</span>
+              <input type="hidden" id="nd-{{ tid }}-{{ side }}" value="N/A">
+              {% endif %}
+            </td>
+            {% endfor %}
+            <td><input type="text" class="spine-cell-inp" id="nd-{{ tid }}-notes" placeholder="Angle, reproduction of symptoms..."></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="field">
+      <label>Neurodynamic Notes</label>
+      <textarea id="nd-notes" placeholder="Differentiation tests, sensitising additions, nerve bias..." style="min-height:56px"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 11 NEUROLOGICAL TEST -->
+<div class="card" id="s-neuro">
+  <div class="card-header"><span class="sec-num">11</span><h2>Neurological Test</h2></div>
+  <div class="card-body">
+    <div class="neuro-grid">
+      <div class="nc hdr"></div>
+      <div class="nc hdr">Left</div>
+      <div class="nc hdr">Right</div>
+      <div class="nc hdr">Dermatomal Level / Notes</div>
+      <div class="nc rl">Sensation</div>
+      <div class="nc"><input type="text" id="neuro-sens-l" placeholder="Intact / Impaired / Absent"></div>
+      <div class="nc"><input type="text" id="neuro-sens-r" placeholder="Intact / Impaired / Absent"></div>
+      <div class="nc"><input type="text" id="neuro-sens-n" placeholder="e.g. C6 dermatomal distribution..."></div>
+      <div class="nc rl">Motor</div>
+      <div class="nc"><input type="text" id="neuro-mot-l" placeholder="Grade 0-5 / Myotome"></div>
+      <div class="nc"><input type="text" id="neuro-mot-r" placeholder="Grade 0-5 / Myotome"></div>
+      <div class="nc"><input type="text" id="neuro-mot-n" placeholder="e.g. L4 tibialis anterior..."></div>
+      <div class="nc rl">Reflexes</div>
+      <div class="nc"><input type="text" id="neuro-ref-l" placeholder="+/++/+++/-"></div>
+      <div class="nc"><input type="text" id="neuro-ref-r" placeholder="+/++/+++/-"></div>
+      <div class="nc"><input type="text" id="neuro-ref-n" placeholder="e.g. L4 patellar, S1 Achilles, UL biceps..."></div>
+    </div>
+    <div style="margin-top:12px" class="field">
+      <label>Neurological Notes</label>
+      <textarea id="neuro-notes" placeholder="Upper motor neuron signs, clonus, Babinski, spasticity..." style="min-height:56px"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 12 PALPATION -->
+<div class="card" id="s-palp">
+  <div class="card-header"><span class="sec-num">12</span><h2>Palpation</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Tenderness</label><textarea id="palp-tender" placeholder="Spinous process, paraspinal muscles, facet joints — site and grade (0-3)..."></textarea></div>
+      <div class="field"><label>Temperature / Skin</label><input type="text" id="palp-temp" placeholder="Warm / Cool / Normal over spine..."></div>
+      <div class="field"><label>Muscle / Soft Tissue</label><textarea id="palp-muscle" placeholder="Paraspinal spasm, trigger points, tightness — site and severity..."></textarea></div>
+      <div class="field"><label>Joint / Bony</label><textarea id="palp-joint" placeholder="Step deformity, spondylolisthesis, bony tenderness, PSIS..."></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 PT IMPRESSION -->
+<div class="card" id="s-plan">
+  <div class="card-header"><span class="sec-num">13</span><h2>PT Impression &amp; Treatment Plan</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>PT Impression</label><textarea id="plan-impression" placeholder="Summary of problems in order of priority..."></textarea></div>
+      <div class="field"><label>Short-Term Goals (STG)</label><textarea id="plan-stg" placeholder="Goals within 1-3 visits / 1-2 weeks..."></textarea></div>
+      <div class="field"><label>Long-Term Goals (LTG)</label><textarea id="plan-ltg" placeholder="Functional rehabilitation goals, return to activity..."></textarea></div>
+      <div class="field"><label>Plan of Treatment</label><textarea id="plan-tx" placeholder="Manual therapy, exercises, electrotherapy, patient education, HEP..."></textarea></div>
+      <div class="field">
+        <label>Review Plan</label>
+        <select id="plan-review">
+          <option value="">— Select —</option>
+          <option value="Symptom no change — reassess and modify plan">Symptom no change — reassess and modify</option>
+          <option value="Symptom worse — refer back to doctor">Symptom worse — refer back to doctor</option>
+          <option value="Symptom better — progress treatment">Symptom better — progress treatment</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Remarks / Precautions / Red Flags</label>
+        <textarea id="plan-remarks" placeholder="Red flags, yellow flags, precautions, contraindications..." style="min-height:52px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/form_spine.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var FM = 'SPINE';
+  ClinicalTemplates.addButton('obs-general',     FM, 'observation');
+  ClinicalTemplates.addButton('obs-local',       FM, 'observation');
+  ClinicalTemplates.addButton('palp-tender',     FM, 'palpation');
+  ClinicalTemplates.addButton('plan-impression', FM, 'impression');
+  ClinicalTemplates.addButton('plan-stg',        FM, 'stg');
+  ClinicalTemplates.addButton('plan-ltg',        FM, 'ltg');
+  ClinicalTemplates.addButton('plan-tx',         FM, 'treatment');
+
+  var episodeId = {{ episode_id or 'null' }};
+  var patientId = {{ patient_id or 'null' }};
+
+  {% if patient %}
+  var patientData = {{ patient | tojson }};
+  FormBase.sv('pt-name',     patientData.name     || '');
+  FormBase.sv('pt-nric',     patientData.ic        || '');
+  FormBase.sv('pt-passport', patientData.passport  || '');
+  FormBase.sv('pt-dob',      patientData.dob       || '');
+  FormBase.sv('pt-country',  patientData.country   || '');
+  FormBase.setRadio('pt-type', patientData.pt_type || 'local');
+  FormBase.setRadio('pt-sex',  patientData.sex     || '');
+  FormBase.onPtTypeChange();
+  if (patientData.ic && patientData.ic.length === 12) {
+    FormBase.onNricInput(patientData.ic);
+  }
+  Main.updateProgress();
+  {% endif %}
+
+  if (episodeId) {
+    var origCollect = window.ActiveForm.collect;
+    window.ActiveForm.collect = function(currentId) {
+      var d = origCollect(currentId);
+      d.episode_id = episodeId;
+      return d;
+    };
+
+    // Auto-load existing assessment for this episode
+    fetch('/api/episodes/' + episodeId + '/record')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.id) {
+          window.ActiveForm.populate(data);
+          Main.setCurrentId(data.id);
+          Main.updateProgress();
+          // Clear dirty flag — this is a load, not an edit
+          setTimeout(function() { Main.clearDirty(); }, 100);
+        }
+      })
+      .catch(function(e) { console.warn('Could not auto-load record:', e); });
+  }
+
+  if (episodeId || patientId) {
+    var navGroup = document.getElementById('topbar-nav-group');
+    var navSep   = document.getElementById('topbar-nav-sep');
+    if (navGroup) {
+      var retBtn = document.createElement('button');
+      retBtn.className = 'tbtn';
+      retBtn.textContent = '\u2190 Return';
+      retBtn.onclick = function() {
+        if (Main.isDirty && !confirm('Unsaved changes. Return anyway?')) return;
+        window.location.href = '/';
+      };
+      var saveRetBtn = document.createElement('button');
+      saveRetBtn.className = 'tbtn primary';
+      saveRetBtn.textContent = 'Save & Return';
+      saveRetBtn.onclick = async function() {
+        await Main.saveRecord();
+        setTimeout(function() { window.location.href = '/'; }, 800);
+      };
+      navGroup.appendChild(retBtn);
+      navGroup.appendChild(saveRetBtn);
+      if (navSep) navSep.style.display = '';
+    }
+  }
+});
+</script>
+{% endblock %}

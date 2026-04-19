@@ -86,6 +86,7 @@
       display: flex;
       gap: 10px;
       align-items: center;
+      margin-bottom: 10px;
     }
     .search-wrap {
       flex: 1;
@@ -682,8 +683,7 @@
         <div class="form-card-name">Musculoskeletal</div>
         <div class="form-card-sub">Peripheral joints, ROM, strength</div>
       </div>
-      <div class="form-card soon" data-form="SPINE">
-        <div class="form-card-badge">Soon</div>
+      <div class="form-card" data-form="SPINE" onclick="selectForm(this)">
         <div class="form-card-icon">&#128279;</div>
         <div class="form-card-name">Spine</div>
         <div class="form-card-sub">Cervical, thoracic, lumbar</div>
@@ -769,6 +769,9 @@
 var currentPatientId = null;
 var searchTimer      = null;
 var selectedForm     = 'MS';
+var sortKey          = 'name';
+var sortAsc          = true;
+var lastPatients     = [];
 
 // ── Dark mode ─────────────────────────────────────────
 function initDark() {
@@ -903,9 +906,8 @@ async function submitNewEpisode() {
     if (!res.ok) { showToast(j.error || 'Failed', 'err'); return; }
     closeModal('modal-new-episode');
     showToast('Episode created', 'ok');
-    // Go straight to the form, pass patient_id for pre-fill
-    window.location.href = '/form/' + selectedForm.toLowerCase() +
-      '?episode_id=' + j.id + '&patient_id=' + currentPatientId;
+    // Go to episode detail page
+    window.location.href = '/episode/' + j.id;
   } catch(e) {
     showToast('Error: ' + e.message, 'err');
   }
@@ -933,8 +935,40 @@ async function doSearch(q) {
   }
 }
 
+// ── Sort patients ─────────────────────────────────────
+function sortPatients(patients) {
+  return patients.slice().sort(function(a, b) {
+    var av, bv;
+    if (sortKey === 'name') {
+      av = (a.name || '').toLowerCase();
+      bv = (b.name || '').toLowerCase();
+    } else if (sortKey === 'last_visit') {
+      av = a.last_visit || '';
+      bv = b.last_visit || '';
+    } else if (sortKey === 'episodes') {
+      av = a.episode_count || 0;
+      bv = b.episode_count || 0;
+    } else {
+      av = (a[sortKey] || '').toString().toLowerCase();
+      bv = (b[sortKey] || '').toString().toLowerCase();
+    }
+    if (av < bv) return sortAsc ? -1 : 1;
+    if (av > bv) return sortAsc ?  1 : -1;
+    return 0;
+  });
+}
+
+function setSort(key) {
+  if (sortKey === key) { sortAsc = !sortAsc; }
+  else { sortKey = key; sortAsc = true; }
+  renderPatientTable(lastPatients);
+}
+
 // ── Render patient table ──────────────────────────────
 function renderPatientTable(patients) {
+  lastPatients = patients;
+  var sorted = sortPatients(patients);
+  patients   = sorted;
   var wrap  = document.getElementById('patient-table-wrap');
   var count = document.getElementById('table-count');
   count.textContent = patients.length + ' patient' + (patients.length !== 1 ? 's' : '');
@@ -965,11 +999,19 @@ function renderPatientTable(patients) {
       '</tr>';
   }).join('');
 
+  function thdr(label, key) {
+    var arrow = sortKey === key ? (sortAsc ? ' &#9650;' : ' &#9660;') : ' <span style="opacity:0.25">&#9650;</span>';
+    return '<th style="cursor:pointer;user-select:none;" onclick="setSort(\'' + key + '\')">' + label + arrow + '</th>';
+  }
   wrap.innerHTML =
     '<table class="pt-table">' +
     '<thead><tr>' +
-    '<th>Name</th><th>IC / Passport</th><th>DOB</th>' +
-    '<th>Sex</th><th>Episodes</th><th>Last Visit</th>' +
+    thdr('Name',        'name') +
+    thdr('IC / Passport','ic') +
+    thdr('DOB',         'dob') +
+    thdr('Sex',         'sex') +
+    thdr('Episodes',    'episodes') +
+    thdr('Last Visit',  'last_visit') +
     '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
@@ -1064,7 +1106,7 @@ async function loadEpisodes(patientId) {
 }
 
 function openEpisode(episodeId) {
-  window.location.href = '/form/ms?episode_id=' + episodeId;
+  window.location.href = '/episode/' + episodeId;
 }
 
 // ── Show list / back ──────────────────────────────────

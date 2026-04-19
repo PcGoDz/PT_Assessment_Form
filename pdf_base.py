@@ -12,6 +12,7 @@ W, H     = A4
 M_LEFT   = 12 * mm
 M_RIGHT  = 12 * mm
 M_TOP    = 10 * mm
+M_BOTTOM = 10 * mm
 COL_W    = W - M_LEFT - M_RIGHT
 LEFT_W   = COL_W * 0.47
 RIGHT_W  = COL_W * 0.53
@@ -271,3 +272,87 @@ def draw_sign_block(c, ty):
     c.drawRightString(M_LEFT + COL_W - 2 * mm, ty - sh + 9 * mm,
                       'Sign & Stamp')
     return ty - sh
+
+
+# ── SOAP follow-up page ─────────────────────────────────────────────
+def draw_soap_page(c, patient, soap, episode_info=None):
+    """Draw a single SOAP follow-up note page."""
+
+    # Header
+    c.setFont(FN, 7)
+    name = patient.get('name', '')
+    ic   = patient.get('nric') or patient.get('passport', '')
+    c.drawRightString(W - M_RIGHT, H - M_TOP,
+        f"fisio / b.pen. 14 / Pind. 1 / 2019  |  {name}  |  IC: {ic}")
+
+    ty = H - M_TOP - 8*mm
+
+    # Session banner
+    session_no  = soap.get('session_no', '')
+    note_date   = soap.get('note_date', '')
+    form_type   = (episode_info or {}).get('form_type', 'MS')
+    form_label  = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric'}.get(form_type, form_type)
+
+    c.setFillColor(colors.HexColor('#1a4a8a'))
+    c.roundRect(M_LEFT, ty - 10*mm, COL_W, 10*mm, 3*mm, stroke=0, fill=1)
+    c.setFillColor(WHITE)
+    c.setFont(FB, 9)
+    c.drawString(M_LEFT + 4*mm, ty - 6.5*mm,
+        f"FOLLOW-UP NOTE  —  Session {session_no}")
+    c.setFont(FN, 9)
+    c.drawRightString(M_LEFT + COL_W - 4*mm, ty - 6.5*mm,
+        f"{form_label}  |  Date: {note_date}")
+    c.setFillColor(BLACK)
+    ty -= 14*mm
+
+    # 2x2 SOAP boxes
+    half_w = COL_W / 2
+    usable_h = ty - M_BOTTOM - 24*mm  # leave room for sign block
+    box_h  = usable_h / 2
+
+    boxes = [
+        ('S  —  SUBJECTIVE',  soap.get('subjective', ''),
+         "Patient's report — pain, function, symptoms."),
+        ('O  —  OBJECTIVE',   soap.get('objective', ''),
+         'Measurements — ROM, strength, VAS, special tests.'),
+        ('A  —  ANALYSIS',    soap.get('analysis', ''),
+         'Progress towards goals, problems in priority.'),
+        ('P  —  PLAN',        soap.get('plan', ''),
+         'Treatment given, HEP, next session plan.'),
+    ]
+
+    for i, (label, text, hint) in enumerate(boxes):
+        col = i % 2
+        row = i // 2
+        bx  = M_LEFT + col * half_w
+        by  = ty - (row + 1) * box_h
+
+        c.setStrokeColor(BLACK); c.setLineWidth(0.5)
+        c.rect(bx, by, half_w, box_h)
+
+        # Label bar
+        c.setFillColor(colors.HexColor('#e8eef8'))
+        c.rect(bx, by + box_h - 7*mm, half_w, 7*mm, stroke=0, fill=1)
+        c.setStrokeColor(colors.HexColor('#c0ccdd')); c.setLineWidth(0.3)
+        c.line(bx, by + box_h - 7*mm, bx + half_w, by + box_h - 7*mm)
+
+        c.setFillColor(colors.HexColor('#1a4a8a'))
+        c.setFont(FB, 8.5)
+        c.drawString(bx + 3*mm, by + box_h - 5*mm, label)
+        c.setFillColor(BLACK)
+
+        if text and text.strip():
+            c.setFont(FN, 8.5)
+            lines = wrap_text(text, half_w - 6*mm, 8.5)
+            cy = by + box_h - 10.5*mm
+            for line in lines:
+                if cy < by + 2*mm: break
+                c.drawString(bx + 3*mm, cy, line)
+                cy -= 4.2*mm
+        else:
+            c.setFont(FN, 8); c.setFillColor(colors.HexColor('#aaaaaa'))
+            c.drawString(bx + 3*mm, by + box_h - 12*mm, hint)
+            c.setFillColor(BLACK)
+
+    ty -= box_h * 2 + 4*mm
+    draw_sign_block(c, ty)

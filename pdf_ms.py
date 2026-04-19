@@ -13,7 +13,8 @@ from pdf_base import (
     BLACK, WHITE, LGREY, FB, FN, MARKER_COLORS,
     wrap_text, draw_section, draw_patient_bar,
     draw_form_header, draw_page2_header,
-    draw_figure, draw_markers, draw_sign_block
+    draw_figure, draw_markers, draw_sign_block,
+    draw_soap_page
 )
 
 TITLE_LINES = [
@@ -277,3 +278,49 @@ def _page2(c, patient, movement, plan):
     ty -= 4*ch
     # Shared sign block from pdf_base
     draw_sign_block(c, ty)
+
+# ── Episode PDF (assessment + all SOAP notes) ───────────────────────
+def generate_episode_pdf(assessment_data, soap_notes, episode_info=None):
+    """Generate full episode PDF — assessment pages then one page per SOAP note."""
+    import io
+    buf = io.BytesIO()
+    c   = rl_canvas.Canvas(buf, pagesize=A4)
+
+    patient = assessment_data.get('patient', {}) if assessment_data else {}
+
+    # ── Page 1 & 2: assessment ───────────────────────────────────────
+    if assessment_data:
+        pain     = assessment_data.get('pain', {})
+        sq       = assessment_data.get('specialQuestions', {})
+        hx       = assessment_data.get('history', {})
+        neuro    = assessment_data.get('neurological', {})
+        obs      = assessment_data.get('observation', {})
+        palp     = assessment_data.get('palpation', {})
+        movement = assessment_data.get('movement', {})
+        plan     = assessment_data.get('plan', {})
+        mgmt     = assessment_data.get('management', {})
+        bc       = assessment_data.get('bodyChart', {})
+        markers  = bc.get('markers', [])
+
+        _page1(c, patient, pain, sq, hx, neuro, obs, palp, mgmt,
+               assessment_data.get('diagnosis', ''),
+               assessment_data.get('problem', ''),
+               markers, bc)
+        c.showPage()
+        _page2(c, patient, movement, plan)
+        c.showPage()
+    else:
+        # No assessment yet — blank placeholder page
+        draw_form_header(c, TITLE_LINES)
+        c.setFont(FN, 12)
+        c.setFillColor(colors.HexColor('#aaaaaa'))
+        c.drawCentredString(W/2, H/2, 'No initial assessment recorded for this episode.')
+        c.showPage()
+
+    # ── SOAP pages ───────────────────────────────────────────────────
+    for soap in (soap_notes or []):
+        draw_soap_page(c, patient, soap, episode_info)
+        c.showPage()
+
+    c.save()
+    return buf.getvalue()

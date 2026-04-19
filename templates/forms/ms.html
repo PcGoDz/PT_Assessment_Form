@@ -116,7 +116,7 @@
         </div>
         <div class="field">
           <label>Date of Birth</label>
-          <input type="date" id="pt-dob">
+          <input type="date" id="pt-dob" onchange="FormBase.onDobChange(this.value)">
         </div>
         <div class="field">
           <label>Age</label>
@@ -618,6 +618,20 @@ document.addEventListener('DOMContentLoaded', function () {
       d.episode_id = episodeId;
       return d;
     };
+
+    // Auto-load existing assessment for this episode
+    fetch('/api/episodes/' + episodeId + '/record')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data && data.id) {
+          window.ActiveForm.populate(data);
+          Main.setCurrentId(data.id);
+          Main.updateProgress();
+          // Clear dirty flag — this is a load, not an edit
+          setTimeout(function() { Main.clearDirty(); }, 100);
+        }
+      })
+      .catch(function(e) { console.warn('Could not auto-load record:', e); });
   }
 
   // ── Nav group: Return / Save & Return ────────
