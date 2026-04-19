@@ -181,3 +181,10 @@ GPT reviewed the code and raised valid points. Status:
 - User is a physio, not a developer — explain tech decisions in plain terms.
 - When in doubt about clinical workflow, ask Miruya. She knows her job better than the code does.
 - "Strength in numbers" is an acceptable clinical compliance strategy 😄
+
+## PyInstaller Build Rules (CRITICAL)
+- Every new `.py` file MUST be added to `pt_assessment.spec` under `datas` before building
+- Current bundled Python files: `app.py`, `database.py`, `pdf_generator.py`, `pdf_base.py`, `pdf_ms.py`, `pdf_spine.py`, `pdf_geriatric.py`
+- Adding a new form type (e.g. cardiorespiratory)? Add its `pdf_xxx.py` to spec AND to `_PDF_GENERATORS` and `_SINGLE_PDF_GENERATORS` dicts in `app.py`
+- After ANY code change, must recompile with `build.bat` — running old `.exe` will silently use old code
+- Symptoms of missing spec entry: import errors at runtime, wrong PDF generator being called, features that work in dev but not in `.exe`

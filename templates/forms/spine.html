@@ -72,8 +72,8 @@
       <div class="field">
         <label>Patient Type</label>
         <div class="radio-group">
-          <label><input type="radio" name="pt-type" value="local" onchange="Form.onPtTypeChange()"> Malaysian (NRIC)</label>
-          <label><input type="radio" name="pt-type" value="foreign" onchange="Form.onPtTypeChange()"> Foreign (Passport)</label>
+          <label><input type="radio" name="pt-type" value="local" onchange="FormBase.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="FormBase.onPtTypeChange()"> Foreign (Passport)</label>
         </div>
       </div>
       <div class="fg c2">
@@ -83,7 +83,7 @@
         </div>
         <div class="field" id="nric-field">
           <label>NRIC No. <span class="req">*</span></label>
-          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="Form.onNricInput(this.value)">
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="FormBase.onNricInput(this.value)">
           <div class="derived-info">
             <span class="derived-badge hidden" id="derived-dob"></span>
             <span class="derived-badge hidden" id="derived-gender"></span>
@@ -743,6 +743,7 @@ document.addEventListener('DOMContentLoaded', function () {
   FormBase.sv('pt-nric',     patientData.ic        || '');
   FormBase.sv('pt-passport', patientData.passport  || '');
   FormBase.sv('pt-dob',      patientData.dob       || '');
+  if (patientData.dob) FormBase.onDobChange(patientData.dob);
   FormBase.sv('pt-country',  patientData.country   || '');
   FormBase.setRadio('pt-type', patientData.pt_type || 'local');
   FormBase.setRadio('pt-sex',  patientData.sex     || '');

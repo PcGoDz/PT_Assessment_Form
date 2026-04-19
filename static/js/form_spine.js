@@ -127,6 +127,7 @@ const FormSpine = (function () {
 
     return {
       id:   currentId,
+      _form_type: 'spine',
       meta: { form: 'SPINE', ref: 'fisio/b.pen.6/Pind.2/2019', saved: new Date().toISOString() },
       patient:    FormBase.collectPatient(),
       diagnosis:  gv('pt-diagnosis'),

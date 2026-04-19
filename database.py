@@ -206,6 +206,35 @@ def get_patient(db_path, patient_id):
         conn.close()
 
 
+def delete_patient(db_path, patient_id):
+    """Cascade delete patient and ALL related data. Irreversible."""
+    conn = get_conn(db_path)
+    try:
+        # Get all episode IDs for this patient
+        eps = conn.execute(
+            'SELECT id FROM episodes WHERE patient_id=?', (patient_id,)
+        ).fetchall()
+        for ep in eps:
+            eid = ep['id']
+            # Delete SOAP notes
+            conn.execute('DELETE FROM soap_notes WHERE episode_id=?', (eid,))
+            # Get record IDs to clean audit log
+            recs = conn.execute(
+                'SELECT id FROM records WHERE episode_id=?', (eid,)
+            ).fetchall()
+            for rec in recs:
+                conn.execute('DELETE FROM audit_log WHERE record_id=?', (rec['id'],))
+            conn.execute('DELETE FROM records WHERE episode_id=?', (eid,))
+        conn.execute('DELETE FROM episodes WHERE patient_id=?', (patient_id,))
+        conn.execute('DELETE FROM patients WHERE id=?', (patient_id,))
+        conn.commit()
+        return True, None
+    except Exception as e:
+        return False, str(e)
+    finally:
+        conn.close()
+
+
 def update_patient(db_path, patient_id, patient_data):
     now  = datetime.now().isoformat(timespec='seconds')
     conn = get_conn(db_path)
