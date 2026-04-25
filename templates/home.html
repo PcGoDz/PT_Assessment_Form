@@ -552,6 +552,11 @@
       <div class="detail-header">
         <button class="back-btn" onclick="showList()">&#8592; All Patients</button>
         <div style="flex:1"></div>
+        <button class="btn-ghost" id="edit-patient-btn"
+          onclick="openEditPatientModal()"
+          title="Edit patient details">
+          &#9998; Edit Patient
+        </button>
         <button class="btn-ghost" id="delete-patient-btn"
           style="color:var(--danger);border-color:var(--danger);opacity:0.7"
           onclick="deleteCurrentPatient()"
@@ -594,6 +599,88 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Modal: Edit Patient -->
+<div class="modal-backdrop" id="modal-edit-patient">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-edit-patient')">&#x2715;</button>
+    <div class="modal-title">Edit Patient Details</div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Patient Type</label>
+        <select id="ep2-type" onchange="onEp2TypeChange()">
+          <option value="local">Malaysian (NRIC)</option>
+          <option value="foreign">Foreign (Passport)</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Full Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="ep2-name" placeholder="Patient full name">
+        <small id="ep2-name-err" style="color:var(--danger);display:none;margin-top:2px"></small>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field" id="ep2-nric-field">
+          <label>NRIC <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="ep2-nric" placeholder="12 digits" maxlength="12" oninput="onEp2Nric(this.value)">
+          <small id="ep2-nric-err" style="color:var(--danger);display:none;margin-top:2px"></small>
+        </div>
+        <div class="modal-field" id="ep2-passport-field" style="display:none">
+          <label>Passport No. <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="ep2-passport" placeholder="Passport number">
+        </div>
+        <div class="modal-field">
+          <label>Date of Birth</label>
+          <input type="date" id="ep2-dob" onchange="onEp2Dob(this.value)">
+          <small id="ep2-age-display" style="color:var(--text-muted);display:block;margin-top:2px"></small>
+          <small id="ep2-dob-warn" style="color:var(--warn,#b45309);display:none;margin-top:2px"></small>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Sex</label>
+          <select id="ep2-sex">
+            <option value="">— Select —</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="modal-field" id="ep2-country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="ep2-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option><option>Myanmar</option><option>Philippines</option>
+              <option>Thailand</option><option>Vietnam</option><option>Cambodia</option>
+              <option>Laos</option><option>Brunei</option><option>Singapore</option><option>Timor-Leste</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option><option>India</option><option>Pakistan</option>
+              <option>Nepal</option><option>Sri Lanka</option><option>Afghanistan</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option><option>Taiwan</option><option>Japan</option>
+              <option>South Korea</option><option>Hong Kong</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option>Saudi Arabia</option><option>Yemen</option><option>Iraq</option>
+              <option>Iran</option><option>Jordan</option><option>Syria</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Australia</option><option>United Kingdom</option><option>United States</option>
+              <option>Other (not listed)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal('modal-edit-patient')">Cancel</button>
+      <button class="btn-primary" onclick="submitEditPatient()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: New Patient -->
 <div class="modal-backdrop" id="modal-new-patient">
   <div class="modal">
@@ -615,6 +702,7 @@
         <div class="modal-field" id="np-nric-field">
           <label>NRIC <span style="color:var(--danger)">*</span></label>
           <input type="text" id="np-nric" placeholder="12 digits" maxlength="12" oninput="onNpNric(this.value)">
+          <small id="np-nric-err" style="color:var(--danger);display:none;margin-top:2px"></small>
         </div>
         <div class="modal-field" id="np-passport-field" style="display:none">
           <label>Passport No. <span style="color:var(--danger)">*</span></label>
@@ -700,8 +788,7 @@
         <div class="form-card-name">Geriatric</div>
         <div class="form-card-sub">Balance, mobility, falls</div>
       </div>
-      <div class="form-card soon" data-form="CARDIO">
-        <div class="form-card-badge">Soon</div>
+      <div class="form-card" data-form="CR" onclick="selectForm(this)">
         <div class="form-card-icon">&#129728;</div>
         <div class="form-card-name">Cardiorespiratory</div>
         <div class="form-card-sub">Pulmonary, cardiac rehab</div>
@@ -837,11 +924,24 @@ function onNpTypeChange() {
 
 function onNpNric(val) {
   var c = val.replace(/\D/g, '');
+  var errEl = document.getElementById('np-nric-err');
+  // Clear error while typing
+  if (errEl) errEl.style.display = 'none';
   if (c.length < 12) return;
+  if (c.length > 12) {
+    if (errEl) { errEl.textContent = 'NRIC must be exactly 12 digits'; errEl.style.display = ''; }
+    return;
+  }
   var yy = c.substring(0,2), mm = c.substring(2,4), dd = c.substring(4,6);
   var thisYY = new Date().getFullYear() % 100;
   var yr = parseInt(yy) <= thisYY ? '20'+yy : '19'+yy;
   var dobStr = yr+'-'+mm+'-'+dd;
+  // Validate the derived date
+  var dob = new Date(dobStr);
+  if (isNaN(dob.getTime()) || dob.getMonth() !== parseInt(mm)-1) {
+    if (errEl) { errEl.textContent = 'NRIC contains invalid date — please check IC number'; errEl.style.display = ''; }
+    return;
+  }
   document.getElementById('np-dob').value = dobStr;
   onNpDob(dobStr);
   var last = parseInt(c.charAt(11));
@@ -1091,8 +1191,8 @@ async function loadEpisodes(patientId) {
     }
 
     wrap.innerHTML = episodes.map(function(ep) {
-      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric' }[ep.form_type] || ep.form_type;
-      var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;' }[ep.form_type] || '&#128203;';
+      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory' }[ep.form_type] || ep.form_type;
+      var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;' }[ep.form_type] || '&#128203;';
       var rawStatus  = ep.status || 'active';
       var statusBase = rawStatus.split('|')[0];  // strip reason
       var statusReason = rawStatus.includes('|') ? rawStatus.split('|')[1] : '';
@@ -1246,6 +1346,135 @@ document.getElementById('patient-table-wrap').addEventListener('click', function
     openPatient(parseInt(row.dataset.patientId));
   }
 });
+
+// ── Edit Patient Modal ────────────────────────────────
+function calcAge(dobStr) {
+  if (!dobStr) return null;
+  var dob = new Date(dobStr);
+  if (isNaN(dob.getTime())) return null;
+  var today = new Date();
+  var age = today.getFullYear() - dob.getFullYear();
+  if (today.getMonth() < dob.getMonth() ||
+     (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
+  return (age >= 0 && age <= 120) ? age : null;
+}
+function onEp2TypeChange() {
+  var local = document.getElementById('ep2-type').value === 'local';
+  document.getElementById('ep2-nric-field').style.display    = local ? '' : 'none';
+  document.getElementById('ep2-passport-field').style.display= local ? 'none' : '';
+  document.getElementById('ep2-country-field').style.display = local ? 'none' : '';
+}
+
+function onEp2Nric(val) {
+  var c = val.replace(/\D/g, '');
+  var errEl = document.getElementById('ep2-nric-err');
+  if (errEl) errEl.style.display = 'none';
+  if (c.length !== 12) return;
+  var yy = c.substring(0,2), mm = c.substring(2,4), dd = c.substring(4,6);
+  var thisYY = new Date().getFullYear() % 100;
+  var yr = parseInt(yy) <= thisYY ? '20'+yy : '19'+yy;
+  var dobStr = yr+'-'+mm+'-'+dd;
+  var dob = new Date(dobStr);
+  if (isNaN(dob.getTime())) {
+    if (errEl) { errEl.textContent = 'NRIC contains invalid date'; errEl.style.display = ''; }
+    return;
+  }
+  document.getElementById('ep2-dob').value = dobStr;
+  onEp2Dob(dobStr);
+  var last = parseInt(c.charAt(11));
+  document.getElementById('ep2-sex').value = last % 2 === 1 ? 'M' : 'F';
+}
+
+function onEp2Dob(val) {
+  var age    = calcAge(val);
+  var dispEl = document.getElementById('ep2-age-display');
+  var warnEl = document.getElementById('ep2-dob-warn');
+  if (age !== null) {
+    if (dispEl) { dispEl.textContent = 'Age: ' + age; }
+    if (warnEl) warnEl.style.display = 'none';
+  } else if (val) {
+    if (dispEl) dispEl.textContent = '';
+    if (warnEl) { warnEl.textContent = 'Could not calculate age — check date'; warnEl.style.display = ''; }
+  } else {
+    if (dispEl) dispEl.textContent = '';
+    if (warnEl) warnEl.style.display = 'none';
+  }
+}
+
+function openEditPatientModal() {
+  if (!currentPatientData) return;
+  var p = currentPatientData;
+  var type = p.pt_type || 'local';
+  document.getElementById('ep2-type').value     = type;
+  document.getElementById('ep2-name').value     = p.name || '';
+  document.getElementById('ep2-nric').value     = p.ic || '';
+  document.getElementById('ep2-passport').value = p.passport || '';
+  document.getElementById('ep2-dob').value      = p.dob || '';
+  document.getElementById('ep2-sex').value      = p.sex || '';
+  document.getElementById('ep2-name-err').style.display = 'none';
+  document.getElementById('ep2-nric-err').style.display = 'none';
+  onEp2TypeChange();
+  onEp2Dob(p.dob || '');
+  var countryEl = document.getElementById('ep2-country');
+  if (countryEl) countryEl.value = p.country || '';
+  openModal('modal-edit-patient');
+  setTimeout(function() { document.getElementById('ep2-name').focus(); }, 100);
+}
+
+async function submitEditPatient() {
+  var name = document.getElementById('ep2-name').value.trim();
+  var nameErrEl = document.getElementById('ep2-name-err');
+  if (!name) {
+    if (nameErrEl) { nameErrEl.textContent = 'Name is required'; nameErrEl.style.display = ''; }
+    return;
+  }
+  if (/\d/.test(name)) {
+    if (nameErrEl) { nameErrEl.textContent = 'Name must not contain numbers'; nameErrEl.style.display = ''; }
+    return;
+  }
+  if (nameErrEl) nameErrEl.style.display = 'none';
+
+  var type = document.getElementById('ep2-type').value;
+  var nric = document.getElementById('ep2-nric').value.trim();
+  var pass = document.getElementById('ep2-passport').value.trim();
+  var nricErrEl = document.getElementById('ep2-nric-err');
+
+  if (type === 'local' && !/^\d{12}$/.test(nric)) {
+    if (nricErrEl) { nricErrEl.textContent = 'NRIC must be exactly 12 digits'; nricErrEl.style.display = ''; }
+    return;
+  }
+  if (nricErrEl) nricErrEl.style.display = 'none';
+  if (type === 'foreign' && !pass) { showToast('Passport is required', 'err'); return; }
+
+  var dob = document.getElementById('ep2-dob').value;
+  var age = calcAge(dob);
+  if (dob && age === null) {
+    if (!confirm('The date of birth gives an unusual age. Save anyway?')) return;
+  }
+
+  try {
+    var res = await fetch('/api/patients/' + currentPatientId, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: name, type: type, nric: nric, passport: pass,
+        dob: dob, sex: document.getElementById('ep2-sex').value,
+        country: (document.getElementById('ep2-country') || {}).value || ''
+      })
+    });
+    var j = await res.json();
+    if (!res.ok) {
+      var msg = Array.isArray(j.error) ? j.error.join(', ') : (j.error || 'Failed to save');
+      showToast(msg, 'err'); return;
+    }
+    currentPatientData = j;
+    closeModal('modal-edit-patient');
+    showToast('Patient details updated', 'ok');
+    openPatient(currentPatientId);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
 
 // ── Init ──────────────────────────────────────────────
 initDark();

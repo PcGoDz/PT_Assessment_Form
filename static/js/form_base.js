@@ -42,13 +42,19 @@ const FormBase = (function () {
   // ── Patient type toggle ───────────────────────────────
   function onPtTypeChange() {
     var local = radio('pt-type') === 'local';
-    document.getElementById('nric-field').style.display     = local ? '' : 'none';
-    document.getElementById('passport-field').style.display = local ? 'none' : '';
-    document.getElementById('country-field').style.display  = local ? 'none' : '';
-    document.getElementById('sex-field').style.display      = local ? 'none' : '';
+    var set = function(id, val) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = val;
+    };
+    set('nric-field',     local ? '' : 'none');
+    set('passport-field', local ? 'none' : '');
+    set('country-field',  local ? 'none' : '');
+    set('sex-field',      local ? 'none' : '');
     if (!local) {
-      document.getElementById('derived-dob').classList.add('hidden');
-      document.getElementById('derived-gender').classList.add('hidden');
+      var dd = document.getElementById('derived-dob');
+      var dg = document.getElementById('derived-gender');
+      if (dd) dd.classList.add('hidden');
+      if (dg) dg.classList.add('hidden');
     }
   }
 

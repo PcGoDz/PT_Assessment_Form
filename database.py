@@ -140,10 +140,60 @@ def validate_record(data):
 # PATIENTS
 # ══════════════════════════════════════════════════════════
 
-def create_patient(db_path, patient_data):
-    name = patient_data.get('name', '').strip()
+import re as _re
+from datetime import date as _date
+
+def validate_patient(data):
+    """
+    Shared patient data validator. Returns list of error strings.
+    Empty list = valid.
+    """
+    errors = []
+    name = data.get('name', '').strip()
+
+    # Name: must not be empty
     if not name:
-        return None, ['Patient name is required']
+        errors.append('Patient name is required')
+    else:
+        # Allow letters (incl. Unicode for Malay/Mandarin/Tamil names),
+        # spaces, hyphens, apostrophes, and @ (for convert names e.g. Michael@Mahmud)
+        if not _re.match(r"^[\w\s\-\'@]+$", name, _re.UNICODE) or _re.search(r'\d', name):
+            errors.append('Patient name must not contain numbers or invalid symbols')
+
+    # DOB age sanity check (warn-only on frontend, hard reject obviously bad dates)
+    dob = data.get('dob', '').strip()
+    if dob:
+        try:
+            dob_date = _date.fromisoformat(dob)
+            today    = _date.today()
+            age      = today.year - dob_date.year - (
+                (today.month, today.day) < (dob_date.month, dob_date.day)
+            )
+            if age < 0 or age > 120:
+                errors.append(f'Date of birth gives an invalid age ({age}). Please check the date.')
+        except ValueError:
+            errors.append('Date of birth is not a valid date')
+
+    # NRIC: exactly 12 digits for local patients
+    pt_type = data.get('type', 'local')
+    if pt_type == 'local':
+        nric = data.get('nric', '').strip()
+        if not nric:
+            errors.append('NRIC is required for Malaysian patients')
+        elif not _re.match(r'^\d{12}$', nric):
+            errors.append('NRIC must be exactly 12 digits with no dashes or spaces')
+
+    if pt_type == 'foreign' and not data.get('passport', '').strip():
+        errors.append('Passport number is required for foreign patients')
+
+    return errors
+
+
+def create_patient(db_path, patient_data):
+    errors = validate_patient(patient_data)
+    if errors:
+        return None, errors
+    name = patient_data.get('name', '').strip()
     now  = datetime.now().isoformat(timespec='seconds')
     conn = get_conn(db_path)
     try:
@@ -236,6 +286,9 @@ def delete_patient(db_path, patient_id):
 
 
 def update_patient(db_path, patient_id, patient_data):
+    errors = validate_patient(patient_data)
+    if errors:
+        return False, errors
     now  = datetime.now().isoformat(timespec='seconds')
     conn = get_conn(db_path)
     try:

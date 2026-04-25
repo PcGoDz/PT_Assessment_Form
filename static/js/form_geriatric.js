@@ -491,8 +491,17 @@ var GeriatricForm = (function () {
     toggleNa:       toggleNa
   };
 
-  window.ActiveForm   = api;
+  window.ActiveForm    = api;
   window.GeriatricForm = api;
+  window.Form = {
+    collect:        api.collect,
+    populate:       api.populate,
+    reset:          api.reset,
+    setPain:        api.setPain,
+    onPtTypeChange: FormBase.onPtTypeChange,
+    onNricInput:    FormBase.onNricInput,
+    onDobChange:    FormBase.onDobChange
+  };
   FormBase.setProgressFields(progressFields);
 
   // Init N/A placeholder cache after DOM ready
