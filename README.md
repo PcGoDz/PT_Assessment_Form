@@ -1,5 +1,6 @@
-# PT Assessment System — Musculoskeletal
-KKM Physiotherapy Department | fisio/b.pen.14/Pind.1/2019
+# PT Assessment System 
+
+PROJECT PHYSIOTHERAPY UNITED NODE DIAGNOSTIC EVALUATION KIT
 
 ## How to use
 
