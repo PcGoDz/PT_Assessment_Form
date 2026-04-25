@@ -14,17 +14,20 @@ from database import (
 import pdf_ms
 import pdf_spine
 import pdf_geriatric
+import pdf_cr
 
 _PDF_GENERATORS = {
     'MS':        pdf_ms.generate_episode_pdf,
     'SPINE':     pdf_spine.generate_episode_pdf,
     'GERIATRIC': pdf_geriatric.generate_episode_pdf,
+    'CR':        pdf_cr.generate_episode_pdf,
 }
 
 _SINGLE_PDF_GENERATORS = {
     'MS':        pdf_ms.generate_ms_pdf,
     'SPINE':     pdf_spine.generate_spine_pdf,
     'GERIATRIC': pdf_geriatric.generate_geriatric_pdf,
+    'CR':        pdf_cr.generate_cr_pdf,
 }
 
 
@@ -52,6 +55,35 @@ app = Flask(
 app.secret_key = 'pt_assessment_local_key'
 
 
+# ── Form registry — single source of truth ───────────────────────
+FORM_REGISTRY = [
+    # ── Musculoskeletal ──────────────────────────────
+    { 'id': 'MS',          'label': 'Musculoskeletal',    'icon': '&#129460;', 'badge': 'MS',  'group': 'Musculoskeletal',  'ready': True  },
+    { 'id': 'SPINE',       'label': 'Spine',              'icon': '&#128279;', 'badge': 'SP',  'group': 'Musculoskeletal',  'ready': True  },
+    { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',  'ready': False },
+    { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',  'ready': False },
+    { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',  'ready': False },
+    # ── Neurological ─────────────────────────────────
+    { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',     'ready': False },
+    { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#128203;', 'badge': 'SC',  'group': 'Neurological',     'ready': False },
+    { 'id': 'VESTIBULAR',  'label': 'Vestibular',         'icon': '&#128261;', 'badge': 'VB',  'group': 'Neurological',     'ready': False },
+    { 'id': 'FACIAL',      'label': 'Facial',             'icon': '&#128580;', 'badge': 'FC',  'group': 'Neurological',     'ready': False },
+    # ── Cardiorespiratory ─────────────────────────────
+    { 'id': 'CR',          'label': 'Cardiorespiratory',  'icon': '&#129728;', 'badge': 'CR',  'group': 'Cardiorespiratory', 'ready': True  },
+    # ── Rehabilitation ────────────────────────────────
+    { 'id': 'GERIATRIC',   'label': 'Geriatric',          'icon': '&#9878;',   'badge': 'GR',  'group': 'Rehabilitation',   'ready': True  },
+    { 'id': 'PAEDIATRIC',  'label': 'Paediatric',         'icon': '&#128118;', 'badge': 'PD',  'group': 'Rehabilitation',   'ready': False },
+    { 'id': 'LYMPHOEDEMA', 'label': 'Lymphoedema',        'icon': '&#128167;', 'badge': 'LY',  'group': 'Rehabilitation',   'ready': False },
+    { 'id': 'NCD',         'label': 'NCD / Obesity',      'icon': '&#129483;', 'badge': 'NC',  'group': 'Rehabilitation',   'ready': False },
+    { 'id': 'GENERAL',     'label': 'General',            'icon': '&#128203;', 'badge': 'GN',  'group': 'Rehabilitation',   'ready': False },
+]
+FORM_GROUPS = ['Musculoskeletal', 'Neurological', 'Cardiorespiratory', 'Rehabilitation']
+
+@app.context_processor
+def inject_forms():
+    return { 'FORM_REGISTRY': FORM_REGISTRY, 'FORM_GROUPS': FORM_GROUPS }
+
+
 # ── Pages ────────────────────────────────────────────────────────
 @app.route('/')
 def index():
@@ -71,9 +103,8 @@ def form_ms():
     if patient_id:
         patient, _ = get_patient(DB_PATH, patient_id)
     return render_template('forms/ms.html',
-        episode_id=episode_id,
-        patient_id=patient_id,
-        patient=patient)
+        episode_id=episode_id, patient_id=patient_id,
+        patient=patient, current_form='MS')
 
 
 @app.route('/form/geriatric')
@@ -84,9 +115,20 @@ def form_geriatric():
     if patient_id:
         patient, _ = get_patient(DB_PATH, patient_id)
     return render_template('forms/geriatric.html',
-        episode_id=episode_id,
-        patient_id=patient_id,
-        patient=patient)
+        episode_id=episode_id, patient_id=patient_id,
+        patient=patient, current_form='GERIATRIC')
+
+
+@app.route('/form/cr')
+def form_cr():
+    episode_id = request.args.get('episode_id', type=int)
+    patient_id = request.args.get('patient_id', type=int)
+    patient    = None
+    if patient_id:
+        patient, _ = get_patient(DB_PATH, patient_id)
+    return render_template('forms/cr.html',
+        episode_id=episode_id, patient_id=patient_id,
+        patient=patient, current_form='CR')
 
 
 @app.route('/form/spine')
@@ -97,9 +139,8 @@ def form_spine():
     if patient_id:
         patient, _ = get_patient(DB_PATH, patient_id)
     return render_template('forms/spine.html',
-        episode_id=episode_id,
-        patient_id=patient_id,
-        patient=patient)
+        episode_id=episode_id, patient_id=patient_id,
+        patient=patient, current_form='SPINE')
 
 
 # ── Patient API ──────────────────────────────────────────────────
@@ -317,10 +358,24 @@ def export_pdf(record_id):
     if err:
         return jsonify({'error': err}), 404
     try:
-        _form_type  = str(data.get('_form_type', 'MS')).upper()
+        # Check both _form_type and meta.form for compatibility
+        _form_type = str(
+            data.get('_form_type') or
+            (data.get('meta') or {}).get('form') or
+            'MS'
+        ).upper()
         _gen        = _SINGLE_PDF_GENERATORS.get(_form_type, pdf_ms.generate_ms_pdf)
         pdf_bytes   = _gen(data)
         patient     = data.get('patient', {})
+        name        = (patient.get('name') or 'record').replace(' ', '_')
+        date        = patient.get('date') or 'nodate'
+        filename    = f"PT_{_form_type}_{name}_{date}.pdf"
+        response    = make_response(pdf_bytes)
+        response.headers['Content-Type']        = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
         name        = (patient.get('name') or 'record').replace(' ', '_')
         date        = patient.get('date') or 'nodate'
         filename    = f"PT_{_form_type}_{name}_{date}.pdf"

@@ -1,148 +1,147 @@
 // clinical_templates.js
 // Reusable clinical template picker based on KKM Best Statement documents
 // Usage: ClinicalTemplates.show(fieldId, formType, category)
-// formType: 'MS' | 'SPINE' | 'GERIATRIC'
+// formType: 'MS' | 'SPINE' | 'GERIATRIC' | 'CR'
 // category: 'impression' | 'stg' | 'ltg' | 'treatment' | 'observation' | 'palpation'
 
 const ClinicalTemplates = (function () {
 
-  // ── Template data — sourced from KKM Best Statement documents ──
+  // ── Template data ───────────────────────────────────────────────
   const TEMPLATES = {
-
     MS: {
-      impression: [
-        'Pain, reduced ROM and muscle weakness with functional limitation.',
-        'Reduced ROM and strength with pain on activity affecting ADLs.',
-        'Pain and stiffness with joint swelling and functional limitation.',
-        'Muscle weakness and pain with impaired gait and functional limitation.',
-        'Reduced ROM, tenderness and weakness with impaired functional performance.',
-      ],
-      stg: [
-        'Reduce pain to [x]/10 within 2 weeks. Improve ROM by 10°. Increase muscle strength to [x]/5.',
-        'Reduce pain and swelling within 1–2 weeks. Improve joint ROM and functional mobility.',
-        'Improve ROM and reduce pain within 2–4 weeks. Educate patient on HEP before discharge.',
-        'Increase quadriceps strength to 4/5. Reduce pain to 4/10 within 2 weeks.',
-        'Improve functional mobility and reduce pain within 2–4 weeks.',
-      ],
-      ltg: [
-        'Independent walking without aid, pain-free ADLs within 3 months.',
-        'Return to work/recreational activities. Achieve full functional independence within 3–6 months.',
-        'Restore full ROM and strength. Return to previous level of function within 3 months.',
-        'Prevent recurrence, improve quality of life, return to sport/work within 3–6 months.',
-        'Achieve pain-free functional independence in ADLs and community activities.',
-      ],
-      treatment: [
-        'Pain management (TENS/heat/cold). Mobilising exercises. Strengthening. Balance training. HEP.',
-        'Manual therapy. Therapeutic exercises (strengthening, stretching). Patient education. HEP.',
-        'Electrotherapy (TENS/US). ROM exercises. Progressive strengthening. Gait re-education. HEP.',
-        'Joint mobilisation. Muscle strengthening. Stretching. Functional training. Home exercise program.',
-        'Pain relief modalities. Active ROM exercises. Strengthening. Patient education and HEP.',
-      ],
       observation: [
-        'Antalgic gait noted. Guarding of affected limb. No obvious deformity.',
-        'Normal gait pattern. Mild swelling at [site]. No muscle wasting observed.',
-        'Reduced arm swing. Guarding right/left [joint]. Mild muscle wasting [muscle].',
-        'Antalgic posture. Swelling and erythema at [site]. No scar or deformity.',
-        'Normal posture. No swelling or deformity. Mild tenderness on palpation.',
+        'Patient ambulant with walking frame. Antalgic gait noted. Guarding of affected limb.',
+        'Patient in wheelchair. Alert and cooperative. Mild distress noted due to pain.',
+        'Standing posture: lateral trunk shift to right. Reduced lumbar lordosis.',
+        'Patient ambulant independently. Mild limp noted. Using single-point walking stick.',
+        'Swelling and erythema noted over affected joint. Skin intact.',
+        'Patient bed-bound. Position of comfort maintained. Alert and oriented.',
       ],
       palpation: [
-        'Tenderness at [site] Grade [1-3]. Mild warmth. Muscle spasm at [muscle].',
-        'Joint line tenderness [medial/lateral]. No warmth or swelling. Moderate muscle tightness.',
-        'Tenderness at [tendon/ligament]. Normal skin temperature. Trigger point at [muscle].',
-        'Diffuse tenderness Grade 2. Warmth at [site]. Tight [muscle group].',
-        'Bony tenderness at [landmark]. No soft tissue swelling. Mild muscle guarding.',
+        'Tenderness grade 2/3 over affected region. Muscle spasm present.',
+        'Mild warmth and soft tissue swelling. No bony deformity.',
+        'Trigger points palpable over upper trapezius bilaterally.',
+        'Joint line tenderness present. No effusion palpable.',
+        'Diffuse tenderness. Reduced muscle tone. Trigger point at [muscle].',
+      ],
+      impression: [
+        'Patient presents with pain and functional limitation secondary to diagnosis. Goals set to reduce pain and improve mobility.',
+        'Reduced ROM and muscle strength affecting ADL performance. Rehabilitation indicated.',
+        'Post-surgical patient with pain, reduced strength and ROM. Physiotherapy to optimise recovery.',
+        'Chronic pain pattern with postural dysfunction. Multifactorial approach required.',
+        'Acute inflammatory phase. Pain management and protection prioritised.',
+      ],
+      stg: [
+        'Reduce pain to VAS <= 3/10 within 2 weeks.',
+        'Improve ROM by 20 degrees within 2 weeks.',
+        'Achieve independent ambulation with aid within 2 weeks.',
+        'Reduce swelling and improve functional mobility within 1 week.',
+        'Independent with home exercise program within 2 weeks.',
+      ],
+      ltg: [
+        'Return to pre-morbid functional level within 4-6 weeks.',
+        'Full weight bearing and independent ambulation without aid within 6 weeks.',
+        'Return to work / recreational activities within 8 weeks.',
+        'Achieve full pain-free ROM within 6 weeks.',
+        'Independent with ADLs and home program within 4 weeks.',
+      ],
+      treatment: [
+        'TENS, heat therapy, ultrasound for pain relief. Strengthening and ROM exercises. HEP.',
+        'Manual therapy, joint mobilisation, soft tissue massage. Progressive strengthening.',
+        'Gait re-education, balance training, proprioceptive exercises.',
+        'Postural correction, ergonomic advice, core stabilisation exercises.',
+        'Hydrotherapy, graded exercise program, patient education.',
       ],
     },
 
     SPINE: {
       impression: [
-        'Pain and reduced spinal mobility with neural involvement and functional limitation.',
-        'Reduced trunk ROM and muscle weakness with postural dysfunction.',
-        'Spinal pain with peripheralisation and functional limitation in ADLs.',
-        'Centralising spinal pain with reduced ROM and muscle guarding.',
-        'Spinal stiffness and pain with impaired movement efficiency and postural faults.',
+        'Patient presents with mechanical low back pain with movement limitation. Neurological screen negative.',
+        'Cervical radiculopathy pattern. Dermatomal symptoms present. Neural tension signs positive.',
+        'Lumbar disc pathology with referred leg pain. Centralisation response noted with extension.',
+        'Postural dysfunction with chronic pain sensitisation. Biopsychosocial approach required.',
+        'Post-surgical spine — wound healing adequate. Rehab to commence per protocol.',
       ],
       stg: [
-        'Reduce pain within 3–5 days. Improve trunk flexion and side flexion within 1 week.',
-        'Centralise symptoms within 2–3 visits. Improve trunk ROM within 1–2 weeks.',
-        'Reduce pain to [x]/10 within 3 visits. Restore segmental mobility within 1 session.',
-        'Improve gait pattern within 6–12 weeks. Educate on HEP before discharge.',
-        'Reduce neural tension within 2 weeks. Improve lumbar flexion by 20% within 1 week.',
+        'Centralise symptoms and reduce leg pain within 1 week.',
+        'Reduce pain to VAS <= 3/10 and improve lumbar flexion within 2 weeks.',
+        'Improve sitting and standing tolerance to 30 minutes within 2 weeks.',
+        'Independent with spinal exercises and posture correction within 2 weeks.',
       ],
       ltg: [
-        'Achieve functional independence in daily and work-related activities.',
-        'Correct postural faults. Promote long-term spinal health and movement efficiency.',
-        'Return to desk job with improved posture tolerance within 6–8 weeks.',
-        'Full functional independence in ADLs. Prevent recurrence with self-management skills.',
-        'Return to previous occupation and recreational activities within 2–3 months.',
+        'Full return to work and recreational activities within 6-8 weeks.',
+        'Independent pain management strategies. Prevent recurrence.',
+        'Achieve functional ROM and strength for full ADL independence within 8 weeks.',
       ],
       treatment: [
-        'Patient education. Lumbar stabilisation exercises. Stretching. Manual therapy. HEP.',
-        'Joint mobilisation (Maitland Grade [1-4]). Neural mobilisation. Core strengthening. HEP.',
-        'Myofascial release. Joint mobilisation. Therapeutic exercises. Postural correction. HEP.',
-        'Pain relief modalities. Active mobility exercises. Stabilisation training. Patient education.',
-        'Manual therapy. Progressive trunk strengthening. Postural re-education. Work modification advice.',
-      ],
-      observation: [
-        'Reduced lumbar lordosis. Antalgic lean to [side]. Guarded movement pattern.',
-        'Flat lumbar spine. No scoliosis. Restricted spinal mobility in all planes.',
-        'Increased lumbar lordosis. Forward head posture. Rounded shoulders.',
-        'Antalgic posture with lateral shift to [side]. Guarded movement. No deformity.',
-        'Normal spinal alignment. Restricted movement. No muscle wasting observed.',
-      ],
-      palpation: [
-        'Tenderness at [L1-L5/C1-C7] spinous process. Paraspinal muscle spasm. Positive PA pressure.',
-        'Joint line tenderness at [level]. Muscle guarding at [paraspinals]. Trigger point at [site].',
-        'Tenderness over [facet joint/disc level]. Tight [erector spinae/piriformis]. No midline tenderness.',
-        'Diffuse paraspinal tenderness. Warmth over [site]. Restricted PA mobility at [level].',
-        'Bony tenderness at [spinous process]. Tight hip flexors. Positive trigger point [muscle].',
+        'Spinal mobilisation, neural mobilisation, McKenzie exercises. HEP.',
+        'Lumbar stabilisation, core strengthening, postural re-education.',
+        'Traction, manual therapy, progressive loading program.',
+        'Ergonomic advice, activity modification, graded return to activity.',
       ],
     },
 
     GERIATRIC: {
       impression: [
-        'Reduced balance and mobility due to muscle weakness and impaired proprioception.',
-        'Impaired mobility and high fall risk due to lower limb weakness and reduced balance.',
-        'Reduced functional independence due to muscle weakness, pain and limited ROM.',
-        'Poor physical performance from inactivity, reduced strength and flexibility.',
-        'Impaired balance and gait with high fall risk due to neurological or musculoskeletal changes.',
+        'Elderly patient with reduced mobility and functional decline. Falls risk assessment completed.',
+        'Post-fall with reduced confidence and activity limitation. Multifactorial falls risk identified.',
+        'Frailty syndrome with generalised deconditioning. Comprehensive rehabilitation required.',
+        'Cognitive impairment affecting rehab participation. Adapted program required.',
       ],
       stg: [
-        'Improve balance and reduce fall risk within 2 weeks. Improve bed mobility to Min A.',
-        'Improve mobility and strength within 1–2 weeks. Educate on fall prevention strategies.',
-        'Improve functional transfer ability within 1 week. Reduce pain to [x]/10 within 2 weeks.',
-        'Improve sitting and standing balance within 2 weeks. Educate patient and carer on HEP.',
-        'Increase lower limb strength by 1 MMT grade within 2–3 weeks. Improve gait pattern.',
+        'Improve sit-to-stand transfers independently within 2 weeks.',
+        'Ambulate 10 metres with appropriate aid within 2 weeks.',
+        'Reduce falls risk score within 4 weeks.',
+        'Independent with basic ADLs within 2 weeks.',
       ],
       ltg: [
-        'Achieve independence in home and community activities within 3 months.',
-        'Independent ambulation with/without walking aid. Return to gardening/social activities.',
-        'Improve overall quality of life. Achieve full functional independence in ADLs.',
-        'Maintain independent mobility. Prevent falls. Achieve community ambulation.',
-        'Return to previous level of function. Independent self-care and home management.',
+        'Safe community ambulation with or without aid within 6 weeks.',
+        'Return to prior living situation with appropriate support within 8 weeks.',
+        'Independent home exercise maintenance program within 4 weeks.',
       ],
       treatment: [
-        'Therapeutic exercises (mobilisation, strengthening, stretching). Gait training. Fall prevention. HEP.',
-        'Balance training. Functional task practice. Caregiver education. Home exercise program.',
-        'Bed mobility exercises. Transfer training. Progressive strengthening. Patient and family education.',
-        'Balance and coordination exercises. Gait re-education. Walking aid assessment. Home program.',
-        'Pain management. Strengthening. Postural exercises. Fall prevention strategies. HEP.',
-      ],
-      observation: [
-        'Slow and cautious gait. Use of walking aid. No obvious deformity. Mild muscle wasting.',
-        'Unsteady gait pattern. Short step length. Reduced arm swing. Kyphotic posture.',
-        'Independent ambulation with [aid]. Antalgic gait. Reduced balance in standing.',
-        'Dependent for transfers. Reduced sitting balance. Muscle wasting [bilateral lower limbs].',
-        'Normal gait with [aid]. Alert and cooperative. No obvious deformity or swelling.',
-      ],
-      palpation: [
-        'Generalised tenderness at [site]. Reduced skin turgor. Mild muscle wasting.',
-        'Tenderness at [joint line]. Normal skin temperature. Reduced muscle bulk [quadriceps].',
-        'Joint tenderness Grade [1-3]. Warmth at [site]. Tight [hip flexors/hamstrings].',
-        'Bony prominence at [site]. No warmth or swelling. Moderate muscle tightness.',
-        'Diffuse tenderness. Reduced muscle tone. Trigger point at [muscle].',
+        'Balance training, strength exercises, gait re-education. Falls prevention education.',
+        'Functional task training, transfer practice, bed mobility exercises.',
+        'Progressive resistance training, walking program, carer education.',
+        'Cognitive-motor dual-task training, environmental modification advice.',
       ],
     },
+
+    CR: {
+      impression: [
+        'Retained secretions bilateral bases. Reduced chest expansion. Ineffective cough.',
+        'Reduced air entry right lower zone. Consolidation noted on CXR. SOB on minimal exertion.',
+        'Post-operative — reduced lung volumes, atelectasis risk. Pain limiting deep breathing.',
+        'COPD exacerbation — hyperinflation, accessory muscle use, SpO2 borderline on RA.',
+        'Productive cough with thick secretions. Asymmetrical chest expansion. Tachypnoea at rest.',
+        'Reduced exercise tolerance — 6MWT below predicted. Dyspnoea MRC Grade 3.',
+      ],
+      stg: [
+        'Improve airway clearance within 3 days. Expectorate secretions effectively.',
+        'Reduce shortness of breath at rest within 2 days. SpO2 > 95% on RA.',
+        'Improve chest expansion symmetry within 1 week.',
+        'Improve cough effectiveness within 1 week. Independent with ACBT.',
+        'Increase exercise tolerance — 6MWT by 30m within 2 weeks.',
+        'Wean O2 requirement within 5 days. Maintain SpO2 > 94% on RA.',
+      ],
+      ltg: [
+        'Regain optimum functional activity within 1 month based on individual needs.',
+        'Independent with home breathing exercise program within 2 weeks.',
+        'Return to pre-morbid activity level within 4 weeks.',
+        'Achieve MRC dyspnoea grade <= 2 within 4 weeks.',
+        'Complete pulmonary rehabilitation program. Maintain exercise independently.',
+      ],
+      treatment: [
+        'Chest physiotherapy — ACBT, percussion, vibration. Postural drainage as tolerated.',
+        'Breathing exercises — diaphragmatic, pursed lip, segmental. Relaxation positioning.',
+        'Early mobilisation — sitting to standing, ambulation with monitoring.',
+        'Airway clearance — huffing, effective cough technique, suction PRN.',
+        'Incentive spirometry — 10 reps/hour. PEFR monitoring.',
+        'Cardiorespiratory endurance training — graded walking program, cycle ergometer.',
+        'Patient education — breathing control, energy conservation, HEP, smoking cessation advice.',
+      ],
+    },
+
     MS_SOAP: {
       analysis: [
         'Pain reduced, ROM improving, progressing well towards goals.',
@@ -163,13 +162,83 @@ const ClinicalTemplates = (function () {
         'Add balance and functional training. Progress towards discharge goals.',
       ],
     },
+
+    CR_SOAP: {
+      analysis: [
+        'Secretion clearance improving. Cough more effective. SpO2 stable on RA.',
+        'SOB reducing. Breathing pattern improving. Patient tolerating activity better.',
+        'Chest expansion improving symmetrically. Air entry improving bilaterally.',
+        'Minimal progress in secretion clearance. Reviewing technique and positioning.',
+        'Exercise tolerance improving — 6MWT distance increased from baseline.',
+        'Patient desaturating on exertion. Reducing exercise intensity. Monitor SpO2.',
+        'Ventilator weaning progressing. FiO2 reduced. Patient tolerating spontaneous breathing.',
+        'Good response to chest PT. Secretions mobilised. Plan to progress mobilisation.',
+      ],
+      plan: [
+        'Continue chest PT — ACBT, percussion, postural drainage. Review tomorrow.',
+        'Progress ambulation — increase distance and reduce rest intervals.',
+        'Commence incentive spirometry. Target volume to increase by next session.',
+        'Wean O2 — trial on room air with SpO2 monitoring. HEP reinforced.',
+        'Refer for pulmonary rehab program on discharge. HEP given.',
+        'Discharge planning initiated. Independent with HEP and breathing exercises.',
+        'Continue current plan. Reassess in 2 days. Monitor SpO2 and exercise tolerance.',
+        'Add inspiratory muscle training. Progress breathing control exercises.',
+      ],
+    },
+
+    SPINE_SOAP: {
+      analysis: [
+        'Symptoms centralising. Peripheral symptoms reducing. Progressing well with McKenzie.',
+        'Pain reducing with activity. Lumbar ROM improving. Neural tension signs easing.',
+        'Good response to manual therapy. Muscle spasm reducing. Posture improving.',
+        'Minimal progress noted. Reviewing loading strategy — considering directional preference.',
+        'Radicular symptoms unchanged. Monitoring closely. Referral back to doctor if no progress.',
+        'Patient achieving centralisation consistently. Ready to progress loading.',
+        'Functional tolerance improving — sitting/standing duration increased. On track for goals.',
+        'Plateau noted. Adding motor control exercises. Reviewed ergonomic advice.',
+      ],
+      plan: [
+        'Continue McKenzie extension exercises. Progress repetitions. HEP reinforced.',
+        'Progress from passive mobilisation to active stabilisation exercises.',
+        'Lumbar stabilisation program commenced — transversus abdominis activation, dead bug.',
+        'Neural mobilisation added — sciatic/femoral sliders. Educate on nerve sensitivity.',
+        'Ergonomic review completed. Activity modification advice given. HEP updated.',
+        'Gait re-education. Core strengthening progression. Reduce frequency of sessions.',
+        'Discharge planning — independent with HEP. Return to work plan discussed.',
+        'Refer back to doctor — no improvement after 6 sessions. Review imaging.',
+      ],
+    },
+
+    GERIATRIC_SOAP: {
+      analysis: [
+        'Balance improving — Berg Balance Scale score increased. Falls risk reducing.',
+        'Functional mobility improving — sit-to-stand now requires Min A (was Mod A).',
+        'Gait improving — increased step length and gait speed. TUG time reduced.',
+        'Lower limb strength improving — chair rising test time improved.',
+        'Patient ambulant with walking frame independently on level surface.',
+        'Falls risk remains high. TUG > 13.5 sec. Continuing intensive balance training.',
+        'Plateau in progress. Reviewing exercise intensity and patient compliance with HEP.',
+        'Patient deconditioned after hospital admission. Restarting from basic bed mobility.',
+        'Functional independence improving — patient now independent with ADLs.',
+      ],
+      plan: [
+        'Continue balance training — Berg exercises, single leg stance, stepping.',
+        'Progress gait training — increase distance, introduce outdoor walking.',
+        'Strengthen lower limbs — sit-to-stand x30, SLR x30, bridging x30 (3x/day).',
+        'Falls prevention education reinforced — environment hazards, footwear, medication review.',
+        'Caregiver education — safe transfer technique, guarding during ambulation.',
+        'HEP reviewed and updated. Encourage daily walking program.',
+        'Discharge planning — independent with HEP. Community exercise referral discussed.',
+        'Continue current plan. Reassess Berg and TUG next session to track progress.',
+      ],
+    },
   };
 
-  // ── Active picker state ─────────────────────────────────
-  var activeField  = null;
-  var pickerEl     = null;
+  // ── State ───────────────────────────────────────────────────────
+  var activeField = null;
+  var pickerEl    = null;
 
-  // ── Show picker ────────────────────────────────────────
+  // ── Show — centred modal ────────────────────────────────────────
   function show(fieldId, formType, category) {
     var field = document.getElementById(fieldId);
     if (!field) return;
@@ -177,94 +246,88 @@ const ClinicalTemplates = (function () {
     var items = (TEMPLATES[formType] || {})[category] || [];
     if (!items.length) return;
 
-    // Remove existing picker
     hide();
     activeField = field;
 
-    var picker = document.createElement('div');
-    picker.id  = 'ct-picker';
-    picker.style.cssText = [
-      'position:absolute',
-      'z-index:500',
+    // Backdrop
+    var backdrop = document.createElement('div');
+    backdrop.id = 'ct-backdrop';
+    backdrop.style.cssText = [
+      'position:fixed', 'inset:0', 'z-index:1200',
+      'background:rgba(0,0,0,0.35)',
+      'display:flex', 'align-items:center', 'justify-content:center',
+    ].join(';');
+
+    // Modal
+    var modal = document.createElement('div');
+    modal.style.cssText = [
       'background:var(--surface)',
       'border:1px solid var(--accent-mid)',
       'border-radius:var(--radius-lg)',
-      'box-shadow:0 4px 16px rgba(0,0,0,0.15)',
-      'padding:8px',
-      'min-width:320px',
-      'max-width:480px',
+      'box-shadow:0 8px 32px rgba(0,0,0,0.22)',
+      'padding:14px',
+      'width:min(520px, 90vw)',
+      'max-height:80vh',
+      'overflow-y:auto',
+      'position:relative',
     ].join(';');
 
     // Header
     var hdr = document.createElement('div');
-    hdr.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;';
-    hdr.innerHTML = '<span>Best Statement Templates</span><button onclick="ClinicalTemplates.hide()" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:16px;line-height:1;padding:0 2px;">&#x2715;</button>';
-    picker.appendChild(hdr);
+    hdr.style.cssText = 'font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;';
+    hdr.innerHTML = '<span>&#128203; Best Statement Templates</span><button onclick="ClinicalTemplates.hide()" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:18px;line-height:1;padding:0 4px;">&#x2715;</button>';
+    modal.appendChild(hdr);
 
     // Template items
-    items.forEach(function (text, i) {
+    items.forEach(function (text) {
       var btn = document.createElement('button');
-      btn.className = 'ct-btn';
-    btn.style.cssText = [
-        'display:block',
-        'width:100%',
-        'text-align:left',
-        'padding:7px 10px',
-        'margin-bottom:4px',
+      btn.style.cssText = [
+        'display:block', 'width:100%', 'text-align:left',
+        'padding:8px 12px', 'margin-bottom:5px',
         'border:1px solid var(--border)',
         'border-radius:var(--radius)',
         'background:var(--bg)',
-        'cursor:pointer',
-        'font-family:inherit',
-        'font-size:12px',
-        'color:var(--text)',
-        'line-height:1.4',
+        'cursor:pointer', 'font-family:inherit',
+        'font-size:12px', 'color:var(--text)', 'line-height:1.45',
         'transition:all 0.12s',
       ].join(';');
       btn.textContent = text;
       btn.addEventListener('mouseover', function () {
-        this.style.background = 'var(--accent-light)';
+        this.style.background  = 'var(--accent-light)';
         this.style.borderColor = 'var(--accent-mid)';
       });
       btn.addEventListener('mouseout', function () {
-        this.style.background = 'var(--bg)';
+        this.style.background  = 'var(--bg)';
         this.style.borderColor = 'var(--border)';
       });
-      btn.addEventListener('click', function () {
-        insert(text);
-      });
-      picker.appendChild(btn);
+      btn.addEventListener('click', function () { insert(text); });
+      modal.appendChild(btn);
     });
 
-    // Position near the field
-    var rect = field.getBoundingClientRect();
-    var scrollTop = window.scrollY || document.documentElement.scrollTop;
-    picker.style.top  = (rect.bottom + scrollTop + 4) + 'px';
-    picker.style.left = rect.left + 'px';
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
+    pickerEl = backdrop;
 
-    document.body.appendChild(picker);
-    pickerEl = picker;
+    // Close on backdrop click
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) hide();
+    });
 
-    // Close on outside click
-    setTimeout(function () {
-      document.addEventListener('click', outsideClick);
-    }, 10);
+    // Close on Escape
+    document.addEventListener('keydown', escClose);
+  }
+
+  function escClose(e) {
+    if (e.key === 'Escape') hide();
   }
 
   function insert(text) {
     if (!activeField) return;
     var cur = activeField.value.trim();
     activeField.value = cur ? cur + '\n' + text : text;
-    // Trigger input event so progress bar and dirty tracking update
     activeField.dispatchEvent(new Event('input', { bubbles: true }));
     hide();
     activeField.focus();
-  }
-
-  function outsideClick(e) {
-    if (pickerEl && !pickerEl.contains(e.target)) {
-      hide();
-    }
   }
 
   function hide() {
@@ -272,36 +335,28 @@ const ClinicalTemplates = (function () {
       pickerEl.remove();
       pickerEl = null;
     }
-    document.removeEventListener('click', outsideClick);
+    document.removeEventListener('keydown', escClose);
     activeField = null;
   }
 
-  // ── Render a template button next to a field label ─────
-  // Call this to inject a "Templates" button next to any field label
-  // Usage: ClinicalTemplates.addButton('field-id', 'MS', 'impression')
+  // ── Add template button next to a field label ───────────────────
   function addButton(fieldId, formType, category) {
     var field = document.getElementById(fieldId);
     if (!field) return;
     var label = field.closest('.field') && field.closest('.field').querySelector('label');
     if (!label) return;
-    // Prevent duplicate buttons
-    if (label.querySelector('.ct-btn')) return;
+    if (label.querySelector('.ct-trigger')) return;
 
     var btn = document.createElement('button');
     btn.type = 'button';
+    btn.className = 'ct-trigger';
     btn.textContent = '+ template';
     btn.style.cssText = [
-      'margin-left:8px',
-      'font-size:10px',
-      'padding:2px 7px',
-      'border-radius:10px',
-      'border:1px solid var(--accent-mid)',
-      'background:var(--accent-light)',
-      'color:var(--accent)',
-      'cursor:pointer',
-      'font-family:inherit',
-      'font-weight:500',
-      'vertical-align:middle',
+      'margin-left:8px', 'font-size:10px', 'padding:2px 7px',
+      'border-radius:10px', 'border:1px solid var(--accent-mid)',
+      'background:var(--accent-light)', 'color:var(--accent)',
+      'cursor:pointer', 'font-family:inherit',
+      'font-weight:500', 'vertical-align:middle',
     ].join(';');
     btn.addEventListener('click', function (e) {
       e.stopPropagation();

@@ -1,0 +1,662 @@
+{% extends "base.html" %}
+
+{% block form_name %}Cardiorespiratory Assessment{% endblock %}
+{% block topbar_ref %}KKM Physiotherapy Dept &mdash; fisio / b.pen. 11 / Pind.2 / 2019{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128202;</span> Pain Score</div>
+<div class="nav-item" onclick="Main.go('s-sq')"><span class="nav-icon">&#10067;</span> Special Qs</div>
+<div class="nav-item" onclick="Main.go('s-ix')"><span class="nav-icon">&#128300;</span> Investigation</div>
+<div class="nav-item" onclick="Main.go('s-hx')"><span class="nav-icon">&#128214;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-obs')"><span class="nav-icon">&#128065;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-palp')"><span class="nav-icon">&#128400;</span> Palpation</div>
+<div class="nav-item" onclick="Main.go('s-ausc')"><span class="nav-icon">&#127908;</span> Auscultation</div>
+<div class="nav-item" onclick="Main.go('s-st')"><span class="nav-icon">&#9878;</span> Special Test</div>
+<div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- 01 PATIENT INFO -->
+<div class="card" id="s-patient">
+  <div class="card-header"><span class="sec-num">01</span><h2>Patient Information</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="FormBase.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="FormBase.onPtTypeChange()"> Foreign (Passport)</label>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="FormBase.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="pt-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option><option>Myanmar</option><option>Philippines</option>
+              <option>Thailand</option><option>Vietnam</option><option>Cambodia</option>
+              <option>Laos</option><option>Brunei</option><option>Singapore</option><option>Timor-Leste</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option><option>India</option><option>Pakistan</option>
+              <option>Nepal</option><option>Sri Lanka</option><option>Afghanistan</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option><option>Taiwan</option><option>Japan</option>
+              <option>South Korea</option><option>Hong Kong</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option>Saudi Arabia</option><option>Yemen</option><option>Iraq</option>
+              <option>Iran</option><option>Jordan</option><option>Syria</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option>Nigeria</option><option>Somalia</option><option>Ghana</option>
+              <option>Ethiopia</option><option>Kenya</option><option>Tanzania</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Australia</option><option>United Kingdom</option><option>United States</option>
+              <option>France</option><option>Germany</option><option>Netherlands</option>
+              <option>Other (not listed)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Assessment Date <span class="req">*</span></label>
+          <input type="date" id="pt-date">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob" onchange="FormBase.onDobChange(this.value)">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pt-age" placeholder="Years" min="0" max="130">
+        </div>
+        <div class="field" id="sex-field" style="display:none">
+          <label>Sex <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="pt-sex" value="M"> Male</label>
+            <label><input type="radio" name="pt-sex" value="F"> Female</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 DIAGNOSIS -->
+<div class="card" id="s-dx">
+  <div class="card-header"><span class="sec-num">02</span><h2>Diagnosis &amp; Management</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Diagnosis <span class="req">*</span></label>
+        <textarea id="pt-diagnosis" placeholder="As stated in referral..."></textarea>
+      </div>
+      <div class="field">
+        <label>Doctor's Management</label>
+        <textarea id="dr-mgmt" placeholder="Medication, nebuliser, O2 therapy, assisted ventilation, pleural tap, chest tube..." style="min-height:60px"></textarea>
+      </div>
+      <div class="field">
+        <label>Problem <span class="req">*</span></label>
+        <textarea id="pt-problem" placeholder="Main presenting problem — productive cough, SOB, reduced exercise tolerance..." style="min-height:60px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 PAIN SCORE -->
+<div class="card" id="s-pain">
+  <div class="card-header"><span class="sec-num">03</span><h2>Pain Score</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="pain-score-box">
+        <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&ndash;10)</label>
+        <div class="pain-scale-row">
+          <span style="font-size:11px;color:var(--text-faint)">0</span>
+          <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="Form.setPain('pre', this.value)">
+          <span style="font-size:11px;color:var(--text-faint)">10</span>
+          <div class="pain-val pv-low" id="pv-pre">0</div>
+        </div>
+      </div>
+      <div class="pain-score-box">
+        <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&ndash;10)</label>
+        <div class="pain-scale-row">
+          <span style="font-size:11px;color:var(--text-faint)">0</span>
+          <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="Form.setPain('post', this.value)">
+          <span style="font-size:11px;color:var(--text-faint)">10</span>
+          <div class="pain-val pv-low" id="pv-post">0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 SPECIAL QUESTIONS -->
+<div class="card" id="s-sq">
+  <div class="card-header"><span class="sec-num">04</span><h2>Special Questions</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>General Health</label>
+        <select id="sq-health">
+          <option value="">— Select —</option>
+          <option>Well</option>
+          <option>Unwell</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>PMHx</label>
+        <input type="text" id="sq-pmhx" placeholder="DM, HPT, IHD, Ca lung, COPD...">
+      </div>
+      <div class="field">
+        <label>Surgical History</label>
+        <select id="sq-surgery-yn" onchange="CRForm.onToggle('sq-surgery-yn','sq-surgery-detail',['Yes'])">
+          <option value="">— Select —</option>
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+        <textarea id="sq-surgery-detail" style="display:none;margin-top:6px;min-height:52px" placeholder="Type of operation, date, complications..."></textarea>
+      </div>
+      <div class="field">
+        <label>Medication</label>
+        <input type="text" id="sq-med" placeholder="Antibiotics, bronchodilators, steroids, analgesics...">
+      </div>
+      <div class="field">
+        <label>Occupation / Recreation</label>
+        <input type="text" id="sq-occ" placeholder="Nature of job, hobbies, physical activity...">
+      </div>
+      <div class="field">
+        <label>Functional Limitation</label>
+        <select id="sq-func-yn" onchange="CRForm.onToggle('sq-func-yn','sq-func-detail',['Yes'])">
+          <option value="">— Select —</option>
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+        <textarea id="sq-func-detail" style="display:none;margin-top:6px;min-height:52px" placeholder="Activities they can / cannot perform..."></textarea>
+      </div>
+      <div class="field">
+        <label>Smoking</label>
+        <select id="sq-smoking-yn" onchange="CRForm.onToggle('sq-smoking-yn','sq-smoking-detail',['Ex-smoker','Current smoker'])">
+          <option value="">— Select —</option>
+          <option value="Never">Never</option>
+          <option value="Ex-smoker">Ex-smoker</option>
+          <option value="Current smoker">Current smoker</option>
+        </select>
+        <input type="text" id="sq-smoking-detail" style="display:none;margin-top:6px" placeholder="Pack-years, years stopped...">
+      </div>
+      <div class="field">
+        <label>Alcohol Consumption</label>
+        <select id="sq-alcohol-yn" onchange="CRForm.onToggle('sq-alcohol-yn','sq-alcohol-detail',['Yes'])">
+          <option value="">— Select —</option>
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+        <input type="text" id="sq-alcohol-detail" style="display:none;margin-top:6px" placeholder="Amount, frequency, duration...">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 INVESTIGATION -->
+<div class="card" id="s-ix">
+  <div class="card-header"><span class="sec-num">05</span><h2>Investigation</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>CXR Findings</label>
+        <textarea id="ix-cxr" placeholder="Lung volume, lung field, structural changes, segment/lobe involved..." style="min-height:56px"></textarea>
+      </div>
+      <div class="field">
+        <label>ABG Interpretation</label>
+        <textarea id="ix-abg" placeholder="pH, PaCO2, HCO3 — respiratory/metabolic, acidosis/alkalosis..." style="min-height:56px"></textarea>
+      </div>
+      <div class="field">
+        <label>Other Investigations</label>
+        <input type="text" id="ix-other" placeholder="ECG, Echo, MRI, blood markers...">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 HISTORY -->
+<div class="card" id="s-hx">
+  <div class="card-header"><span class="sec-num">06</span><h2>History</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Current History <span class="req">*</span></label>
+        <textarea id="hx-current" placeholder="Source of referral, onset, precipitating factors, presenting complaints..." style="min-height:95px"></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="hx-past" placeholder="Previous episodes, dates, duration, complications, previous PT and effects..." style="min-height:95px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 OBSERVATION -->
+<div class="card" id="s-obs">
+  <div class="card-header"><span class="sec-num">07</span><h2>Observation</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Vital Signs</div>
+        <div class="fg c2" style="gap:10px">
+          <div class="field"><label>Temp (°C)</label><input type="text" id="vs-temp" placeholder="e.g. 37.2"></div>
+          <div class="field"><label>RR (/min)</label><input type="text" id="vs-rr" placeholder="e.g. 18"></div>
+          <div class="field"><label>PR (bpm)</label><input type="text" id="vs-pr" placeholder="e.g. 82"></div>
+          <div class="field"><label>B/P (mmHg)</label><input type="text" id="vs-bp" placeholder="e.g. 120/80"></div>
+          <div class="field"><label>SpO2 (%)</label><input type="text" id="vs-spo2" placeholder="e.g. 98"></div>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Breathing Pattern</label>
+          <select id="obs-breathing-pattern">
+            <option value="">— Select —</option>
+            <option>Normal</option>
+            <option>Rapid, shallow</option>
+            <option>Slow, deep</option>
+            <option>Kussmaul (deep, laboured)</option>
+            <option>Cheyne-Stokes</option>
+            <option>Biot's (ataxic)</option>
+            <option>Apneustic</option>
+            <option>Paradoxical</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Breathing Level</label>
+          <select id="obs-breathing-level">
+            <option value="">— Select —</option>
+            <option>Apical</option>
+            <option>Middle</option>
+            <option>Basal / Diaphragmatic</option>
+            <option>Apical dominant</option>
+            <option>Symmetrical</option>
+            <option>Asymmetrical</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Chest Deformity</label>
+          <select id="obs-chest-deformity">
+            <option value="">— Select —</option>
+            <option>Nil</option>
+            <option>Barrel chest</option>
+            <option>Pigeon chest (pectus carinatum)</option>
+            <option>Funnel chest (pectus excavatum)</option>
+            <option>Kyphosis</option>
+            <option>Scoliosis</option>
+            <option>Kyphoscoliosis</option>
+            <option>Flail chest</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Chest Drain</label>
+          <select id="obs-chest-drain-yn" onchange="CRForm.onToggle('obs-chest-drain-yn','obs-chest-drain-detail',['Present'])">
+            <option value="">— Select —</option>
+            <option value="Nil">Nil</option>
+            <option value="Present">Present</option>
+          </select>
+          <input type="text" id="obs-chest-drain-detail" style="display:none;margin-top:6px" placeholder="Type, site, level (e.g. ICC right lower zone, 2-bottle)...">
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Cough Type</label>
+          <select id="cough-type">
+            <option value="">— Select —</option>
+            <option>Productive</option>
+            <option>Non-Productive</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cough Effectiveness</label>
+          <select id="cough-effect">
+            <option value="">— Select —</option>
+            <option>Effective</option>
+            <option>Ineffective</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Sputum</div>
+        <div class="fg c2" style="gap:10px">
+          <div class="field">
+            <label>Colour</label>
+            <select id="sputum-colour">
+              <option value="">— Select —</option>
+              <option>Clear / White (mucoid)</option>
+              <option>Yellow (mucopurulent)</option>
+              <option>Green (purulent)</option>
+              <option>Rust / Brown (old blood)</option>
+              <option>Pink frothy (pulmonary oedema)</option>
+              <option>Blood-stained (haemoptysis)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Amount</label>
+            <select id="sputum-amount">
+              <option value="">— Select —</option>
+              <option>Minimal (&lt;10 mL/day)</option>
+              <option>Moderate (10–30 mL/day)</option>
+              <option>Large (&gt;30 mL/day)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Consistency</label>
+            <select id="sputum-consistency">
+              <option value="">— Select —</option>
+              <option>Watery</option>
+              <option>Loose</option>
+              <option>Mucoid</option>
+              <option>Thick</option>
+              <option>Tenacious</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>O2 Treatment</label>
+            <input type="text" id="obs-o2" placeholder="e.g. Nasal prong 3L/min, Venturi 40%, NIV...">
+          </div>
+        </div>
+      </div>
+      <div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500">
+          <input type="checkbox" id="vent-toggle" onchange="Form.onVentChange()">
+          Patient is ventilated
+        </label>
+        <div id="vent-block" style="display:none;margin-top:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Ventilated Patient</div>
+          <div class="fg c2" style="gap:10px">
+            <div class="field"><label>Mode</label><input type="text" id="vent-mode" placeholder="e.g. SIMV, CPAP, BiPAP..."></div>
+            <div class="field"><label>PEEP (cmH2O)</label><input type="text" id="vent-peep" placeholder="e.g. 5"></div>
+            <div class="field"><label>FiO2 (%)</label><input type="text" id="vent-fio2" placeholder="e.g. 40"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 PALPATION -->
+<div class="card" id="s-palp">
+  <div class="card-header"><span class="sec-num">08</span><h2>Palpation</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Chest Expansion</div>
+        <div class="fg c2">
+          <div class="field">
+            <label>Apical (anterior)</label>
+            <select id="exp-apical">
+              <option value="">— Select —</option>
+              <option>Symmetrical</option><option>Asymmetrical</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Middle (anterior)</label>
+            <select id="exp-middle">
+              <option value="">— Select —</option>
+              <option>Symmetrical</option><option>Asymmetrical</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Lower Costal (posterior)</label>
+            <select id="exp-lower">
+              <option value="">— Select —</option>
+              <option>Symmetrical</option><option>Asymmetrical</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Chest Measurement — Thumb Displacement</div>
+        <table class="mov-table" style="width:100%">
+          <thead>
+            <tr><th>Level</th><th>Measurement</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Apical</td>
+              <td><input type="text" id="meas-apical" placeholder="e.g. 2 cm" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td>
+                <select id="meas-apical-status" style="font-size:12px;width:100%;border:none;background:transparent;padding:2px 4px">
+                  <option value="">—</option><option>Assessed</option><option>Not assessed</option><option>KIV next visit</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Middle</td>
+              <td><input type="text" id="meas-middle" placeholder="e.g. 3 cm" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td>
+                <select id="meas-middle-status" style="font-size:12px;width:100%;border:none;background:transparent;padding:2px 4px">
+                  <option value="">—</option><option>Assessed</option><option>Not assessed</option><option>KIV next visit</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Lower Costal</td>
+              <td><input type="text" id="meas-lower" placeholder="e.g. 2.5 cm" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td>
+                <select id="meas-lower-status" style="font-size:12px;width:100%;border:none;background:transparent;padding:2px 4px">
+                  <option value="">—</option><option>Assessed</option><option>Not assessed</option><option>KIV next visit</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 AUSCULTATION -->
+<div class="card" id="s-ausc">
+  <div class="card-header"><span class="sec-num">09</span><h2>Auscultation</h2></div>
+  <div class="card-body">
+    <div class="fg">
+
+      <!-- Dropdowns row -->
+      <div class="fg c2">
+        <div class="field">
+          <label>Overall Lung Sounds</label>
+          <select id="ausc-lungs">
+            <option value="">— Select —</option>
+            <option>Clear</option>
+            <option>Crepitation</option>
+            <option>Wheeze</option>
+            <option>Reduced air entry</option>
+            <option>Absent breath sounds</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Crepitation Grade</label>
+          <select id="ausc-crep">
+            <option value="">— N/A —</option>
+            <option>Mild</option>
+            <option>Moderate</option>
+            <option>Coarse</option>
+            <option>Rhonchi</option>
+            <option>Mild — bilateral bases</option>
+            <option>Moderate — bilateral</option>
+            <option>Coarse — right lower zone</option>
+            <option>Coarse — left lower zone</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:span 2">
+          <label>Air Entry</label>
+          <select id="ausc-air">
+            <option value="">— Select —</option>
+            <option>Equal bilaterally</option>
+            <option>Reduced right upper zone</option>
+            <option>Reduced right middle zone</option>
+            <option>Reduced right lower zone</option>
+            <option>Reduced left upper zone</option>
+            <option>Reduced left lower zone</option>
+            <option>Reduced bilateral bases</option>
+            <option>Absent right side</option>
+            <option>Absent left side</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Interactive lung diagram -->
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">
+          Auscultation Map — click a zone to mark findings
+        </div>
+        <div class="body-chart-wrap">
+          <div class="body-figures" style="justify-content:center">
+            <div class="fig-wrap">
+              <div class="fig-label">Anterior view (click to mark)</div>
+              <svg id="lung-svg" width="220" height="200" viewBox="0 0 220 200"
+                   style="display:block;cursor:pointer;border-radius:8px;background:var(--bg)">
+              </svg>
+            </div>
+          </div>
+          <div class="chart-controls">
+            <div class="list-header">
+              <span>Zone Findings</span>
+              <button class="btn-sm" onclick="LungChart.clearAll()">Clear all</button>
+            </div>
+            <div class="marker-list" id="lung-finding-list">
+              <div class="empty-hint" id="lung-empty-hint">No findings marked</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Lung finding picker modal -->
+<div id="lung-picker-backdrop" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,0.35);align-items:center;justify-content:center">
+  <div style="background:var(--surface);border:1px solid var(--accent-mid);border-radius:var(--radius-lg);padding:16px;width:min(340px,90vw);box-shadow:0 8px 32px rgba(0,0,0,0.22)">
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <span id="lung-picker-title">Select Finding</span>
+      <button onclick="document.getElementById('lung-picker-backdrop').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:18px;line-height:1">&#x2715;</button>
+    </div>
+    <div id="lung-finding-sel" style="display:flex;flex-direction:column;gap:6px">
+      <button data-finding="clear"   style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#2a8a4a;display:inline-block;flex-shrink:0"></span>Clear</button>
+      <button data-finding="crep"    style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#c0392b;display:inline-block;flex-shrink:0"></span>Crepitation</button>
+      <button data-finding="wheeze"  style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#c87a00;display:inline-block;flex-shrink:0"></span>Wheeze</button>
+      <button data-finding="reduced" style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#4a7ac8;display:inline-block;flex-shrink:0"></span>Reduced air entry</button>
+      <button data-finding="absent"  style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#7b5ea7;display:inline-block;flex-shrink:0"></span>Absent</button>
+    </div>
+    <button id="lung-clear-zone" style="margin-top:10px;width:100%;padding:7px;border:1px dashed var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:12px;color:var(--text-muted);font-family:inherit">Clear this zone</button>
+  </div>
+</div>
+
+<!-- 10 SPECIAL TEST -->
+<div class="card" id="s-st">
+  <div class="card-header"><span class="sec-num">10</span><h2>Special Test</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">6-Minute Walk Test (6MWT)</div>
+        <table class="mov-table" style="width:100%">
+          <thead>
+            <tr><th style="width:160px">Measure</th><th>Pre</th><th>Post</th><th>Notes / Remarks</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Distance (m)</strong></td>
+              <td colspan="2"><input type="text" id="mwt-dist" placeholder="e.g. 280 m" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><strong>PR (bpm)</strong></td>
+              <td><input type="text" id="mwt-pr-pre" placeholder="Pre" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td><input type="text" id="mwt-pr-post" placeholder="Post" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><strong>RPE / Borg Scale</strong></td>
+              <td><input type="text" id="mwt-rpe-pre" placeholder="Pre (0–10)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td><input type="text" id="mwt-rpe-post" placeholder="Post (0–10)" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td><strong>Remarks</strong></td>
+              <td colspan="3"><input type="text" id="mwt-remarks" placeholder="Reason for stopping, symptoms during test..." style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="fg c2" style="gap:10px">
+        <div class="field"><label>PEFR (L/min)</label><input type="text" id="st-pefr" placeholder="e.g. 350"></div>
+        <div class="field"><label>Incentive Spirometer (c.c)</label><input type="text" id="st-is" placeholder="e.g. 1000 mL"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11 PT IMPRESSION -->
+<div class="card" id="s-plan">
+  <div class="card-header"><span class="sec-num">11</span><h2>PT Impression &amp; Treatment Plan</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>PT Impression</label><textarea id="plan-impression" placeholder="Clinical summary..."></textarea></div>
+      <div class="field"><label>Short-Term Goals (STG)</label><textarea id="plan-stg" placeholder="Goals within 1–2 weeks with timeframe..."></textarea></div>
+      <div class="field"><label>Long-Term Goals (LTG)</label><textarea id="plan-ltg" placeholder="Functional rehabilitation goals, timeframe..."></textarea></div>
+      <div class="field"><label>Plan of Treatment</label><textarea id="plan-tx" placeholder="Chest PT, postural drainage, breathing exercises, mobilisation, HEP..."></textarea></div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/lungchart.js"></script>
+<script src="/static/js/form_cr.js"></script>
+<script>
+var CRForm = {
+  onToggle: function(selectId, detailId, showVals) {
+    var val = document.getElementById(selectId).value;
+    var det = document.getElementById(detailId);
+    if (!det) return;
+    det.style.display = (showVals.indexOf(val) !== -1) ? '' : 'none';
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Auto-fill assessment date with today
+  var dateEl = document.getElementById('pt-date');
+  if (dateEl && !dateEl.value) {
+    dateEl.value = new Date().toISOString().split('T')[0];
+  }
+
+  // Init interactive lung diagram
+  try { LungChart.init(); } catch(e) { console.warn('LungChart init error:', e); }
+
+  // Template buttons
+  ClinicalTemplates.addButton('plan-impression', 'CR', 'impression');
+  ClinicalTemplates.addButton('plan-stg',        'CR', 'stg');
+  ClinicalTemplates.addButton('plan-ltg',        'CR', 'ltg');
+  ClinicalTemplates.addButton('plan-tx',         'CR', 'treatment');});
+</script>
+{% endblock %}

@@ -438,7 +438,14 @@ document.getElementById('soap-modal').addEventListener('click', function(e) {
 
 // ── Template picker ────────────────────────────────────
 function showSoapTemplate(fieldId, category) {
-  ClinicalTemplates.show(fieldId, 'MS_SOAP', category);
+  var formType = episode ? episode.form_type : 'MS';
+  var tplMap   = {
+    'CR':       'CR_SOAP',
+    'SPINE':    'SPINE_SOAP',
+    'GERIATRIC':'GERIATRIC_SOAP',
+  };
+  var tplKey = tplMap[formType] || 'MS_SOAP';
+  ClinicalTemplates.show(fieldId, tplKey, category);
 }
 
 // ── Save SOAP ──────────────────────────────────────────
@@ -526,7 +533,7 @@ async function loadEpisode() {
     var res = await fetch('/api/episodes/' + EPISODE_ID);
     episode  = await res.json();
 
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric'}[episode.form_type] || episode.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory'}[episode.form_type] || episode.form_type;
 
     // Topbar
     document.getElementById('topbar-episode-label').textContent =
@@ -561,7 +568,7 @@ async function loadAssessment(ep) {
   try {
     var res  = await fetch('/api/episodes/' + EPISODE_ID + '/record');
     var data = await res.json();
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric'}[ep.form_type] || ep.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory'}[ep.form_type] || ep.form_type;
     var formPath  = '/form/' + ep.form_type.toLowerCase();
     var btnWrap   = document.getElementById('assess-btn-wrap');
     var actions   = document.getElementById('assess-actions');

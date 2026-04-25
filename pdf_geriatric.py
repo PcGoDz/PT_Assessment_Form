@@ -1,448 +1,197 @@
-# pdf_geriatric.py — KKM Geriatric Assessment Form PDF
-# Standalone bespoke generator. fisio / b.pen. 15 / 2019
-# Pure Python, PyInstaller-friendly.
+# pdf_geriatric.py — KKM Geriatric Assessment Form PDF (Platypus layout engine)
+# fisio / b.pen. 15 / 2019
 
-from reportlab.lib.pagesizes import A4
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak, KeepTogether
 from reportlab.lib.units import mm
 from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle
-from reportlab.pdfgen import canvas as rl_canvas
-from pdf_base import draw_figure, draw_markers, draw_soap_page, wrap_text, MARKER_COLORS
-import io
+from pdf_platypus_base import (
+    build_pdf, page_header, patient_bar, body_chart_section,
+    box, two_col, plan_section, soap_page,
+    data_table, gap, tick, cbtick,
+    S_LABEL, S_NORMAL, S_SMALL, S_BOLD,
+    CW, LW2, RW2, BLACK, LGREY
+)
 
-W, H   = A4
-ML     = 12 * mm
-MR     = 12 * mm
-MT     = 10 * mm
-CW     = W - ML - MR
-LW     = CW * 0.50
-RW     = CW * 0.50
-BLACK  = colors.black
-WHITE  = colors.white
-LGREY  = colors.HexColor('#f0f0f0')
-DGREY  = colors.HexColor('#555555')
-FB, FN = 'Helvetica-Bold', 'Helvetica'
-REF    = 'fisio / b.pen. 15 / 2019'
-TITLE  = ['KEMENTERIAN KESIHATAN MALAYSIA',
-          'PHYSIOTHERAPY DEPARTMENT',
-          'GERIATRIC  ASSESSMENT FORM']
+REF   = 'fisio / b.pen. 15 / 2019'
+TITLE = ['KEMENTERIAN KESIHATAN MALAYSIA',
+         'PHYSIOTHERAPY DEPARTMENT',
+         'GERIATRIC  ASSESSMENT FORM']
 
-# ── Helpers ───────────────────────────────────────────
 
-def _ref(c):
-    c.setFont(FN, 7)
-    c.drawRightString(W - MR, H - MT, REF)
-
-def _title(c):
-    ty = H - MT - 5 * mm
-    c.setFont(FB, 10)
-    for line in TITLE:
-        c.drawCentredString(W / 2, ty, line)
-        ty -= 5 * mm
-    return ty - 1 * mm
-
-def _patient_bar(c, p, ty):
-    bh = 7 * mm
-    c.setLineWidth(0.5); c.rect(ML, ty-bh, CW, bh)
-    by = ty - bh + 2.2*mm
-    c.setFont(FN, 8)
-
-    def fld(lbl, val, at, fw=30*mm):
-        c.drawString(at, by, lbl)
-        lw = c.stringWidth(lbl, FN, 8)
-        vx = at + lw + 1*mm
-        c.line(vx, by-0.5*mm, vx+fw, by-0.5*mm)
-        c.drawString(vx+0.5*mm, by, str(val or ''))
-        return at + lw + fw + 3*mm
-
-    nric = p.get('nric','') or p.get('ic','') or p.get('passport','')
-    sex  = p.get('sex','') or 'M / F'
-    nx = fld('Name :', p.get('name',''), ML+2*mm, 46*mm)
-    nx = fld('Age:', p.get('age',''), nx, 10*mm)
-    c.drawString(nx, by, 'Sex: M / F  [' + sex + ']'); nx += 28*mm
-    nx = fld('RN :', nric, nx, 30*mm)
-    fld('Date :', p.get('date',''), nx, 22*mm)
-    return ty - bh
-
-def _box(c, x, y, w, h, label=None, content=None, fs=8):
-    c.setStrokeColor(BLACK); c.setLineWidth(0.5)
-    c.rect(x, y, w, h)
-    cy = y + h - 4*mm
-    if label:
-        c.setFont(FB, fs); c.setFillColor(BLACK)
-        c.drawString(x+2*mm, cy, label); cy -= 4.5*mm
-    if content:
-        c.setFont(FN, fs)
-        for line in wrap_text(content, w-4*mm, fs):
-            if cy < y+1.5*mm: break
-            c.drawString(x+2*mm, cy, line)
-            cy -= fs*0.38*mm + 0.8*mm
-
-def _tick(val, options):
-    """Return 'option [x]' style string for the filled option."""
-    parts = []
-    for opt in options:
-        mark = 'x' if str(val or '').strip().lower() == opt.lower() else ' '
-        parts.append(f'[{mark}] {opt}')
-    return '  '.join(parts)
-
-def _cb(checked):
-    return '[x]' if checked else '[ ]'
-
-# ═══════════════════════════════════════════════════
-# PAGE 1
-# ═══════════════════════════════════════════════════
-
-def _page1(c, d):
+def _build_story(d):
+    story   = []
     patient = d.get('patient', {})
     bc      = d.get('body_chart') or {}
-    markers = bc.get('markers', [])
 
-    _ref(c)
-    ty = _title(c)
-    ty = _patient_bar(c, patient, ty)
-
-    lx = ML; rx = ML + LW
-    cl = ty;  cr = ty
-
-    def lsec(h, label=None, content=None, fn=None):
-        nonlocal cl
-        if fn:
-            c.setLineWidth(0.5); c.rect(lx, cl-h, LW, h)
-            fn(lx, cl-h, LW, h)
-        else:
-            _box(c, lx, cl-h, LW, h, label, content)
-        cl -= h
-
-    def rsec(h, label=None, content=None, fn=None):
-        nonlocal cr
-        if fn:
-            c.setLineWidth(0.5); c.rect(rx, cr-h, RW, h)
-            fn(rx, cr-h, RW, h)
-        else:
-            _box(c, rx, cr-h, RW, h, label, content)
-        cr -= h
-
-    # ── LEFT ─────────────────────────────────────────
-    _box(c, lx, cl-16*mm, LW, 16*mm, "DOCTOR'S DIAGNOSIS", d.get('dx_diagnosis',''))
-    cl -= 16*mm
+    # ── PAGE 1 ────────────────────────────────────────────────────
+    story += page_header(TITLE, REF)
+    story.append(patient_bar(patient, REF))
+    story.append(gap(2))
 
     # Management
     mgmt_val = d.get('dx_mgmt_type','')
-    mgmt_txt = _tick(mgmt_val, ['Conservative','Surgical'])
+    mgmt_txt = mgmt_val
     if mgmt_val == 'Surgical':
         if d.get('dx_surgery_no_info'):
-            mgmt_txt += '\nNo information disclosed'
+            mgmt_txt += ' — No information disclosed'
         else:
             if d.get('dx_surgery_date'):    mgmt_txt += f"  Date: {d['dx_surgery_date']}"
-            if d.get('dx_surgery_details'): mgmt_txt += f"\n{d['dx_surgery_details']}"
-    lsec(14*mm, "DOCTOR'S MANAGEMENT :", mgmt_txt)
-    lsec(16*mm, 'CURRENT COMPLAINT / PROBLEM :', d.get('complaint',''))
+            if d.get('dx_surgery_details'): mgmt_txt += f"  ({d['dx_surgery_details']})"
 
-    # Subjective Assessment block
-    def draw_subj(bx, by, bw, bh):
-        c.setFont(FB, 8)
-        c.drawString(bx+2*mm, by+bh-5*mm, 'SUBJECTIVE ASSESSMENT :')
-        c.setFont(FN, 7.5)
-        cy = by+bh-10*mm
-
-        # Medical history checkboxes — compact inline format
-        med_map = [
-            ('med_hpt','HPT'),('med_dm','DM'),('med_ccf','CCF'),
-            ('med_ihd','IHD'),('med_pvd','PVD'),('med_copd','COPD'),
-            ('med_dementia','DEMENTIA'),('med_pd','PD'),
-            ('med_cva_rt','OLD CVA (RT)'),('med_cva_lt','OLD CVA (LT)'),
-            ('med_oa','OA'),('med_fracture','FRACTURE'),
-        ]
-        med_line = 'Medical history :  ' + '  '.join(
-            f"{'[x]' if d.get(k) else '[ ]'} {lbl}" for k,lbl in med_map
-        )
-        for line in wrap_text(med_line, bw-4*mm, 7.5):
-            if cy < by+1.5*mm: break
-            c.drawString(bx+2*mm, cy, line); cy -= 3.8*mm
-
-        # Social history
-        soc = d.get('social_hx','')
-        c.drawString(bx+2*mm, cy, f"SOCIAL HISTORY : {soc[:60]}"); cy -= 3.8*mm
-
-        # Previous Surgery
-        surg = _tick(d.get('prev_surgery',''), ['YES','NO'])
-        area = d.get('surgery_area','')
-        c.drawString(bx+2*mm, cy, f"Previous Surgery : {surg}  : Area {area}"); cy -= 3.8*mm
-
-        # IX
-        ix = d.get('investigations','')
-        c.drawString(bx+2*mm, cy, f"IX / MRI / X-RAY / CT BRAIN / BMD / BIA :"); cy -= 3.8*mm
-        if ix:
-            for line in wrap_text(ix, bw-6*mm, 7.5):
-                if cy < by+1.5*mm: break
-                c.drawString(bx+4*mm, cy, line); cy -= 3.8*mm
-
-        # Medication
-        med = d.get('medication','')
-        c.drawString(bx+2*mm, cy, f"Medication : {med[:55]}"); cy -= 3.8*mm
-
-        # Main carer
-        carer = d.get('main_carer','')
-        carer_other = d.get('carer_other','')
-        if carer == 'Other' and carer_other: carer = carer_other
-        c.drawString(bx+2*mm, cy,
-            f"Main Carer : Husband / Wife / Son / Daughter / Sibling / Other :  {carer}"); cy -= 3.8*mm
-
-        # Premorbid / Current Mobility
-        c.drawString(bx+2*mm, cy,
-            'Premorbid Mobility : ' + _tick(d.get('premorbid_mobility',''),
-            ['Independent','Semi Independent','Dependent'])); cy -= 3.8*mm
-        c.drawString(bx+2*mm, cy,
-            'Current Mobility : ' + _tick(d.get('current_mobility',''),
-            ['Independent','Semi Independent','Dependent'])); cy -= 3.8*mm
-
-        # Home Environment
-        home = []
-        if d.get('home_lift'):   home.append('[x] Lift')
-        if d.get('home_stairs'): home.append('[x] Stairs')
-        if d.get('home_kerbs'):  home.append('[x] Kerbs')
-        if d.get('home_ground'): home.append('[x] Ground Level')
-        if not home: home = ['[ ] Lift','[ ] Stairs','[ ] Kerbs','[ ] Ground Level']
-        c.drawString(bx+2*mm, cy, 'Home Environment  ' + '  '.join(home)); cy -= 3.8*mm
-
-        # Toilet
-        tlt = []
-        if d.get('toilet_sitting'):   tlt.append('[x] Sitting')
-        if d.get('toilet_squatting'): tlt.append('[x] Squatting')
-        if d.get('toilet_commode'):   tlt.append('[x] Commode')
-        if not tlt: tlt = ['[ ] Sitting','[ ] Squatting','[ ] Commode']
-        c.drawString(bx+2*mm, cy, 'Toilet :  ' + '  '.join(tlt)); cy -= 3.8*mm
-
-        # Walking aids
-        aids = []
-        if d.get('aid_frame'):      aids.append('[x] Walking Frame')
-        if d.get('aid_quadripod'):  aids.append('[x] Quadripod')
-        if d.get('aid_stick'):      aids.append('[x] Stick')
-        if d.get('aid_wheelchair'): aids.append('[x] Wheelchair')
-        if d.get('aid_none'):       aids.append('[x] None')
-        if not aids: aids = ['[ ] Walking Frame','[ ] Quadripod','[ ] Stick']
-        aid_str = '  '.join(aids)
-        if d.get('aid_others'): aid_str += f"  Others: {d['aid_others']}"
-        c.drawString(bx+2*mm, cy, 'Walking Aids :  ' + aid_str); cy -= 3.8*mm
-
-        # Incontinence
-        bl = _tick(d.get('incon_bladder',''), ['YES','NO'])
-        bw2 = _tick(d.get('incon_bowel',''), ['YES','NO'])
-        c.drawString(bx+2*mm, cy, f"Incontinence :  Bladder: {bl}    Bowel: {bw2}"); cy -= 3.8*mm
-        types = []
-        if d.get('incon_stress'): types.append('[x] Stress')
-        if d.get('incon_urge'):   types.append('[x] Urge')
-        if d.get('incon_mixed'):  types.append('[x] Mixed')
-        if types: c.drawString(bx+6*mm, cy, '  '.join(types)); cy -= 3.8*mm
-
-        # Diaper
-        diaper = _tick(d.get('diaper',''), ['YES','NO'])
-        day_str = ''
-        if d.get('diaper_day') and d.get('diaper_night'): day_str = 'Day & Night'
-        elif d.get('diaper_day'):   day_str = 'Day'
-        elif d.get('diaper_night'): day_str = 'Night'
-        c.drawString(bx+2*mm, cy,
-            f"Wear Diapers : {diaper}" + (f"  Day : {'[x]' if d.get('diaper_day') else '[ ]'}  Night : {'[x]' if d.get('diaper_night') else '[ ]'}" if d.get('diaper') == 'Yes' else '')); cy -= 3.8*mm
-
-        # Dominant hand / cognitive / communication / sensory
-        c.drawString(bx+2*mm, cy,
-            f"Dominant Hand : {_tick(d.get('dominant_hand',''), ['Right','Left'])}"); cy -= 3.8*mm
-        cog = _tick(d.get('cognitive',''), ['YES','NO'])
-        cog_test = d.get('cognitive_test','')
-        c.drawString(bx+2*mm, cy,
-            f"Cognitive Impairment : {cog}  MMSE / Mini COG Test : {cog_test}"); cy -= 3.8*mm
-        c.drawString(bx+2*mm, cy,
-            'Communication Impairment : ' + _tick(d.get('communication',''), ['Expressive','Receptive','None'])); cy -= 3.8*mm
-        vis = _cb(d.get('deficit_visual'))
-        hrg = _cb(d.get('deficit_hearing'))
-        c.drawString(bx+2*mm, cy,
-            f"Visual Field Deficit : YES / NO  {vis}    Hearing Deficit : YES / NO  {hrg}"); cy -= 3.8*mm
-        dev = []
-        if d.get('device_pacemaker'):   dev.append('Pacemaker')
-        if d.get('device_hearing_aid'): dev.append('Hearing aids')
-        if d.get('device_spectacles'):  dev.append('Spectacles')
-        if d.get('device_dentures'):    dev.append('Dentures')
-        c.drawString(bx+2*mm, cy,
-            'Other assistive Device : ' + (', '.join(dev) if dev else 'Pacemaker / Hearing aids / spectacles / dentures'))
-
-    lsec(114*mm, fn=draw_subj)
-
-    # ── RIGHT ─────────────────────────────────────────
-    # Fall History
-    def draw_falls(bx, by, bw, bh):
-        c.setFont(FB, 8)
-        c.drawString(bx+2*mm, by+bh-5*mm, 'Fall History :')
-        c.setFont(FN, 8)
-        fall_hx = d.get('fall_hx','')
-        c.drawString(bx+2*mm, by+bh-10*mm,
-            'H/O Fall in past 1 year :  ' + _tick(fall_hx, ['YES','NO']))
-        # Consequence
-        cons = []
-        if d.get('fall_fracture'):     cons.append('[x] Fracture')
-        if d.get('fall_hospitalised'): cons.append('[x] Hospitalised')
-        if d.get('fall_fear'):         cons.append('[x] Fear of Falling')
-        if d.get('fall_injury'):       cons.append('[x] Soft Tissue Injury')
-        if d.get('fall_none'):         cons.append('[x] No Injury')
-        if d.get('fall_consequence_other'): cons.append(d['fall_consequence_other'])
-        c.setFont(FN, 7.5)
-        cy = by+bh-15*mm
-        for line in wrap_text('Consequence of fall : ' + ('  '.join(cons) if cons else ''), bw-4*mm, 7.5):
-            if cy < by+1.5*mm: break
-            c.drawString(bx+2*mm, cy, line); cy -= 3.8*mm
-
-    rsec(24*mm, fn=draw_falls)
-    rsec(28*mm, 'CURRENT HISTORY', d.get('hx_current',''))
-    rsec(22*mm, 'PAST HISTORY',    d.get('hx_past',''))
-
-    # Body Chart
-    def draw_bc(bx, by, bw, bh):
-        c.setFont(FB, 8); c.setFillColor(BLACK)
-        c.drawString(bx+2*mm, by+bh-5*mm, 'BODY CHART')
-        sc      = 0.155
-        ant_cx  = bx + bw*0.27
-        post_cx = bx + bw*0.73
-        fig_top = by + bh - 9*mm
-        draw_figure(c, ant_cx,  fig_top, s=sc)
-        draw_markers(c, ant_cx,  fig_top, markers, 'ant',  s=sc)
-        draw_figure(c, post_cx, fig_top, s=sc)
-        draw_markers(c, post_cx, fig_top, markers, 'post', s=sc)
-        label_y = by+2*mm
-        c.setFont(FN, 6); c.setFillColor(BLACK)
-        c.drawString(bx+2*mm,         label_y, 'Right')
-        c.drawCentredString(ant_cx,   label_y, 'Left')
-        c.drawCentredString(post_cx,  label_y, 'Left')
-        c.drawRightString(bx+bw-2*mm, label_y, 'Right')
-
-    rsec(64*mm, fn=draw_bc)
-
-    # Pain section — right column bottom
-    def draw_pain(bx, by, bw, bh):
-        c.setFont(FN, 8); c.setFillColor(BLACK)
-        presence = d.get('pain_present','')
-        score    = d.get('pain_score','0') or '0'
-        cy = by+bh-5*mm
-        c.drawString(bx+2*mm, cy,
-            f"Presence of pain : {_tick(presence, ['YES','NO'])}    Pain Score : {score}")
-        cy -= 4.5*mm
-        c.drawString(bx+2*mm, cy, f"Pain Site : {d.get('pain_site','')}")
-        cy -= 4.5*mm
-        c.drawString(bx+2*mm, cy,
-            'Nature of pain : ' + _tick(d.get('pain_nature',''), ['constant','intermittent','episodic']))
-        cy -= 4.5*mm
-        c.drawString(bx+2*mm, cy,
-            'Type of pain : ' + _tick(d.get('pain_type',''), ['sharp','dull','superficial','deep']))
-        cy -= 4.5*mm
-        c.drawString(bx+2*mm, cy,
-            'Pain History : ' + _tick(d.get('pain_history',''), ['improve','unchanged','worsened']))
-
-    rsec(30*mm, fn=draw_pain)
-
-    # Close borders
-    bottom = min(cl, cr)
-    c.setLineWidth(0.5)
-    c.line(ML,    ty, ML,    bottom)
-    c.line(ML+LW, ty, ML+LW, bottom)
-    c.line(ML+CW, ty, ML+CW, bottom)
-    c.line(ML, bottom, ML+CW, bottom)
-
-# ═══════════════════════════════════════════════════
-# PAGE 2
-# ═══════════════════════════════════════════════════
-
-def _page2(c, d):
-    patient = d.get('patient', {})
-
-    _ref(c)
-    c.setFont(FN, 7)
-    c.drawRightString(W-MR, H-MT,
-        f"{REF}  |  {patient.get('name','')}  |  {patient.get('date','')}")
-    ty = H - MT - 6*mm
-
-    # ── OBJECTIVE ASSESSMENT ──────────────────────────
-    c.setFont(FB, 8)
-    c.drawString(ML, ty, 'OBJECTIVE ASSESSMENT')
-    ty -= 2*mm
-
-    obj_h = 62*mm
-    c.setLineWidth(0.5); c.rect(ML, ty-obj_h, CW, obj_h)
-    mid_x = ML + LW
-    c.line(mid_x, ty, mid_x, ty-obj_h)
-
-    # Left: Posture + Functional Mobility grid
-    lx2 = ML + 2*mm
-    oy  = ty - 4*mm
-    c.setFont(FN, 8); c.setFillColor(BLACK)
-    c.drawString(lx2, oy, f"Posture : {d.get('obj_posture','')[:50]}"); oy -= 4*mm
-    c.drawString(lx2, oy, 'Gait:'); oy -= 5*mm
-    c.setFont(FB, 8)
-    c.drawString(lx2, oy, 'Functional Mobility :'); oy -= 5*mm
-
-    mob_data = [
-        ['', 'Ind', 'Sup', 'Min A', 'Mod A', 'Max A'],
-        ['Bed Mobility  :',
-         _cb(d.get('mob_bed')=='Ind'), _cb(d.get('mob_bed')=='Sup'),
-         _cb(d.get('mob_bed')=='Min A'), _cb(d.get('mob_bed')=='Mod A'),
-         _cb(d.get('mob_bed')=='Max A')],
-        ['Sitting \u21d4 Standing :',
-         _cb(d.get('mob_sitting')=='Ind' or d.get('mob_standing')=='Ind'),
-         _cb(d.get('mob_sitting')=='Sup' or d.get('mob_standing')=='Sup'),
-         _cb(d.get('mob_sitting')=='Min A' or d.get('mob_standing')=='Min A'),
-         _cb(d.get('mob_sitting')=='Mod A' or d.get('mob_standing')=='Mod A'),
-         _cb(d.get('mob_sitting')=='Max A' or d.get('mob_standing')=='Max A')],
-        ['Transfer (Bed \u21d4 W/C) :',
-         _cb(d.get('mob_transfer')=='Ind'), _cb(d.get('mob_transfer')=='Sup'),
-         _cb(d.get('mob_transfer')=='Min A'), _cb(d.get('mob_transfer')=='Mod A'),
-         _cb(d.get('mob_transfer')=='Max A')],
+    # Falls
+    fall_cons = []
+    if d.get('fall_fracture'):     fall_cons.append('Fracture')
+    if d.get('fall_hospitalised'): fall_cons.append('Hospitalised')
+    if d.get('fall_fear'):         fall_cons.append('Fear of Falling')
+    if d.get('fall_injury'):       fall_cons.append('Soft Tissue Injury')
+    if d.get('fall_none'):         fall_cons.append('No Injury')
+    if d.get('fall_consequence_other'): fall_cons.append(d['fall_consequence_other'])
+    fall_content = [
+        Paragraph(f'<b>H/O Fall in Past 1 Year:</b> {d.get("fall_hx","Not recorded")}', S_NORMAL),
     ]
-    mob_cw = [LW*0.38, LW*0.12, LW*0.12, LW*0.12, LW*0.12, LW*0.12]
-    mob_tbl = Table(mob_data, colWidths=mob_cw)
-    mob_tbl.setStyle(TableStyle([
-        ('BACKGROUND',    (0,0),(-1,0),  LGREY),
-        ('FONTNAME',      (0,0),(-1,0),  FB),
-        ('FONTNAME',      (0,1),(-1,-1), FN),
-        ('FONTSIZE',      (0,0),(-1,-1), 7),
-        ('ALIGN',         (1,0),(-1,-1), 'CENTER'),
-        ('VALIGN',        (0,0),(-1,-1), 'MIDDLE'),
-        ('GRID',          (0,0),(-1,-1), 0.4, BLACK),
-        ('TOPPADDING',    (0,0),(-1,-1), 2),
-        ('BOTTOMPADDING', (0,0),(-1,-1), 2),
-        ('LEFTPADDING',   (0,0),(-1,-1), 2),
-    ]))
-    tw, th = mob_tbl.wrapOn(c, LW-4*mm, 30*mm)
-    mob_tbl.drawOn(c, lx2, oy-th)
+    if fall_cons:
+        fall_content.append(Paragraph(f'<b>Consequence:</b> {", ".join(fall_cons)}', S_NORMAL))
 
-    # Right: Lungs / Strength / ROM / Reflex
-    rx2 = mid_x + 2*mm
-    ry  = ty - 4*mm
-    c.setFont(FN, 8)
-    c.drawString(rx2, ry, f"Lungs : {d.get('obj_lungs','')[:45]}"); ry -= 4*mm
-    c.setFont(FB, 8)
-    c.drawString(rx2, ry, 'General Muscle Strength :  Upper Limb :'); ry -= 4*mm
-    c.setFont(FN, 8)
-    for line in wrap_text(d.get('obj_strength',''), RW-6*mm, 8):
-        c.drawString(rx2+2*mm, ry, line); ry -= 3.8*mm
-    ry -= 1*mm
-    c.drawString(rx2, ry, 'Lower Limb :'); ry -= 5*mm
-    rom_val  = d.get('rom_contracture','')
-    rom_note = d.get('rom_notes','')
-    c.drawString(rx2, ry,
-        f"ROM : Any contractures (Yes/No) : Area : {rom_note}"); ry -= 4*mm
-    reflex = d.get('reflex_sensation','')
-    c.drawString(rx2, ry,
-        f"Reflex :  {_cb(reflex=='Intact')} Intact    {_cb(reflex=='Impaired')} Absent"); ry -= 4*mm
-    ref_note = d.get('reflex_notes','')
-    c.drawString(rx2, ry,
-        f"Sensation: Intact (Yes / No)  :  {ref_note[:28]}"); ry -= 4*mm
-    c.drawString(rx2, ry,
-        'Proprioception: Intact (Yes / No)  : ........................')
+    # Walking aids
+    aids = []
+    if d.get('aid_none'):       aids.append('None')
+    if d.get('aid_frame'):      aids.append('Walking Frame')
+    if d.get('aid_quadripod'):  aids.append('Quadripod')
+    if d.get('aid_stick'):      aids.append('Stick')
+    if d.get('aid_wheelchair'): aids.append('Wheelchair')
+    if d.get('aid_others'):     aids.append(d['aid_others'])
 
-    ty -= obj_h + 2*mm
+    # Incontinence
+    incon_parts = []
+    if d.get('incon_bladder'): incon_parts.append(f"Bladder: {d['incon_bladder']}")
+    if d.get('incon_bowel'):   incon_parts.append(f"Bowel: {d['incon_bowel']}")
+    types = []
+    if d.get('incon_stress'): types.append('Stress')
+    if d.get('incon_urge'):   types.append('Urge')
+    if d.get('incon_mixed'):  types.append('Mixed')
+    if types: incon_parts.append(f"Type: {', '.join(types)}")
 
-    # ── OUTCOME MEASURE table ─────────────────────────
-    c.setFont(FB, 8)
-    c.drawCentredString(W/2, ty, 'OUTCOME MEASURE')
-    ty -= 4*mm
+    # Medical history
+    med_map = [
+        ('med_hpt','HPT'),('med_dm','DM'),('med_ccf','CCF'),
+        ('med_ihd','IHD'),('med_pvd','PVD'),('med_copd','COPD'),
+        ('med_dementia','DEMENTIA'),('med_pd','PD'),
+        ('med_cva_rt','OLD CVA (RT)'),('med_cva_lt','OLD CVA (LT)'),
+        ('med_oa','OA'),('med_fracture','FRACTURE'),
+    ]
+    active_med = [lbl for k, lbl in med_map if d.get(k)]
+
+    # Subjective block
+    subj_content = [
+        Paragraph(f'<b>Medical History:</b> {", ".join(active_med) if active_med else "Nil"}', S_NORMAL),
+        Paragraph(f'<b>Social History:</b> {d.get("social_hx","")}', S_NORMAL),
+        Paragraph(f'<b>Previous Surgery:</b> {d.get("prev_surgery","")}  {d.get("surgery_area","")}', S_NORMAL),
+        Paragraph(f'<b>Investigations:</b> {d.get("investigations","")}', S_NORMAL),
+        Paragraph(f'<b>Medication:</b> {d.get("medication","")}', S_NORMAL),
+        Paragraph(f'<b>Main Carer:</b> {d.get("main_carer","")} {d.get("carer_other","")}', S_NORMAL),
+        Paragraph(f'<b>Premorbid Mobility:</b> {d.get("premorbid_mobility","")}', S_NORMAL),
+        Paragraph(f'<b>Current Mobility:</b> {d.get("current_mobility","")}', S_NORMAL),
+    ]
+    home = []
+    if d.get('home_lift'):   home.append('Lift')
+    if d.get('home_stairs'): home.append('Stairs')
+    if d.get('home_kerbs'):  home.append('Kerbs')
+    if d.get('home_ground'): home.append('Ground Level')
+    if home: subj_content.append(Paragraph(f'<b>Home Environment:</b> {", ".join(home)}', S_NORMAL))
+
+    tlt = []
+    if d.get('toilet_sitting'):   tlt.append('Sitting')
+    if d.get('toilet_squatting'): tlt.append('Squatting')
+    if d.get('toilet_commode'):   tlt.append('Commode')
+    if tlt: subj_content.append(Paragraph(f'<b>Toilet:</b> {", ".join(tlt)}', S_NORMAL))
+
+    if aids: subj_content.append(Paragraph(f'<b>Walking Aids:</b> {", ".join(aids)}', S_NORMAL))
+    if incon_parts: subj_content.append(Paragraph(f'<b>Incontinence:</b> {" | ".join(incon_parts)}', S_NORMAL))
+
+    diaper_txt = d.get('diaper','')
+    if diaper_txt == 'Yes':
+        day_night = []
+        if d.get('diaper_day'):   day_night.append('Day')
+        if d.get('diaper_night'): day_night.append('Night')
+        diaper_txt += f' ({", ".join(day_night)})' if day_night else ''
+    subj_content.append(Paragraph(f'<b>Wear Diapers:</b> {diaper_txt}', S_NORMAL))
+    subj_content.append(Paragraph(f'<b>Dominant Hand:</b> {d.get("dominant_hand","")}', S_NORMAL))
+
+    cog_txt = d.get('cognitive','')
+    if d.get('cognitive_test'): cog_txt += f'  — {d["cognitive_test"]}'
+    subj_content.append(Paragraph(f'<b>Cognitive Impairment:</b> {cog_txt}', S_NORMAL))
+    subj_content.append(Paragraph(f'<b>Communication Impairment:</b> {d.get("communication","")}', S_NORMAL))
+
+    sens = []
+    if d.get('deficit_visual'):  sens.append('Visual Field Deficit')
+    if d.get('deficit_hearing'): sens.append('Hearing Deficit')
+    if not sens and d.get('deficit_none'): sens.append('No Deficit')
+    subj_content.append(Paragraph(f'<b>Sensory Deficits:</b> {", ".join(sens) if sens else "—"}', S_NORMAL))
+
+    dev = []
+    if d.get('device_pacemaker'):   dev.append('Pacemaker')
+    if d.get('device_hearing_aid'): dev.append('Hearing Aid')
+    if d.get('device_spectacles'):  dev.append('Spectacles')
+    if d.get('device_dentures'):    dev.append('Dentures')
+    if dev: subj_content.append(Paragraph(f'<b>Assistive Devices:</b> {", ".join(dev)}', S_NORMAL))
+
+    # Pain
+    pain_content = [
+        Paragraph(f'<b>Presence of Pain:</b> {d.get("pain_present","")}   <b>Score:</b> {d.get("pain_score","0")}/10', S_NORMAL),
+        Paragraph(f'<b>Pain Site:</b> {d.get("pain_site","")}', S_NORMAL),
+        Paragraph(f'<b>Nature:</b> {d.get("pain_nature","")}   <b>Type:</b> {d.get("pain_type","")}', S_NORMAL),
+        Paragraph(f'<b>Pain History:</b> {d.get("pain_history","")}', S_NORMAL),
+    ]
+
+    left = [
+        box("DOCTOR'S DIAGNOSIS", d.get('dx_diagnosis',''), width=LW2),
+        box("DOCTOR'S MANAGEMENT", mgmt_txt, width=LW2),
+        box('CURRENT COMPLAINT / PROBLEM', d.get('complaint',''), width=LW2),
+        box('FALLS HISTORY', fall_content, width=LW2),
+        box('SUBJECTIVE ASSESSMENT', subj_content, width=LW2),
+    ]
+
+    right = [
+        box('CURRENT HISTORY', d.get('hx_current',''), width=RW2),
+        box('PAST HISTORY', d.get('hx_past',''), width=RW2),
+        body_chart_section(bc, width=RW2),
+        box('PAIN ASSESSMENT', pain_content, width=RW2),
+    ]
+
+    story.append(two_col(left, right, lw=LW2, rw=RW2))
+    story.append(PageBreak())
+
+    # ── PAGE 2 ────────────────────────────────────────────────────
+    story += page_header(TITLE, REF)
+    story.append(patient_bar(patient, REF))
+    story.append(gap(3))
+
+    # Objective Assessment
+    story.append(Paragraph('OBJECTIVE ASSESSMENT', S_LABEL))
+
+    def mob_tick(key):
+        val = d.get(key,'')
+        opts = ['Ind','Sup','Min A','Mod A','Max A']
+        return '  '.join(f"[{'x' if val==o else ' '}] {o}" for o in opts)
+
+    obj_content = [
+        Paragraph(f'<b>Posture / Gait:</b> {d.get("obj_posture","")}', S_NORMAL),
+        gap(1),
+        Paragraph('<b>Functional Mobility:</b>', S_BOLD),
+        Paragraph(f'Bed Mobility :  {mob_tick("mob_bed")}', S_NORMAL),
+        Paragraph(f'Sitting ⇔ Standing :  {mob_tick("mob_sitting")}  /  {mob_tick("mob_standing")}', S_NORMAL),
+        Paragraph(f'Transfer (Bed ⇔ W/C) :  {mob_tick("mob_transfer")}', S_NORMAL),
+        gap(1),
+        Paragraph(f'<b>Lungs:</b> {d.get("obj_lungs","")}', S_NORMAL),
+        Paragraph(f'<b>General Muscle Strength:</b> {d.get("obj_strength","")}', S_NORMAL),
+        Paragraph(f'<b>ROM & Contracture:</b> {d.get("rom_contracture","")}  Area: {d.get("rom_notes","")}', S_NORMAL),
+        Paragraph(f'<b>Reflex / Sensation / Proprioception:</b> {d.get("reflex_sensation","")}  {d.get("reflex_notes","")}', S_NORMAL),
+    ]
+    story.append(box(None, obj_content))
+    story.append(gap(2))
+
+    # Outcome Measures Table
+    story.append(Paragraph('OUTCOME MEASURE', S_LABEL))
 
     def fv(key, na_key=None):
         if na_key and d.get(na_key): return 'N/A'
@@ -465,112 +214,108 @@ def _page2(c, d):
     gstep = fv('om_gait_steps','om_na_gait')
     reach = frl('om_reach_r','om_reach_l','om_na_reach')
 
-    gait_cell  = f"No. of step : {gstep}\nTime of Speed : {gsec} sec" if (gsec or gstep) else 'N/A' if d.get('om_na_gait') else 'No. of step :\nTime of Speed :'
-    berg_cell  = f"{berg} /56" if berg and berg != 'N/A' else (berg or '/56')
-    tug_cell   = f"{tug} sec"  if tug  and tug  != 'N/A' else (tug  or 'sec')
-    sls_cell   = f"{sls} sec"  if sls  and sls  != 'N/A' else (sls  or 'sec')
-    ftsst_cell = f"{ftsst} sec" if ftsst and ftsst != 'N/A' else (ftsst or 'sec')
-    ems_cell   = f"{ems} /20"  if ems  and ems  != 'N/A' else (ems  or '/20')
-    walk_cell  = f"{walk} m"   if walk and walk != 'N/A' else (walk or 'meter')
+    def fmt_result(val, unit=''):
+        if not val or val == 'N/A': return val or '—'
+        return f"{val} {unit}".strip()
 
-    om_data = [
-        ['', 'Test', 'Date', 'Date', 'Date', 'Remarks'],
-        ['Balance',         "Berg's Balance Scale", berg_cell,  '/56',               '/56',               ''],
-        ['',                'Timed Up and go Test', tug_cell,   'sec',               'sec',               ''],
-        ['',                'Single Leg Stance',    sls_cell,   'sec',               'sec',               ''],
-        ['Strength',        'Grip Strength (kg)',   grip or 'R :    L :', 'R :    L :', 'R :    L :', ''],
-        ['',                'Chair rising (5x)',    ftsst_cell, 'sec',               'sec',               ''],
-        ['Mobility &\nGait','Elderly Mobility Scale', ems_cell, '',                  '',                  ''],
-        ['',                'Problem Orientated\nMobility Assessment', poma or '', '', '', ''],
-        ['',                '3 / 6 Min Walk Test',  walk_cell,  'meter',             'meter',             ''],
-        ['Physical\nPerformance','Gait Speed (10 meter\nwalk test)', gait_cell, 'No. of step :\nTime of Speed :', 'No. of step :\nTime of Speed :', ''],
-        ['Flexibility',     'Chair Sit and Reach\n(cm)', reach or 'R :    L :', 'R :    L :', 'R :    L :', ''],
+    om_headers = ['Category', 'Test', 'Result', 'Reference']
+    om_cw = [CW*0.14, CW*0.28, CW*0.26, CW*0.32]
+    om_rows = [
+        ['Balance',         "Berg's Balance Scale",     fmt_result(berg, '/56'),    '56–41 Low · 40–21 Mod · 0–20 High'],
+        ['',                'Timed Up & Go (TUG)',       fmt_result(tug, 'sec'),     '≤13.5s Low risk · >13.5s High'],
+        ['',                'Single Leg Stance',         fmt_result(sls, 'sec'),     'Age norm 50–59: ~29 sec'],
+        ['Strength',        'Grip Strength (R/L)',       grip or '—',                'Frailty indicator'],
+        ['',                'Chair Rising 5× (FTSST)',   fmt_result(ftsst, 'sec'),   '60–69: 11.4s · 70–79: 12.6s'],
+        ['Mobility & Gait', 'Elderly Mobility Scale',    fmt_result(ems, '/20'),     '14–20 Ind · 10–13 Sup · 0–9 Dep'],
+        ['',                'Problem Orientated Mobility', poma or '—',             ''],
+        ['',                '3/6-Min Walk Test',         fmt_result(walk, 'm'),      'Specify 3 or 6 min'],
+        ['Performance',     'Gait Speed (10m)',          f"Time: {gsec} sec  Steps: {gstep}" if (gsec or gstep) else '—', '<0.8 m/s = fall risk'],
+        ['Flexibility',     'Chair Sit & Reach (R/L)',   reach or '—',               'Hamstring / lower back'],
     ]
 
-    cw_cat  = CW * 0.11
-    cw_test = CW * 0.22
-    cw_date = CW * 0.185
-    cw_rem  = CW * 0.12
-    om_cw   = [cw_cat, cw_test, cw_date, cw_date, cw_date, cw_rem]
-
-    om_tbl = Table(om_data, colWidths=om_cw)
+    om_tbl = Table([om_headers] + om_rows, colWidths=om_cw)
     om_tbl.setStyle(TableStyle([
-        ('BACKGROUND',    (0,0), (-1,0),  LGREY),
-        ('FONTNAME',      (0,0), (-1,0),  FB),
-        ('FONTSIZE',      (0,0), (-1,-1), 7.5),
-        ('FONTNAME',      (0,1), (-1,-1), FN),
-        ('FONTNAME',      (0,1), (0,-1),  FB),
-        ('ALIGN',         (0,0), (-1,0),  'CENTER'),
-        ('ALIGN',         (2,1), (-1,-1), 'CENTER'),
-        ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
-        ('GRID',          (0,0), (-1,-1), 0.4, BLACK),
-        ('TOPPADDING',    (0,0), (-1,-1), 2),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
-        ('LEFTPADDING',   (0,0), (-1,-1), 2),
-        ('BACKGROUND',    (0,1), (0,-1),  LGREY),
-        ('SPAN', (0,1), (0,3)),   # Balance
-        ('SPAN', (0,4), (0,5)),   # Strength
-        ('SPAN', (0,6), (0,8)),   # Mobility & Gait
-        ('SPAN', (0,9), (0,9)),   # Physical Performance
-        ('SPAN', (0,10),(0,10)),  # Flexibility
+        ('BACKGROUND',    (0,0),(-1,0),  LGREY),
+        ('FONTNAME',      (0,0),(-1,0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0,0),(-1,-1), 7.5),
+        ('FONTNAME',      (0,1),(-1,-1), 'Helvetica'),
+        ('FONTNAME',      (0,1),(0,-1),  'Helvetica-Bold'),
+        ('GRID',          (0,0),(-1,-1), 0.4, BLACK),
+        ('VALIGN',        (0,0),(-1,-1), 'TOP'),
+        ('TOPPADDING',    (0,0),(-1,-1), 3),
+        ('BOTTOMPADDING', (0,0),(-1,-1), 3),
+        ('LEFTPADDING',   (0,0),(-1,-1), 3),
+        ('SPAN',          (0,1),(0,3)),  # Balance
+        ('SPAN',          (0,4),(0,5)),  # Strength
+        ('SPAN',          (0,6),(0,9)),  # Mobility
+        ('BACKGROUND',    (0,1),(0,-1),  LGREY),
     ]))
-    tw, th = om_tbl.wrapOn(c, CW, H)
-    om_tbl.drawOn(c, ML, ty-th)
-    ty -= th + 3*mm
+    story.append(om_tbl)
 
-    # ── PT Impression 2x2 grid ────────────────────────
-    cell_h = 26*mm
-    hw     = CW / 2
-    cells  = [
-        ('PHYSIOTHERAPY IMPRESSION', d.get('plan_impression','')),
-        ('SHORT TERM GOALS',         d.get('plan_stg','')),
-        ('LONG TERM GOALS',          d.get('plan_ltg','')),
-        ('PLAN OF TREATMENT',        d.get('plan_tx','')),
-    ]
-    for i, (lbl, txt) in enumerate(cells):
-        col = i % 2; row = i // 2
-        _box(c, ML+col*hw, ty-(row+1)*cell_h, hw, cell_h, lbl, txt)
-    ty -= 2 * cell_h + 3*mm
+    if d.get('om_notes'):
+        story.append(gap(1))
+        story.append(Paragraph(f'<b>Notes:</b> {d["om_notes"]}', S_SMALL))
 
-    # ── Consent footer ────────────────────────────────
+    story.append(gap(2))
+
+    # Plan
+    story.append(plan_section(
+        d.get('plan_impression',''), d.get('plan_stg',''),
+        d.get('plan_ltg',''), d.get('plan_tx','')
+    ))
+
+    # Consent footer — matches real KKM form layout
+    # Row 1: "Patient / carer agreeable..." (left) | "Attending Physiotherapist:" (right)
+    # Row 2: "Patient Education Given..." (left) | blank (right)
+    story.append(gap(2))
     consent = d.get('consent_agree','')
     edu     = d.get('consent_edu','')
-    c.setFont(FN, 8)
-    c.drawString(ML, ty,
-        f"Patient / carer agreeable to propose treatment:  {_tick(consent, ['Yes','No'])}")
-    c.drawRightString(ML+CW, ty, 'Attending Physiotherapist:')
-    ty -= 8*mm
-    c.drawString(ML, ty, f"Patient Education Given : {_tick(edu, ['YES','NO'])}")
 
-# ═══════════════════════════════════════════════════
-# Public API
-# ═══════════════════════════════════════════════════
+    # Left col: 2 rows (consent + education), merged vertically on right for signature area
+    consent_tbl = Table([
+        [
+            Paragraph(f'Patient / carer agreeable to proposed treatment:  {tick(consent, ["Yes","No"])}', S_NORMAL),
+            Paragraph('Attending Physiotherapist:', S_NORMAL),
+        ],
+        [
+            Paragraph(f'Patient Education Given :  {tick(edu, ["YES","NO"])}', S_NORMAL),
+            Paragraph('', S_NORMAL),  # blank — signature space
+        ],
+    ], colWidths=[CW*0.60, CW*0.40], rowHeights=[10*mm, 12*mm])
+    consent_tbl.setStyle(TableStyle([
+        ('BOX',          (0,0),(-1,-1), 0.5, BLACK),
+        ('LINEABOVE',    (0,1),(0,1),   0.5, BLACK),  # line only between left cells
+        ('LINEBEFORE',   (1,0),(1,-1),  0.5, BLACK),  # vertical divider
+        ('SPAN',         (1,0),(1,1)),                 # merge right col — one big signature area
+        ('TOPPADDING',   (0,0),(-1,-1), 6),
+        ('BOTTOMPADDING',(0,0),(-1,-1), 6),
+        ('LEFTPADDING',  (0,0),(-1,-1), 6),
+        ('RIGHTPADDING', (0,0),(-1,-1), 6),
+        ('VALIGN',       (0,0),(0,-1),  'MIDDLE'),     # left col: vertically centred
+        ('VALIGN',       (1,0),(1,-1),  'TOP'),        # right col: label at top, space below
+    ]))
+    story.append(consent_tbl)
+    return story
+
 
 def generate_geriatric_pdf(data):
-    buf = io.BytesIO()
-    c   = rl_canvas.Canvas(buf, pagesize=A4)
-    _page1(c, data); c.showPage()
-    _page2(c, data); c.save()
-    return buf.getvalue()
-
+    return build_pdf(_build_story(data))
 
 def generate_episode_pdf(assessment_data, soap_notes, episode_info=None):
-    buf     = io.BytesIO()
-    c       = rl_canvas.Canvas(buf, pagesize=A4)
+    story   = []
     patient = (assessment_data or {}).get('patient', {})
-
     if assessment_data:
-        _page1(c, assessment_data); c.showPage()
-        _page2(c, assessment_data); c.showPage()
+        story += _build_story(assessment_data)
     else:
-        _ref(c); _title(c)
-        c.setFont(FN, 12); c.setFillColor(colors.HexColor('#aaaaaa'))
-        c.drawCentredString(W/2, H/2, 'No initial assessment recorded for this episode.')
-        c.showPage()
-
-    for soap in (soap_notes or []):
-        draw_soap_page(c, patient, soap, episode_info)
-        c.showPage()
-
-    c.save()
-    return buf.getvalue()
+        story += page_header(TITLE, REF)
+        story.append(Paragraph('No initial assessment recorded for this episode.', S_NORMAL))
+    # Pair notes explicitly — 2 per page, PageBreak between pairs
+    notes = soap_notes or []
+    for i in range(0, len(notes), 2):
+        story.append(PageBreak())
+        pair = []
+        pair += soap_page(patient, notes[i], episode_info)
+        if i + 1 < len(notes):
+            pair += soap_page(patient, notes[i + 1], episode_info)
+        story.append(KeepTogether(pair))
+    return build_pdf(story)

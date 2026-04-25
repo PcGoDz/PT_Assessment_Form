@@ -251,9 +251,96 @@ const Main = (function () {
   }
 
   // ── Init ──────────────────────────────────────
+  // ── Form context init — replaces boilerplate in every form ──────
+  // Reads episode_id, patient_id, and patient data from base.html meta tags.
+  // Handles: patient prefill, episode collect wrapper, auto-load, nav buttons.
+  // New forms get all this for FREE — no boilerplate needed in form HTML.
+  function initFormContext() {
+    var ctx       = document.getElementById('page-context');
+    if (!ctx) return;
+    var episodeId = parseInt(ctx.dataset.episodeId) || null;
+    var patientId = parseInt(ctx.dataset.patientId) || null;
+
+    // ── 1. Patient prefill ───────────────────────────────────────
+    var ptScript  = document.getElementById('patient-json');
+    if (ptScript) {
+      try {
+        var p = JSON.parse(ptScript.textContent);
+        FormBase.sv('pt-name',     p.name      || '');
+        FormBase.sv('pt-nric',     p.ic         || '');
+        FormBase.sv('pt-passport', p.passport   || '');
+        FormBase.sv('pt-dob',      p.dob        || '');
+        if (p.dob) FormBase.onDobChange(p.dob);
+        FormBase.sv('pt-age',      p.age        || '');
+        FormBase.sv('pt-country',  p.country    || '');
+        FormBase.setRadio('pt-type', p.pt_type  || 'local');
+        FormBase.setRadio('pt-sex',  p.sex      || '');
+        FormBase.onPtTypeChange();
+        if (p.ic && p.ic.length === 12) FormBase.onNricInput(p.ic);
+        updateProgress();
+      } catch(e) { console.warn('Patient prefill error:', e); }
+    }
+
+    // ── 2. Episode collect wrapper + auto-load ───────────────────
+    if (episodeId && window.ActiveForm) {
+      var origCollect = window.ActiveForm.collect;
+      window.ActiveForm.collect = function(id) {
+        var d = origCollect(id);
+        d.episode_id = episodeId;
+        return d;
+      };
+
+      fetch('/api/episodes/' + episodeId + '/record')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data.id) {
+            window.ActiveForm.populate(data);
+            setCurrentId(data.id);
+            updateProgress();
+            setTimeout(function() { markClean(); }, 100);
+          }
+        })
+        .catch(function(e) { console.warn('Auto-load record failed:', e); });
+    }
+
+    // ── 3. Return / Save & Return nav buttons ────────────────────
+    if (episodeId || patientId) {
+      var navGroup = document.getElementById('topbar-nav-group');
+      var navSep   = document.getElementById('topbar-nav-sep');
+      if (navGroup && !navGroup.querySelector('.ctx-ret-btn')) {
+        var retBtn = document.createElement('button');
+        retBtn.className   = 'tbtn ctx-ret-btn';
+        retBtn.textContent = '← Return';
+        retBtn.title       = 'Return to patient';
+        retBtn.onclick = function() {
+          if (isDirty && !confirm('You have unsaved changes. Return anyway?')) return;
+          window.location.href = '/';
+        };
+
+        var saveRetBtn = document.createElement('button');
+        saveRetBtn.className   = 'tbtn primary ctx-ret-btn';
+        saveRetBtn.textContent = 'Save & Return';
+        saveRetBtn.onclick = async function() {
+          await saveRecord();
+          setTimeout(function() { window.location.href = '/'; }, 800);
+        };
+
+        navGroup.appendChild(retBtn);
+        navGroup.appendChild(saveRetBtn);
+        if (navSep) navSep.style.display = '';
+      }
+    }
+  }
+
+  function setCurrentId(id) { currentId = id; }
+
   function init() {
-    BodyChart.init();
-    MovementTable.init();
+    if (typeof BodyChart !== 'undefined' && document.getElementById('svg-ant')) {
+      BodyChart.init();
+    }
+    if (typeof MovementTable !== 'undefined' && document.getElementById('mov-tbody')) {
+      MovementTable.init();
+    }
 
     document.getElementById('pt-date').value = new Date().toISOString().split('T')[0];
 
@@ -262,12 +349,19 @@ const Main = (function () {
     var noRadio = document.querySelector('[name=pacemaker][value=No]');
     if (noRadio) noRadio.checked = true;
 
-    Form.onPtTypeChange();
+    if (typeof Form !== 'undefined' && typeof Form.onPtTypeChange === 'function') {
+      Form.onPtTypeChange();
+    } else if (typeof FormBase !== 'undefined') {
+      FormBase.onPtTypeChange();
+    }
     loadRecordsList();
     updateProgress();
     setupDirtyWarning();
     checkForDraft();
     initDark();
+
+    // Must run after ActiveForm is registered by form-specific JS
+    setTimeout(initFormContext, 0);
 
     document.querySelector('.main').addEventListener('input', function () {
       markDirty();
@@ -539,7 +633,149 @@ const Main = (function () {
     }
   }
 
-  // ── Copy to clipboard (MPIS plain text) ──────────
+  // ── MPIS: Cardiorespiratory ─────────────────────────
+  async function copyToMpisCr() {
+    var data = window.ActiveForm.collect(currentId);
+    var p    = data.patient          || {};
+    var pain = data.pain             || {};
+    var sq   = data.specialQuestions || {};
+    var ix   = data.investigation    || {};
+    var hx   = data.history          || {};
+    var obs  = data.observation      || {};
+    var vs   = obs.vital_signs       || {};
+    var sput = obs.sputum            || {};
+    var vent = data.ventilated       || {};
+    var palp = data.palpation        || {};
+    var exp  = palp.expansion        || {};
+    var meas = palp.measurement      || {};
+    var ausc = data.auscultation     || {};
+    var lmap = ausc.lung_map         || {};
+    var st   = data.specialTest      || {};
+    var mwt  = st['6mwt']           || {};
+    var plan = data.plan             || {};
+    var mgmt = data.management       || {};
+
+    var LN  = String.fromCharCode(10);
+    var DIV = '==================================================';
+    var dash= '--------------------------------------------------';
+
+    var parts = [];
+    parts.push('CARDIORESPIRATORY ASSESSMENT');
+    parts.push(DIV);
+    parts.push('Name  : ' + (p.name||'') + '   Date : ' + (p.date||''));
+    if (p.type === 'local') {
+      parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+    } else {
+      parts.push('Passport : ' + (p.passport||'') + '   Country : ' + (p.country||'') + '   Age : ' + (p.age||''));
+    }
+    parts.push('Sex   : ' + (p.sex === 'M' ? 'Male' : p.sex === 'F' ? 'Female' : ''));
+    parts.push('');
+
+    function sec(title, val) {
+      if (!val || !String(val).trim()) return;
+      parts.push(dash); parts.push(title); parts.push(String(val).trim()); parts.push('');
+    }
+
+    sec('DIAGNOSIS', data.diagnosis);
+    sec("DOCTOR'S MANAGEMENT", mgmt.type);
+    sec('PROBLEM', data.problem);
+
+    parts.push(dash); parts.push('PAIN SCORE');
+    parts.push('PRE: ' + (pain.pre||'0') + '/10   POST: ' + (pain.post||'0') + '/10');
+    parts.push('');
+
+    parts.push(dash); parts.push('SPECIAL QUESTIONS');
+    if (sq.health)                parts.push('General Health        : ' + sq.health);
+    if (sq.pmhx)                  parts.push('PMHx                  : ' + sq.pmhx);
+    if (sq.surgery)               parts.push('Surgical History      : ' + sq.surgery);
+    if (sq.medication)            parts.push('Medication            : ' + sq.medication);
+    if (sq.occupation)            parts.push('Occupation/Recreation : ' + sq.occupation);
+    if (sq.functional_limitation) parts.push('Functional Limitation : ' + sq.functional_limitation);
+    if (sq.smoking)               parts.push('Smoking               : ' + sq.smoking);
+    if (sq.alcohol)               parts.push('Alcohol               : ' + sq.alcohol);
+    parts.push('');
+
+    parts.push(dash); parts.push('INVESTIGATION');
+    if (ix.cxr)   parts.push('CXR  : ' + ix.cxr);
+    if (ix.abg)   parts.push('ABG  : ' + ix.abg);
+    if (ix.other) parts.push('Other: ' + ix.other);
+    parts.push('');
+
+    sec('CURRENT HISTORY', hx.current);
+    sec('PAST HISTORY',    hx.past);
+
+    parts.push(dash); parts.push('OBSERVATION');
+    parts.push('Vital Signs : Temp ' + (vs.temp||'—') + 'C  RR ' + (vs.rr||'—') + '/min  PR ' + (vs.pr||'—') + 'bpm  BP ' + (vs.bp||'—') + 'mmHg  SpO2 ' + (vs.spo2||'—') + '%');
+    if (obs.breathing_pattern) parts.push('Breathing Pattern  : ' + obs.breathing_pattern);
+    if (obs.breathing_level)   parts.push('Breathing Level    : ' + obs.breathing_level);
+    if (obs.chest_deformity)   parts.push('Chest Deformity    : ' + obs.chest_deformity);
+    if (obs.chest_drain)       parts.push('Chest Drain        : ' + obs.chest_drain);
+    if (obs.cough_type || obs.cough_effect)
+      parts.push('Cough              : ' + [obs.cough_type, obs.cough_effect].filter(Boolean).join(', '));
+    if (sput.colour || sput.amount || sput.consistency)
+      parts.push('Sputum             : Colour: ' + (sput.colour||'—') + '  Amount: ' + (sput.amount||'—') + '  Consistency: ' + (sput.consistency||'—'));
+    if (obs.o2_treatment) parts.push('O2 Treatment       : ' + obs.o2_treatment);
+    if (vent.mode || vent.peep || vent.fio2) {
+      parts.push('Ventilated         : Mode: ' + (vent.mode||'—') + '  PEEP: ' + (vent.peep||'—') + '  FiO2: ' + (vent.fio2||'—') + '%');
+    }
+    parts.push('');
+
+    parts.push(dash); parts.push('PALPATION');
+    parts.push('Chest Expansion:');
+    parts.push('  Apical (ant)     : ' + (exp.apical||'—'));
+    parts.push('  Middle (ant)     : ' + (exp.middle||'—'));
+    parts.push('  Lower Costal     : ' + (exp.lower_costal||'—'));
+    parts.push('Chest Measurement (thumb displacement):');
+    parts.push('  Apical       : ' + (meas.apical||'—') + (meas.apical_status ? '  [' + meas.apical_status + ']' : ''));
+    parts.push('  Middle       : ' + (meas.middle||'—') + (meas.middle_status ? '  [' + meas.middle_status + ']' : ''));
+    parts.push('  Lower Costal : ' + (meas.lower_costal||'—') + (meas.lower_costal_status ? '  [' + meas.lower_costal_status + ']' : ''));
+    parts.push('');
+
+    parts.push(dash); parts.push('AUSCULTATION');
+    if (ausc.lungs)       parts.push('Lungs       : ' + ausc.lungs);
+    if (ausc.crepitation) parts.push('Crepitation : ' + ausc.crepitation);
+    if (ausc.air_entry)   parts.push('Air Entry   : ' + ausc.air_entry);
+    var zoneLabels = { RU:'Right Upper', RM:'Right Middle', RL:'Right Lower', LU:'Left Upper', LL:'Left Lower', BASE:'Bilateral Bases' };
+    var findingLabels = { clear:'Clear', crep:'Crepitation', wheeze:'Wheeze', reduced:'Reduced air entry', absent:'Absent' };
+    var mapEntries = Object.keys(lmap).filter(function(k){ return lmap[k]; });
+    if (mapEntries.length) {
+      parts.push('Zone Findings:');
+      mapEntries.forEach(function(k) {
+        parts.push('  ' + (zoneLabels[k]||k) + ' : ' + (findingLabels[lmap[k]]||lmap[k]));
+      });
+    }
+    parts.push('');
+
+    parts.push(dash); parts.push('SPECIAL TEST');
+    parts.push('6-Minute Walk Test:');
+    parts.push('  Distance : ' + (mwt.distance||'—') + ' m');
+    parts.push('  PR       : Pre ' + (mwt.pr_pre||'—') + '  Post ' + (mwt.pr_post||'—'));
+    parts.push('  RPE/Borg : Pre ' + (mwt.rpe_pre||'—') + '  Post ' + (mwt.rpe_post||'—'));
+    if (mwt.remarks) parts.push('  Remarks  : ' + mwt.remarks);
+    if (st.pefr)                 parts.push('PEFR               : ' + st.pefr + ' L/min');
+    if (st.incentive_spirometer) parts.push('Incentive Spirometer: ' + st.incentive_spirometer);
+    parts.push('');
+
+    parts.push(dash); parts.push("PHYSIOTHERAPIST'S IMPRESSION & PLAN");
+    if (plan.impression) parts.push('Impression : ' + plan.impression);
+    if (plan.stg)        parts.push('STG        : ' + plan.stg);
+    if (plan.ltg)        parts.push('LTG        : ' + plan.ltg);
+    if (plan.treatment)  parts.push('Treatment  : ' + plan.treatment);
+    parts.push(''); parts.push(DIV);
+    parts.push('Generated by PT Assessment System');
+
+    var text = parts.join(LN);
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied! Paste into MPIS', 'ok');
+    } catch (e) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Copied! Paste into MPIS', 'ok');
+    }
+  }
   async function copyToMpis() {
     var data = window.ActiveForm.collect(currentId);
     var p    = data.patient || {};
@@ -728,6 +964,7 @@ const Main = (function () {
     } catch(e) { formType = 'MS'; }
     if (formType === 'SPINE')     return copyToMpisSpine();
     if (formType === 'GERIATRIC') return copyToMpisGeriatric();
+    if (formType === 'CR')        return copyToMpisCr();
     return copyToMpis();
   }
 
@@ -751,6 +988,7 @@ const Main = (function () {
     copyToMpis:          copyToMpis,
     copyToMpisSpine:     copyToMpisSpine,
     copyToMpisGeriatric: copyToMpisGeriatric,
+    copyToMpisCr:        copyToMpisCr,
     copyToMpisAuto:      copyToMpisAuto,
     toggleDark:     toggleDark
   };
