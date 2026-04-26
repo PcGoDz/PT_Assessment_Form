@@ -116,11 +116,11 @@
     <div class="topbar-sep"></div>
     <div class="topbar-sub">{% block topbar_ref %}KKM Physiotherapy Dept &mdash; fisio/b.pen.14/Pind.1/2019{% endblock %}</div>
     <div class="topbar-actions">
-      <!-- Nav group: episode-only buttons injected here by form_ms.js -->
+      <!-- Nav group: Return / Save & Return injected by initFormContext() when episode context present -->
       <div id="topbar-nav-group" style="display:flex;gap:6px;align-items:center;"></div>
       <div class="tbtn-sep" id="topbar-nav-sep" style="display:none"></div>
 
-      <!-- Destructive group -->
+      <!-- Form group -->
       <button class="tbtn" onclick="Main.newForm()">+ New</button>
       <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
       <div class="tbtn-sep"></div>
@@ -136,10 +136,10 @@
     </div>
   </header>
 
-  <div id="draft-banner" style="display:none;background:var(--warn-light);border-bottom:1px solid var(--warn);padding:8px 20px;font-size:12px;color:var(--warn);align-items:center;gap:12px;flex-shrink:0;">
-    <span id="draft-banner-msg" style="flex:1;font-weight:500;"></span>
-    <button onclick="Main.restoreDraft()" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid var(--warn);font-family:inherit;background:var(--warn);color:white;margin-right:4px;">Restore</button>
-    <button onclick="Main.dismissDraft()" style="padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid var(--warn);font-family:inherit;background:none;color:var(--warn);">Dismiss</button>
+  <div id="draft-banner" class="draft-banner">
+    <span id="draft-banner-msg" class="draft-banner-msg"></span>
+    <button onclick="Main.restoreDraft()" class="draft-btn restore">Restore</button>
+    <button onclick="Main.dismissDraft()" class="draft-btn">Dismiss</button>
   </div>
   <div class="content-area">
 
@@ -199,7 +199,7 @@
 <div class="status-bar">
   <div class="sdot"></div>
   <span style="font-size:12px;color:var(--text-muted);">{% block form_name %}Assessment{% endblock %}</span>
-  <div id="draft-indicator" style="display:none;font-size:11px;color:var(--warn);display:none;align-items:center;gap:4px;">
+  <div id="draft-indicator" style="display:none;font-size:11px;color:var(--warn);align-items:center;gap:4px;">
     <div style="width:6px;height:6px;border-radius:50%;background:var(--warn);"></div>
     draft saved
   </div>
