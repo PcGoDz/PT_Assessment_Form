@@ -86,7 +86,7 @@ def init_db(db_path):
     ]:
         try:
             conn.execute(f'ALTER TABLE soap_notes ADD COLUMN {col} {typedef}')
-        except Exception:
+        except sqlite3.OperationalError:
             pass  # column already exists
 
     # ── Audit log ─────────────────────────────────
@@ -508,7 +508,8 @@ def get_episode_record(db_path, episode_id):
     conn = get_conn(db_path)
     try:
         row = conn.execute(
-            'SELECT id, data_json FROM records WHERE episode_id=?', (episode_id,)
+            'SELECT id, data_json FROM records WHERE episode_id=? ORDER BY updated_at DESC LIMIT 1',
+            (episode_id,)
         ).fetchone()
         if not row:
             return None, None

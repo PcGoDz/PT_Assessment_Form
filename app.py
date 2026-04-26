@@ -274,14 +274,14 @@ def api_delete_soap(soap_id):
 # ── Stats API ───────────────────────────────────────────────────
 @app.route('/api/stats')
 def api_stats():
-    conn = __import__('database').get_conn(DB_PATH)
+    conn = get_conn(DB_PATH)
     try:
         stats = {}
         stats['patients']    = conn.execute('SELECT COUNT(*) FROM patients').fetchone()[0]
         stats['episodes']    = conn.execute("SELECT COUNT(*) FROM episodes WHERE status='active'").fetchone()[0]
         stats['assessments'] = conn.execute('SELECT COUNT(*) FROM records').fetchone()[0]
         stats['soaps']       = conn.execute('SELECT COUNT(*) FROM soap_notes').fetchone()[0]
-        return __import__('flask').jsonify(stats)
+        return jsonify(stats)
     finally:
         conn.close()
 
@@ -383,15 +383,6 @@ def export_pdf(record_id):
         _gen        = _SINGLE_PDF_GENERATORS.get(_form_type, pdf_ms.generate_ms_pdf)
         pdf_bytes   = _gen(data)
         patient     = data.get('patient', {})
-        name        = (patient.get('name') or 'record').replace(' ', '_')
-        date        = patient.get('date') or 'nodate'
-        filename    = f"PT_{_form_type}_{name}_{date}.pdf"
-        response    = make_response(pdf_bytes)
-        response.headers['Content-Type']        = 'application/pdf'
-        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
         name        = (patient.get('name') or 'record').replace(' ', '_')
         date        = patient.get('date') or 'nodate'
         filename    = f"PT_{_form_type}_{name}_{date}.pdf"
