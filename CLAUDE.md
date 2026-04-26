@@ -117,6 +117,11 @@ getCurrentFormType() checks d._form_type first (amputation/cr/etc), then d.meta.
 6.  Add to _PDF_GENERATORS and _SINGLE_PDF_GENERATORS in app.py
 7.  Add pdf_xxx.py to pt_assessment.spec under datas (DO NOT FORGET — silent failure)
 8.  Add MPIS formatter copyToMpisXxx() in main.js, wire into copyToMpisAuto()
+    Use the shared helpers — do NOT redeclare locally:
+      var LN   = MPIS_LN;   var DIV = MPIS_DIV;   var dash = MPIS_DASH;
+      function sec(title, val) { mpisSec(parts, title, val); }
+      await copyText(parts.join(LN));   // at the end, replaces try/catch clipboard block
+    Pattern: declare LN/DIV/dash + sec() once at top of the function, use throughout.
 9.  Add clinical templates to clinical_templates.js (assessment categories + SOAP variant)
 10. Add SOAP key to tplMap in showSoapTemplate() in episode.html
 11. Run: node --check static/js/form_xxx.js before packaging
@@ -196,6 +201,9 @@ Shortest path always. 12-21 patients/day.
 - Export PDF auto-saves first if not saved
 - Never add friction between user and primary action
 - If user can enter, user must be able to return — always provide navigation back
+- Topbar button order (left→right): [← Return | Save & Return] | [+ New | Clear] | [🌙 | Copy to MPIS | Export KKM PDF] | [Save Record]
+  Return/Save & Return are injected by initFormContext() into #topbar-nav-group — only visible in episode context.
+  Do NOT reorder these. The primary action (Save Record) is always rightmost.
 
 ### 3. Clinical Rule
 - Fields must match KKM standardised form exactly for audit compliance
@@ -216,6 +224,12 @@ Shortest path always. 12-21 patients/day.
   BodyChart.populate(). Store as bodyChart: { markers: [...], notes: str } (camelCase).
 - clinical_templates.js must be a clean IIFE — orphaned code outside functions
   breaks the entire module silently (learned the hard way this session)
+- MPIS formatters share constants and helpers defined at top of Main IIFE:
+    MPIS_LN, MPIS_DIV, MPIS_DASH — never redeclare locally as String.fromCharCode etc.
+    mpisSec(parts, title, val) — replaces inline function sec() in each formatter
+    copyText(str) — replaces the 5-line try/catch clipboard block
+  XSS: user-supplied strings injected into innerHTML must go through escapeHtml()
+  (available as a shared helper in Main) — patient names, dates, form types.
 
 ### 5. PDF Rules
 - Each form type has its own standalone PDF generator
@@ -503,7 +517,7 @@ Shortest path always. 12-21 patients/day.
 ### High Priority
 - [ ] HAND or NEURO form (HAND simpler warmup; NEURO higher clinical volume)
 - [ ] Full end-to-end test of exe build (all 5 forms)
-- [x] Git push — done manually
+- [ ] Git push — seriously, every session this stays on the list
 
 ### Medium Priority
 - [ ] Validation layer — UI enforcement (hard stop before save — REQUIRED_FIELDS already covers all 5 forms, just needs frontend to surface the errors)
@@ -515,15 +529,15 @@ Shortest path always. 12-21 patients/day.
 - [ ] Versioning UI (audit_log data exists, no UI yet)
 - [ ] Remaining 10 forms: BURN, SCI, VESTIBULAR, FACIAL, PAEDIATRIC, LYMPHOEDEMA, NCD, GENERAL
 - [ ] POMR-aligned MPIS output for assessment forms (currently uses assessment format)
+- [ ] Accessibility: ARIA labels on toast, progress bar, sidebar nav items (low clinical priority)
 
 ### Done this session
-- [x] Dead code removed from export_pdf() in app.py
-- [x] get_episode_record() ORDER BY updated_at DESC LIMIT 1
-- [x] api_stats() get_conn import fixed
-- [x] ALTER TABLE exception narrowed to sqlite3.OperationalError
-- [x] Generic /form/<form_id> route replacing 5 copy-paste handlers
-- [x] export_episode_pdf() respects ?form_type= query param
-- [x] CR + AMPUTATION added to REQUIRED_FIELDS
+- [x] Frontend refactor: shared MPIS helpers in main.js (MPIS_LN/DIV/DASH, mpisSec(), copyText())
+- [x] escapeHtml() added — used in loadRecordsList() innerHTML interpolation
+- [x] draft-indicator duplicate display:none fixed
+- [x] draft-banner CSS class conflict resolved (inline style replaced with .show class)
+- [x] showDraftIndicator() fixed to show as flex (was showing as block)
+- [x] Topbar button order corrected to match spec
 
 ---
 
@@ -563,7 +577,36 @@ POMR format uses Malay headers (TARIKH, NOMBOR GILIRAN, DILIHAT, TEMUJANJI) + En
 
 ---
 
-## What's Done (as of 2026-04-25)
+## What's Done (as of 2026-04-27)
+
+- [x] Patient registration with NRIC auto-derive (DOB/age/sex)
+- [x] Patient edit modal in home.html
+- [x] Episode management (create, discharge with reason, reactivate)
+- [x] Delete patient (cascade wipe, two-step confirm)
+- [x] MS assessment form + PDF + MPIS + SOAP templates
+- [x] Spine assessment form + PDF + MPIS + SOAP templates
+- [x] Geriatric assessment form + PDF + MPIS + SOAP templates
+- [x] CR assessment form + PDF + MPIS + SOAP templates
+- [x] Body chart (SVG anterior + posterior, 6 pain types, markers in PDF)
+- [x] Lung chart (SVG 6 zones, radiological view, click-to-mark, findings -> PDF)
+- [x] Clinical templates for all 4 forms (assessment + per-form SOAP variants)
+- [x] SOAP follow-up notes (session numbered, per-form-type templates)
+- [x] PDF export for all 5 forms (episode PDF + single record PDF)
+- [x] MPIS clipboard copy for all 5 forms (MS, Spine, Geriatric, CR, Amputation)
+- [x] Amputation form — full implementation (HTML, JS, PDF, MPIS, SOAP templates, body chart)
+- [x] Episode modal — all 15 form cards shown, not-ready ones greyed out with "Soon" badge
+- [x] sign_chop_block() helper in pdf_platypus_base — used by all 5 PDF generators
+- [x] Session header fields in SOAP modal (Nombor Giliran, KPI-SS-30 min, Dilihat, Temujanji)
+- [x] SOAP MPIS output follows POMR format (Malay headers matching dept Word template)
+- [x] clinical_templates.js insert() null focus bug fixed
+- [x] getCurrentFormType() now checks _form_type first (fixes amputation export routing)
+- [x] BodyChart body_chart→bodyChart key fixed (body chart markers now appear in PDF)
+- [x] Frontend refactor: shared MPIS helpers (MPIS_LN/DIV/DASH, mpisSec(), copyText(), escapeHtml())
+- [x] Frontend bug: draft-indicator duplicate display:none fixed (flex layout now correct)
+- [x] Frontend bug: draft-banner CSS class vs inline style conflict resolved (uses .show class)
+- [x] Frontend bug: XSS in records sidebar innerHTML (patient names now escaped via escapeHtml())
+- [x] Frontend bug: showDraftIndicator() now shows as flex not block
+- [x] Topbar button order corrected to match spec: [Return | Save & Return] | [New | Clear] | [🌙 | MPIS | PDF] | [Save]
 
 - [x] Patient registration with NRIC auto-derive (DOB/age/sex)
 - [x] Patient edit modal in home.html
@@ -607,6 +650,121 @@ POMR format uses Malay headers (TARIKH, NOMBOR GILIRAN, DILIHAT, TEMUJANJI) + En
 
 ---
 
+
+## HANDOVER NOTE — Frontend Refactor Session 2026-04-27
+
+### What happened this session
+
+Short focused session: frontend code review followed by targeted refactoring.
+No new features, no backend changes. All changes are in main.js and base.html only.
+
+**Bugs fixed:**
+
+- `draft-indicator` (base.html line 202) had `display:none` written twice in the same
+  inline style attribute. The second declaration overwrote `align-items:center`, so when
+  JS showed the indicator via `style.display = ''` it rendered as block — dot and "draft saved"
+  text stacked vertically instead of inline.
+
+- `draft-banner` had a CSS class system (`.draft-banner { display:none }` /
+  `.draft-banner.show { display:flex }`) defined in the `<style>` block, but the actual
+  element used inline `style="display:none"` with no class, and JS toggled it via
+  `banner.style.display = ''`. The class toggle was completely disconnected. Unified to
+  use the class system: element now has class `draft-banner`, JS calls
+  `classList.add/remove('show')`.
+
+- `showDraftIndicator(true)` was setting `style.display = ''` (inherits as block) instead
+  of `style.display = 'flex'`. Fixed.
+
+- `loadRecordsList()` interpolated `r.patient_name`, `r.patient_date`, `r.form_type`
+  directly into `innerHTML` string. Wrapped with `escapeHtml()`. Low-risk in a local app
+  but trivial to fix now that the helper exists.
+
+**Refactoring done (main.js):**
+
+- Added 3 shared MPIS constants at top of Main IIFE:
+    `MPIS_LN`, `MPIS_DIV`, `MPIS_DASH`
+  Previously each of the 5 `copyToMpis*` functions redeclared these identically.
+
+- Added `escapeHtml(str)` — sanitises strings before innerHTML injection.
+
+- Added `copyText(str)` — single implementation of the clipboard try/catch fallback.
+  Previously copy-pasted verbatim into all 5 MPIS functions (25 lines × 5 = 125 lines gone).
+
+- Added `mpisSec(parts, title, val)` — the shared section helper.
+  Previously `function sec(title, val)` was redeclared inside each of the 5 MPIS functions.
+
+- Each `copyToMpis*` function now declares:
+    `var LN = MPIS_LN; var DIV = MPIS_DIV; var dash = MPIS_DASH;`
+    `function sec(title, val) { mpisSec(parts, title, val); }`
+  and ends with `await copyText(parts.join(LN));` instead of the clipboard block.
+
+- Topbar button order in base.html corrected to match documented spec:
+    `[← Return | Save & Return] | [+ New | Clear] | [🌙 | Copy to MPIS | Export KKM PDF] | [Save Record]`
+  Previously "Destructive group" comment label was misleading; New/Clear aren't destructive
+  (New auto-saves). Comment updated to "Form group".
+
+**net result:** main.js 1164 → 1126 lines. All public APIs unchanged.
+
+---
+
+### Retrospective
+
+**What went smoothly:**
+- The refactor was safe because all helpers produce identical output — just extracted, not changed.
+- `node --check` caught nothing (good). All 3 modified JS files passed.
+- str_replace discipline held up — re-read file after each edit, no orphaned code.
+
+**What was fiddly:**
+- The spine `copyToMpisSpine()` refactor accidentally consumed the `parts.push('SPINE ASSESSMENT')`
+  line inside the str_replace. Caught by re-reading the function immediately after the edit.
+  Required a second pass to restore it. This is the orphaned-code pattern in reverse —
+  the replacement omitted a line rather than leaving dead code behind. Always re-read.
+
+**What we'd do differently:**
+- The CSS class vs inline style conflict on draft-banner was a "define it twice" bug —
+  the class was defined in CSS but the element never used it. In future: if a class exists
+  for show/hide behaviour, don't also add inline style to the element. Pick one mechanism.
+- `display:''` to "reset" an element is fragile — it inherits the element's default
+  (block for div), which isn't always what you want. Prefer explicit `display:'flex'`
+  or `display:'block'` when the rendered type matters.
+
+---
+
+### Known issues (updated)
+
+**Still open:**
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No unique constraint on episode_id in records table — ORDER BY workaround in place
+- audit_log FK has no ON DELETE CASCADE — orphaned rows harmless but untidy
+- pt_assessment.spec datas includes templates/pdf redundantly
+- No ARIA attributes anywhere (toast, progress bar, sidebar nav) — low clinical priority
+- Accessibility: sidebar nav uses onclick divs, not buttons — not keyboard navigable
+
+**Fixed this session:**
+- draft-indicator duplicate display:none ✓
+- draft-banner class/inline style conflict ✓
+- showDraftIndicator() block vs flex ✓
+- XSS in loadRecordsList() innerHTML ✓
+- Topbar button order ✓
+- MPIS code duplication (5× sec/LN/DIV/clipboard) ✓
+
+---
+
+### What to do next session
+1. Git push — this has been on the list for 3 sessions
+2. HAND or NEURO form (HAND simpler, NEURO higher clinical value)
+3. Full exe build test (all 5 forms end-to-end)
+4. Validation layer UI — surface REQUIRED_FIELDS errors to the user before save
+
+### Architecture reminders for next session
+- New MPIS formatter: use MPIS_LN/DIV/DASH + mpisSec() + copyText() — see step 8 of checklist
+- Shared helpers live at the top of the Main IIFE (lines ~10–40 in main.js)
+- Draft banner: uses CSS `.show` class toggle, not `style.display`
+- Always re-read the full replaced function after any str_replace — missing lines are as
+  dangerous as orphaned lines, and harder to spot
+
+---
 
 ## HANDOVER NOTE — Code Review Session 2026-04-26
 
