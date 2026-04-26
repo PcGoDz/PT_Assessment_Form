@@ -4,7 +4,7 @@ import threading
 import webbrowser
 from flask import Flask, render_template, request, jsonify, make_response
 from database import (
-    init_db, save_record, list_records, load_record, delete_record,
+    init_db, get_conn, save_record, list_records, load_record, delete_record,
     create_patient, search_patients, get_patient, update_patient, delete_patient,
     create_episode, get_patient_episodes, get_episode, update_episode_status,
     get_episode_record, save_soap, get_soap_notes, delete_soap
