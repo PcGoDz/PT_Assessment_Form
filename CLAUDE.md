@@ -259,6 +259,9 @@ Shortest path always. 12-21 patients/day.
 - Copy-paste route handlers are a code smell. If you're about to paste a 5th copy
   of a route, stop and write a generic handler instead.
 - sqlite3.OperationalError, not bare Exception, for migration try/except blocks.
+- When replacing a __import__() hack with a direct call, ADD the symbol to the
+  module-level imports first. The hack worked precisely because it bypassed imports.
+  Replacing the call without updating imports = NameError at runtime.
 
 ---
 
@@ -291,6 +294,12 @@ Shortest path always. 12-21 patients/day.
    All four bugs fixed this session would have been debugged eventually — as confusing
    symptoms (wrong PDF, empty form, silent error). A review pass every few sessions
    pays for itself in a project with heavy str_replace usage.
+
+6. **Replacing a hack requires understanding why the hack existed.**
+   api_stats() used __import__('database').get_conn() — ugly but functional, because
+   get_conn was never in the module-level imports. Replacing it with a direct get_conn()
+   call without adding the import = NameError at runtime. Before removing a workaround,
+   ask: what problem was this solving? Then solve that problem properly first.
 
 ### What we should have done differently
 
