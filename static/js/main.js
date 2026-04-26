@@ -913,12 +913,12 @@ const Main = (function () {
   }
 
     // ── Export PDF — auto-save if needed then export ─
-  async function exportPdf(id) {
-    if (!id) {
-      // Try auto-save first
-      var name = document.getElementById('pt-name').value.trim();
-      var date = document.getElementById('pt-date').value.trim();
-      if (!name && !date) {
+  async function exportPdf(id, formType) {
+    var needSave = !id || isDirty;
+    if (needSave) {
+      var name = document.getElementById('pt-name') ? document.getElementById('pt-name').value.trim() : '';
+      var date = document.getElementById('pt-date') ? document.getElementById('pt-date').value.trim() : '';
+      if (!id && !name && !date) {
         showToast('Fill in patient details before exporting', 'err');
         return;
       }
@@ -929,13 +929,13 @@ const Main = (function () {
         currentId = j.id;
         markClean();
         loadRecordsList();
-        API.exportPdf(currentId);
+        API.exportPdf(currentId, formType);
       } catch (e) {
         showToast('Save failed: ' + e.message, 'err');
       }
       return;
     }
-    API.exportPdf(id);
+    API.exportPdf(id, formType);
   }
 
   // ── Dark mode ────────────────────────────────
@@ -962,10 +962,172 @@ const Main = (function () {
       var d = window.ActiveForm.collect(currentId);
       formType = (d._form_type || (d.meta && d.meta.form) || 'MS').toUpperCase();
     } catch(e) { formType = 'MS'; }
-    if (formType === 'SPINE')     return copyToMpisSpine();
-    if (formType === 'GERIATRIC') return copyToMpisGeriatric();
-    if (formType === 'CR')        return copyToMpisCr();
+    if (formType === 'SPINE')      return copyToMpisSpine();
+    if (formType === 'GERIATRIC')  return copyToMpisGeriatric();
+    if (formType === 'CR')         return copyToMpisCr();
+    if (formType === 'AMPUTATION') return copyToMpisAmputation();
     return copyToMpis();
+  }
+
+  async function copyToMpisAmputation() {
+    var data = window.ActiveForm.collect(currentId);
+    var p    = data.patient || {};
+
+    var LN  = String.fromCharCode(10);
+    var DIV = '==================================================';
+    var dash= '--------------------------------------------------';
+    var parts = [];
+
+    parts.push('AMPUTATION ASSESSMENT');
+    parts.push(DIV);
+    parts.push('Name  : ' + (p.name||'') + '   Date : ' + (p.date||''));
+    if (p.pt_type === 'local') {
+      parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+    } else {
+      parts.push('Passport : ' + (p.passport||'') + '   Country : ' + (p.country||'') + '   Age : ' + (p.age||''));
+    }
+    parts.push('Sex   : ' + (p.sex||''));
+    parts.push('');
+
+    function sec(title, val) {
+      if (!val || !String(val).trim()) return;
+      parts.push(dash); parts.push(title); parts.push(String(val).trim()); parts.push('');
+    }
+    function line(label, val) {
+      if (val && String(val).trim()) parts.push(label + String(val).trim());
+    }
+
+    sec('DIAGNOSIS',           data.diagnosis);
+    sec("DOCTOR'S MANAGEMENT", data.doctors_management);
+    sec('PROBLEMS',            data.problems);
+
+    parts.push(dash); parts.push('PAIN SCALE');
+    parts.push('PRE: ' + (data.pain_pre||'0') + '/10   POST: ' + (data.pain_post||'0') + '/10');
+    line('Nature       : ', data.pain_nature);
+    line('Agg          : ', data.pain_agg);
+    line('Ease         : ', data.pain_ease);
+    line('Irritability : ', data.pain_irritability);
+    parts.push('');
+
+    parts.push(dash); parts.push('PHANTOM LIMB SENSATION');
+    parts.push('Present: ' + (data.phantom_present||'No'));
+    if (data.phantom_present === 'Yes') {
+      if (data.phantom_type)     parts.push('Type    : ' + data.phantom_type);
+      if (data.phantom_duration) parts.push('Pattern : ' + data.phantom_duration);
+      if (data.phantom_comments) parts.push('Comments: ' + data.phantom_comments);
+    }
+    parts.push('');
+
+    parts.push(dash); parts.push('SPECIAL QUESTIONS');
+    line('General Health      : ', data.sq_general_health);
+    line('PMHx / Surgery      : ', data.sq_pmhx);
+    line('Medication          : ', data.sq_medication);
+    line('Social History      : ', data.sq_social_history);
+    line('Home Accessibility  : ', data.sq_home_access);
+    line('Pre-Morbid Condition: ', data.sq_pre_morbid);
+    parts.push('');
+
+    parts.push(dash); parts.push('PROSTHETIC USAGE');
+    line('Types of Prosthesis          : ', data.prosthetic_types);
+    line('Don/Doff                     : ', data.prosthetic_don_doff);
+    line('Prosthetic Static WB         : ', data.prosthetic_static_wb);
+    line('Max Walking Distance/day     : ', data.prosthetic_max_walk);
+    line('Duration Wearing/day         : ', data.prosthetic_duration);
+    parts.push('');
+
+    sec('CURRENT HISTORY', data.current_history);
+    sec('PAST HISTORY',    data.past_history);
+
+    parts.push(dash); parts.push('OBSERVATION');
+    if (data.obs_general)         parts.push('General / Local  : ' + data.obs_general);
+    if (data.obs_stump_condition) parts.push('Stump Condition  : ' + data.obs_stump_condition);
+    if (data.obs_bandaging)       parts.push('Bandaging Skill  : ' + data.obs_bandaging);
+    if (data.obs_gait)            parts.push('Gait             : ' + data.obs_gait);
+    parts.push('');
+
+    sec('PALPATION', data.palpation);
+    sec('CARDIORESPIRATORY STATUS', data.cardio_status);
+
+    if (data.movements && data.movements.length) {
+      parts.push(dash); parts.push('MOVEMENT');
+      data.movements.forEach(function(m) {
+        if (m.joint) {
+          parts.push('  ' + m.joint + ' — Active: ' + (m.active||'—') + '  Passive: ' + (m.passive||'—') +
+            (m.comments ? '  [' + m.comments + ']' : ''));
+        }
+      });
+      parts.push('');
+    }
+
+    if (data.mmt && data.mmt.length) {
+      parts.push(dash); parts.push('MANUAL MUSCLE TESTING');
+      data.mmt.forEach(function(m) {
+        if (m.muscle || m.grade) {
+          parts.push('  ' + (m.muscle||'—') + ' (' + (m.side||'—') + ') : ' + (m.grade||'—') +
+            (m.comment ? '  — ' + m.comment : ''));
+        }
+      });
+      parts.push('');
+    }
+
+    parts.push(dash); parts.push('STUMP MEASUREMENT');
+    line('Length        : ', data.stump_length);
+    line('Circumference : ', data.stump_circumference);
+    parts.push('');
+
+    sec('CLEARING TESTS', data.clearing_tests);
+
+    parts.push(dash); parts.push('OUTCOME MEASUREMENT');
+    if (data.outcome_skipped) {
+      parts.push('Not assessed — ' + (data.outcome_skip_reason||'') +
+        (data.outcome_skip_notes ? ' (' + data.outcome_skip_notes + ')' : ''));
+    } else {
+      var mrmiTotal = 0;
+      var mrmiItems = [data.mrmi_1,data.mrmi_2,data.mrmi_3,data.mrmi_4,
+                       data.mrmi_5,data.mrmi_6,data.mrmi_7,data.mrmi_8];
+      mrmiItems.forEach(function(v){ mrmiTotal += parseInt(v||0,10); });
+      parts.push('Modified Rivermead Mobility Index  Date: ' + (data.mrmi_date||''));
+      parts.push('  1.Turning over:' + (data.mrmi_1||'') +
+        '  2.Lying-sitting:' + (data.mrmi_2||'') +
+        '  3.Sit Balance:' + (data.mrmi_3||'') +
+        '  4.Sit-Stand:' + (data.mrmi_4||''));
+      parts.push('  5.Standing:' + (data.mrmi_5||'') +
+        '  6.Transfer:' + (data.mrmi_6||'') +
+        '  7.Walking:' + (data.mrmi_7||'') +
+        '  8.Stairs:' + (data.mrmi_8||'') +
+        '  Total: ' + mrmiTotal + '/40');
+      parts.push('TUG — Aid: ' + (data.tug_walking_aid||'—') + '  Result: ' + (data.tug_distance||'—'));
+      parts.push('2MWT — Aid: ' + (data.mwt_walking_aid||'—') + '  Distance: ' + (data.mwt_distance||'—') + ' m');
+    }
+    parts.push('');
+
+    parts.push(dash); parts.push("PHYSIOTHERAPIST'S IMPRESSION");
+    if (data.pt_impression)    parts.push(data.pt_impression);
+    if (data.patient_goals)    parts.push('Patient Goals : ' + data.patient_goals);
+    if (data.short_term_goals) parts.push('STG           : ' + data.short_term_goals);
+    if (data.long_term_goals)  parts.push('LTG           : ' + data.long_term_goals);
+    if (data.plan_of_treatment)parts.push('Treatment     : ' + data.plan_of_treatment);
+    parts.push(''); parts.push(DIV);
+    parts.push('Generated by PT Assessment System');
+
+    var text = parts.join(LN);
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied! Paste into MPIS', 'ok');
+    } catch(e) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Copied! Paste into MPIS', 'ok');
+    }
+  }
+
+  function getCurrentFormType() {
+    try {
+      var d = window.ActiveForm && window.ActiveForm.collect(currentId);
+      return ((d && (d._form_type || (d.meta && d.meta.form))) || 'MS').toUpperCase();
+    } catch(e) { return 'MS'; }
   }
 
   return {
@@ -981,15 +1143,17 @@ const Main = (function () {
     restoreDraft:   restoreDraft,
     dismissDraft:   dismissDraft,
     exportPdf:      exportPdf,
-    getCurrentId:   function() { return currentId; },
+    getCurrentId:       function() { return currentId; },
+    getCurrentFormType: getCurrentFormType,
     setCurrentId:   function(id) { currentId = id; },
     clearDirty:     function() { isDirty = false; },
     get isDirty()   { return isDirty; },
-    copyToMpis:          copyToMpis,
-    copyToMpisSpine:     copyToMpisSpine,
-    copyToMpisGeriatric: copyToMpisGeriatric,
-    copyToMpisCr:        copyToMpisCr,
-    copyToMpisAuto:      copyToMpisAuto,
+    copyToMpis:               copyToMpis,
+    copyToMpisSpine:          copyToMpisSpine,
+    copyToMpisGeriatric:      copyToMpisGeriatric,
+    copyToMpisCr:             copyToMpisCr,
+    copyToMpisAmputation:     copyToMpisAmputation,
+    copyToMpisAuto:           copyToMpisAuto,
     toggleDark:     toggleDark
   };
 

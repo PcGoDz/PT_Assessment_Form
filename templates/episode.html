@@ -350,12 +350,50 @@
         <label style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);">Session Date <span style="color:var(--danger)">*</span></label>
         <input type="date" id="soap-date">
       </div>
+
+      <!-- Session Header (POMR / MPIS admin fields) -->
+      <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--bg-secondary);">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-bottom:8px;">Session Info (MPIS Header)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="soap-form-field">
+            <label style="font-size:11px;color:var(--text-muted);">Nombor Giliran</label>
+            <input type="text" id="soap-queue-no" placeholder="e.g. D003" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+          </div>
+          <div class="soap-form-field">
+            <label style="font-size:11px;color:var(--text-muted);">KPI-SS-30 Minit</label>
+            <select id="soap-kpi-30min" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+              <option value="">— Select —</option>
+              <option value="Achieved">Achieved</option>
+              <option value="Not Achieved">Not Achieved</option>
+              <option value="N/A">N/A</option>
+            </select>
+          </div>
+          <div class="soap-form-field" style="grid-column:span 2">
+            <label style="font-size:11px;color:var(--text-muted);">Dilihat (Seen By)</label>
+            <input type="text" id="soap-seen-by" placeholder="Therapist name" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+          </div>
+          <div class="soap-form-field">
+            <label style="font-size:11px;color:var(--text-muted);">Temujanji — Tarikh</label>
+            <input type="date" id="soap-next-appt" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+          </div>
+          <div class="soap-form-field">
+            <label style="font-size:11px;color:var(--text-muted);">Temujanji — Masa</label>
+            <input type="time" id="soap-next-appt-time" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+          </div>
+        </div>
+      </div>
       <div class="soap-form-field">
         <div class="soap-form-label">S &mdash; Subjective</div>
         <textarea id="soap-s" placeholder="Patient's report — pain score, symptoms, functional status, patient's own words..."></textarea>
       </div>
       <div class="soap-form-field">
-        <div class="soap-form-label">O &mdash; Objective</div>
+        <div class="soap-form-label">
+          O &mdash; Objective
+          <button type="button" id="soap-o-tpl-btn" onclick="showSoapTemplate('soap-o','objective')"
+            style="font-size:10px;padding:2px 7px;border-radius:10px;border:1px solid var(--accent-mid);background:var(--accent-light);color:var(--accent);cursor:pointer;font-family:inherit;font-weight:500;display:none;">
+            + template
+          </button>
+        </div>
         <textarea id="soap-o" placeholder="Measurements — ROM, muscle strength, VAS pre/post, special test results..."></textarea>
       </div>
       <div class="soap-form-field">
@@ -425,6 +463,18 @@ function openSoapModal(soap) {
   document.getElementById('soap-o').value = soap ? (soap.objective  || '') : '';
   document.getElementById('soap-a').value = soap ? (soap.analysis   || '') : '';
   document.getElementById('soap-p').value = soap ? (soap.plan       || '') : '';
+  // Session header fields
+  document.getElementById('soap-queue-no').value       = soap ? (soap.queue_no       || '') : '';
+  document.getElementById('soap-kpi-30min').value      = soap ? (soap.kpi_30min      || '') : '';
+  document.getElementById('soap-seen-by').value        = soap ? (soap.seen_by        || '') : '';
+  document.getElementById('soap-next-appt').value      = soap ? (soap.next_appt      || '') : '';
+  document.getElementById('soap-next-appt-time').value = soap ? (soap.next_appt_time || '') : '';
+  // Show objective template button only for forms that have objective templates
+  var oBtn = document.getElementById('soap-o-tpl-btn');
+  if (oBtn) {
+    var ft = episode ? episode.form_type : '';
+    oBtn.style.display = (ft === 'AMPUTATION') ? '' : 'none';
+  }
   document.getElementById('soap-modal').classList.add('open');
   setTimeout(function() { document.getElementById('soap-s').focus(); }, 100);
 }
@@ -440,9 +490,10 @@ document.getElementById('soap-modal').addEventListener('click', function(e) {
 function showSoapTemplate(fieldId, category) {
   var formType = episode ? episode.form_type : 'MS';
   var tplMap   = {
-    'CR':       'CR_SOAP',
-    'SPINE':    'SPINE_SOAP',
-    'GERIATRIC':'GERIATRIC_SOAP',
+    'CR':          'CR_SOAP',
+    'SPINE':       'SPINE_SOAP',
+    'GERIATRIC':   'GERIATRIC_SOAP',
+    'AMPUTATION':  'AMPUTATION_SOAP',
   };
   var tplKey = tplMap[formType] || 'MS_SOAP';
   ClinicalTemplates.show(fieldId, tplKey, category);
@@ -455,12 +506,17 @@ async function saveSoap() {
   var soapId = document.getElementById('soap-edit-id').value;
 
   var payload = {
-    id:         soapId ? parseInt(soapId) : null,
-    note_date:  date,
-    subjective: document.getElementById('soap-s').value,
-    objective:  document.getElementById('soap-o').value,
-    analysis:   document.getElementById('soap-a').value,
-    plan:       document.getElementById('soap-p').value,
+    id:              soapId ? parseInt(soapId) : null,
+    note_date:       date,
+    subjective:      document.getElementById('soap-s').value,
+    objective:       document.getElementById('soap-o').value,
+    analysis:        document.getElementById('soap-a').value,
+    plan:            document.getElementById('soap-p').value,
+    queue_no:        document.getElementById('soap-queue-no').value,
+    kpi_30min:       document.getElementById('soap-kpi-30min').value,
+    seen_by:         document.getElementById('soap-seen-by').value,
+    next_appt:       document.getElementById('soap-next-appt').value,
+    next_appt_time:  document.getElementById('soap-next-appt-time').value,
   };
 
   try {
@@ -490,28 +546,49 @@ async function deleteSoap(soapId) {
 
 // ── Copy SOAP to MPIS ──────────────────────────────────
 function copySOAPtoMpis() {
-  var LN = String.fromCharCode(10);
-  var DIV = '='.repeat(50);
+  var LN   = String.fromCharCode(10);
+  var DIV  = '='.repeat(50);
   var dash = '-'.repeat(50);
-  var date = document.getElementById('soap-date').value;
-  var s    = document.getElementById('soap-s').value;
-  var o    = document.getElementById('soap-o').value;
-  var a    = document.getElementById('soap-a').value;
-  var p    = document.getElementById('soap-p').value;
+
+  var date          = document.getElementById('soap-date').value;
+  var queueNo       = document.getElementById('soap-queue-no').value;
+  var kpi30         = document.getElementById('soap-kpi-30min').value;
+  var seenBy        = document.getElementById('soap-seen-by').value;
+  var nextAppt      = document.getElementById('soap-next-appt').value;
+  var nextApptTime  = document.getElementById('soap-next-appt-time').value;
+  var s             = document.getElementById('soap-s').value;
+  var o             = document.getElementById('soap-o').value;
+  var a             = document.getElementById('soap-a').value;
+  var p             = document.getElementById('soap-p').value;
 
   var patientName = episode ? episode.patient_name : '';
   var patientId   = episode ? (episode.ic || episode.passport || '') : '';
-  var formType    = episode ? episode.form_type : '';
 
   var parts = [];
-  parts.push('FOLLOW-UP NOTE');
+
+  // POMR header
+  parts.push('TARIKH : ' + date);
+  if (queueNo)  parts.push('NOMBOR GILIRAN : ' + queueNo);
+  if (kpi30)    parts.push('KPI-SS-30 MINIT : ' + kpi30);
+  if (seenBy)   parts.push('DILIHAT : ' + seenBy);
   parts.push(DIV);
-  parts.push('Patient : ' + patientName + '   IC : ' + patientId);
-  parts.push('Date    : ' + date + '   Form: ' + formType);
-  if (s) { parts.push(dash); parts.push('S \u2014 SUBJECTIVE'); parts.push(s); }
-  if (o) { parts.push(dash); parts.push('O \u2014 OBJECTIVE');  parts.push(o); }
-  if (a) { parts.push(dash); parts.push('A \u2014 ANALYSIS');   parts.push(a); }
-  if (p) { parts.push(dash); parts.push('P \u2014 PLAN');       parts.push(p); }
+  parts.push('Pesakit : ' + patientName + '   IC/Passport : ' + patientId);
+  parts.push('');
+
+  // SOAP content
+  if (s) { parts.push(dash); parts.push('SUBJECTIVE'); parts.push(s); parts.push(''); }
+  if (o) { parts.push(dash); parts.push('OBJECTIVE');  parts.push(o); parts.push(''); }
+  if (a) { parts.push(dash); parts.push('ANALYSIS');   parts.push(a); parts.push(''); }
+  if (p) { parts.push(dash); parts.push('PLAN / INTERVENTION'); parts.push(p); parts.push(''); }
+
+  // Temujanji
+  if (nextAppt || nextApptTime) {
+    parts.push(dash);
+    parts.push('TEMUJANJI');
+    if (nextAppt)     parts.push('Tarikh : ' + nextAppt);
+    if (nextApptTime) parts.push('Masa   : ' + nextApptTime);
+  }
+
   parts.push(DIV);
   parts.push('Generated by PT Assessment System');
 

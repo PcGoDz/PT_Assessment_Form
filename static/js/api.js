@@ -33,9 +33,10 @@ const API = {
     return res.json();
   },
 
-  exportPdf(id) {
-    // Opens PDF in new tab / triggers download
-    window.open('/api/export/' + id + '/pdf', '_blank');
+  exportPdf(id, formType) {
+    var url = '/api/export/' + id + '/pdf';
+    if (formType) url += '?form_type=' + encodeURIComponent(formType);
+    window.open(url, '_blank');
   }
 
 };

@@ -421,6 +421,22 @@ def data_table(headers, rows, col_widths, stripe=True):
 
 # ── Plan section (Impression / STG / LTG / Plan) ─────────────────
 
+def sign_chop_block(attending_pt=''):
+    """
+    Standard KKM sign & chop block. Drop anywhere in a story or column.
+    Returns a list of flowables ready to append.
+    """
+    items = [
+        gap(4),
+        Paragraph(f'Attending Physiotherapist: {attending_pt}', S_NORMAL),
+        Spacer(1, 12*mm),
+        Paragraph('..........................................', S_NORMAL),
+        Paragraph('(Sign &amp; Chop)', S_NORMAL),
+        Paragraph('Date:', S_NORMAL),
+    ]
+    return items
+
+
 def plan_section(impression, stg, ltg, treatment, width=None):
     """2x2 grid for the clinical plan."""
     w = width or CW

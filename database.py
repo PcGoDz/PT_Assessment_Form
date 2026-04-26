@@ -76,6 +76,19 @@ def init_db(db_path):
         )
     ''')
 
+    # ── Migration: add session header fields to soap_notes ──
+    for col, typedef in [
+        ('queue_no',    'TEXT DEFAULT ""'),
+        ('kpi_30min',   'TEXT DEFAULT ""'),
+        ('seen_by',     'TEXT DEFAULT ""'),
+        ('next_appt',   'TEXT DEFAULT ""'),
+        ('next_appt_time', 'TEXT DEFAULT ""'),
+    ]:
+        try:
+            conn.execute(f'ALTER TABLE soap_notes ADD COLUMN {col} {typedef}')
+        except Exception:
+            pass  # column already exists
+
     # ── Audit log ─────────────────────────────────
     conn.execute('''
         CREATE TABLE IF NOT EXISTS audit_log (
@@ -561,7 +574,9 @@ def save_soap(db_path, episode_id, soap_data):
             conn.execute('''
                 UPDATE soap_notes
                 SET note_date=?, subjective=?, objective=?,
-                    analysis=?, plan=?, updated_at=?
+                    analysis=?, plan=?, updated_at=?,
+                    queue_no=?, kpi_30min=?, seen_by=?,
+                    next_appt=?, next_appt_time=?
                 WHERE id=?
             ''', (
                 soap_data.get('note_date', ''),
@@ -569,7 +584,13 @@ def save_soap(db_path, episode_id, soap_data):
                 soap_data.get('objective', ''),
                 soap_data.get('analysis', ''),
                 soap_data.get('plan', ''),
-                now, soap_id
+                now,
+                soap_data.get('queue_no', ''),
+                soap_data.get('kpi_30min', ''),
+                soap_data.get('seen_by', ''),
+                soap_data.get('next_appt', ''),
+                soap_data.get('next_appt_time', ''),
+                soap_id
             ))
         else:
             row = conn.execute(
@@ -580,8 +601,9 @@ def save_soap(db_path, episode_id, soap_data):
             cur = conn.execute('''
                 INSERT INTO soap_notes
                     (episode_id, session_no, note_date, subjective,
-                     objective, analysis, plan, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     objective, analysis, plan, created_at, updated_at,
+                     queue_no, kpi_30min, seen_by, next_appt, next_appt_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 episode_id, next_session,
                 soap_data.get('note_date', ''),
@@ -589,7 +611,12 @@ def save_soap(db_path, episode_id, soap_data):
                 soap_data.get('objective', ''),
                 soap_data.get('analysis', ''),
                 soap_data.get('plan', ''),
-                now, now
+                now, now,
+                soap_data.get('queue_no', ''),
+                soap_data.get('kpi_30min', ''),
+                soap_data.get('seen_by', ''),
+                soap_data.get('next_appt', ''),
+                soap_data.get('next_appt_time', ''),
             ))
             soap_id = cur.lastrowid
 

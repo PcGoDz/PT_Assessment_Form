@@ -1,0 +1,776 @@
+{% extends "base.html" %}
+
+{% block form_name %}Amputee Assessment{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128202;</span> Pain &amp; Phantom</div>
+<div class="nav-item" onclick="Main.go('s-sq')"><span class="nav-icon">&#10067;</span> Special Questions</div>
+<div class="nav-item" onclick="Main.go('s-prosthetic')"><span class="nav-icon">&#129462;</span> Prosthetic Usage</div>
+<div class="nav-item" onclick="Main.go('s-chart')"><span class="nav-icon">&#128506;</span> Body Chart</div>
+<div class="nav-item" onclick="Main.go('s-hx')"><span class="nav-icon">&#128214;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-obs')"><span class="nav-icon">&#128065;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-palp')"><span class="nav-icon">&#128400;</span> Palpation &amp; CR</div>
+<div class="nav-item" onclick="Main.go('s-mov')"><span class="nav-icon">&#128260;</span> Movement &amp; MMT</div>
+<div class="nav-item" onclick="Main.go('s-stump')"><span class="nav-icon">&#128207;</span> Stump &amp; Outcome</div>
+<div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- 01 PATIENT INFO -->
+<div class="card" id="s-patient">
+  <div class="card-header">
+    <span class="sec-num">01</span>
+    <h2>Patient Information</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="FormBase.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="FormBase.onPtTypeChange()"> Foreign (Passport)</label>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="FormBase.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="pt-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option><option>Myanmar</option><option>Philippines</option>
+              <option>Thailand</option><option>Vietnam</option><option>Cambodia</option>
+              <option>Laos</option><option>Brunei</option><option>Singapore</option>
+              <option>Timor-Leste</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option><option>India</option><option>Pakistan</option>
+              <option>Nepal</option><option>Sri Lanka</option><option>Afghanistan</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option><option>Japan</option><option>South Korea</option>
+              <option>Taiwan</option><option>Hong Kong</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option>Saudi Arabia</option><option>Yemen</option><option>Iraq</option>
+              <option>Iran</option><option>Syria</option><option>Jordan</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option>Nigeria</option><option>Somalia</option><option>Ethiopia</option>
+              <option>Ghana</option><option>Kenya</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>United Kingdom</option><option>United States</option>
+              <option>Australia</option><option>Other</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob" onchange="FormBase.onDobChange(this.value)">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pt-age" placeholder="Age in years" min="0" max="120">
+        </div>
+        <div class="field" id="sex-field">
+          <label>Sex</label>
+          <div class="radio-group">
+            <label><input type="radio" name="pt-sex" value="M"> Male</label>
+            <label><input type="radio" name="pt-sex" value="F"> Female</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Referral Date</label>
+          <input type="date" id="pt-date">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 DIAGNOSIS -->
+<div class="card" id="s-dx">
+  <div class="card-header">
+    <span class="sec-num">02</span>
+    <h2>Diagnosis &amp; Management</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Diagnosis</label>
+          <textarea id="diagnosis" placeholder="As stated in referral letter or medical notes..." style="min-height:60px"></textarea>
+        </div>
+        <div class="field">
+          <label>Doctor's Management</label>
+          <select id="doctors-management" onchange="AmputationForm.onMgmtChange(this.value)">
+            <option value="">— Select —</option>
+            <option value="Conservative">Conservative</option>
+            <option value="Surgical">Surgical</option>
+          </select>
+          <div id="surgery-date-row" style="display:none;margin-top:6px;display:none;align-items:center;gap:8px;">
+            <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">Surgery date:</span>
+            <input type="date" id="surgery-date" style="flex:1">
+          </div>
+        </div>
+        <div class="field">
+          <label>Problems</label>
+          <textarea id="problems" placeholder="Main presenting problems e.g. pain, weakness, difficulty ambulating..." style="min-height:60px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 PAIN & PHANTOM -->
+<div class="card" id="s-pain">
+  <div class="card-header">
+    <span class="sec-num">03</span>
+    <h2>Pain Scale &amp; Phantom Limb Sensation</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+
+      <!-- Pain Sliders -->
+      <div class="fg c2">
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="AmputationForm.setPain('pre', this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-pre">0</div>
+          </div>
+        </div>
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="AmputationForm.setPain('post', this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-post">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg c2">
+        <div class="field">
+          <label>Nature of Pain</label>
+          <select id="pain-nature">
+            <option value="">— Select —</option>
+            <option>Sharp</option>
+            <option>Dull aching</option>
+            <option>Burning</option>
+            <option>Throbbing</option>
+            <option>Tingling / Pins &amp; needles</option>
+            <option>Cramping</option>
+            <option>Stiffness / Tightness</option>
+            <option>Tenderness</option>
+            <option>Mixed (describe in notes)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aggravating Factors (Agg)</label>
+          <input type="text" id="pain-agg" placeholder="e.g. walking, standing, wearing prosthesis...">
+        </div>
+        <div class="field">
+          <label>Easing Factors (Ease)</label>
+          <input type="text" id="pain-ease" placeholder="e.g. rest, elevation, medication...">
+        </div>
+        <div class="field">
+          <label>Irritability</label>
+          <div class="irr-chips">
+            <button class="irr-chip" id="irr-High"   onclick="AmputationForm.pickIrr('High')">High</button>
+            <button class="irr-chip" id="irr-Medium" onclick="AmputationForm.pickIrr('Medium')">Medium</button>
+            <button class="irr-chip" id="irr-Low"    onclick="AmputationForm.pickIrr('Low')">Low</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phantom Limb -->
+      <div class="section-label" style="margin-top:8px;">Phantom Limb Sensation</div>
+      <div class="field">
+        <label>Present</label>
+        <div class="radio-group">
+          <label><input type="radio" name="phantom-present" value="Yes" onchange="AmputationForm.onPhantomChange(this.value)"> Yes</label>
+          <label><input type="radio" name="phantom-present" value="No"  onchange="AmputationForm.onPhantomChange(this.value)"> No</label>
+        </div>
+      </div>
+      <div id="phantom-comments-block" style="display:none">
+        <div class="fg c2">
+          <div class="field">
+            <label>Type of Sensation</label>
+            <select id="phantom-type">
+              <option value="">— Select —</option>
+              <option>Tingling</option>
+              <option>Burning</option>
+              <option>Itching</option>
+              <option>Cramping</option>
+              <option>Pressure</option>
+              <option>Mixed</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Duration / Pattern</label>
+            <select id="phantom-duration">
+              <option value="">— Select —</option>
+              <option>Constant</option>
+              <option>Intermittent</option>
+              <option>Nocturnal</option>
+              <option>Activity-provoked</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:span 2">
+            <label>Comments (area affected, additional details)</label>
+            <textarea id="phantom-comments" placeholder="e.g. Tingling at toes of amputated foot, especially at night..." style="min-height:56px"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 04 SPECIAL QUESTIONS -->
+<div class="card" id="s-sq">
+  <div class="card-header">
+    <span class="sec-num">04</span>
+    <h2>Special Questions</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="fg c2">
+        <div class="field">
+          <label>General Health</label>
+          <textarea id="sq-general-health" placeholder="General health status, any systemic conditions or red flags..." style="min-height:64px"></textarea>
+        </div>
+        <div class="field">
+          <label>PMHx / Surgery</label>
+          <textarea id="sq-pmhx" placeholder="Significant past medical history, surgeries e.g. DM, hypertension, previous operations..." style="min-height:64px"></textarea>
+        </div>
+        <div class="field">
+          <label>Medication</label>
+          <textarea id="sq-medication" placeholder="Current medications e.g. Metformin, NSAIDs, anticoagulants, analgesics..." style="min-height:64px"></textarea>
+        </div>
+        <div class="field">
+          <label>Social History / Occupation / Recreation</label>
+          <textarea id="sq-social-history" placeholder="Occupation, nature of work, recreational activities, living situation..." style="min-height:64px"></textarea>
+        </div>
+        <div class="field">
+          <label>Home / Work Accessibility</label>
+          <textarea id="sq-home-access" placeholder="Type of housing, stairs, ramps, barriers, squat toilet, elevators..." style="min-height:64px"></textarea>
+        </div>
+        <div class="field">
+          <label>Pre–Morbid Condition</label>
+          <textarea id="sq-pre-morbid" placeholder="Functional status and mobility before amputation, use of aids, level of independence..." style="min-height:64px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 PROSTHETIC USAGE -->
+<div class="card" id="s-prosthetic">
+  <div class="card-header">
+    <span class="sec-num">05</span>
+    <h2>Prosthetic Usage</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Types of Prosthesis</label>
+        <input type="text" id="prosthetic-types" placeholder="e.g. PTB, KBM, IRC Socket, Suction, Pin Lock Suspension...">
+      </div>
+      <div class="field">
+        <label>Don / Doff Technique</label>
+        <textarea id="prosthetic-don-doff" placeholder="Technique, level of assistance, any challenges..." style="min-height:64px"></textarea>
+      </div>
+      <div class="field">
+        <label>Prosthetic Static Weight Bearing</label>
+        <textarea id="prosthetic-static-wb" placeholder="Weight distribution, balance, asymmetry, compensatory patterns..." style="min-height:64px"></textarea>
+      </div>
+      <div class="field">
+        <label>Maximum Walking Distance per day</label>
+        <input type="text" id="prosthetic-max-walk" placeholder="e.g. 50m, 200m, 1km...">
+      </div>
+      <div class="field">
+        <label>Length of Time Wearing Prosthesis per day</label>
+        <input type="text" id="prosthetic-duration" placeholder="e.g. 4 hours, all day, limited by discomfort...">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 BODY CHART -->
+<div class="card" id="s-chart">
+  <div class="card-header">
+    <span class="sec-num">06</span>
+    <h2>Body Chart</h2>
+  </div>
+  <div class="card-body">
+    <div class="body-chart-wrap">
+      <div class="body-figures">
+        <div class="fig-wrap">
+          <div class="fig-label">Anterior</div>
+          <svg class="bsvg" id="svg-ant" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,120 36,130 Q34,140 38,148 Q50,154 65,154 Q80,154 92,148 Q96,140 94,130 Q92,120 88,115 Z"/>
+              <path d="M38,148 Q32,160 30,178 Q28,196 30,212 Q36,218 44,216 Q50,200 52,182 Q54,164 50,150 Z"/>
+              <path d="M92,148 Q98,160 100,178 Q102,196 100,212 Q94,218 86,216 Q80,200 78,182 Q76,164 80,150 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M28,278 Q24,284 24,292 Q28,300 38,300 Q46,300 48,292 Q48,284 46,278 Z"/>
+              <path d="M102,278 Q106,284 106,292 Q102,300 92,300 Q84,300 82,292 Q82,284 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head"            data-view="ant"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck / Shoulder" data-view="ant"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm"           data-view="ant"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm"           data-view="ant"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Chest"           data-view="ant"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Abdomen"         data-view="ant"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm"       data-view="ant"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm"       data-view="ant"/>
+            <rect class="hit" x="34" y="150" width="34" height="68" rx="3"  data-zone="L thigh"         data-view="ant"/>
+            <rect class="hit" x="62" y="150" width="34" height="68" rx="3"  data-zone="R thigh"         data-view="ant"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L leg"           data-view="ant"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R leg"           data-view="ant"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L foot"          data-view="ant"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R foot"          data-view="ant"/>
+            <g id="markers-ant"></g>
+          </svg>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-label">Posterior</div>
+          <svg class="bsvg" id="svg-post" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,122 36,132 Q34,144 40,150 Q52,156 65,156 Q78,156 90,150 Q96,144 94,132 Q92,122 88,115 Z"/>
+              <path d="M40,150 Q32,162 30,180 Q28,198 32,214 Q38,220 46,218 Q52,202 54,184 Q56,166 50,152 Z"/>
+              <path d="M90,150 Q98,162 100,180 Q102,198 98,214 Q92,220 84,218 Q78,202 76,184 Q74,166 80,152 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M34,278 Q28,282 26,290 Q30,298 40,300 Q48,300 48,290 Q48,282 46,278 Z"/>
+              <path d="M96,278 Q102,282 104,290 Q100,298 90,300 Q82,300 82,290 Q82,282 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head (post)"        data-view="post"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck (post)"        data-view="post"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm (post)"       data-view="post"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm (post)"       data-view="post"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Upper back"         data-view="post"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Lumbar / Lower back" data-view="post"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm (post)"   data-view="post"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm (post)"   data-view="post"/>
+            <rect class="hit" x="34" y="150" width="34" height="70" rx="3"  data-zone="L hamstring"        data-view="post"/>
+            <rect class="hit" x="62" y="150" width="34" height="70" rx="3"  data-zone="R hamstring"        data-view="post"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L calf"             data-view="post"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R calf"             data-view="post"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L heel / foot (post)" data-view="post"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R heel / foot (post)" data-view="post"/>
+            <g id="markers-post"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-controls">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click figure</div>
+          <div class="pain-type-sel" id="ptype-sel">
+            <button class="pt-chip ptype-ache active" data-ptype="ache">Ache</button>
+            <button class="pt-chip ptype-sharp"       data-ptype="sharp">Sharp</button>
+            <button class="pt-chip ptype-numb"        data-ptype="numb">Numbness</button>
+            <button class="pt-chip ptype-burn"        data-ptype="burn">Burning</button>
+            <button class="pt-chip ptype-refer"       data-ptype="refer">Referred</button>
+            <button class="pt-chip ptype-tender"      data-ptype="tender">Tenderness</button>
+          </div>
+        </div>
+        <div>
+          <div class="list-header">
+            <span>Marked Locations</span>
+            <button class="btn-sm" onclick="BodyChart.clearAll()">Clear all</button>
+          </div>
+          <div class="marker-list" id="marker-list">
+            <div class="empty-hint" id="empty-hint">No markers yet</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Body Chart Notes</label>
+          <textarea id="chart-notes" placeholder="Amputation level, side, pain location, phantom limb area..." style="min-height:56px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 HISTORY -->
+<div class="card" id="s-hx">
+  <div class="card-header">
+    <span class="sec-num">07</span>
+    <h2>History</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Current History</label>
+        <textarea id="current-history" placeholder="Site of amputation, date, reason (DM, PVD, trauma, malignancy), description of amputation episode, post-op complications..." style="min-height:120px"></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="past-history" placeholder="Previous amputation history, prior foot ulcers or vascular interventions, relevant past medical events..." style="min-height:120px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 OBSERVATION -->
+<div class="card" id="s-obs">
+  <div class="card-header">
+    <span class="sec-num">08</span>
+    <h2>Observation</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="section-label">General / Local</div>
+      <div class="field">
+        <label>General Observation</label>
+        <textarea id="obs-general" placeholder="Body size, posture, facial expression, cognitive status, mobility with/without prosthesis..." style="min-height:72px"></textarea>
+      </div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Stump Condition</label>
+          <textarea id="obs-stump-condition" placeholder="Shape (conical/cylindrical/bulbous), scar condition, swelling, muscle wasting, skin colour/temperature, signs of infection or irritation..." style="min-height:100px"></textarea>
+        </div>
+        <div class="fg" style="align-content:start;gap:12px;">
+          <div class="field">
+            <label>Bandaging Skill</label>
+            <input type="text" id="obs-bandaging" placeholder="e.g. Figure-of-8, independent, requires assistance, uneven pressure...">
+          </div>
+          <div class="field">
+            <label>Gait</label>
+            <input type="text" id="obs-gait" placeholder="e.g. step-to gait with walker, Trendelenburg, vaulting, circumduction...">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 PALPATION & CR -->
+<div class="card" id="s-palp">
+  <div class="card-header">
+    <span class="sec-num">09</span>
+    <h2>Palpation &amp; Cardiorespiratory Status</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Palpation</label>
+        <textarea id="palpation" placeholder="Warmth, swelling (localised/general), muscle spasm or tightness, tenderness on touch..." style="min-height:100px"></textarea>
+      </div>
+      <div class="field">
+        <label>Cardiorespiratory Status <span style="font-weight:400;font-size:11px;">(if relevant)</span></label>
+        <textarea id="cardio-status" placeholder="Breathing pattern, HR, RR, SpO₂, chest expansion, SOB, abnormal breath sounds..." style="min-height:100px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 MOVEMENT & MMT -->
+<div class="card" id="s-mov">
+  <div class="card-header">
+    <span class="sec-num">10</span>
+    <h2>Movement &amp; Manual Muscle Testing</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg" style="gap:20px;">
+
+      <!-- Movement Table -->
+      <div>
+        <div class="section-label">Range of Motion</div>
+        <div class="mov-table-wrap">
+          <table class="mov-table">
+            <thead>
+              <tr>
+                <th style="min-width:160px;">Joint</th>
+                <th style="min-width:130px;">Active ROM</th>
+                <th style="min-width:130px;">Passive ROM</th>
+                <th style="min-width:200px;">Comments</th>
+              </tr>
+            </thead>
+            <tbody id="movement-table-body">
+              <tr>
+                <td><input type="text" placeholder="e.g. Hip, Knee..."></td>
+                <td><input type="text" placeholder="e.g. 0–90°"></td>
+                <td><input type="text" placeholder="e.g. 0–95°"></td>
+                <td><input type="text" placeholder="Comments..."></td>
+              </tr>
+              <tr>
+                <td><input type="text" placeholder="e.g. Hip, Knee..."></td>
+                <td><input type="text" placeholder="e.g. 0–90°"></td>
+                <td><input type="text" placeholder="e.g. 0–95°"></td>
+                <td><input type="text" placeholder="Comments..."></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="mov-add-btn" onclick="AmputationForm.addMovRow()">+ Add row</button>
+      </div>
+
+      <!-- MMT -->
+      <div>
+        <div class="section-label">Manual Muscle Testing (MMT) — Oxford Scale 0–5</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">0=no contraction · 1=flicker · 2=gravity eliminated · 3=against gravity · 4=against resistance · 5=normal</div>
+        <div class="mov-table-wrap">
+          <table class="mov-table" id="mmt-table">
+            <thead>
+              <tr>
+                <th style="min-width:180px;">Muscle Group</th>
+                <th style="min-width:80px;">Side</th>
+                <th style="min-width:80px;">Grade (0–5)</th>
+                <th style="min-width:160px;">Comments</th>
+              </tr>
+            </thead>
+            <tbody id="mmt-tbody">
+              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
+              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
+              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
+              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="mov-add-btn" onclick="AmputationForm.addMmtRow()">+ Add row</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 11 STUMP MEASUREMENT & OUTCOME -->
+<div class="card" id="s-stump">
+  <div class="card-header">
+    <span class="sec-num">11</span>
+    <h2>Stump Measurement &amp; Outcome Measurement</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg" style="gap:20px;">
+
+      <!-- Stump Measurement -->
+      <div class="section-label">Stump Measurement</div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Length (cm)</label>
+          <input type="text" id="stump-length" placeholder="e.g. Trans-tibial: from tibial plateau to distal end = 18 cm">
+        </div>
+        <div class="field">
+          <label>Circumference (cm)</label>
+          <input type="text" id="stump-circumference" placeholder="e.g. Distal: 24 cm, 5 cm proximal: 26 cm, 10 cm proximal: 28 cm">
+        </div>
+      </div>
+
+      <!-- Clearing Tests -->
+      <div class="field">
+        <label>Clearing Tests and Measurements</label>
+        <textarea id="clearing-tests" placeholder="Proximal joint clearing e.g. Hip quadrant test, passive joint ROM, lumbar screening, additional tests..." style="min-height:72px"></textarea>
+      </div>
+
+      <!-- Outcome Measurement -->
+      <div class="section-label" style="margin-top:4px;">Outcome Measurement</div>
+
+      <div class="field" style="background:var(--bg-secondary);border-radius:8px;padding:12px 14px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;">
+          <input type="checkbox" id="outcome-skipped" onchange="AmputationForm.onOutcomeSkip(this.checked)" style="width:16px;height:16px;">
+          Outcome measures not assessed at this visit
+        </label>
+      </div>
+
+      <div id="outcome-skip-block" style="display:none">
+        <div class="fg c2">
+          <div class="field">
+            <label>Reason</label>
+            <select id="outcome-skip-reason">
+              <option value="">— Select reason —</option>
+              <option value="Patient declined">Patient declined</option>
+              <option value="Deferred to next visit">Deferred to next visit</option>
+              <option value="Not applicable at this stage">Not applicable at this stage</option>
+              <option value="Medical condition precluding assessment">Medical condition precluding assessment</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Notes</label>
+            <input type="text" id="outcome-skip-notes" placeholder="Additional notes...">
+          </div>
+        </div>
+      </div>
+
+      <div id="outcome-scores-block">
+        <!-- MRMI -->
+        <div class="section-label" style="font-size:12px;margin-bottom:8px;">a) Modified Rivermead Mobility Index (MRMI)</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Score: 0=unable · 1=assist×2 · 2=assist×1 · 3=supervision · 4=aids · 5=independent</div>
+        <div class="mov-table-wrap" style="max-width:500px;">
+          <table class="mov-table">
+            <thead>
+              <tr><th style="width:55%">Item</th><th>Score (0–5)</th><th style="width:40px">Date</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1. Turning over</td>        <td><select id="mrmi-1"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td><td rowspan="8" style="vertical-align:middle;"><input type="date" id="mrmi-date" style="writing-mode:initial;width:120px;"></td></tr>
+              <tr><td>2. Lying to sitting</td>    <td><select id="mrmi-2"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+              <tr><td>3. Sitting Balance</td>     <td><select id="mrmi-3"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+              <tr><td>4. Sitting to Standing</td> <td><select id="mrmi-4"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+              <tr><td>5. Standing</td>             <td><select id="mrmi-5"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+              <tr><td>6. Transfer</td>             <td><select id="mrmi-6"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+              <tr><td>7. Walking Indoors</td>     <td><select id="mrmi-7"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+              <tr><td>8. Stairs</td>              <td><select id="mrmi-8"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TUG -->
+        <div class="section-label" style="font-size:12px;margin-top:12px;margin-bottom:8px;">b) Timed Up and Go (TUG)</div>
+        <div class="fg c2" style="max-width:600px;">
+          <div class="field">
+            <label>Walking Aid Used</label>
+            <select id="tug-walking-aid">
+              <option value="">— Select —</option>
+              <option>None</option>
+              <option>Walking frame / Zimmer</option>
+              <option>Rollator</option>
+              <option>Axillary crutches</option>
+              <option>Elbow crutches</option>
+              <option>Quad stick</option>
+              <option>Walking stick</option>
+              <option>Prosthesis only</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Time (seconds)</label>
+            <input type="text" id="tug-distance" placeholder="e.g. 28 sec">
+          </div>
+        </div>
+
+        <!-- 2MWT -->
+        <div class="section-label" style="font-size:12px;margin-top:12px;margin-bottom:8px;">c) 2-Minute Walk Test (2MWT)</div>
+        <div class="fg c2" style="max-width:600px;">
+          <div class="field">
+            <label>Walking Aid Used</label>
+            <select id="mwt-walking-aid">
+              <option value="">— Select —</option>
+              <option>None</option>
+              <option>Walking frame / Zimmer</option>
+              <option>Rollator</option>
+              <option>Axillary crutches</option>
+              <option>Elbow crutches</option>
+              <option>Quad stick</option>
+              <option>Walking stick</option>
+              <option>Prosthesis only</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Distance Covered (m)</label>
+            <input type="text" id="mwt-distance" placeholder="e.g. 65 m">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- 12 PT IMPRESSION & GOALS -->
+<div class="card" id="s-plan">
+  <div class="card-header">
+    <span class="sec-num">12</span>
+    <h2>PT Impression &amp; Goals</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Physiotherapist's Impression</label>
+        <textarea id="pt-impression" placeholder="Clinical summary integrating subjective and objective findings..." style="min-height:88px"></textarea>
+      </div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Patient's Goals</label>
+          <textarea id="patient-goals" placeholder="What does the patient want to achieve? Relevant to daily life, occupation, social roles..." style="min-height:80px"></textarea>
+        </div>
+        <div class="field">
+          <label>Short Term Goals</label>
+          <textarea id="short-term-goals" placeholder="SMART goals achievable within days to weeks..." style="min-height:80px"></textarea>
+        </div>
+        <div class="field">
+          <label>Long Term Goals</label>
+          <textarea id="long-term-goals" placeholder="SMART goals over weeks to months — functional independence, quality of life..." style="min-height:80px"></textarea>
+        </div>
+        <div class="field">
+          <label>Plan of Treatment</label>
+          <textarea id="plan-of-treatment" placeholder="Physiotherapy interventions: pain management, stump care, strengthening, gait training, endurance, HEP, discharge planning..." style="min-height:80px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/form_amputation.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var FM = 'AMPUTATION';
+  ClinicalTemplates.addButton('obs-general',       FM, 'observation');
+  ClinicalTemplates.addButton('obs-stump-condition',FM, 'observation');
+  ClinicalTemplates.addButton('palpation',         FM, 'palpation');
+  ClinicalTemplates.addButton('pt-impression',     FM, 'impression');
+  ClinicalTemplates.addButton('short-term-goals',  FM, 'stg');
+  ClinicalTemplates.addButton('long-term-goals',   FM, 'ltg');
+  ClinicalTemplates.addButton('plan-of-treatment', FM, 'treatment');
+});
+</script>
+{% endblock %}

@@ -232,6 +232,90 @@ const ClinicalTemplates = (function () {
         'Continue current plan. Reassess Berg and TUG next session to track progress.',
       ],
     },
+
+    AMPUTATION: {
+      observation: [
+        'Stump conical, well-healed scar, no signs of infection or skin breakdown.',
+        'Stump oedematous, figure-of-8 bandaging applied. Skin intact.',
+        'Stump cylindrical, mature. Prosthetic fitting assessment completed.',
+        'Residual limb — mild redness at distal end. Socket fit reviewed.',
+        'Stump wound healing well. Sutures intact. No discharge. Temperature normal.',
+        'Wound dehiscence noted distally. Referred to surgical team for review.',
+      ],
+      palpation: [
+        'No excessive warmth. Mild tenderness at distal stump on direct pressure.',
+        'Moderate tenderness at scar. No warmth or crepitus. Soft tissue mobility intact.',
+        'Warmth present — monitor for infection. No fluctuance. Referred for review.',
+        'Stump soft, non-tender. Good tissue pliability. Ready for prosthetic fitting.',
+      ],
+      impression: [
+        'Patient with transtibial amputation, stump well-healed. Fair mobility with walking aid. Requires strengthening and gait training with prosthesis.',
+        'Patient with transfemoral amputation, good stump condition. Limited endurance. Pre-prosthetic rehabilitation phase commenced.',
+        'Patient ambulant with prosthesis, gait deviations noted. Requires gait re-education and prosthetic socket review.',
+        'Post-amputation — pre-prosthetic phase. Stump oedema management and strengthening in progress.',
+        'Prosthetic rehabilitation progressing. Patient achieving short-term mobility goals. Independence improving.',
+      ],
+      stg: [
+        'Reduce stump oedema within 2 weeks — independent with bandaging technique.',
+        'Improve hip extensor/abductor strength to 4/5 within 4 weeks.',
+        'Ambulate 20m with walker safely within 2 weeks.',
+        'Independent with prosthetic don/doff within 2 weeks.',
+        'Reduce phantom limb pain to < 3/10 within 2 weeks.',
+        'Achieve sitting balance Grade 3 (unsupported, dynamic) within 1 week.',
+        'Transfer independently bed to chair within 1 week.',
+      ],
+      ltg: [
+        'Independent ambulation with prosthesis > 100m within 8 weeks.',
+        'Safe stair climbing with prosthesis within 12 weeks.',
+        'Return to ADLs independently within 8 weeks.',
+        'Community ambulation with prosthesis within 12 weeks.',
+        'Return to occupational / recreational activities within 3 months.',
+        'Independent with HEP and home walking program at discharge.',
+      ],
+      treatment: [
+        'Stump care — bandaging, skin inspection, scar management. Positioning to prevent contracture.',
+        'Strengthening — hip extensors, abductors, core stability, upper limb for aid use.',
+        'Gait training — parallel bars to walker to crutches. Focus on symmetry and safety.',
+        'Prosthetic training — weight shift, balance, don/doff, socket skin inspection.',
+        'Endurance training — progressive walking distance targets based on 2MWT.',
+        'Functional retraining — transfers, stair practice, ADL simulation.',
+        'Pain management — desensitisation, soft tissue mobilisation, cryotherapy.',
+        'Education — stump care, bandaging technique, skin monitoring, HEP.',
+        'Discharge planning — HEP issued, safety advice, community follow-up arranged.',
+      ],
+    },
+
+    AMPUTATION_SOAP: {
+      objective: [
+        'MRMI: Turning over __/5  Lying-sitting __/5  Sit balance __/5  Sit-stand __/5  Standing __/5  Transfer __/5  Walking __/5  Stairs __/5  Total __/40\nTUG: __ sec  Aid: __\n2MWT: __ m  Aid: __',
+        'Stump: Shape __  Skin intact Y/N  Redness __  Oedema __\nBandaging: __  Gait: __\nVAS PRE: __/10  POST: __/10',
+        'ROM: Hip flex __  Hip ext __  Hip abd __  Knee ext __\nMMT: Hip flex __/5  Hip ext __/5  Hip abd __/5  Knee ext __/5',
+      ],
+      analysis: [
+        'Stump oedema reducing. Bandaging technique improving. Progressing to prosthetic phase.',
+        'Gait deviations noted — lateral trunk bending, vaulting. Targeting hip abductor strengthening.',
+        'Prosthetic walking distance increasing. Endurance improving. On track for community ambulation.',
+        'Phantom limb pain reducing with desensitisation. Sleep quality improving.',
+        'MRMI score improved from last session. Functional mobility gains noted.',
+        'TUG time reduced — fall risk improving. Patient gaining confidence with prosthesis.',
+        'Hip flexion contracture risk — reinforcing prone lying and stretching program.',
+        'Socket fit issues reported — skin redness at proximal brim. Orthotist referral arranged.',
+        'Plateau noted in walking distance. Reviewing prosthetic alignment and exercise progression.',
+        'Nearing discharge criteria — independent with prosthesis on level surface and stairs.',
+      ],
+      plan: [
+        'Continue stump care — bandaging, skin check, scar massage. Monitor wound.',
+        'Progress hip strengthening — increase resistance, add closed chain exercises.',
+        'Gait training — extend distance, introduce uneven terrain, outdoor walking.',
+        'Prosthetic training — step-over-step stairs, ramps, curbs.',
+        'Balance training — single leg stance, perturbation training, parallel bar work.',
+        'Endurance training — 2MWT progression, increase target distance.',
+        'Desensitisation techniques — tapping, rubbing, mirror therapy for phantom pain.',
+        'HEP reviewed and progressed. Reinforce compliance and home walking program.',
+        'Discharge planning in progress — ensure independence with HEP and safety.',
+        'Continue current plan. Reassess MRMI and TUG next session.',
+      ],
+    },
   };
 
   // ── State ───────────────────────────────────────────────────────
@@ -326,8 +410,9 @@ const ClinicalTemplates = (function () {
     var cur = activeField.value.trim();
     activeField.value = cur ? cur + '\n' + text : text;
     activeField.dispatchEvent(new Event('input', { bubbles: true }));
+    var field = activeField;  // save ref before hide() nulls activeField
     hide();
-    activeField.focus();
+    if (field) field.focus();
   }
 
   function hide() {

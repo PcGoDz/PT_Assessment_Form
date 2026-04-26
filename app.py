@@ -15,19 +15,22 @@ import pdf_ms
 import pdf_spine
 import pdf_geriatric
 import pdf_cr
+import pdf_amputation
 
 _PDF_GENERATORS = {
-    'MS':        pdf_ms.generate_episode_pdf,
-    'SPINE':     pdf_spine.generate_episode_pdf,
-    'GERIATRIC': pdf_geriatric.generate_episode_pdf,
-    'CR':        pdf_cr.generate_episode_pdf,
+    'MS':         pdf_ms.generate_episode_pdf,
+    'SPINE':      pdf_spine.generate_episode_pdf,
+    'GERIATRIC':  pdf_geriatric.generate_episode_pdf,
+    'CR':         pdf_cr.generate_episode_pdf,
+    'AMPUTATION': pdf_amputation.generate_episode_pdf,
 }
 
 _SINGLE_PDF_GENERATORS = {
-    'MS':        pdf_ms.generate_ms_pdf,
-    'SPINE':     pdf_spine.generate_spine_pdf,
-    'GERIATRIC': pdf_geriatric.generate_geriatric_pdf,
-    'CR':        pdf_cr.generate_cr_pdf,
+    'MS':         pdf_ms.generate_ms_pdf,
+    'SPINE':      pdf_spine.generate_spine_pdf,
+    'GERIATRIC':  pdf_geriatric.generate_geriatric_pdf,
+    'CR':         pdf_cr.generate_cr_pdf,
+    'AMPUTATION': pdf_amputation.generate_amputation_pdf,
 }
 
 
@@ -61,7 +64,7 @@ FORM_REGISTRY = [
     { 'id': 'MS',          'label': 'Musculoskeletal',    'icon': '&#129460;', 'badge': 'MS',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'SPINE',       'label': 'Spine',              'icon': '&#128279;', 'badge': 'SP',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',  'ready': False },
-    { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',  'ready': False },
+    { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',  'ready': False },
     # ── Neurological ─────────────────────────────────
     { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',     'ready': False },
@@ -141,6 +144,18 @@ def form_spine():
     return render_template('forms/spine.html',
         episode_id=episode_id, patient_id=patient_id,
         patient=patient, current_form='SPINE')
+
+
+@app.route('/form/amputation')
+def form_amputation():
+    episode_id = request.args.get('episode_id', type=int)
+    patient_id = request.args.get('patient_id', type=int)
+    patient    = None
+    if patient_id:
+        patient, _ = get_patient(DB_PATH, patient_id)
+    return render_template('forms/amputation.html',
+        episode_id=episode_id, patient_id=patient_id,
+        patient=patient, current_form='AMPUTATION')
 
 
 # ── Patient API ──────────────────────────────────────────────────
@@ -358,8 +373,9 @@ def export_pdf(record_id):
     if err:
         return jsonify({'error': err}), 404
     try:
-        # Check both _form_type and meta.form for compatibility
-        _form_type = str(
+        # Priority: ?form_type= query param > _form_type in data > meta.form > MS
+        _form_type = (
+            request.args.get('form_type') or
             data.get('_form_type') or
             (data.get('meta') or {}).get('form') or
             'MS'

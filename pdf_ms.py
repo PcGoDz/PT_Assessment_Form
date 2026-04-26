@@ -6,7 +6,7 @@ from reportlab.lib.units import mm
 from reportlab.lib import colors
 from pdf_platypus_base import (
     build_pdf, page_header, patient_bar, body_chart_section,
-    box, two_col, plan_section, soap_page,
+    box, two_col, plan_section, soap_page, sign_chop_block,
     data_table, gap, tick,
     S_LABEL, S_NORMAL, S_SMALL,
     CW, LW, RW, BLACK, LGREY
@@ -143,22 +143,8 @@ def _build_story(d):
         story.append(gap(2))
         story.append(box('REMARKS / PRECAUTIONS', plan.get('remarks','')))
 
-    story.append(gap(3))
-    sign_content = [
-        Paragraph('Attending Physiotherapist :  ………………………………………………………………………………………', S_NORMAL),
-        Spacer(1, 4*mm),
-        Paragraph('Date :  _______________________&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sign &amp; Stamp :', S_NORMAL),
-    ]
-    sign = Table([[sign_content]], colWidths=[CW])
-    sign.setStyle(TableStyle([
-        ('BOX',          (0,0),(-1,-1), 0.5, BLACK),
-        ('TOPPADDING',   (0,0),(-1,-1), 8),
-        ('BOTTOMPADDING',(0,0),(-1,-1), 8),
-        ('LEFTPADDING',  (0,0),(-1,-1), 6),
-        ('RIGHTPADDING', (0,0),(-1,-1), 6),
-        ('VALIGN',       (0,0),(-1,-1), 'TOP'),
-    ]))
-    story.append(sign)
+    story += sign_chop_block()
+
     return story
 
 
