@@ -113,9 +113,11 @@ REQUIRED_FIELDS = {
         ('patient.name', 'Patient name is required'),
         ('patient.date', 'Assessment date is required'),
     ],
-    'MS':        [('diagnosis', 'Diagnosis is required')],
-    'SPINE':     [('diagnosis', 'Diagnosis is required')],
-    'GERIATRIC': [('diagnosis', 'Diagnosis is required')],
+    'MS':          [('diagnosis', 'Diagnosis is required')],
+    'SPINE':       [('diagnosis', 'Diagnosis is required')],
+    'GERIATRIC':   [('diagnosis', 'Diagnosis is required')],
+    'CR':          [('diagnosis', 'Diagnosis is required')],
+    'AMPUTATION':  [('impression', 'PT Impression is required')],
 }
 
 

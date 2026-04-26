@@ -4,7 +4,7 @@ import threading
 import webbrowser
 from flask import Flask, render_template, request, jsonify, make_response
 from database import (
-    init_db, get_conn, save_record, list_records, load_record, delete_record,
+    init_db, save_record, list_records, load_record, delete_record,
     create_patient, search_patients, get_patient, update_patient, delete_patient,
     create_episode, get_patient_episodes, get_episode, update_episode_status,
     get_episode_record, save_soap, get_soap_notes, delete_soap
@@ -98,64 +98,29 @@ def episode_detail(episode_id):
     return render_template('episode.html', episode_id=episode_id)
 
 
-@app.route('/form/ms')
-def form_ms():
+# ── Form templates — add new forms here only ────────────────────
+FORM_TEMPLATES = {
+    'MS':          'forms/ms.html',
+    'SPINE':       'forms/spine.html',
+    'GERIATRIC':   'forms/geriatric.html',
+    'CR':          'forms/cr.html',
+    'AMPUTATION':  'forms/amputation.html',
+}
+
+@app.route('/form/<form_id>')
+def form_view(form_id):
+    form_id  = form_id.upper()
+    template = FORM_TEMPLATES.get(form_id)
+    if not template:
+        return jsonify({'error': f'Form {form_id} not found'}), 404
     episode_id = request.args.get('episode_id', type=int)
     patient_id = request.args.get('patient_id', type=int)
     patient    = None
     if patient_id:
         patient, _ = get_patient(DB_PATH, patient_id)
-    return render_template('forms/ms.html',
+    return render_template(template,
         episode_id=episode_id, patient_id=patient_id,
-        patient=patient, current_form='MS')
-
-
-@app.route('/form/geriatric')
-def form_geriatric():
-    episode_id = request.args.get('episode_id', type=int)
-    patient_id = request.args.get('patient_id', type=int)
-    patient    = None
-    if patient_id:
-        patient, _ = get_patient(DB_PATH, patient_id)
-    return render_template('forms/geriatric.html',
-        episode_id=episode_id, patient_id=patient_id,
-        patient=patient, current_form='GERIATRIC')
-
-
-@app.route('/form/cr')
-def form_cr():
-    episode_id = request.args.get('episode_id', type=int)
-    patient_id = request.args.get('patient_id', type=int)
-    patient    = None
-    if patient_id:
-        patient, _ = get_patient(DB_PATH, patient_id)
-    return render_template('forms/cr.html',
-        episode_id=episode_id, patient_id=patient_id,
-        patient=patient, current_form='CR')
-
-
-@app.route('/form/spine')
-def form_spine():
-    episode_id = request.args.get('episode_id', type=int)
-    patient_id = request.args.get('patient_id', type=int)
-    patient    = None
-    if patient_id:
-        patient, _ = get_patient(DB_PATH, patient_id)
-    return render_template('forms/spine.html',
-        episode_id=episode_id, patient_id=patient_id,
-        patient=patient, current_form='SPINE')
-
-
-@app.route('/form/amputation')
-def form_amputation():
-    episode_id = request.args.get('episode_id', type=int)
-    patient_id = request.args.get('patient_id', type=int)
-    patient    = None
-    if patient_id:
-        patient, _ = get_patient(DB_PATH, patient_id)
-    return render_template('forms/amputation.html',
-        episode_id=episode_id, patient_id=patient_id,
-        patient=patient, current_form='AMPUTATION')
+        patient=patient, current_form=form_id)
 
 
 # ── Patient API ──────────────────────────────────────────────────
@@ -339,7 +304,11 @@ def export_episode_pdf(episode_id):
         ep, err = get_episode(DB_PATH, episode_id)
         if err or not ep:
             return jsonify({'error': err or 'Episode not found'}), 404
-        _form_type = ep.get('form_type', 'MS').upper()
+        # Priority: ?form_type= query param > stored episode form_type
+        _form_type = (
+            request.args.get('form_type') or
+            ep.get('form_type', 'MS')
+        ).upper()
         generate_episode_pdf = _PDF_GENERATORS.get(_form_type, pdf_ms.generate_episode_pdf)
         assessment, _ = get_episode_record(DB_PATH, episode_id)
         soaps, _      = get_soap_notes(DB_PATH, episode_id)

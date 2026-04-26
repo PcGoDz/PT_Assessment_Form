@@ -102,9 +102,8 @@ getCurrentFormType() checks d._form_type first (amputation/cr/etc), then d.meta.
 ## Adding a New Form — Full Checklist
 
 1.  Add entry to FORM_REGISTRY in app.py, set ready=True
-2.  Add /form/xxx route in app.py passing current_form='XXX', episode_id, patient_id, patient
-    NOTE: These 5 routes are copy-paste duplicates. A generic /form/<form_id> route is on the
-    TODO — until that's done, copy carefully and don't miss wiring the template name.
+2.  Add form to FORM_TEMPLATES dict in app.py (one line — generic route handles the rest)
+    e.g. 'HAND': 'forms/hand.html'
 3.  Create templates/forms/xxx.html extending base.html
     - Only needs: form HTML sections + extra_js block with form-specific init
     - NO boilerplate needed — initFormContext() handles patient prefill, nav buttons, auto-load
@@ -504,12 +503,10 @@ Shortest path always. 12-21 patients/day.
 ### High Priority
 - [ ] HAND or NEURO form (HAND simpler warmup; NEURO higher clinical volume)
 - [ ] Full end-to-end test of exe build (all 5 forms)
-- [ ] Git push — this has been on the list too long
-- [ ] Add CR + AMPUTATION entries to REQUIRED_FIELDS in database.py
+- [x] Git push — done manually
 
 ### Medium Priority
-- [ ] Validation layer — hard stop on required fields before save (REQUIRED_FIELDS exists, just needs CR/AMPUTATION + UI enforcement)
-- [ ] Generic form route /form/<form_id> to replace 5 copy-paste handlers in app.py
+- [ ] Validation layer — UI enforcement (hard stop before save — REQUIRED_FIELDS already covers all 5 forms, just needs frontend to surface the errors)
 - [ ] Geriatric duplicate RN/IC fields cleanup (cosmetic, low effort)
 - [ ] Age auto-calculation bug (NRIC->age, DOB->age) — still unresolved, revisit when building NEURO
 
@@ -518,6 +515,15 @@ Shortest path always. 12-21 patients/day.
 - [ ] Versioning UI (audit_log data exists, no UI yet)
 - [ ] Remaining 10 forms: BURN, SCI, VESTIBULAR, FACIAL, PAEDIATRIC, LYMPHOEDEMA, NCD, GENERAL
 - [ ] POMR-aligned MPIS output for assessment forms (currently uses assessment format)
+
+### Done this session
+- [x] Dead code removed from export_pdf() in app.py
+- [x] get_episode_record() ORDER BY updated_at DESC LIMIT 1
+- [x] api_stats() get_conn import fixed
+- [x] ALTER TABLE exception narrowed to sqlite3.OperationalError
+- [x] Generic /form/<form_id> route replacing 5 copy-paste handlers
+- [x] export_episode_pdf() respects ?form_type= query param
+- [x] CR + AMPUTATION added to REQUIRED_FIELDS
 
 ---
 
@@ -593,8 +599,11 @@ POMR format uses Malay headers (TARIKH, NOMBOR GILIRAN, DILIHAT, TEMUJANJI) + En
 - [x] PyInstaller .exe build (Windows, build.bat)
 - [x] Code review: dead code removed from export_pdf() in app.py
 - [x] Code review: get_episode_record() now ORDER BY updated_at DESC LIMIT 1 (deterministic)
-- [x] Code review: api_stats() __import__ hack replaced with direct imports
+- [x] Code review: api_stats() __import__ hack replaced with direct imports + get_conn added to imports
 - [x] Code review: migration ALTER TABLE now catches sqlite3.OperationalError not bare Exception
+- [x] Generic form route /form/<form_id> replacing 5 copy-paste handlers — add to FORM_TEMPLATES for new forms
+- [x] export_episode_pdf() now respects ?form_type= query param (same as single record export)
+- [x] CR and AMPUTATION added to REQUIRED_FIELDS in database.py
 
 ---
 
