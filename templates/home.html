@@ -1266,8 +1266,8 @@ async function loadEpisodes(patientId) {
       var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation' }[ep.form_type] || ep.form_type;
       var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;' }[ep.form_type] || '&#128203;';
       var rawStatus  = ep.status || 'active';
-      var statusBase = rawStatus.split('|')[0];  // strip reason
-      var statusReason = rawStatus.includes('|') ? rawStatus.split('|')[1] : '';
+      var statusBase = rawStatus.split('|')[0];  // backwards-compat for old records
+      var statusReason = ep.discharge_reason || (rawStatus.includes('|') ? rawStatus.split('|')[1] : '');
       var statusCls  = 'status-' + statusBase.replace(/\s+/g,'-').toLowerCase();
       var hasAssess = ep.has_assessment > 0;
       var soaps     = ep.soap_count || 0;

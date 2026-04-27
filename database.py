@@ -76,6 +76,12 @@ def init_db(db_path):
         )
     ''')
 
+    # ── Migration: add discharge_reason column to episodes ──
+    try:
+        conn.execute('ALTER TABLE episodes ADD COLUMN discharge_reason TEXT DEFAULT ""')
+    except sqlite3.OperationalError:
+        pass  # column already exists
+
     # ── Migration: add session header fields to soap_notes ──
     for col, typedef in [
         ('queue_no',    'TEXT DEFAULT ""'),
@@ -275,24 +281,24 @@ def delete_patient(db_path, patient_id):
     """Cascade delete patient and ALL related data. Irreversible."""
     conn = get_conn(db_path)
     try:
-        # Get all episode IDs for this patient
-        eps = conn.execute(
-            'SELECT id FROM episodes WHERE patient_id=?', (patient_id,)
-        ).fetchall()
-        for ep in eps:
-            eid = ep['id']
-            # Delete SOAP notes
-            conn.execute('DELETE FROM soap_notes WHERE episode_id=?', (eid,))
-            # Get record IDs to clean audit log
-            recs = conn.execute(
-                'SELECT id FROM records WHERE episode_id=?', (eid,)
+        with conn:  # atomic — all-or-nothing, auto-rollback on exception
+            # Get all episode IDs for this patient
+            eps = conn.execute(
+                'SELECT id FROM episodes WHERE patient_id=?', (patient_id,)
             ).fetchall()
-            for rec in recs:
-                conn.execute('DELETE FROM audit_log WHERE record_id=?', (rec['id'],))
-            conn.execute('DELETE FROM records WHERE episode_id=?', (eid,))
-        conn.execute('DELETE FROM episodes WHERE patient_id=?', (patient_id,))
-        conn.execute('DELETE FROM patients WHERE id=?', (patient_id,))
-        conn.commit()
+            for ep in eps:
+                eid = ep['id']
+                # Delete SOAP notes
+                conn.execute('DELETE FROM soap_notes WHERE episode_id=?', (eid,))
+                # Get record IDs to clean audit log
+                recs = conn.execute(
+                    'SELECT id FROM records WHERE episode_id=?', (eid,)
+                ).fetchall()
+                for rec in recs:
+                    conn.execute('DELETE FROM audit_log WHERE record_id=?', (rec['id'],))
+                conn.execute('DELETE FROM records WHERE episode_id=?', (eid,))
+            conn.execute('DELETE FROM episodes WHERE patient_id=?', (patient_id,))
+            conn.execute('DELETE FROM patients WHERE id=?', (patient_id,))
         return True, None
     except Exception as e:
         return False, str(e)
@@ -394,13 +400,9 @@ def update_episode_status(db_path, episode_id, status, reason=None):
     now  = datetime.now().isoformat(timespec='seconds')
     conn = get_conn(db_path)
     try:
-        # Store discharge reason in status field if provided
-        status_val = status
-        if reason and status != 'active':
-            status_val = status + '|' + reason
         conn.execute(
-            'UPDATE episodes SET status=?, updated_at=? WHERE id=?',
-            (status_val, now, episode_id)
+            'UPDATE episodes SET status=?, discharge_reason=?, updated_at=? WHERE id=?',
+            (status, reason or '', now, episode_id)
         )
         conn.commit()
         return True, None
