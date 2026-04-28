@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PT Assessment System</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+<style>
+.draft-banner {
+  display: none;
+  background: var(--warn-light);
+  border-bottom: 1px solid var(--warn);
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--warn);
+  display: none;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.draft-banner.show { display: flex; }
+.draft-banner-msg { flex: 1; font-weight: 500; }
+.draft-btn {
+  padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: 1.5px solid var(--warn); font-family: inherit;
+  background: none; color: var(--warn); transition: all 0.12s;
+}
+.draft-btn.restore { background: var(--warn); color: white; }
+.draft-btn:hover { opacity: 0.8; }
+.draft-dot {
+  display: none;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--warn); flex-shrink: 0;
+}
+/* ── MOVEMENT TABLE ──────────────────────────── */
+.mov-table-wrap { overflow-x: auto; }
+.mov-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.mov-table th {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 7px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.mov-table td {
+  border: 1px solid var(--border);
+  padding: 3px 4px;
+  vertical-align: middle;
+}
+.mov-cell-input {
+  width: 100%;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  padding: 4px 5px;
+  outline: none;
+  min-width: 80px;
+}
+.mov-cell-input:focus {
+  background: var(--accent-light);
+  border-radius: 3px;
+}
+.mov-cell-input option { font-size: 12px; }
+.mov-del-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 13px;
+  padding: 2px 5px;
+  line-height: 1;
+}
+.mov-del-btn:hover { color: var(--danger); }
+.mov-add-btn {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 14px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.12s;
+  margin-top: 8px;
+}
+.mov-add-btn:hover {
+  border-color: var(--accent-mid);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+</style>
+</head>
+<body>
+<!-- Page context — read by main.js initFormContext() -->
+<meta id="page-context"
+  data-episode-id="{{ episode_id or '' }}"
+  data-patient-id="{{ patient_id or '' }}">
+{% if patient %}
+<script id="patient-json" type="application/json">{{ patient | tojson }}</script>
+{% endif %}
+<div class="shell">
+
+  <header class="topbar">
+    <div class="topbar-logo">PT Assessment System</div>
+    <button class="tbtn" onclick="toggleSidebar()" title="Toggle sidebar" style="margin-left:6px;padding:4px 8px;font-size:13px" id="sidebar-toggle-btn">&#9776;</button>
+    <div class="topbar-sep"></div>
+    <div class="topbar-sub">{% block topbar_ref %}KKM Physiotherapy Dept &mdash; fisio/b.pen.14/Pind.1/2019{% endblock %}</div>
+    <div class="topbar-actions">
+      <!-- Nav group: Return / Save & Return injected by initFormContext() when episode context present -->
+      <div id="topbar-nav-group" style="display:flex;gap:6px;align-items:center;"></div>
+      <div class="tbtn-sep" id="topbar-nav-sep" style="display:none"></div>
+
+      <!-- Form group -->
+      <button class="tbtn" onclick="Main.newForm()">+ New</button>
+      <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
+      <div class="tbtn-sep"></div>
+
+      <!-- Utility group -->
+      <button class="dark-toggle" id="dark-toggle" onclick="Main.toggleDark()" title="Toggle dark mode">&#9790;</button>
+      <button class="tbtn" onclick="Main.copyToMpisAuto()" title="Copy plain text for MPIS">Copy to MPIS</button>
+      <button class="tbtn" onclick="Main.exportPdf(Main.getCurrentId(), Main.getCurrentFormType())" id="btn-export-pdf">Export KKM PDF</button>
+      <div class="tbtn-sep"></div>
+
+      <!-- Primary action -->
+      <button class="tbtn primary" onclick="Main.saveRecord()">Save Record</button>
+    </div>
+  </header>
+
+  <div id="draft-banner" class="draft-banner">
+    <span id="draft-banner-msg" class="draft-banner-msg"></span>
+    <button onclick="Main.restoreDraft()" class="draft-btn restore">Restore</button>
+    <button onclick="Main.dismissDraft()" class="draft-btn">Dismiss</button>
+  </div>
+  <div class="content-area">
+
+    <aside class="sidebar">
+      <div class="sidebar-label">Assessment Forms</div>
+
+      {% for group in FORM_GROUPS %}
+      <div class="sidebar-group-label" onclick="toggleSidebarGroup(this)"
+        style="font-size:9px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;padding:8px 14px 2px;margin-top:4px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
+        <span>{{ group }}</span>
+        <span class="group-chevron" style="font-size:8px;transition:transform 0.2s">▼</span>
+      </div>
+      <div class="sidebar-group-items">
+      {% for form in FORM_REGISTRY if form.group == group %}
+        {% if form.ready %}
+        <a href="#" onclick="navigateForm('{{ form.id | lower }}');return false;" style="text-decoration:none">
+          <div class="nav-item {% if form.id == current_form %}active{% endif %}">
+            <span class="nav-icon">{{ form.icon | safe }}</span> {{ form.label }}
+            <span class="nav-badge">{{ form.badge }}</span>
+          </div>
+        </a>
+        {% else %}
+        <div class="nav-item soon">
+          <span class="nav-icon">{{ form.icon | safe }}</span> {{ form.label }}
+          <span class="nav-badge" style="background:var(--text-faint)">Soon</span>
+        </div>
+        {% endif %}
+      {% endfor %}
+      </div><!-- end sidebar-group-items -->
+      {% endfor %}
+
+      <div class="nav-divider"></div>
+      <div class="sidebar-label" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding-right:14px;"
+           onclick="toggleJumpTo()" title="Toggle Jump To">
+        Jump To
+        <span id="jumpto-arrow" style="font-size:9px;transition:transform 0.2s;">&#9650;</span>
+      </div>
+      <div id="jumpto-nav">
+        {% block sidebar_nav %}{% endblock %}
+      </div>
+
+      <div class="nav-divider"></div>
+      <div class="records-panel">
+        <h4>Saved Records</h4>
+        <div id="records-list"><div class="no-records">No records yet</div></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      {% block content %}{% endblock %}
+      <div style="height:60px"></div>
+    </main>
+
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="sdot"></div>
+  <span style="font-size:12px;color:var(--text-muted);">{% block form_name %}Assessment{% endblock %}</span>
+  <div id="draft-indicator" style="display:none;font-size:11px;color:var(--warn);align-items:center;gap:4px;">
+    <div style="width:6px;height:6px;border-radius:50%;background:var(--warn);"></div>
+    draft saved
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <span id="prog-pct">0%</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/api.js"></script>
+<script src="/static/js/movement_table.js"></script>
+<script src="/static/js/bodychart.js"></script>
+<script src="/static/js/form_base.js"></script>
+<script src="/static/js/clinical_templates.js"></script>
+<script src="/static/js/main.js"></script>
+{% block extra_js %}{% endblock %}
+<script>
+// ── Sidebar Jump To toggle ─────────────────────────────
+function toggleJumpTo() {
+  var nav    = document.getElementById('jumpto-nav');
+  var arrow  = document.getElementById('jumpto-arrow');
+  if (!nav) return;
+  var collapsed = nav.style.display === 'none';
+  nav.style.display   = collapsed ? '' : 'none';
+  arrow.style.transform = collapsed ? '' : 'rotate(180deg)';
+  localStorage.setItem('pt_jumpto_collapsed', collapsed ? '0' : '1');
+}
+
+// Restore state on load
+(function() {
+  if (localStorage.getItem('pt_jumpto_collapsed') === '1') {
+    var nav   = document.getElementById('jumpto-nav');
+    var arrow = document.getElementById('jumpto-arrow');
+    if (nav)   nav.style.display    = 'none';
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
+  }
+})();
+</script>
+<script>
+// ── Sidebar collapse ──────────────────────────────────
+function toggleSidebar() {
+  var sidebar = document.querySelector('.sidebar');
+  var main    = document.querySelector('.main');
+  if (!sidebar) return;
+  var hidden = sidebar.style.display === 'none';
+  sidebar.style.display = hidden ? '' : 'none';
+  if (main) main.style.marginLeft = hidden ? '' : '0';
+  localStorage.setItem('pt_sidebar_hidden', hidden ? '0' : '1');
+}
+
+// ── Context-aware form navigation ─────────────────────
+function navigateForm(formId) {
+  // Preserve episode_id and patient_id from current URL
+  var params  = new URLSearchParams(window.location.search);
+  var ep      = params.get('episode_id');
+  var pt      = params.get('patient_id');
+  var url     = '/form/' + formId;
+  var qs      = [];
+  if (ep) qs.push('episode_id=' + ep);
+  if (pt) qs.push('patient_id=' + pt);
+  if (qs.length) url += '?' + qs.join('&');
+
+  // Warn if dirty
+  if (typeof Main !== 'undefined' && Main.isDirty) {
+    if (!confirm('You have unsaved changes. Switch form anyway?')) return;
+  }
+  window.location.href = url;
+}
+
+// ── Collapsible sidebar groups ────────────────────────
+function toggleSidebarGroup(labelEl) {
+  var items    = labelEl.nextElementSibling;
+  var chevron  = labelEl.querySelector('.group-chevron');
+  var collapsed = items.style.display === 'none';
+  items.style.display  = collapsed ? '' : 'none';
+  if (chevron) chevron.style.transform = collapsed ? '' : 'rotate(-90deg)';
+  // Persist state
+  var key = 'sg_' + labelEl.querySelector('span').textContent.trim();
+  localStorage.setItem(key, collapsed ? '1' : '0');
+}
+
+// Restore collapsed state on load
+document.addEventListener('DOMContentLoaded', function () {
+  // Restore sidebar visibility
+  if (localStorage.getItem('pt_sidebar_hidden') === '1') {
+    var sidebar = document.querySelector('.sidebar');
+    var main    = document.querySelector('.main');
+    if (sidebar) sidebar.style.display = 'none';
+    if (main)    main.style.marginLeft = '0';
+  }
+
+  // Restore group collapsed states
+  document.querySelectorAll('.sidebar-group-label').forEach(function (lbl) {
+    var key       = 'sg_' + lbl.querySelector('span').textContent.trim();
+    var collapsed = localStorage.getItem(key) === '0';
+    if (collapsed) {
+      var items   = lbl.nextElementSibling;
+      var chevron = lbl.querySelector('.group-chevron');
+      if (items)   items.style.display = 'none';
+      if (chevron) chevron.style.transform = 'rotate(-90deg)';
+    }
+  });
+});
+</script>
+</body>
+</html>

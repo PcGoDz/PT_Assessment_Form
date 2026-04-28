@@ -1,0 +1,1066 @@
+{% extends "base.html" %}
+
+{% block form_name %}Neurology Assessment{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+<div class="nav-item" onclick="Main.go('s-subjective')"><span class="nav-icon">&#128214;</span> Subjective</div>
+<div class="nav-item" onclick="Main.go('s-objective')"><span class="nav-icon">&#128065;</span> Objective</div>
+<div class="nav-item" onclick="Main.go('s-clinical')"><span class="nav-icon">&#128202;</span> Clinical Assessment</div>
+<div class="nav-item" onclick="Main.go('s-balance')"><span class="nav-icon">&#9878;</span> Posture &amp; Balance</div>
+<div class="nav-item" onclick="Main.go('s-mrmi')"><span class="nav-icon">&#128260;</span> Functional (MRMI)</div>
+<div class="nav-item" onclick="Main.go('s-gait')"><span class="nav-icon">&#128694;</span> Gait</div>
+<div class="nav-item" onclick="Main.go('s-endurance')"><span class="nav-icon">&#10084;</span> Exercise Endurance</div>
+<div class="nav-item" onclick="Main.go('s-outcome')"><span class="nav-icon">&#128200;</span> Outcome Measures</div>
+<div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- 01 PATIENT INFO -->
+<div class="card" id="s-patient">
+  <div class="card-header">
+    <span class="sec-num">01</span>
+    <h2>Patient Information</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="window.FormBase.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="window.FormBase.onPtTypeChange()"> Foreign (Passport)</label>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="window.FormBase.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="pt-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option><option>Philippines</option><option>Vietnam</option>
+              <option>Thailand</option><option>Myanmar</option><option>Cambodia</option>
+              <option>Laos</option><option>Singapore</option><option>Brunei</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option><option>India</option><option>Pakistan</option>
+              <option>Sri Lanka</option><option>Nepal</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option><option>Hong Kong</option><option>Taiwan</option>
+              <option>Japan</option><option>South Korea</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Other</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob" onchange="window.FormBase.onDobChange(this.value)">
+        </div>
+        <div class="field">
+          <label>Assessment Date <span class="req">*</span></label>
+          <input type="date" id="pt-date">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 DIAGNOSIS -->
+<div class="card" id="s-dx">
+  <div class="card-header">
+    <span class="sec-num">02</span>
+    <h2>Diagnosis &amp; Chief Complaint</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Diagnosis (as in referral) <span class="req">*</span></label>
+        <input type="text" id="diagnosis" placeholder="e.g. Left MCA Ischaemic Stroke, Parkinson's Disease">
+      </div>
+      <div class="field">
+        <label>Doctor's Management</label>
+        <div class="radio-group">
+          <label><input type="radio" name="dr-mgmt" value="Conservative"> Conservative</label>
+          <label><input type="radio" name="dr-mgmt" value="Operative"> Operative</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Pain Score (VAS)</label>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <input type="range" id="pain-score" min="0" max="10" value="0" oninput="NeuroForm.onPainChange(this.value)" style="flex:1">
+          <span id="pain-display" class="pain-val pv-low">0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted)">
+          <span>0 — No pain</span><span>10 — Worst</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Chief Complaint / Problem</label>
+        <div class="chip-group" id="complaint-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Weakness</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Pain</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Stiffness / Spasticity</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Balance problems</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Gait difficulty</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Functional limitation</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Continence issues</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Communication difficulty</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'complaint-chips')">Cognitive issues</span>
+        </div>
+        <textarea id="complaint-text" rows="2" class="mt-1" placeholder="Describe in patient's own words..."></textarea>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Patient Goal / Expected Outcome</label>
+        <input type="text" id="patient-goal" placeholder="e.g. Walk independently, return to work">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 SUBJECTIVE -->
+<div class="card" id="s-subjective">
+  <div class="card-header">
+    <span class="sec-num">03</span>
+    <h2>Subjective</h2>
+  </div>
+  <div class="card-body">
+
+    <h3 class="subsec">Current History</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Onset</label>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="number" id="onset-value" min="1" placeholder="e.g. 3" style="width:80px">
+          <select id="onset-unit">
+            <option value="days">Days</option>
+            <option value="weeks" selected>Weeks</option>
+            <option value="months">Months</option>
+            <option value="years">Years</option>
+          </select>
+          <span style="color:var(--muted);font-size:0.85rem">ago</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Motor Deficit — Limb(s) Affected</label>
+        <div class="chip-group" id="limb-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'limb-chips')">Right UL</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'limb-chips')">Left UL</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'limb-chips')">Right LL</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'limb-chips')">Left LL</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'limb-chips')">Bilateral UL</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'limb-chips')">Bilateral LL</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'limb-chips')">None</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subsec">Past History</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Previous Episodes</label>
+        <div class="radio-group">
+          <label><input type="radio" name="prev-episode" value="No"> No</label>
+          <label><input type="radio" name="prev-episode" value="Yes"> Yes</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Previous Mobility</label>
+        <div class="radio-group">
+          <label><input type="radio" name="prev-mobility" value="Normal" onchange="NeuroForm.onPrevMobilityChange(this.value)"> Normal</label>
+          <label><input type="radio" name="prev-mobility" value="Limited" onchange="NeuroForm.onPrevMobilityChange(this.value)"> Limited</label>
+        </div>
+      </div>
+      <div class="field" id="walking-aid-field" style="display:none">
+        <label>Walking Aid Used</label>
+        <div class="chip-group" id="prev-aid-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'prev-aid-chips')">Walking frame</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'prev-aid-chips')">Quadripod</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'prev-aid-chips')">Tripod</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'prev-aid-chips')">Elbow crutch</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'prev-aid-chips')">Standard crutch</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'prev-aid-chips')">Wheelchair</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Past Medical History (PMHx) / Comorbidities</label>
+        <div class="chip-group" id="pmhx-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">Hypertension</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">Diabetes Mellitus</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">IHD</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">Hyperlipidaemia</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">Atrial Fibrillation</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">Epilepsy</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">Previous CVA/Stroke</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">TIA</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'pmhx-chips')">Parkinson's Disease</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>PMHx / Surgery Details</label>
+        <textarea id="pmhx-details" rows="2" placeholder="Other conditions, surgeries, dates..."></textarea>
+      </div>
+      <div class="field">
+        <label>Past Physiotherapy Treatment</label>
+        <div class="radio-group">
+          <label><input type="radio" name="past-pt" value="No"> No</label>
+          <label><input type="radio" name="past-pt" value="Yes"> Yes</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Outcome of Past PT</label>
+        <input type="text" id="past-pt-outcome" placeholder="e.g. Improved, No change">
+      </div>
+    </div>
+
+    <h3 class="subsec">Investigations &amp; Medication</h3>
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Investigations</label>
+        <table class="data-table" id="investigation-table">
+          <thead><tr><th>Type</th><th>Date</th><th>Key Findings</th><th></th></tr></thead>
+          <tbody id="investigation-tbody"></tbody>
+        </table>
+        <button class="btn-ghost mt-1" onclick="NeuroForm.addInvestigationRow()">+ Add Investigation</button>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Medication</label>
+        <table class="data-table" id="medication-table">
+          <thead><tr><th>Name</th><th>Dose</th><th>Frequency</th><th></th></tr></thead>
+          <tbody id="medication-tbody"></tbody>
+        </table>
+        <button class="btn-ghost mt-1" onclick="NeuroForm.addMedicationRow()">+ Add Medication</button>
+      </div>
+    </div>
+
+    <h3 class="subsec">General &amp; Social</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>General Health</label>
+        <div class="radio-group">
+          <label><input type="radio" name="gen-health" value="Well"> Well</label>
+          <label><input type="radio" name="gen-health" value="Unwell"> Unwell</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Emotional / Psychological</label>
+        <input type="text" id="emotional-status" placeholder="e.g. Anxious, Depressed, Cooperative">
+      </div>
+      <div class="field">
+        <label>Incontinence — Bladder</label>
+        <div class="radio-group">
+          <label><input type="radio" name="bladder" value="Full control"> Full control</label>
+          <label><input type="radio" name="bladder" value="Partial"> Partial</label>
+          <label><input type="radio" name="bladder" value="Incontinence"> Incontinence</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Incontinence — Bowel</label>
+        <div class="radio-group">
+          <label><input type="radio" name="bowel" value="Full control"> Full control</label>
+          <label><input type="radio" name="bowel" value="Partial"> Partial</label>
+          <label><input type="radio" name="bowel" value="Incontinence"> Incontinence</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Visual Field</label>
+        <div class="chip-group" id="vision-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'vision-chips')">Normal</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'vision-chips')">Hemianopia</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'vision-chips')">Diplopia</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'vision-chips')">Blurred vision</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Hearing</label>
+        <div class="chip-group" id="hearing-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'hearing-chips')">Normal</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'hearing-chips')">Impaired</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'hearing-chips')">Hearing aid</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Sensation</label>
+        <div class="radio-group">
+          <label><input type="radio" name="sensation-gen" value="Normal"> Normal</label>
+          <label><input type="radio" name="sensation-gen" value="Reduced"> Reduced</label>
+          <label><input type="radio" name="sensation-gen" value="Absent"> Absent</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Hand Dominance</label>
+        <div class="radio-group">
+          <label><input type="radio" name="hand-dom" value="Right"> Right</label>
+          <label><input type="radio" name="hand-dom" value="Left"> Left</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Pre-morbid Independence</label>
+        <div class="radio-group">
+          <label><input type="radio" name="premorbid-indep" value="Independent"> Independent</label>
+          <label><input type="radio" name="premorbid-indep" value="Dependent"> Dependent</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Current Independence (Home Care)</label>
+        <div class="radio-group">
+          <label><input type="radio" name="current-indep" value="Independent"> Independent</label>
+          <label><input type="radio" name="current-indep" value="Dependent"> Dependent</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Type of House</label>
+        <div class="radio-group">
+          <label><input type="radio" name="house-type" value="Single-storey"> Single-storey</label>
+          <label><input type="radio" name="house-type" value="Double-storey"> Double-storey</label>
+          <label><input type="radio" name="house-type" value="Flat"> Flat</label>
+          <label><input type="radio" name="house-type" value="Condominium"> Condominium</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Toilet</label>
+        <div class="radio-group">
+          <label><input type="radio" name="toilet-type" value="Sitting"> Sitting</label>
+          <label><input type="radio" name="toilet-type" value="Squatting"> Squatting</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Curb / Stairs at Home</label>
+        <div class="radio-group">
+          <label><input type="radio" name="has-stairs" value="Yes"> Yes</label>
+          <label><input type="radio" name="has-stairs" value="No"> No</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Door Width (wheelchair-adequate)</label>
+        <div class="radio-group">
+          <label><input type="radio" name="door-width" value="Yes"> Yes</label>
+          <label><input type="radio" name="door-width" value="No"> No</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Occupation</label>
+        <input type="text" id="occupation" placeholder="Job type and duties">
+      </div>
+      <div class="field">
+        <label>Hobbies / Social Role</label>
+        <input type="text" id="hobbies" placeholder="Leisure activities, community roles">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 OBJECTIVE — OBSERVATION -->
+<div class="card" id="s-objective">
+  <div class="card-header">
+    <span class="sec-num">04</span>
+    <h2>Objective — Observation &amp; Vital Signs</h2>
+  </div>
+  <div class="card-body">
+
+    <h3 class="subsec">Observation</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Appearance</label>
+        <div class="chip-group" id="appearance-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'appearance-chips')">Alert</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'appearance-chips')">Ill</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'appearance-chips')">Fatigued</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'appearance-chips')">Drowsy</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Consciousness</label>
+        <div class="chip-group" id="consciousness-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'consciousness-chips')">Alert</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'consciousness-chips')">Drowsy</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'consciousness-chips')">Comatose</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Posture</label>
+        <div class="chip-group" id="posture-obs-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'posture-obs-chips')">Normal</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'posture-obs-chips')">Slouching</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'posture-obs-chips')">Asymmetry</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'posture-obs-chips')">Uneven weight distribution</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Mobility</label>
+        <div class="chip-group" id="mobility-obs-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'mobility-obs-chips')">Independent</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'mobility-obs-chips')">Assisted</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'mobility-obs-chips')">Dependent</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'mobility-obs-chips')">Wheelchair</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Emotional State</label>
+        <div class="chip-group" id="emotional-obs-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'emotional-obs-chips')">Calm</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'emotional-obs-chips')">Cooperative</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'emotional-obs-chips')">Anxious</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'emotional-obs-chips')">Depressed</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'emotional-obs-chips')">Uncooperative</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Respiratory Status</label>
+        <div class="chip-group" id="resp-obs-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'resp-obs-chips')">Spontaneous</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'resp-obs-chips')">Oxygen support</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Medical Devices</label>
+        <div class="chip-group" id="devices-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'devices-chips')">IV drip</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'devices-chips')">NG tube</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'devices-chips')">Urinary catheter</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'devices-chips')">Tracheostomy</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'devices-chips')">None</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subsec">Body Chart</h3>
+    <div class="body-chart-wrap">
+      <div class="body-figures">
+        <div class="fig-wrap">
+          <div class="fig-label">Anterior</div>
+          <svg class="bsvg" id="svg-ant" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,120 36,130 Q34,140 38,148 Q50,154 65,154 Q80,154 92,148 Q96,140 94,130 Q92,120 88,115 Z"/>
+              <path d="M38,148 Q32,160 30,178 Q28,196 30,212 Q36,218 44,216 Q50,200 52,182 Q54,164 50,150 Z"/>
+              <path d="M92,148 Q98,160 100,178 Q102,196 100,212 Q94,218 86,216 Q80,200 78,182 Q76,164 80,150 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M28,278 Q24,284 24,292 Q28,300 38,300 Q46,300 48,292 Q48,284 46,278 Z"/>
+              <path d="M102,278 Q106,284 106,292 Q102,300 92,300 Q84,300 82,292 Q82,284 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head"            data-view="ant"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck / Shoulder" data-view="ant"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm"           data-view="ant"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm"           data-view="ant"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Chest"           data-view="ant"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Abdomen"         data-view="ant"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm"       data-view="ant"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm"       data-view="ant"/>
+            <rect class="hit" x="34" y="150" width="34" height="68" rx="3"  data-zone="L thigh"         data-view="ant"/>
+            <rect class="hit" x="62" y="150" width="34" height="68" rx="3"  data-zone="R thigh"         data-view="ant"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L leg"           data-view="ant"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R leg"           data-view="ant"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L foot"          data-view="ant"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R foot"          data-view="ant"/>
+            <g id="markers-ant"></g>
+          </svg>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-label">Posterior</div>
+          <svg class="bsvg" id="svg-post" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,122 36,132 Q34,144 40,150 Q52,156 65,156 Q78,156 90,150 Q96,144 94,132 Q92,122 88,115 Z"/>
+              <path d="M40,150 Q32,162 30,180 Q28,198 32,214 Q38,220 46,218 Q52,202 54,184 Q56,166 50,152 Z"/>
+              <path d="M90,150 Q98,162 100,180 Q102,198 98,214 Q92,220 84,218 Q78,202 76,184 Q74,166 80,152 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M34,278 Q28,282 26,290 Q30,298 40,300 Q48,300 48,290 Q48,282 46,278 Z"/>
+              <path d="M96,278 Q102,282 104,290 Q100,298 90,300 Q82,300 82,290 Q82,282 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head (post)"          data-view="post"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck (post)"          data-view="post"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm (post)"         data-view="post"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm (post)"         data-view="post"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Upper back"           data-view="post"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Lumbar / Lower back"  data-view="post"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm (post)"     data-view="post"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm (post)"     data-view="post"/>
+            <rect class="hit" x="34" y="150" width="34" height="70" rx="3"  data-zone="L hamstring"          data-view="post"/>
+            <rect class="hit" x="62" y="150" width="34" height="70" rx="3"  data-zone="R hamstring"          data-view="post"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L calf"               data-view="post"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R calf"               data-view="post"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L heel / foot (post)" data-view="post"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R heel / foot (post)" data-view="post"/>
+            <g id="markers-post"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-controls">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click figure</div>
+          <div class="pain-type-sel" id="ptype-sel">
+            <button class="pt-chip ptype-ache active" data-ptype="ache">Ache</button>
+            <button class="pt-chip ptype-sharp"       data-ptype="sharp">Sharp</button>
+            <button class="pt-chip ptype-numb"        data-ptype="numb">Numbness</button>
+            <button class="pt-chip ptype-burn"        data-ptype="burn">Burning</button>
+            <button class="pt-chip ptype-refer"       data-ptype="refer">Referred</button>
+            <button class="pt-chip ptype-tender"      data-ptype="tender">Tenderness</button>
+          </div>
+        </div>
+        <div>
+          <div class="list-header">
+            <span>Marked Locations</span>
+            <button class="btn-sm" onclick="BodyChart.clearAll()">Clear all</button>
+          </div>
+          <div class="marker-list" id="marker-list">
+            <div class="empty-hint" id="empty-hint">No markers yet</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Body Chart Notes</label>
+          <textarea id="chart-notes" placeholder="Spasticity, pain, numbness distribution..." style="min-height:56px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subsec">Vital Signs</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Blood Pressure (mmHg)</label>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="number" id="bp-sys" placeholder="Systolic" style="width:90px">
+          <span>/</span>
+          <input type="number" id="bp-dia" placeholder="Diastolic" style="width:90px">
+        </div>
+      </div>
+      <div class="field">
+        <label>Heart Rate (bpm)</label>
+        <input type="number" id="heart-rate" placeholder="e.g. 72" style="width:120px">
+      </div>
+      <div class="field">
+        <label>Respiratory Rate (breaths/min)</label>
+        <input type="number" id="resp-rate" placeholder="e.g. 18" style="width:120px">
+      </div>
+      <div class="field">
+        <label>SpO₂ (%)</label>
+        <input type="number" id="spo2" placeholder="e.g. 98" min="0" max="100" style="width:120px">
+      </div>
+      <div class="field">
+        <label>Breathing Pattern</label>
+        <div class="radio-group">
+          <label><input type="radio" name="breathing-pattern" value="Normal"> Normal</label>
+          <label><input type="radio" name="breathing-pattern" value="Rapid"> Rapid</label>
+          <label><input type="radio" name="breathing-pattern" value="Slow"> Slow</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Breathing Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="breathing-type" value="Diaphragmatic"> Diaphragmatic</label>
+          <label><input type="radio" name="breathing-type" value="Apical"> Apical</label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 CLINICAL ASSESSMENT -->
+<div class="card" id="s-clinical">
+  <div class="card-header">
+    <span class="sec-num">05</span>
+    <h2>Clinical Assessment</h2>
+  </div>
+  <div class="card-body">
+
+    <h3 class="subsec">Muscle Tone (Modified Ashworth Scale)</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Right UL</label>
+        <select id="tone-rul">
+          <option value="">— Select —</option>
+          <option>0</option><option>1</option><option>1+</option>
+          <option>2</option><option>3</option><option>4</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Left UL</label>
+        <select id="tone-lul">
+          <option value="">— Select —</option>
+          <option>0</option><option>1</option><option>1+</option>
+          <option>2</option><option>3</option><option>4</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Right LL</label>
+        <select id="tone-rll">
+          <option value="">— Select —</option>
+          <option>0</option><option>1</option><option>1+</option>
+          <option>2</option><option>3</option><option>4</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Left LL</label>
+        <select id="tone-lll">
+          <option value="">— Select —</option>
+          <option>0</option><option>1</option><option>1+</option>
+          <option>2</option><option>3</option><option>4</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Tone Notes</label>
+        <input type="text" id="tone-notes" placeholder="Additional tone findings...">
+      </div>
+    </div>
+
+    <h3 class="subsec">Muscle Strength (MMT)</h3>
+    <table class="data-table" id="mmt-table">
+      <thead><tr><th>Muscle Group</th><th>R</th><th>L</th><th></th></tr></thead>
+      <tbody id="mmt-tbody"></tbody>
+    </table>
+    <button class="btn-ghost mt-1" onclick="NeuroForm.addMmtRow()">+ Add MMT Row</button>
+
+    <h3 class="subsec">Range of Motion</h3>
+    <table class="data-table" id="rom-table">
+      <thead><tr><th>Joint</th><th>UL/LL</th><th>Active</th><th>Passive</th><th></th></tr></thead>
+      <tbody id="rom-tbody"></tbody>
+    </table>
+    <button class="btn-ghost mt-1" onclick="NeuroForm.addRomRow()">+ Add ROM Row</button>
+
+    <h3 class="subsec">Coordination</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Finger-to-Nose</label>
+        <div class="radio-group">
+          <label><input type="radio" name="ftn" value="Intact"> Intact</label>
+          <label><input type="radio" name="ftn" value="Dysmetria"> Dysmetria</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Heel-to-Shin</label>
+        <div class="radio-group">
+          <label><input type="radio" name="hts" value="No ataxia"> No ataxia</label>
+          <label><input type="radio" name="hts" value="Ataxia"> Ataxia</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Rapid Alternating Movements</label>
+        <div class="radio-group">
+          <label><input type="radio" name="ram" value="Able"> Able</label>
+          <label><input type="radio" name="ram" value="Unable"> Unable</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tremor</label>
+        <div class="radio-group">
+          <label><input type="radio" name="tremor" value="No" onchange="NeuroForm.onTremorChange(this.value)"> No</label>
+          <label><input type="radio" name="tremor" value="Yes" onchange="NeuroForm.onTremorChange(this.value)"> Yes</label>
+        </div>
+      </div>
+      <div class="field" id="tremor-type-field" style="display:none">
+        <label>Tremor Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="tremor-type" value="Resting"> Resting</label>
+          <label><input type="radio" name="tremor-type" value="Intention"> Intention</label>
+          <label><input type="radio" name="tremor-type" value="Postural"> Postural</label>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subsec">Sensation</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Light Touch</label>
+        <div class="radio-group">
+          <label><input type="radio" name="lt" value="Intact"> Intact</label>
+          <label><input type="radio" name="lt" value="Impaired"> Impaired</label>
+          <label><input type="radio" name="lt" value="Absent"> Absent</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Pin Prick</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pp" value="Intact"> Intact</label>
+          <label><input type="radio" name="pp" value="Impaired"> Impaired</label>
+          <label><input type="radio" name="pp" value="Absent"> Absent</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Thermal Sensation</label>
+        <div class="radio-group">
+          <label><input type="radio" name="thermal" value="Intact"> Intact</label>
+          <label><input type="radio" name="thermal" value="Impaired"> Impaired</label>
+          <label><input type="radio" name="thermal" value="Absent"> Absent</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Sensation Area / Notes</label>
+        <input type="text" id="sensation-notes" placeholder="Specify affected area if impaired">
+      </div>
+    </div>
+
+    <h3 class="subsec">Proprioception</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Upper Limb</label>
+        <div class="radio-group">
+          <label><input type="radio" name="prop-ul" value="Intact"> Intact</label>
+          <label><input type="radio" name="prop-ul" value="Impaired"> Impaired</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Lower Limb</label>
+        <div class="radio-group">
+          <label><input type="radio" name="prop-ll" value="Intact"> Intact</label>
+          <label><input type="radio" name="prop-ll" value="Impaired"> Impaired</label>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="subsec">Others</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Cognitive Impairment</label>
+        <div class="chip-group" id="cognitive-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'cognitive-chips')">None</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'cognitive-chips')">Delirium</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'cognitive-chips')">Dementia</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'cognitive-chips')">Mild Cognitive Impairment</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Communication Impairment</label>
+        <div class="radio-group">
+          <label><input type="radio" name="communication" value="None"> None</label>
+          <label><input type="radio" name="communication" value="Expressive"> Expressive</label>
+          <label><input type="radio" name="communication" value="Receptive"> Receptive</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Oro-Facial Function</label>
+        <div class="radio-group">
+          <label><input type="radio" name="orofacial" value="Normal"> Normal</label>
+          <label><input type="radio" name="orofacial" value="Abnormal"> Deviation / Drooping</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Oro-Facial Notes</label>
+        <input type="text" id="orofacial-notes" placeholder="Specify deviation, swallowing difficulty...">
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Other Findings</label>
+        <textarea id="other-findings" rows="2" placeholder="Any other relevant clinical findings..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 POSTURE & BALANCE -->
+<div class="card" id="s-balance">
+  <div class="card-header">
+    <span class="sec-num">06</span>
+    <h2>Posture &amp; Balance</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Sitting Balance</label>
+        <div class="chip-group" id="sit-balance-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'sit-balance-chips')">Independent</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'sit-balance-chips')">Assisted</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'sit-balance-chips')">Unable</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Standing Balance</label>
+        <div class="chip-group" id="stand-balance-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'stand-balance-chips')">Independent</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'stand-balance-chips')">Assisted</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'stand-balance-chips')">Unable</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Postural Observations</label>
+        <textarea id="balance-notes" rows="3" placeholder="Describe balance deficits, compensatory strategies, safety concerns, functional implications..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 FUNCTIONAL LIMITATION (MRMI) -->
+<div class="card" id="s-mrmi">
+  <div class="card-header">
+    <span class="sec-num">07</span>
+    <h2>Functional Limitation — MRMI</h2>
+  </div>
+  <div class="card-body">
+    <table class="data-table">
+      <thead><tr><th>Component</th><th style="width:120px">Score (0–5)</th></tr></thead>
+      <tbody>
+        <tr><td>Turning Over</td><td><select id="mrmi-turn" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr><td>Lying to Sitting on Edge of Bed</td><td><select id="mrmi-lying-sit" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr><td>Balance in Sitting</td><td><select id="mrmi-sit-balance" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr><td>Sitting to Standing</td><td><select id="mrmi-sit-stand" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr><td>Standing</td><td><select id="mrmi-standing" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr><td>Transfer (Bed to Chair)</td><td><select id="mrmi-transfer" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr><td>Walking Inside</td><td><select id="mrmi-walk" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr><td>Stair Climbing</td><td><select id="mrmi-stairs" onchange="NeuroForm.calcMrmiTotal()" style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></td></tr>
+        <tr style="font-weight:600"><td>Total</td><td><span id="mrmi-total">— / 40</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 08 GAIT -->
+<div class="card" id="s-gait">
+  <div class="card-header">
+    <span class="sec-num">08</span>
+    <h2>Gait</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Gait Pattern</label>
+        <div class="chip-group" id="gait-pattern-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Normal</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Circumduction</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Waddling</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Foot drop</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Antalgic</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Scissor gait</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Parkinsonian / Festination</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'gait-pattern-chips')">Steppage</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Walking Aid</label>
+        <div class="chip-group" id="walking-aid-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'walking-aid-chips')">None</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'walking-aid-chips')">Walking frame</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'walking-aid-chips')">Quadripod</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'walking-aid-chips')">Tripod</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'walking-aid-chips')">Elbow crutch</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'walking-aid-chips')">Standard crutch</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'walking-aid-chips')">Wheelchair</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>10MWT Time (seconds)</label>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="number" id="mwt10-time" placeholder="e.g. 25.4" step="0.1" oninput="NeuroForm.calc10MWT()" style="width:110px">
+          <span id="mwt10-speed" style="color:var(--muted);font-size:0.85rem"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Turning Characteristics</label>
+        <div class="chip-group" id="turning-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'turning-chips')">Normal</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'turning-chips')">Hesitancy</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'turning-chips')">Wide arc</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'turning-chips')">Festination</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'turning-chips')">Freezing</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Gait Observations</label>
+        <textarea id="gait-notes" rows="2" placeholder="Describe stance/swing deviations, assistance required, safety concerns..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 EXERCISE ENDURANCE -->
+<div class="card" id="s-endurance">
+  <div class="card-header">
+    <span class="sec-num">09</span>
+    <h2>Exercise Endurance</h2>
+  </div>
+  <div class="card-body">
+    <h3 class="subsec">6-Minute Walk Test (6MWT)</h3>
+    <div class="fg c2">
+      <div class="field">
+        <label>Distance (m)</label>
+        <input type="number" id="sixmwt-dist" placeholder="e.g. 280" style="width:120px">
+      </div>
+      <div class="field">
+        <label>RPE — Borg Scale (0–10)</label>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <input type="range" id="borg-rpe" min="0" max="10" value="0" oninput="NeuroForm.onBorgChange(this.value)" style="flex:1">
+          <span id="borg-display" class="pain-val pv-low">0</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Pre-test HR (bpm)</label>
+        <input type="number" id="sixmwt-pre-hr" placeholder="e.g. 72" style="width:120px">
+      </div>
+      <div class="field">
+        <label>Post-test HR (bpm)</label>
+        <input type="number" id="sixmwt-post-hr" placeholder="e.g. 105" style="width:120px">
+      </div>
+      <div class="field">
+        <label>Pre-test SpO₂ (%)</label>
+        <input type="number" id="sixmwt-pre-spo2" placeholder="e.g. 98" style="width:120px">
+      </div>
+      <div class="field">
+        <label>Post-test SpO₂ (%)</label>
+        <input type="number" id="sixmwt-post-spo2" placeholder="e.g. 95" style="width:120px">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 OUTCOME MEASURES -->
+<div class="card" id="s-outcome">
+  <div class="card-header">
+    <span class="sec-num">10</span>
+    <h2>Outcome Measures</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>TUG — Timed Up and Go (seconds)</label>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="number" id="tug-time" placeholder="e.g. 15.2" step="0.1" oninput="NeuroForm.flagTug()" style="width:110px">
+          <span id="tug-flag" style="font-size:0.8rem;color:var(--warn)"></span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted)">Cut-off: &gt;13.5s (Stroke) | &gt;11.5s (PD)</div>
+      </div>
+      <div class="field">
+        <label>Berg Balance Scale (/56)</label>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="number" id="berg-score" placeholder="0–56" min="0" max="56" oninput="NeuroForm.flagBerg()" style="width:110px">
+          <span id="berg-flag" style="font-size:0.8rem;color:var(--warn)"></span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted)">Score &lt;45 = increased fall risk</div>
+      </div>
+      <div class="field">
+        <label>Functional Reach Test (cm)</label>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <input type="number" id="frt-score" placeholder="e.g. 20" step="0.1" oninput="NeuroForm.flagFrt()" style="width:110px">
+          <span id="frt-flag" style="font-size:0.8rem;color:var(--warn)"></span>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted)">&lt;15cm High | 15–25cm Moderate | &gt;25cm Low risk</div>
+      </div>
+      <div class="field">
+        <label>Other Measures Used</label>
+        <div class="chip-group" id="other-outcome-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'other-outcome-chips')">MAS</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'other-outcome-chips')">Tardieu</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'other-outcome-chips')">MBI</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'other-outcome-chips')">MMSE</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'other-outcome-chips')">MoCA</span>
+        </div>
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Outcome Notes</label>
+        <textarea id="outcome-notes" rows="2" placeholder="Additional remarks on outcome measures..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 11 PT IMPRESSION & GOALS -->
+<div class="card" id="s-plan">
+  <div class="card-header">
+    <span class="sec-num">11</span>
+    <h2>PT Impression, Goals &amp; Plan</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>PT Impression — Body Structure &amp; Function (ICF) <span class="req">*</span></label>
+        <textarea id="pt-impression-bsf" rows="3" placeholder="e.g. Reduced muscle strength in affected limbs, Impaired postural control, Decreased exercise tolerance..."></textarea>
+      </div>
+      <div class="field">
+        <label>PT Impression — Activity Limitation (ICF)</label>
+        <textarea id="pt-impression-al" rows="2" placeholder="e.g. Difficulty maintaining sitting balance, Inability to stand independently..."></textarea>
+      </div>
+      <div class="field">
+        <label>PT Impression — Participation Restriction (ICF)</label>
+        <textarea id="pt-impression-pr" rows="2" placeholder="e.g. Unable to perform work duties, Limited community activities..."></textarea>
+      </div>
+      <div class="field">
+        <label>Short Term Goals</label>
+        <textarea id="stg" rows="3" placeholder="Specific, measurable goals within 1–4 weeks..."></textarea>
+      </div>
+      <div class="field">
+        <label>Long Term Goals</label>
+        <textarea id="ltg" rows="3" placeholder="Goals for 4–12 weeks, aligned with patient's functional aims..."></textarea>
+      </div>
+      <div class="field">
+        <label>Plan of Treatment</label>
+        <div class="chip-group" id="plan-chips">
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Chest physiotherapy</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Neuromuscular re-education</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Functional training</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Balance training</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Gait training</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">TENS</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Stretching / ROM</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Strengthening exercises</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Patient / carer education</span>
+          <span class="chip" onclick="NeuroForm.toggleChip(this,'plan-chips')">Home Exercise Programme</span>
+        </div>
+        <textarea id="plan-notes" rows="2" class="mt-1" placeholder="Additional plan details, frequency, progression..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/form_neuro.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var FM = 'NEURO';
+  ClinicalTemplates.addButton('pt-impression-bsf', FM, 'impression_bsf');
+  ClinicalTemplates.addButton('pt-impression-al',  FM, 'impression_al');
+  ClinicalTemplates.addButton('pt-impression-pr',  FM, 'impression_pr');
+  ClinicalTemplates.addButton('stg',               FM, 'stg');
+  ClinicalTemplates.addButton('ltg',               FM, 'ltg');
+  ClinicalTemplates.addButton('plan-notes',        FM, 'plan');
+});
+</script>
+{% endblock %}

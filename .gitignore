@@ -1,0 +1,20 @@
+# Build output
+dist/
+build/
+*.spec.bak
+
+# Local patient data - NEVER commit this
+pt_data/
+*.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db

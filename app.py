@@ -1,0 +1,380 @@
+import sys
+import os
+import threading
+import webbrowser
+from flask import Flask, render_template, request, jsonify, make_response
+from database import (
+    init_db, get_conn, save_record, list_records, load_record, delete_record,
+    create_patient, search_patients, get_patient, update_patient, delete_patient,
+    create_episode, get_patient_episodes, get_episode, update_episode_status,
+    get_episode_record, save_soap, get_soap_notes, delete_soap
+)
+
+
+import pdf_ms
+import pdf_spine
+import pdf_geriatric
+import pdf_cr
+import pdf_amputation
+import pdf_neuro
+
+_PDF_GENERATORS = {
+    'MS':         pdf_ms.generate_episode_pdf,
+    'SPINE':      pdf_spine.generate_episode_pdf,
+    'GERIATRIC':  pdf_geriatric.generate_episode_pdf,
+    'CR':         pdf_cr.generate_episode_pdf,
+    'AMPUTATION': pdf_amputation.generate_episode_pdf,
+    'NEURO':      pdf_neuro.generate_episode_pdf,
+}
+
+_SINGLE_PDF_GENERATORS = {
+    'MS':         pdf_ms.generate_ms_pdf,
+    'SPINE':      pdf_spine.generate_spine_pdf,
+    'GERIATRIC':  pdf_geriatric.generate_geriatric_pdf,
+    'CR':         pdf_cr.generate_cr_pdf,
+    'AMPUTATION': pdf_amputation.generate_amputation_pdf,
+    'NEURO':      pdf_neuro.generate_neuro_pdf,
+}
+
+
+def resource_path(relative):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative)
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), relative)
+
+
+def data_path(filename):
+    base = os.path.dirname(sys.executable) if hasattr(sys, '_MEIPASS') \
+        else os.path.dirname(os.path.abspath(__file__))
+    d = os.path.join(base, 'pt_data')
+    os.makedirs(d, exist_ok=True)
+    return os.path.join(d, filename)
+
+
+DB_PATH = data_path('records.db')
+
+app = Flask(
+    __name__,
+    template_folder=resource_path('templates'),
+    static_folder=resource_path('static')
+)
+app.secret_key = 'pt_assessment_local_key'
+
+
+# ── Form registry — single source of truth ───────────────────────
+FORM_REGISTRY = [
+    # ── Musculoskeletal ──────────────────────────────
+    { 'id': 'MS',          'label': 'Musculoskeletal',    'icon': '&#129460;', 'badge': 'MS',  'group': 'Musculoskeletal',  'ready': True  },
+    { 'id': 'SPINE',       'label': 'Spine',              'icon': '&#128279;', 'badge': 'SP',  'group': 'Musculoskeletal',  'ready': True  },
+    { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',  'ready': False },
+    { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',  'ready': True  },
+    { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',  'ready': False },
+    # ── Neurological ─────────────────────────────────
+    { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',     'ready': True  },
+    { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#128203;', 'badge': 'SC',  'group': 'Neurological',     'ready': False },
+    { 'id': 'VESTIBULAR',  'label': 'Vestibular',         'icon': '&#128261;', 'badge': 'VB',  'group': 'Neurological',     'ready': False },
+    { 'id': 'FACIAL',      'label': 'Facial',             'icon': '&#128580;', 'badge': 'FC',  'group': 'Neurological',     'ready': False },
+    # ── Cardiorespiratory ─────────────────────────────
+    { 'id': 'CR',          'label': 'Cardiorespiratory',  'icon': '&#129728;', 'badge': 'CR',  'group': 'Cardiorespiratory', 'ready': True  },
+    # ── Rehabilitation ────────────────────────────────
+    { 'id': 'GERIATRIC',   'label': 'Geriatric',          'icon': '&#9878;',   'badge': 'GR',  'group': 'Rehabilitation',   'ready': True  },
+    { 'id': 'PAEDIATRIC',  'label': 'Paediatric',         'icon': '&#128118;', 'badge': 'PD',  'group': 'Rehabilitation',   'ready': False },
+    { 'id': 'LYMPHOEDEMA', 'label': 'Lymphoedema',        'icon': '&#128167;', 'badge': 'LY',  'group': 'Rehabilitation',   'ready': False },
+    { 'id': 'NCD',         'label': 'NCD / Obesity',      'icon': '&#129483;', 'badge': 'NC',  'group': 'Rehabilitation',   'ready': False },
+    { 'id': 'GENERAL',     'label': 'General',            'icon': '&#128203;', 'badge': 'GN',  'group': 'Rehabilitation',   'ready': False },
+]
+FORM_GROUPS = ['Musculoskeletal', 'Neurological', 'Cardiorespiratory', 'Rehabilitation']
+
+@app.context_processor
+def inject_forms():
+    return { 'FORM_REGISTRY': FORM_REGISTRY, 'FORM_GROUPS': FORM_GROUPS }
+
+
+# ── Pages ────────────────────────────────────────────────────────
+@app.route('/')
+def index():
+    return render_template('home.html')
+
+
+@app.route('/episode/<int:episode_id>')
+def episode_detail(episode_id):
+    return render_template('episode.html', episode_id=episode_id)
+
+
+# ── Form templates — add new forms here only ────────────────────
+FORM_TEMPLATES = {
+    'MS':          'forms/ms.html',
+    'SPINE':       'forms/spine.html',
+    'GERIATRIC':   'forms/geriatric.html',
+    'CR':          'forms/cr.html',
+    'AMPUTATION':  'forms/amputation.html',
+    'NEURO':       'forms/neuro.html',
+}
+
+@app.route('/form/<form_id>')
+def form_view(form_id):
+    form_id  = form_id.upper()
+    template = FORM_TEMPLATES.get(form_id)
+    if not template:
+        return jsonify({'error': f'Form {form_id} not found'}), 404
+    episode_id = request.args.get('episode_id', type=int)
+    patient_id = request.args.get('patient_id', type=int)
+    patient    = None
+    if patient_id:
+        patient, _ = get_patient(DB_PATH, patient_id)
+    return render_template(template,
+        episode_id=episode_id, patient_id=patient_id,
+        patient=patient, current_form=form_id)
+
+
+# ── Patient API ──────────────────────────────────────────────────
+@app.route('/api/patients/search')
+def api_patient_search():
+    q       = request.args.get('q', '')
+    results, err = search_patients(DB_PATH, q)
+    if err:
+        return jsonify({'error': err}), 500
+    return jsonify(results)
+
+
+@app.route('/api/patients', methods=['POST'])
+def api_create_patient():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    pid, errors = create_patient(DB_PATH, data)
+    if errors:
+        return jsonify({'error': errors}), 422
+    return jsonify({'success': True, 'id': pid})
+
+
+@app.route('/api/patients/<int:patient_id>', methods=['GET'])
+def api_get_patient(patient_id):
+    patient, err = get_patient(DB_PATH, patient_id)
+    if err or not patient:
+        return jsonify({'error': err or 'Not found'}), 404
+    return jsonify(patient)
+
+
+@app.route('/api/patients/<int:patient_id>', methods=['DELETE'])
+def api_delete_patient(patient_id):
+    ok, err = delete_patient(DB_PATH, patient_id)
+    if not ok:
+        return jsonify({'error': err}), 500
+    return jsonify({'success': True})
+
+
+@app.route('/api/patients/<int:patient_id>', methods=['PUT'])
+def api_update_patient(patient_id):
+    data = request.get_json(silent=True)
+    ok, errors = update_patient(DB_PATH, patient_id, data)
+    if not ok:
+        return jsonify({'error': errors}), 422
+    return jsonify({'success': True})
+
+
+# ── Episode API ──────────────────────────────────────────────────
+@app.route('/api/patients/<int:patient_id>/episodes', methods=['GET'])
+def api_patient_episodes(patient_id):
+    episodes, err = get_patient_episodes(DB_PATH, patient_id)
+    if err:
+        return jsonify({'error': err}), 500
+    return jsonify(episodes)
+
+
+@app.route('/api/patients/<int:patient_id>/episodes', methods=['POST'])
+def api_create_episode(patient_id):
+    data      = request.get_json(silent=True) or {}
+    form_type = data.get('form_type', 'MS')
+    ref_date  = data.get('referral_date')
+    eid, errors = create_episode(DB_PATH, patient_id, form_type, ref_date)
+    if errors:
+        return jsonify({'error': errors}), 422
+    return jsonify({'success': True, 'id': eid})
+
+
+@app.route('/api/episodes/<int:episode_id>', methods=['GET'])
+def api_get_episode(episode_id):
+    episode, err = get_episode(DB_PATH, episode_id)
+    if err or not episode:
+        return jsonify({'error': err or 'Not found'}), 404
+    return jsonify(episode)
+
+
+@app.route('/api/episodes/<int:episode_id>/status', methods=['PUT'])
+def api_episode_status(episode_id):
+    data   = request.get_json(silent=True) or {}
+    status = data.get('status', 'active')
+    reason = data.get('reason')
+    ok, err = update_episode_status(DB_PATH, episode_id, status, reason)
+    if not ok:
+        return jsonify({'error': err}), 500
+    return jsonify({'success': True})
+
+
+# ── SOAP API ─────────────────────────────────────────────────────
+@app.route('/api/episodes/<int:episode_id>/soap', methods=['GET'])
+def api_get_soaps(episode_id):
+    notes, err = get_soap_notes(DB_PATH, episode_id)
+    if err:
+        return jsonify({'error': err}), 500
+    return jsonify(notes)
+
+
+@app.route('/api/episodes/<int:episode_id>/soap', methods=['POST'])
+def api_save_soap(episode_id):
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    sid, errors = save_soap(DB_PATH, episode_id, data)
+    if errors:
+        return jsonify({'error': errors}), 422
+    return jsonify({'success': True, 'id': sid})
+
+
+@app.route('/api/soap/<int:soap_id>', methods=['DELETE'])
+def api_delete_soap(soap_id):
+    ok, err = delete_soap(DB_PATH, soap_id)
+    if not ok:
+        return jsonify({'error': err}), 500
+    return jsonify({'success': True})
+
+
+# ── Stats API ───────────────────────────────────────────────────
+@app.route('/api/stats')
+def api_stats():
+    conn = get_conn(DB_PATH)
+    try:
+        stats = {}
+        stats['patients']    = conn.execute('SELECT COUNT(*) FROM patients').fetchone()[0]
+        stats['episodes']    = conn.execute("SELECT COUNT(*) FROM episodes WHERE status='active'").fetchone()[0]
+        stats['assessments'] = conn.execute('SELECT COUNT(*) FROM records').fetchone()[0]
+        stats['soaps']       = conn.execute('SELECT COUNT(*) FROM soap_notes').fetchone()[0]
+        return jsonify(stats)
+    finally:
+        conn.close()
+
+
+# ── Records API (kept for form save/load) ────────────────────────
+@app.route('/api/records', methods=['GET'])
+def api_list():
+    records, err = list_records(DB_PATH)
+    if err:
+        return jsonify({'error': err}), 500
+    return jsonify(records)
+
+
+@app.route('/api/records', methods=['POST'])
+def api_save():
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    record_id, errors = save_record(DB_PATH, data)
+    if errors:
+        return jsonify({'error': errors}), 422
+    return jsonify({'success': True, 'id': record_id})
+
+
+@app.route('/api/records/<int:record_id>', methods=['GET'])
+def api_load(record_id):
+    data, err = load_record(DB_PATH, record_id)
+    if err:
+        return jsonify({'error': err}), 404
+    return jsonify(data)
+
+
+@app.route('/api/records/<int:record_id>', methods=['DELETE'])
+def api_delete(record_id):
+    ok, err = delete_record(DB_PATH, record_id)
+    if not ok:
+        return jsonify({'error': err}), 500
+    return jsonify({'success': True})
+
+
+@app.route('/api/episodes/<int:episode_id>/record', methods=['GET'])
+def api_episode_record(episode_id):
+    data, err = get_episode_record(DB_PATH, episode_id)
+    if err:
+        return jsonify({'error': err}), 500
+    if not data:
+        return jsonify(None)
+    return jsonify(data)
+
+
+# ── PDF Export ───────────────────────────────────────────────────
+@app.route('/api/episodes/<int:episode_id>/pdf', methods=['GET'])
+def export_episode_pdf(episode_id):
+    try:
+        ep, err = get_episode(DB_PATH, episode_id)
+        if err or not ep:
+            return jsonify({'error': err or 'Episode not found'}), 404
+        # Priority: ?form_type= query param > stored episode form_type
+        _form_type = (
+            request.args.get('form_type') or
+            ep.get('form_type', 'MS')
+        ).upper()
+        generate_episode_pdf = _PDF_GENERATORS.get(_form_type, pdf_ms.generate_episode_pdf)
+        assessment, _ = get_episode_record(DB_PATH, episode_id)
+        soaps, _      = get_soap_notes(DB_PATH, episode_id)
+        if not assessment:
+            assessment = {}
+            assessment['patient'] = {
+                'name':    ep.get('patient_name',''),
+                'nric':    ep.get('ic',''),
+                'passport':ep.get('passport',''),
+                'type':    ep.get('pt_type','local'),
+                'dob':     ep.get('dob',''),
+                'sex':     ep.get('sex',''),
+                'date':    ep.get('referral_date',''),
+            }
+        pdf_bytes = generate_episode_pdf(assessment, soaps, ep)
+        name     = (ep.get('patient_name') or 'record').replace(' ','_')
+        ref_date = ep.get('referral_date') or 'nodate'
+        form     = ep.get('form_type','MS')
+        filename = f"PT_{form}_{name}_{ref_date}.pdf"
+        response = make_response(pdf_bytes)
+        response.headers['Content-Type']        = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/export/<int:record_id>/pdf', methods=['GET'])
+def export_pdf(record_id):
+    data, err = load_record(DB_PATH, record_id)
+    if err:
+        return jsonify({'error': err}), 404
+    try:
+        # Priority: ?form_type= query param > _form_type in data > meta.form > MS
+        _form_type = (
+            request.args.get('form_type') or
+            data.get('_form_type') or
+            (data.get('meta') or {}).get('form') or
+            'MS'
+        ).upper()
+        _gen        = _SINGLE_PDF_GENERATORS.get(_form_type, pdf_ms.generate_ms_pdf)
+        pdf_bytes   = _gen(data)
+        patient     = data.get('patient', {})
+        name        = (patient.get('name') or 'record').replace(' ', '_')
+        date        = patient.get('date') or 'nodate'
+        filename    = f"PT_{_form_type}_{name}_{date}.pdf"
+        response    = make_response(pdf_bytes)
+        response.headers['Content-Type']        = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── Launch ───────────────────────────────────────────────────────
+def open_browser():
+    webbrowser.open('http://127.0.0.1:5000')
+
+
+if __name__ == '__main__':
+    init_db(DB_PATH)
+    threading.Timer(1.2, open_browser).start()
+    print("PT Assessment System running at http://127.0.0.1:5000")
+    print("Close this window to stop the server.")
+    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
