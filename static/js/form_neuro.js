@@ -114,33 +114,6 @@ var NeuroForm = (function () {
   }
 
   // ── Dynamic table rows ────────────────────────────────
-  function addInvestigationRow() {
-    var tb = document.getElementById('investigation-tbody');
-    if (!tb) return;
-    var tr = document.createElement('tr');
-    var typeOpts = ['CT scan','MRI','Angiogram','X-ray','Blood test','ECG','Other'].map(function(t){
-      return '<option>' + t + '</option>';
-    }).join('');
-    tr.innerHTML =
-      '<td><select style="width:100%"><option value="">— Type —</option>' + typeOpts + '</select></td>' +
-      '<td><input type="date" style="width:100%"></td>' +
-      '<td><input type="text" placeholder="Key findings..." style="width:100%"></td>' +
-      '<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
-    tb.appendChild(tr);
-  }
-
-  function addMedicationRow() {
-    var tb = document.getElementById('medication-tbody');
-    if (!tb) return;
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td><input type="text" placeholder="Medication name..." style="width:100%"></td>' +
-      '<td><input type="text" placeholder="Dose..." style="width:100%"></td>' +
-      '<td><input type="text" placeholder="Frequency..." style="width:100%"></td>' +
-      '<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
-    tb.appendChild(tr);
-  }
-
   function addRomRow() {
     var tb = document.getElementById('rom-tbody');
     if (!tb) return;
@@ -205,8 +178,8 @@ var NeuroForm = (function () {
       past_pt:     radio('past-pt'),
       past_pt_outcome: gv('past-pt-outcome'),
 
-      investigations: collectTable('investigation-tbody'),
-      medications:    collectTable('medication-tbody'),
+      investigations: InvMedTable.getData().investigations,
+      medications:    InvMedTable.getData().medications,
 
       gen_health:  radio('gen-health'),
       emotional_status: gv('emotional-status'),
@@ -335,8 +308,7 @@ var NeuroForm = (function () {
     setRadio('past-pt', d.past_pt);
     sv('past-pt-outcome', d.past_pt_outcome);
 
-    restoreTable('investigation-tbody', d.investigations, addInvestigationRow);
-    restoreTable('medication-tbody',    d.medications,    addMedicationRow);
+    InvMedTable.loadData({ investigations: d.investigations, medications: d.medications });
 
     setRadio('gen-health', d.gen_health);
     sv('emotional-status', d.emotional_status);
@@ -499,10 +471,9 @@ var NeuroForm = (function () {
     });
 
     MmtTable.clear();
-    ['investigation-tbody','medication-tbody','rom-tbody'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el) el.innerHTML = '';
-    });
+    InvMedTable.clear();
+    var romTb = document.getElementById('rom-tbody');
+    if (romTb) romTb.innerHTML = '';
 
     BodyChart.clearAll();
 
@@ -537,8 +508,6 @@ var NeuroForm = (function () {
     flagTug:             flagTug,
     flagBerg:            flagBerg,
     flagFrt:             flagFrt,
-    addInvestigationRow: addInvestigationRow,
-    addMedicationRow:    addMedicationRow,
     addRomRow:           addRomRow,
     collect:             collect,
     populate:            populate,

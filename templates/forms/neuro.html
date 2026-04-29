@@ -242,7 +242,7 @@
           <thead><tr><th>Type</th><th>Date</th><th>Key Findings</th><th></th></tr></thead>
           <tbody id="investigation-tbody"></tbody>
         </table>
-        <button class="btn-ghost mt-1" onclick="NeuroForm.addInvestigationRow()">+ Add Investigation</button>
+        <button class="btn-ghost mt-1" id="inv-add-row">+ Add Investigation</button>
       </div>
       <div class="field" style="grid-column:span 2">
         <label>Medication</label>
@@ -250,7 +250,7 @@
           <thead><tr><th>Name</th><th>Dose</th><th>Frequency</th><th></th></tr></thead>
           <tbody id="medication-tbody"></tbody>
         </table>
-        <button class="btn-ghost mt-1" onclick="NeuroForm.addMedicationRow()">+ Add Medication</button>
+        <button class="btn-ghost mt-1" id="med-add-row">+ Add Medication</button>
       </div>
     </div>
 
@@ -1052,6 +1052,7 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/mmt_table.js') }}"></script>
+<script src="{{ url_for('static', filename='js/inv_med_table.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form_neuro.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -1064,6 +1065,7 @@ document.addEventListener('DOMContentLoaded', function () {
     'Core / Trunk','Other'
   ];
   MmtTable.init({ containerId: 'mmt-tbody', muscles: NEURO_MUSCLES });
+  InvMedTable.init();
 
   var FM = 'NEURO';
   ClinicalTemplates.addButton('pt-impression-bsf', FM, 'impression_bsf');
