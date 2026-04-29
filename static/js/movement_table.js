@@ -2,7 +2,7 @@
 
 const MovementTable = (function () {
 
-  const JOINTS = [
+  const _DEFAULT_JOINTS = [
     'Shoulder joint', 'Glenohumeral joint', 'Acromioclavicular joint',
     'Elbow joint', 'Radioulnar joint', 'Wrist joint (radiocarpal)',
     'Carpometacarpal joint', 'Metacarpophalangeal joint', 'Interphalangeal joint',
@@ -10,23 +10,26 @@ const MovementTable = (function () {
     'Subtalar joint', 'Metatarsophalangeal joint',
     'Temporomandibular joint', 'Other (specify)'
   ];
-
-  const PLANES = [
+  const _DEFAULT_PLANES = [
     'Flexion', 'Extension', 'Abduction', 'Adduction',
     'Internal rotation', 'External rotation',
     'Lateral flexion (L)', 'Lateral flexion (R)',
     'Pronation', 'Supination', 'Inversion', 'Eversion',
     'Opposition', 'All planes', 'Other (specify)'
   ];
+  const _DEFAULT_SIDES = ['Right (affected)', 'Left (affected)', 'Right (unaffected)', 'Left (unaffected)', 'Bilateral'];
 
-  const SIDES = ['Right (affected)', 'Left (affected)', 'Right (unaffected)', 'Left (unaffected)', 'Bilateral'];
+  var _joints = _DEFAULT_JOINTS;
+  var _planes = _DEFAULT_PLANES;
+  var _sides  = _DEFAULT_SIDES;
 
   let rows = [];
   let rowCounter = 0;
 
-  // ── Init ──────────────────────────────────────
-  function init() {
-    // Use event delegation on document for robustness
+  function init(config) {
+    _joints = (config && config.joints) || _DEFAULT_JOINTS;
+    _planes = (config && config.planes) || _DEFAULT_PLANES;
+    _sides  = (config && config.sides)  || _DEFAULT_SIDES;
     document.addEventListener('click', function(e) {
       if (e.target && e.target.id === 'mov-add-row') {
         e.preventDefault();
@@ -71,7 +74,7 @@ const MovementTable = (function () {
     }
 
     tbody.innerHTML = rows.map(function (r) {
-      var jointCell = makeSelect('joint', r.id, JOINTS, r.joint)
+      var jointCell = makeSelect('joint', r.id, _joints, r.joint)
         + (r.joint === 'Other (specify)'
             ? makeInput('jointOther', r.id, r.jointOther, 'Specify joint...')
             : '<span data-other-hint="' + r.id + '" style="display:none">'
@@ -79,8 +82,8 @@ const MovementTable = (function () {
               + '</span>');
       return '<tr data-rid="' + r.id + '">'
         + '<td style="min-width:180px">' + jointCell + '</td>'
-        + '<td>' + makeSelect('side', r.id, SIDES, r.side) + '</td>'
-        + '<td>' + makeSelect('plane', r.id, PLANES, r.plane) + '</td>'
+        + '<td>' + makeSelect('side', r.id, _sides, r.side) + '</td>'
+        + '<td>' + makeSelect('plane', r.id, _planes, r.plane) + '</td>'
         + '<td>' + makeInput('activeRom', r.id, r.activeRom, '0-°') + '</td>'
         + '<td>' + makeInput('activePain', r.id, r.activePain, 'Nil / end range...') + '</td>'
         + '<td>' + makeInput('passiveRom', r.id, r.passiveRom, '0-°') + '</td>'
