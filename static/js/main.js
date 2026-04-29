@@ -1200,9 +1200,10 @@ const Main = (function () {
     if (data.mmt && data.mmt.length) {
       parts.push(dash); parts.push('MANUAL MUSCLE TESTING');
       data.mmt.forEach(function(r) {
-        var muscle = (typeof r === 'object' && !Array.isArray(r)) ? r.muscle : r[0];
-        var gradeR = (typeof r === 'object' && !Array.isArray(r)) ? r.gradeR : r[1];
-        var gradeL = (typeof r === 'object' && !Array.isArray(r)) ? r.gradeL : r[2];
+        var isObj = r !== null && typeof r === 'object' && !Array.isArray(r);
+        var muscle = isObj ? r.muscle : r[0];
+        var gradeR = isObj ? r.gradeR : r[1];
+        var gradeL = isObj ? r.gradeL : r[2];
         if (muscle) parts.push('  ' + muscle + ' — R: ' + (gradeR||'—') + '  L: ' + (gradeL||'—'));
       });
       parts.push('');
