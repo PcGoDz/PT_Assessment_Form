@@ -659,7 +659,7 @@
       <thead><tr><th>Muscle Group</th><th>R</th><th>L</th><th></th></tr></thead>
       <tbody id="mmt-tbody"></tbody>
     </table>
-    <button class="btn-ghost mt-1" onclick="NeuroForm.addMmtRow()">+ Add MMT Row</button>
+    <button class="btn-ghost mt-1" id="mmt-add-row">+ Add MMT Row</button>
 
     <h3 class="subsec">Range of Motion</h3>
     <table class="data-table" id="rom-table">
@@ -1051,9 +1051,20 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/mmt_table.js') }}"></script>
 <script src="{{ url_for('static', filename='js/form_neuro.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  var NEURO_MUSCLES = [
+    'Shoulder Flexors','Shoulder Abductors','Shoulder External Rotators',
+    'Elbow Flexors','Elbow Extensors','Wrist Extensors','Wrist Flexors',
+    'Finger Extensors','Finger Flexors','Grip Strength',
+    'Hip Flexors','Hip Extensors','Hip Abductors','Hip Adductors',
+    'Knee Extensors','Knee Flexors','Ankle Dorsiflexors','Ankle Plantarflexors',
+    'Core / Trunk','Other'
+  ];
+  MmtTable.init({ containerId: 'mmt-tbody', muscles: NEURO_MUSCLES });
+
   var FM = 'NEURO';
   ClinicalTemplates.addButton('pt-impression-bsf', FM, 'impression_bsf');
   ClinicalTemplates.addButton('pt-impression-al',  FM, 'impression_al');

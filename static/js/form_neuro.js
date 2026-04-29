@@ -141,31 +141,6 @@ var NeuroForm = (function () {
     tb.appendChild(tr);
   }
 
-  var MMT_MUSCLES = [
-    'Shoulder Flexors','Shoulder Abductors','Shoulder External Rotators',
-    'Elbow Flexors','Elbow Extensors','Wrist Extensors','Wrist Flexors',
-    'Finger Extensors','Finger Flexors','Grip Strength',
-    'Hip Flexors','Hip Extensors','Hip Abductors','Hip Adductors',
-    'Knee Extensors','Knee Flexors','Ankle Dorsiflexors','Ankle Plantarflexors',
-    'Core / Trunk','Other'
-  ];
-
-  function addMmtRow() {
-    var tb = document.getElementById('mmt-tbody');
-    if (!tb) return;
-    var tr   = document.createElement('tr');
-    var opts = '<option value="">— Select —</option>' + MMT_MUSCLES.map(function(m){
-      return '<option>' + m + '</option>';
-    }).join('');
-    var grades = '<option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option>';
-    tr.innerHTML =
-      '<td><select style="width:100%">' + opts    + '</select></td>' +
-      '<td><select style="width:100%">' + grades  + '</select></td>' +
-      '<td><select style="width:100%">' + grades  + '</select></td>' +
-      '<td><button class="btn-ghost btn-sm" onclick="this.closest(\'tr\').remove()">✕</button></td>';
-    tb.appendChild(tr);
-  }
-
   function addRomRow() {
     var tb = document.getElementById('rom-tbody');
     if (!tb) return;
@@ -272,7 +247,7 @@ var NeuroForm = (function () {
       tone_rll:   gv('tone-rll'),
       tone_lll:   gv('tone-lll'),
       tone_notes: gv('tone-notes'),
-      mmt:        collectTable('mmt-tbody'),
+      mmt:        MmtTable.getData(),
       rom:        collectTable('rom-tbody'),
 
       ftn:     radio('ftn'),
@@ -405,7 +380,7 @@ var NeuroForm = (function () {
     sv('tone-rll',   d.tone_rll);
     sv('tone-lll',   d.tone_lll);
     sv('tone-notes', d.tone_notes);
-    restoreTable('mmt-tbody', d.mmt, addMmtRow);
+    MmtTable.loadData(d.mmt);
     restoreTable('rom-tbody', d.rom, addRomRow);
 
     setRadio('ftn',    d.ftn);
@@ -523,7 +498,8 @@ var NeuroForm = (function () {
       });
     });
 
-    ['investigation-tbody','medication-tbody','mmt-tbody','rom-tbody'].forEach(function(id) {
+    MmtTable.clear();
+    ['investigation-tbody','medication-tbody','rom-tbody'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el) el.innerHTML = '';
     });
@@ -563,7 +539,6 @@ var NeuroForm = (function () {
     flagFrt:             flagFrt,
     addInvestigationRow: addInvestigationRow,
     addMedicationRow:    addMedicationRow,
-    addMmtRow:           addMmtRow,
     addRomRow:           addRomRow,
     collect:             collect,
     populate:            populate,

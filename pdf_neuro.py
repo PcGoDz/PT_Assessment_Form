@@ -38,6 +38,11 @@ def _build_story(d):
             return sep.join([str(v) for v in val if v])
         return str(val) if val else ''
 
+    def _mmt_val(r, key, idx):
+        if isinstance(r, dict): return str(r.get(key, '') or '')
+        if isinstance(r, list) and len(r) > idx: return str(r[idx])
+        return ''
+
     story   = []
     patient = _ensure_dict(d.get('patient'))
     bc      = _ensure_dict(d.get('bodyChart') or d.get('body_chart'))
@@ -254,10 +259,10 @@ def _build_story(d):
     mmt = d.get('mmt', [])
     if mmt:
         mmt_data = [[
-            Paragraph(str(r[0]) if len(r) > 0 else '', S_SMALL),
-            Paragraph(str(r[1]) if len(r) > 1 else '', S_SMALL),
-            Paragraph(str(r[2]) if len(r) > 2 else '', S_SMALL),
-        ] for r in mmt]
+            Paragraph(_mmt_val(r, 'muscle', 0), S_SMALL),
+            Paragraph(_mmt_val(r, 'gradeR', 1), S_SMALL),
+            Paragraph(_mmt_val(r, 'gradeL', 2), S_SMALL),
+        ] for r in mmt if r]
         mmt_t = mini_table(
             [Paragraph('<b>Muscle Group</b>', S_SMALL), Paragraph('<b>R</b>', S_SMALL), Paragraph('<b>L</b>', S_SMALL)],
             mmt_data,
