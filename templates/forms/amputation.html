@@ -573,20 +573,15 @@
             <thead>
               <tr>
                 <th style="min-width:180px;">Muscle Group</th>
-                <th style="min-width:80px;">Side</th>
-                <th style="min-width:80px;">Grade (0–5)</th>
-                <th style="min-width:160px;">Comments</th>
+                <th style="min-width:80px;">R</th>
+                <th style="min-width:80px;">L</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody id="mmt-tbody">
-              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
-              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
-              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
-              <tr><td><select style="width:100%"><option value="">— Select —</option><option>Hip Flexors</option><option>Hip Extensors</option><option>Hip Abductors</option><option>Hip Adductors</option><option>Hip External Rotators</option><option>Knee Extensors</option><option>Knee Flexors</option><option>Ankle Dorsiflexors</option><option>Ankle Plantarflexors</option><option>Shoulder Flexors</option><option>Shoulder Abductors</option><option>Elbow Flexors</option><option>Elbow Extensors</option><option>Core / Trunk</option><option>Other</option></select></td><td><select style="width:100%"><option value="">—</option><option>R</option><option>L</option><option>B/L</option></select></td><td><select style="width:100%"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option></select></td><td><input type="text" placeholder="Comments..."></td></tr>
-            </tbody>
+            <tbody id="mmt-tbody"></tbody>
           </table>
         </div>
-        <button class="mov-add-btn" onclick="AmputationForm.addMmtRow()">+ Add row</button>
+        <button class="mov-add-btn" id="mmt-add-row">+ Add row</button>
       </div>
 
     </div>
@@ -760,9 +755,18 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/mmt_table.js') }}"></script>
 <script src="/static/js/form_amputation.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  var AMP_MUSCLES = [
+    'Hip Flexors','Hip Extensors','Hip Abductors','Hip Adductors',
+    'Hip External Rotators','Knee Extensors','Knee Flexors','Ankle Dorsiflexors',
+    'Ankle Plantarflexors','Shoulder Flexors','Shoulder Abductors',
+    'Elbow Flexors','Elbow Extensors','Core / Trunk','Other'
+  ];
+  MmtTable.init({ containerId: 'mmt-tbody', muscles: AMP_MUSCLES });
+
   var FM = 'AMPUTATION';
   ClinicalTemplates.addButton('obs-general',       FM, 'observation');
   ClinicalTemplates.addButton('obs-stump-condition',FM, 'observation');

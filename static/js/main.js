@@ -1035,9 +1035,8 @@ const Main = (function () {
     if (data.mmt && data.mmt.length) {
       parts.push(dash); parts.push('MANUAL MUSCLE TESTING');
       data.mmt.forEach(function(m) {
-        if (m.muscle || m.grade) {
-          parts.push('  ' + (m.muscle||'—') + ' (' + (m.side||'—') + ') : ' + (m.grade||'—') +
-            (m.comment ? '  — ' + m.comment : ''));
+        if (m.muscle || m.gradeR || m.gradeL) {
+          parts.push('  ' + (m.muscle||'—') + ' — R: ' + (m.gradeR||'—') + '  L: ' + (m.gradeL||'—'));
         }
       });
       parts.push('');

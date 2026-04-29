@@ -64,25 +64,6 @@ var AmputationForm = (function () {
     tb.appendChild(tr);
   }
 
-  var MMT_MUSCLES = ['Hip Flexors','Hip Extensors','Hip Abductors','Hip Adductors',
-    'Hip External Rotators','Knee Extensors','Knee Flexors','Ankle Dorsiflexors',
-    'Ankle Plantarflexors','Shoulder Flexors','Shoulder Abductors',
-    'Elbow Flexors','Elbow Extensors','Core / Trunk','Other'];
-
-  function addMmtRow() {
-    var tb = document.getElementById('mmt-tbody');
-    var tr = document.createElement('tr');
-    var opts   = '<option value="">— Select —</option>' + MMT_MUSCLES.map(function(m){ return '<option>' + m + '</option>'; }).join('');
-    var sides  = '<option value="">—</option><option>R</option><option>L</option><option>B/L</option>';
-    var grades = '<option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option>';
-    tr.innerHTML =
-      '<td><select style="width:100%">' + opts   + '</select></td>' +
-      '<td><select style="width:100%">' + sides  + '</select></td>' +
-      '<td><select style="width:100%">' + grades + '</select></td>' +
-      '<td><input type="text" placeholder="Comments..."></td>';
-    tb.appendChild(tr);
-  }
-
   // ── Movement table ───────────────────────────
   function collectMovements() {
     var rows = document.querySelectorAll('#movement-table-body tr');
@@ -113,43 +94,6 @@ var AmputationForm = (function () {
           inputs[1].value = m.active   || '';
           inputs[2].value = m.passive  || '';
           inputs[3].value = m.comments || '';
-        }
-      }
-    });
-  }
-
-  // ── MMT table ────────────────────────────────
-  function collectMmt() {
-    var rows = document.querySelectorAll('#mmt-tbody tr');
-    var out  = [];
-    rows.forEach(function(row) {
-      var sels = row.querySelectorAll('select');
-      var inp  = row.querySelector('input');
-      if (sels.length >= 3) {
-        var muscle  = sels[0].value;
-        var side    = sels[1].value;
-        var grade   = sels[2].value;
-        var comment = inp ? inp.value.trim() : '';
-        if (muscle || grade) {
-          out.push({ muscle: muscle, side: side, grade: grade, comment: comment });
-        }
-      }
-    });
-    return out;
-  }
-
-  function populateMmt(mmt) {
-    if (!mmt || !mmt.length) return;
-    var rows = document.querySelectorAll('#mmt-tbody tr');
-    mmt.forEach(function(m, i) {
-      if (i < rows.length) {
-        var sels = rows[i].querySelectorAll('select');
-        var inp  = rows[i].querySelector('input');
-        if (sels.length >= 3) {
-          sels[0].value = m.muscle  || '';
-          sels[1].value = m.side    || '';
-          sels[2].value = m.grade   || '';
-          if (inp) inp.value = m.comment || '';
         }
       }
     });
@@ -220,7 +164,7 @@ var AmputationForm = (function () {
     d.movements           = collectMovements();
 
     // MMT table
-    d.mmt                 = collectMmt();
+    d.mmt                 = MmtTable.getData();
 
     // Stump measurement
     d.stump_length        = gv('stump-length');
@@ -316,7 +260,16 @@ var AmputationForm = (function () {
     sv('cardio-status',      data.cardio_status);
 
     populateMovements(data.movements);
-    populateMmt(data.mmt);
+    // Backward-compat: old records stored {muscle, side, grade, comment} per limb;
+    // new MmtTable expects bilateral {muscle, gradeR, gradeL}.
+    var mmtData = (data.mmt || []).map(function(r) {
+      if (r.gradeR !== undefined || r.gradeL !== undefined) return r;
+      var out = { muscle: r.muscle || '' };
+      out[r.side === 'Left' ? 'gradeL' : 'gradeR'] = r.grade || '';
+      out[r.side === 'Left' ? 'gradeR' : 'gradeL'] = '';
+      return out;
+    });
+    MmtTable.loadData(mmtData);
 
     sv('stump-length',       data.stump_length);
     sv('stump-circumference',data.stump_circumference);
@@ -383,7 +336,7 @@ var AmputationForm = (function () {
     onMgmtChange('');
 
     document.querySelectorAll('#movement-table-body input, #movement-table-body textarea').forEach(function(el) { el.value = ''; });
-    document.querySelectorAll('#mmt-tbody select, #mmt-tbody input').forEach(function(el) { el.value = ''; });
+    MmtTable.clear();
 
     if (window.BodyChart) BodyChart.clearAll();
     FormBase.resetPatient();
@@ -396,7 +349,6 @@ var AmputationForm = (function () {
     setPain:            setPain,
     pickIrr:            pickIrr,
     addMovRow:          addMovRow,
-    addMmtRow:          addMmtRow,
     onMgmtChange:       onMgmtChange,
     onPhantomChange:    onPhantomChange,
     onOutcomeSkip:      onOutcomeSkip,

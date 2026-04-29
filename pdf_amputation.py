@@ -230,21 +230,19 @@ def _build_story(d):
         mmt_data = d.get('mmt', [])
         if isinstance(mmt_data, list) and mmt_data:
             mmt_rows = [[Paragraph('<b>Muscle Group</b>', S_SMALL),
-                         Paragraph('<b>Side</b>', S_SMALL),
-                         Paragraph('<b>Grade</b>', S_SMALL),
-                         Paragraph('<b>Comments</b>', S_SMALL)]]
+                         Paragraph('<b>R</b>', S_SMALL),
+                         Paragraph('<b>L</b>', S_SMALL)]]
             for m in mmt_data:
-                if isinstance(m, dict) and (m.get('muscle') or m.get('grade')):
+                if isinstance(m, dict) and m.get('muscle'):
                     mmt_rows.append([
-                        Paragraph(m.get('muscle',''), S_SMALL),
-                        Paragraph(m.get('side',''),   S_SMALL),
-                        Paragraph(m.get('grade',''),  S_SMALL),
-                        Paragraph(m.get('comment',''),S_SMALL),
+                        Paragraph(m.get('muscle',''),  S_SMALL),
+                        Paragraph(m.get('gradeR', m.get('grade','')), S_SMALL),
+                        Paragraph(m.get('gradeL',''),  S_SMALL),
                     ])
             while len(mmt_rows) < 5:
-                mmt_rows.append([Paragraph('', S_SMALL)] * 4)
+                mmt_rows.append([Paragraph('', S_SMALL)] * 3)
             mmt_inner = Table(mmt_rows,
-                colWidths=[INN*0.44, INN*0.10, INN*0.10, INN*0.36],
+                colWidths=[INN*0.64, INN*0.18, INN*0.18],
                 style=TableStyle([
                     ('INNERGRID',    (0,0), (-1,-1), 0.3, LGREY),
                     ('FONTSIZE',     (0,0), (-1,-1), 6.5),
