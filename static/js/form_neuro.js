@@ -211,6 +211,7 @@ var NeuroForm = (function () {
     return {
       _form_type: 'NEURO',
       meta:       { form: 'NEURO' },
+      patient:    FormBase.collectPatient(),
       diagnosis:  gv('diagnosis'),
       dr_mgmt:    radio('dr-mgmt'),
       pain_score: gv('pain-score'),
@@ -338,6 +339,7 @@ var NeuroForm = (function () {
   // ── POPULATE ──────────────────────────────────────────
   function populate(d) {
     if (!d) return;
+    FormBase.populatePatient(d.patient);
     sv('diagnosis', d.diagnosis);
     setRadio('dr-mgmt', d.dr_mgmt);
     var ps = document.getElementById('pain-score');
@@ -475,6 +477,7 @@ var NeuroForm = (function () {
 
   // ── RESET ─────────────────────────────────────────────
   function reset() {
+    FormBase.resetPatient();
     var ids = [
       'diagnosis','complaint-text','patient-goal','onset-value','pmhx-details','past-pt-outcome',
       'emotional-status','occupation','hobbies','chart-notes',

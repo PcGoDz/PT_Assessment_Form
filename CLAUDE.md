@@ -5,13 +5,13 @@ and context established during development. Keep it updated as things change.
 
 ---
 
-## ⚠️ LAST SESSION: 2026-04-28 (NEURO Bug Fixes)
+## ⚠️ LAST SESSION: 2026-04-28 (NEURO save/PDF fixes + shared component planning)
 
-1. **Where we left off** — NEURO form bug fix session complete. 8 bugs found and resolved after first real-world test. Final fix: added `meta: { form: 'NEURO' }` to `form_neuro.js collect()` — this made the 422 save/PDF error disappear by letting `validate_record()` in database.py correctly identify the form type. All known bugs resolved. Exe build NOT yet tested.
-2. **Do this first next session** — Git push (seriously). Then full exe build test (all 6 forms end-to-end). Then HAND form.
-3. **Traps / gotchas** — Every form's `collect()` MUST return both `_form_type` AND `meta: { form: 'NEURO' }`. The PDF routing uses `_form_type`, the validator uses `meta.form`. Missing either one causes silent mismatch. Also: `resetPatient()` in `form_base.js` still has no null guard on `derived-dob`/`derived-gender` — will crash any future form that omits those elements.
-4. **What's half-done** — Validation layer UI (REQUIRED_FIELDS errors exist in backend, not surfaced before save). Age auto-calculation still broken. Both deprioritised.
-5. **What to skip for now** — audit_log ON DELETE CASCADE, UNIQUE constraint on records.episode_id, pt_assessment.spec redundant templates/pdf entry, ARIA/accessibility. All documented, none urgent.
+1. **Where we left off** — NEURO save/PDF fully working. Git repo initialized and pushed to GitHub. pdf_neuro.py rewritten to match KKM 2-column layout using multiple short two_col blocks. Shared table component architecture planned but NOT yet implemented.
+2. **Do this first next session** — Build shared table IIFEs (MmtTable, InvMedTable, refactor MovementTable to be configurable). Do this BEFORE starting HAND — it pays off immediately.
+3. **Traps / gotchas** — Every form's `collect()` MUST include `patient: FormBase.collectPatient()` or the validator 422s on every save (NEURO was missing this). Also: after any pdf_neuro.py change, Flask must be RESTARTED — same error memory addresses = old process still running.
+4. **What's half-done** — Shared table components (MmtTable, InvMedTable, MovementTable refactor) planned and scoped, not started. NEURO exe build still untested.
+5. **What to skip for now** — Validation layer UI, age auto-calc, audit_log ON DELETE CASCADE, UNIQUE constraint, ARIA. All documented, none urgent.
 
 ---
 
@@ -266,6 +266,8 @@ Shortest path always. 12-21 patients/day.
 - body_chart_section() returns a single Table — use items.append(), NOT items +=
 - Nested tables inside ruled_section() cells MUST use INN = column_width - 8*mm for
   their colWidths, not the full column width — padding eats into available space
+- NEURO PDF layout: 2-column throughout (matches KKM borang). Page 1 top = subjective/history (left) + body chart/vitals/tone (right). Page 1-2 = investigation/social (left) + objective/coordination/others (right). Explicit PageBreak then MRMI/gait/endurance (left) + impression/goals/plan (right). MMT+ROM tables go full-width between blocks if data is present. Never flatten to single-column — KKM audit requires 2-column layout match.
+- NEURO two_col splits into MULTIPLE short blocks (not one giant block) — each block must be shorter than the page frame (~250mm). If you see a single two_col with >30 rows across both columns, split it. ReportLab throws "too large" if any single flowable exceeds the frame.
 - ALWAYS use sign_chop_block() from pdf_platypus_base for the sign & chop footer.
   Do NOT inline custom sign/chop code in individual PDF generators.
   Usage: items += sign_chop_block()  or  story += sign_chop_block()
@@ -546,6 +548,56 @@ Shortest path always. 12-21 patients/day.
 
 ---
 
+## Lessons Learned — NEURO PDF Rewrite Session 2026-04-28
+
+1. **`patient: FormBase.collectPatient()` is a separate requirement from `meta: { form: 'XXX' }`.**
+   Both must be present in collect(). They fail in different ways:
+   - Missing `meta.form` → validator picks wrong REQUIRED_FIELDS → 422 with wrong field errors
+   - Missing `patient` → validator can't find `patient.name` / `patient.date` → 422 even if all form fields are filled
+   NEURO had `meta.form` fixed in the previous session but still 422'd — because `patient` was also missing.
+   Both are now in the Anti-Repeat Rules and the new form template. Two bugs, one symptom.
+
+2. **Flask does not auto-reload .py changes. Restart it.**
+   Same error memory address across two separate requests = same process still running.
+   The pdf_neuro.py rewrite was not picked up until Flask was manually restarted (Ctrl+C → `python app.py`).
+   Rule: after changing any .py file, tell the user to restart Flask before testing. Make it explicit.
+
+3. **ReportLab "too large" error = a single flowable exceeds the frame height (~750pt / 264mm).**
+   `two_col()` returns ONE Table. If that table's height > frame, it cannot be split — error and crash.
+   The fix is not to flatten the layout; it's to split the content into multiple shorter `two_col()` blocks.
+   Each block must be ≤ ~250mm. ReportLab will move a block to the next page if needed, but it
+   cannot split a block that is taller than the frame. Think of each `two_col()` as a unit, not a section.
+
+4. **Nested tables inside `rs()` must be `(None, table)` rows — not siblings.**
+   When MRMI table and outcome_t were siblings of their header rows in the `two_col` list,
+   they rendered as disconnected floating elements with a box header above them. No error.
+   Correct pattern: the table goes as the `content` of an `rs()` row — `(None, table)` —
+   so it's contained inside the ruled section's border. Always test page 3+ of any PDF for this.
+
+5. **KKM form ref numbers must be verified against the real printed form.**
+   CLAUDE.md had `MOH/P/FIS/27.25(HB)-e` for NEURO. The real form says `fisio/b.pen. 21/2022`.
+   PDF audit compliance depends on this matching exactly. When in doubt, ask for the physical form scan.
+   All refs are now documented in the Key Clinical Context section — check there first.
+
+6. **Never flatten a 2-column layout because of a ReportLab error.**
+   The first instinct when "too large" error fires is to simplify the layout to flat single-column.
+   This is wrong — it breaks audit compliance, visual match to KKM borang, and user trust.
+   The right fix is always: split the two_col blocks smaller. The layout must stay 2-column.
+
+### What we should have done differently
+
+- **Split two_col blocks from the start on any form with > 20 content rows.**
+  The "too large" error was entirely predictable from the content volume. NEURO has 11 sections.
+  A single two_col block covering 6 sections will always exceed 264mm on A4. Plan for 2–3 blocks
+  per page from the moment you start the PDF generator — not as a bugfix pass.
+
+- **Flatten-then-rewrite cost a full round-trip.** The intermediate flat PDF was wrong layout,
+  the Flask-not-restarted confusion added ambiguity, and the user had to share form images to
+  confirm the requirement was always 2-column. One clarifying question up front ("should this match
+  the 2-column borang layout?") saves all of that.
+
+---
+
 ## Lessons Learned — NEURO Bug Fix Session 2026-04-28
 
 1. **`collect()` needs both `_form_type` AND `meta.form` — they serve different consumers.**
@@ -609,7 +661,7 @@ Shortest path always. 12-21 patients/day.
 ## TODO (next session priority order)
 
 ### High Priority
-- [ ] Git push — this has been on the list for 5+ sessions, do it first
+- [x] Git push — pushed to GitHub (PcGoDz/PT_Assessment_Form) — DONE 2026-04-28
 - [ ] Full end-to-end exe build test (all 6 forms — NEURO code is fixed but build is untested)
 - [ ] HAND form (next new form — simpler scope, good warmup)
 
@@ -645,6 +697,15 @@ Shortest path always. 12-21 patients/day.
 - [x] Added ClinicalTemplates.addButton() calls in neuro.html extra_js (6 template buttons)
 - [x] Added `meta: { form: 'NEURO' }` to form_neuro.js collect() — fixed 422 on save/PDF
 
+### Done this session (2026-04-28 — NEURO save/PDF rewrite + Git setup)
+- [x] Git repository initialised and pushed to GitHub (https://github.com/PcGoDz/PT_Assessment_Form)
+- [x] Added `patient: FormBase.collectPatient()` to form_neuro.js collect() — fixed 422 on every save and export (SEPARATE bug from meta.form — this one prevented validate_record() finding patient.name/date)
+- [x] Added `FormBase.populatePatient(d.patient)` and `FormBase.resetPatient()` to populate() and reset()
+- [x] Fixed topbar resize: overflow-x:auto on .topbar-actions, nowrap + ellipsis on .topbar-sub, media query hiding .topbar-sub at <900px
+- [x] pdf_neuro.py completely rewritten — 2-column KKM layout across 4 two_col blocks, matches real fisio/b.pen. 21/2022 form. Page 1: subjective/history (L) + body chart/vitals/tone (R). Page 1-2: inv/social (L) + objective/coordination/others (R). PageBreak + page 3: MRMI/gait/endurance (L) + impression/goals/plan (R)
+- [x] Fixed floating tables on PDF page 3 — MRMI table, legend, and outcome_t moved inside rs() as `(None, table)` rows instead of sibling flowables
+- [x] Corrected KKM NEURO ref number from `MOH/P/FIS/27.25(HB)-e` to `fisio/b.pen. 21/2022`
+
 ---
 
 ## Key Clinical Context
@@ -661,7 +722,7 @@ Shortest path always. 12-21 patients/day.
 - Geriatric: fisio / b.pen. 15 / 2019
 - CR:        fisio / b.pen. 11 / Pind. 2 / 2019
 - Amputation: fisio / b.pen. 16 / 2019
-- Neurology: MOH/P/FIS/27.25(HB)-e
+- Neurology: fisio/b.pen. 21/2022
 
 ### Lung Diagram (CR)
 - 6 zones: RU, RM, RL (right lung), LU, LL (left lung), BASE (bilateral)
@@ -722,19 +783,25 @@ POMR format uses Malay headers (TARIKH, NOMBOR GILIRAN, DILIHAT, TEMUJANJI) + En
 - [x] **home.html status parsing reads discharge_reason directly, with backwards-compat fallback**
 - [x] **NEURO form — full implementation (HTML, JS, PDF, MPIS, SOAP templates, spec)**
 - [x] **NEURO bug fix pass — chip CSS, body chart SVG, duplicate script, 422 validator, modal card, template buttons**
+- [x] **Git repository initialised and pushed to GitHub (PcGoDz/PT_Assessment_Form)**
+- [x] **NEURO save/PDF 422 fix (pass 2) — patient: FormBase.collectPatient() added to collect(); populatePatient/resetPatient wired in**
+- [x] **Topbar resize CSS fix — scrollable actions row, .topbar-sub hidden at <900px**
+- [x] **pdf_neuro.py full rewrite — 2-column KKM borang layout, 4 two_col blocks, correct ref number fisio/b.pen. 21/2022**
+- [x] **Floating table fix on PDF page 3 — nested tables placed inside rs() rows not as siblings**
 
 ---
 
 
-## 🔁 PERSISTENT REMINDER — Git Push
+## 🔁 PERSISTENT REMINDER — Git Push Before Every Session
 
-**Push to GitHub at the start of every session. Not the end. The start.**
-This has been on the TODO list for 4+ sessions and keeps getting skipped.
-It takes 2 minutes. Do it before opening any files.
+**Git is set up. Remote is live. Push at the start of every session.**
+Remote: https://github.com/PcGoDz/PT_Assessment_Form
 
 ```bash
 git add -A && git commit -m "session checkpoint" && git push
 ```
+
+This is now a 2-minute habit, not a 5-session debt. Keep it that way.
 
 ---
 
@@ -1367,3 +1434,129 @@ Main achievements:
 4. Geriatric duplicate field cleanup
 5. Decide which form to build next (NEURO recommended for clinical volume,
    HAND recommended for simpler scope as warmup)
+
+---
+
+## HANDOVER NOTE — NEURO PDF Rewrite + Git Setup Session 2026-04-28
+
+### What happened this session
+
+Second bug-fix session on the NEURO form, immediately following the first (chip CSS / body chart / modal card / template buttons session). User ran first real-world test of the fixed form and found two more bugs. Also: git was finally pushed to GitHub for the first time. pdf_neuro.py was completely rewritten to match the real KKM borang layout.
+
+**Files modified:**
+- `static/js/form_neuro.js` — added `patient: FormBase.collectPatient()` to collect(), `FormBase.populatePatient(d.patient)` to populate(), `FormBase.resetPatient()` to reset()
+- `static/css/style.css` — topbar resize fixes (overflow-x:auto, .topbar-sub ellipsis + media query, nowrap on .topbar-logo)
+- `pdf_neuro.py` — complete rewrite to 2-column KKM layout
+- `CLAUDE.md` — ref number corrected, NEURO PDF layout rules updated, this handover note
+
+**Git:**
+- Repo initialised (`git init`)
+- `.gitignore` already had `pt_data/` and `*.db` — patient data excluded
+- 43 files committed and pushed to https://github.com/PcGoDz/PT_Assessment_Form
+
+---
+
+**Bugs fixed:**
+
+1. **422 on Save Record and Export KKM PDF (pass 2)** — After the previous session fixed `meta: { form: 'NEURO' }`, a second unrelated 422 remained: `validate_record()` also checks `patient.name` and `patient.date` as common required fields for ALL forms. `form_neuro.js collect()` never called `FormBase.collectPatient()` so there was no `patient` object in the payload. Validator found `patient.name` undefined → 422.
+   Fixed: added `patient: FormBase.collectPatient()` to collect(), plus matching populate/reset calls.
+   This is a different bug from the `meta.form` one. Both were present; both needed fixing.
+
+2. **Topbar breaks on window resize** — At narrow widths, `.topbar-actions` wrapped onto a second line pushing the topbar to double height. `.topbar-sub` compressed to zero and broke the flex layout.
+   Fixed: `.topbar-actions { overflow-x: auto; flex-shrink: 0; }` keeps buttons on one scrollable row.
+   `.topbar-sub { overflow: hidden; text-overflow: ellipsis; min-width: 0; }` clips gracefully.
+   `@media (max-width: 900px) { .topbar-sub { display: none; } }` hides subtitle on small windows.
+
+3. **PDF export all flat (not 2-column)** — The previous pdf_neuro.py was using a single large `two_col()` block spanning 39 rows across both columns. ReportLab threw `"Flowable too large on page 2 in frame 'normal' (515 x 750*)"`. First fix attempt (not restarting Flask) appeared to change nothing. Second fix attempt (full flatten) generated but completely wrong layout — KKM audit requires 2-column to match the printed borang. User shared actual form scan images.
+   Correct fix: rewrite as 4 independent two_col blocks, each ≤ ~250mm tall. ReportLab moves whole blocks to the next page; it cannot split a single block that exceeds frame height. The `two_col()` unit is a hard constraint.
+
+4. **Floating / jarring tables on PDF page 3** — MRMI table, legend, and outcome_t were sibling items in the two_col left-column list alongside their header rs() row. They rendered as disconnected boxes with a header floating above. Visual layout looked broken.
+   Fix: moved all three inside rs() as `(None, mrmi_t)`, `(None, legend)`, `(None, outcome_t)` rows. They are now contained inside one continuous bordered block. Rule: tables that belong "inside" a section must be `(None, table)` rows in rs(), not separate list items.
+
+---
+
+### Retrospective
+
+**What went wrong:**
+
+- **Two 422 bugs in the same form for the same symptom.** `meta.form` and `patient` are both required by the validator. One was fixed in the previous session, one in this session. The bug that was obvious to the user ("422 on save") actually had two independent root causes. We should have read validate_record() end-to-end after fixing the first one to check whether any other paths still failed — instead of waiting for the user to report the same symptom again.
+
+- **Flask restart assumption.** After changing pdf_neuro.py, the error did not change. The instinct was "code change didn't work" rather than "Flask didn't reload." Same error memory address in two requests confirmed the process was stale. Lesson: always mention "restart Flask after any .py change" in the same message as the fix.
+
+- **Flatten instinct was wrong.** When "too large" fires, the brain goes to "simplify layout." That's the wrong direction. The constraint is height-per-block, not total layout complexity. A flat layout that breaks audit compliance is worse than no PDF at all.
+
+**What went well:**
+
+- User sharing the actual KKM form scan immediately resolved the layout question. There was no ambiguity about what "2-column" meant once we had the reference.
+- The 4-block two_col structure correctly matches the form's two pages: block 1-2 on page 1, block 3-4 on page 3 after explicit PageBreak.
+- The floating table fix was a clean conceptual change (sibling → nested row) with no other fallout.
+
+**What we'd do differently:**
+
+- After fixing any 422, run validate_record() mentally against the full collect() output and check every required path — not just the one that matched the reported error.
+- Ask "does the KKM borang have a specific layout?" before starting any new PDF generator. The answer is always yes. All KKM forms are 2-column. This is now in CLAUDE.md as a PDF rule.
+- Plan two_col block count FIRST, then write content. For any form with > 20 content rows, assume 2–3 blocks per page before writing a single line.
+
+---
+
+### Known issues (updated as of 2026-04-28)
+
+**Still open:**
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place
+- `audit_log` FK has no ON DELETE CASCADE — orphaned audit rows harmless but untidy
+- `pt_assessment.spec` datas includes `templates/pdf` redundantly
+- No ARIA attributes anywhere — low clinical priority
+- Accessibility: sidebar nav uses onclick divs, not buttons — not keyboard navigable
+- `resetPatient()` in `form_base.js` missing null guards on `derived-dob`/`derived-gender`
+- `api.js` episode/SOAP coverage inconsistent (inline fetches in templates)
+- NEURO exe build NOT tested — code is fixed, build verification still deferred
+- Shared table components (MmtTable, InvMedTable, MovementTable refactor) — planned and scoped, not started
+
+**Fixed this session:**
+- 422 on Save Record / Export KKM PDF (pass 2): `patient: FormBase.collectPatient()` ✓
+- Topbar resize / wrapping ✓
+- pdf_neuro.py rewrite — 2-column KKM layout, correct ref, 4 two_col blocks ✓
+- Floating tables on PDF page 3 ✓
+- Git pushed to GitHub ✓
+
+---
+
+### Next session priorities
+
+1. **Git push** — now set up, keep the habit. `git add -A && git commit -m "session checkpoint" && git push` before opening any files.
+2. **Shared table IIFEs** — MmtTable, InvMedTable, refactor MovementTable to accept configurable tbody ID. Do this BEFORE HAND form — it pays off across NEURO MMT, AMPUTATION MMT, and every new form that has a tabular section. Estimated ~2.5h. Pattern: same IIFE structure as movement_table.js.
+3. **Full exe build test** — all 6 forms (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO). NEURO is code-complete but untested in the built exe.
+4. **HAND form** — next new form after shared components. Simpler than NEURO (no MRMI, no MRCP, no complex balance section). Good session warmup.
+
+---
+
+### Architecture reminders / new rules from this session
+
+**Two_col block planning (NEURO / any large form):**
+- Each `two_col()` call is ONE Table flowable. If either column exceeds ~250mm, it will "too large" error.
+- Plan block count first. NEURO: 4 blocks across 2 explicit pages. Never try to fit a full page in one block.
+- Page breaks must be explicit `PageBreak` flowables in story[] — ReportLab won't insert them mid-block.
+
+**Nested tables in rs() rows:**
+- Tables that belong visually "inside" a bordered section must be `(None, table)` rows in rs(), not sibling list items.
+- Sibling = floating. Nested row = contained. No visual border will appear around siblings. This is the source of the "jarring floating table" appearance.
+
+**collect() template — the two non-negotiables:**
+```javascript
+return {
+  _form_type: 'NEURO',          // → getCurrentFormType() → ?form_type= → PDF routing
+  meta:       { form: 'NEURO' }, // → validate_record() → REQUIRED_FIELDS lookup
+  patient:    FormBase.collectPatient(), // → validate_record() patient.name / patient.date check
+  ...
+};
+```
+All three keys are required. Missing any one of them causes 422. Check all three in any new form.
+
+**Shared table component plan (for next session):**
+- `movement_table.js` is currently hardcoded to `#mov-tbody`. Refactor to accept tbody ID as config.
+- `MmtTable` — new IIFE, same pattern (rows array, addRow, deleteRow, renderTable, getData, loadData, clear). Columns: Muscle Group, Side, Grade (0-5 select).
+- `InvMedTable` — new IIFE for investigation / medication tables. Columns vary by table (Inv: date/type/result; Med: name/dose/frequency).
+- Wire into neuro.html for MMT section. Wire into amputation.html for its MMT. Smoke test both.
+- Injection pattern: same as sign_chop_block — pass tbody ID as config option to the IIFE init.
