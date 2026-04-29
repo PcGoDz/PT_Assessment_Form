@@ -61,15 +61,6 @@
         <label>Age</label>
         <input type="number" id="pt-age" placeholder="Years" min="0" max="130" readonly style="background:var(--surface2);color:var(--muted)">
       </div>
-      <div class="field">
-        <label>Sex</label>
-        <input type="text" id="pt-sex-display" placeholder="Auto-filled" readonly style="background:var(--surface2);color:var(--muted)">
-        <!-- hidden radio for collect/populate compat -->
-        <div style="display:none">
-          <input type="radio" name="pt-sex" value="M" id="pt-sex-m">
-          <input type="radio" name="pt-sex" value="F" id="pt-sex-f">
-        </div>
-      </div>
       <!-- hidden pt-type radio for FormBase compat -->
       <div style="display:none">
         <input type="radio" name="pt-type" value="local" id="pt-type-local" checked>
@@ -78,10 +69,6 @@
       <div class="field">
         <label>Date of Assessment <span class="req">*</span></label>
         <input type="date" id="pt-date">
-      </div>
-      <div class="field">
-        <label>RN / IC</label>
-        <input type="text" id="pt-rn" placeholder="Registration number">
       </div>
     </div>
   </div>
@@ -501,10 +488,6 @@
             <label><input type="radio" name="pain-present" value="Yes" onchange="GeriatricForm.onPainPresent('Yes')"> Yes</label>
             <label><input type="radio" name="pain-present" value="No"  onchange="GeriatricForm.onPainPresent('No')"> No</label>
           </div>
-        </div>
-        <div class="field">
-          <label>Pain Site</label>
-          <input type="text" id="pain-site" placeholder="Location of pain...">
         </div>
       </div>
 

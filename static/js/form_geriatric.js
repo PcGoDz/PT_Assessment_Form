@@ -249,12 +249,12 @@ var GeriatricForm = (function () {
     d.toilet_squatting = cb('toilet-squatting');
     d.toilet_commode   = cb('toilet-commode');
 
-    d.body_chart  = (typeof BodyChart !== 'undefined') ? BodyChart.getData() : null;
-    d.chart_notes = gv('chart-notes');
+    d.bodyChart   = (typeof BodyChart !== 'undefined')
+                  ? { markers: BodyChart.getData(), notes: gv('chart-notes') }
+                  : null;
 
     d.pain_present = radio('pain-present');
     d.pain_score   = gv('pain-score');
-    d.pain_site    = gv('pain-site');
     d.pain_nature  = radio('pain-nature');
     d.pain_type    = radio('pain-type');
     d.pain_history = radio('pain-history');
@@ -393,15 +393,16 @@ var GeriatricForm = (function () {
     setCb('toilet-squatting', data.toilet_squatting);
     setCb('toilet-commode',   data.toilet_commode);
 
-    if (data.body_chart && typeof BodyChart !== 'undefined') BodyChart.setData(data.body_chart);
-    sv('chart-notes', data.chart_notes);
+    if (data.bodyChart && typeof BodyChart !== 'undefined') {
+      BodyChart.loadData(data.bodyChart.markers || []);
+      sv('chart-notes', data.bodyChart.notes || '');
+    }
 
     setRadio('pain-present', data.pain_present);
     if (data.pain_present) onPainPresent(data.pain_present);
     var scoreVal = (data.pain_score && data.pain_score !== 'N/A') ? data.pain_score : '0';
     var scoreEl = document.getElementById('pain-score');
     if (scoreEl) { scoreEl.value = scoreVal; setPain(scoreVal); }
-    sv('pain-site',          data.pain_site);
     setRadio('pain-nature',  data.pain_nature);
     setRadio('pain-type',    data.pain_type);
     setRadio('pain-history', data.pain_history);

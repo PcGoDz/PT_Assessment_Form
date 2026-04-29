@@ -18,10 +18,18 @@ TITLE = ['KEMENTERIAN KESIHATAN MALAYSIA',
          'GERIATRIC  ASSESSMENT FORM']
 
 
+def _ensure_dict(val):
+    if isinstance(val, str):
+        import json
+        try: return json.loads(val)
+        except: return {}
+    return val if isinstance(val, dict) else {}
+
 def _build_story(d):
     story   = []
-    patient = d.get('patient', {})
-    bc      = d.get('body_chart') or {}
+    patient = _ensure_dict(d.get('patient'))
+    bc_raw  = d.get('bodyChart') or d.get('body_chart')
+    bc      = {'markers': bc_raw} if isinstance(bc_raw, list) else _ensure_dict(bc_raw)
 
     # ── PAGE 1 ────────────────────────────────────────────────────
     story += page_header(TITLE, REF)
@@ -136,9 +144,13 @@ def _build_story(d):
     if dev: subj_content.append(Paragraph(f'<b>Assistive Devices:</b> {", ".join(dev)}', S_NORMAL))
 
     # Pain
+    pain_sites = ', '.join(
+        f"{m.get('zone','')} ({'Ant' if m.get('view')=='ant' else 'Post'})"
+        for m in bc.get('markers', [])
+    ) or '—'
     pain_content = [
         Paragraph(f'<b>Presence of Pain:</b> {d.get("pain_present","")}   <b>Score:</b> {d.get("pain_score","0")}/10', S_NORMAL),
-        Paragraph(f'<b>Pain Site:</b> {d.get("pain_site","")}', S_NORMAL),
+        Paragraph(f'<b>Pain Site (Body Chart):</b> {pain_sites}', S_NORMAL),
         Paragraph(f'<b>Nature:</b> {d.get("pain_nature","")}   <b>Type:</b> {d.get("pain_type","")}', S_NORMAL),
         Paragraph(f'<b>Pain History:</b> {d.get("pain_history","")}', S_NORMAL),
     ]
