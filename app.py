@@ -7,6 +7,7 @@ from database import (
     init_db, get_conn, save_record, list_records, load_record, delete_record,
     create_patient, search_patients, get_patient, update_patient, delete_patient,
     create_episode, get_patient_episodes, get_episode, update_episode_status,
+    update_episode_appt,
     get_episode_record, save_soap, get_soap_notes, delete_soap
 )
 
@@ -210,6 +211,23 @@ def api_episode_status(episode_id):
     if not ok:
         return jsonify({'error': err}), 500
     return jsonify({'success': True})
+
+
+@app.route('/api/episodes/<int:episode_id>/appt', methods=['PATCH'])
+def api_update_episode_appt(episode_id):
+    data = request.get_json(silent=True) or {}
+    ok, err = update_episode_appt(
+        DB_PATH, episode_id,
+        data.get('next_appt', ''),
+        data.get('next_appt_time', '')
+    )
+    if not ok:
+        return jsonify({'error': err}), 500
+    return jsonify({
+        'ok': True,
+        'next_appt':      data.get('next_appt', ''),
+        'next_appt_time': data.get('next_appt_time', '')
+    })
 
 
 # ── SOAP API ─────────────────────────────────────────────────────
