@@ -1439,7 +1439,8 @@ const Main = (function () {
         if (dateEl) dateEl.value = episode.next_appt || '';
         if (timeEl) timeEl.value = episode.next_appt_time || '';
         if (saveEl) saveEl.style.display = 'none';
-      });
+      })
+      .catch(function(){ console.warn('Patient panel: episode fetch failed'); });
 
     // Action buttons
     var editBtn = document.getElementById('pp-edit-btn');
