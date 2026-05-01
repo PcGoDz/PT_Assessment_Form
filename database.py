@@ -209,10 +209,25 @@ def create_patient(db_path, patient_data):
     errors = validate_patient(patient_data)
     if errors:
         return None, errors
-    name = patient_data.get('name', '').strip()
-    now  = datetime.now().isoformat(timespec='seconds')
+    name    = patient_data.get('name', '').strip()
+    pt_type = patient_data.get('type', 'local')
+    now     = datetime.now().isoformat(timespec='seconds')
     conn = get_conn(db_path)
     try:
+        if pt_type == 'local':
+            nric = patient_data.get('nric', '').strip()
+            dup  = conn.execute(
+                'SELECT id FROM patients WHERE ic = ? AND ic != ""', (nric,)
+            ).fetchone()
+            if dup:
+                return None, ['A patient with this NRIC already exists']
+        else:
+            passport = patient_data.get('passport', '').strip()
+            dup = conn.execute(
+                'SELECT id FROM patients WHERE passport = ? AND passport != ""', (passport,)
+            ).fetchone()
+            if dup:
+                return None, ['A patient with this passport number already exists']
         cur = conn.execute('''
             INSERT INTO patients
                 (name, ic, passport, pt_type, dob, sex, country, created_at, updated_at)
@@ -221,7 +236,7 @@ def create_patient(db_path, patient_data):
             name,
             patient_data.get('nric', ''),
             patient_data.get('passport', ''),
-            patient_data.get('type', 'local'),
+            pt_type,
             patient_data.get('dob', ''),
             patient_data.get('sex', ''),
             patient_data.get('country', ''),

@@ -136,7 +136,7 @@ def _build_story(d):
             ('BP (mmHg)',         str(d.get('bp_sys', '')) + ' / ' + str(d.get('bp_dia', ''))),
             ('HR (bpm)',          str(d.get('hr', ''))),
             ('RR (breaths/min)',  str(d.get('rr', ''))),
-            ('SpO₂ (%)',         str(d.get('spo2', ''))),
+            ('SpO2 (%)',          str(d.get('spo2', ''))),
             ('Breathing Pattern', d.get('breathing_pattern', '')),
             ('Breathing Type',    d.get('breathing_type', '')),
             ('', Paragraph('<b>MUSCLE TONE (Modified Ashworth Scale)</b>', S_LABEL)),

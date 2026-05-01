@@ -334,7 +334,18 @@ const Main = (function () {
         .catch(function(e) { console.warn('Auto-load record failed:', e); });
     }
 
-    // ── 3. Return / Save & Return nav buttons ────────────────────
+    // ── 3. Lock patient identity fields — prevent changing NRIC/type for existing patient
+    if (patientId || episodeId) {
+      ['pt-nric', 'pt-passport'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.readOnly = true;
+      });
+      document.querySelectorAll('input[name="pt-type"]').forEach(function(el) {
+        el.disabled = true;
+      });
+    }
+
+    // ── 4. Return / Save & Return nav buttons ────────────────────
     if (episodeId || patientId) {
       var navGroup = document.getElementById('topbar-nav-group');
       var navSep   = document.getElementById('topbar-nav-sep');

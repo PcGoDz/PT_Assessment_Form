@@ -118,22 +118,16 @@ var GeriatricForm = (function () {
     });
   }
 
-  // ── Incontinence: both No → grey out type checkboxes ─
+  // ── Incontinence: stress/urge/mixed apply to bladder only ─
   function onIncon() {
-    var bladderNo = FormBase.radio('incon-bladder') === 'No';
-    var bowelNo   = FormBase.radio('incon-bowel')   === 'No';
-    var noBoth    = bladderNo && bowelNo;
-    // also show/hide if both answered
-    var bladderAns = FormBase.radio('incon-bladder');
-    var bowelAns   = FormBase.radio('incon-bowel');
-    var anyYes = bladderAns === 'Yes' || bowelAns === 'Yes';
+    var bladderYes = FormBase.radio('incon-bladder') === 'Yes';
     var typeIds = ['incon-stress','incon-urge','incon-mixed'];
     typeIds.forEach(function(id) {
       var el = document.getElementById(id);
       if (!el) return;
-      el.disabled = !anyYes;
-      if (!anyYes) el.checked = false;
-      el.parentElement.style.opacity = anyYes ? '' : '0.4';
+      el.disabled = !bladderYes;
+      if (!bladderYes) el.checked = false;
+      el.parentElement.style.opacity = bladderYes ? '' : '0.4';
     });
   }
 
