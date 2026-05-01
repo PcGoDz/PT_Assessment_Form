@@ -305,6 +305,47 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+<!-- ── MPIS Session Header Modal ───────────────────── -->
+<div id="mpis-overlay" class="mpis-overlay" onclick="if(typeof Main!=='undefined')Main.cancelMpisModal()"></div>
+<div id="mpis-modal" class="mpis-modal" role="dialog" aria-modal="true" aria-label="MPIS session info">
+  <div class="mpis-modal-title">MPIS — Session Info</div>
+  <div class="mpis-modal-grid">
+    <div class="mpis-field">
+      <label>Tarikh</label>
+      <input type="date" id="mpis-tarikh">
+    </div>
+    <div class="mpis-field">
+      <label>Nombor Giliran</label>
+      <input type="text" id="mpis-queue" placeholder="e.g. D003">
+    </div>
+    <div class="mpis-field" style="grid-column: 1 / -1;">
+      <label>KPI-SS-30 Minit</label>
+      <select id="mpis-kpi">
+        <option value="">— Select —</option>
+        <option value="Achieved">Achieved</option>
+        <option value="Not Achieved">Not Achieved</option>
+        <option value="N/A">N/A</option>
+      </select>
+    </div>
+    <div class="mpis-field" style="grid-column: 1 / -1;">
+      <label>Dilihat (Seen By)</label>
+      <input type="text" id="mpis-seen-by" placeholder="Therapist name">
+    </div>
+    <div class="mpis-field">
+      <label>Temujanji — Tarikh</label>
+      <input type="date" id="mpis-appt-date">
+    </div>
+    <div class="mpis-field">
+      <label>Temujanji — Masa</label>
+      <input type="time" id="mpis-appt-time">
+    </div>
+  </div>
+  <div class="mpis-modal-actions">
+    <button type="button" class="draft-btn" onclick="if(typeof Main!=='undefined')Main.cancelMpisModal()">Cancel</button>
+    <button type="button" class="tbtn primary" onclick="if(typeof Main!=='undefined')Main.confirmMpisModal()">Copy to MPIS</button>
+  </div>
+</div>
+
 <!-- ── Patient Context Panel ──────────────────────── -->
 <div id="pt-panel-overlay" onclick="if(typeof Main!=='undefined')Main.closePatientPanel()"></div>
 <div id="pt-panel" role="dialog" aria-modal="true" aria-label="Patient details">
