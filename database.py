@@ -89,6 +89,16 @@ def init_db(db_path):
         except sqlite3.OperationalError:
             pass  # column already exists
 
+    # ── Migration: add next appointment fields to episodes ──
+    for col_def in [
+        ("next_appt",      "TEXT DEFAULT ''"),
+        ("next_appt_time", "TEXT DEFAULT ''"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE episodes ADD COLUMN {col_def[0]} {col_def[1]}")
+        except sqlite3.OperationalError:
+            pass  # column already exists
+
     # ── Audit log ─────────────────────────────────
     conn.execute('''
         CREATE TABLE IF NOT EXISTS audit_log (
@@ -417,6 +427,22 @@ def update_episode_status(db_path, episode_id, status, reason=None):
         conn.execute(
             'UPDATE episodes SET status=?, updated_at=? WHERE id=?',
             (status_val, now, episode_id)
+        )
+        conn.commit()
+        return True, None
+    except Exception as e:
+        return False, str(e)
+    finally:
+        conn.close()
+
+
+def update_episode_appt(db_path, episode_id, next_appt, next_appt_time):
+    now  = datetime.now().isoformat(timespec='seconds')
+    conn = get_conn(db_path)
+    try:
+        conn.execute(
+            'UPDATE episodes SET next_appt=?, next_appt_time=?, updated_at=? WHERE id=?',
+            (next_appt or '', next_appt_time or '', now, episode_id)
         )
         conn.commit()
         return True, None
