@@ -81,6 +81,20 @@
       margin-top: 2px;
     }
 
+    /* ── Stats accordion ── */
+    #stats-row {
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                  opacity     0.3s ease,
+                  margin-bottom 0.4s ease;
+      max-height: 200px;
+    }
+    #stats-row.stats-collapsed {
+      max-height: 0 !important;
+      opacity: 0;
+      margin-bottom: 0;
+    }
+
     /* ── SEARCH + ACTION BAR ── */
     .search-bar {
       display: flex;
@@ -1209,6 +1223,17 @@ function renderPatientTable(patients) {
     '</tr></thead><tbody>' + rows + '</tbody></table>';
 }
 
+// ── Stats accordion ──────────────────────────────────
+function collapseStats() {
+  var el = document.getElementById('stats-row');
+  if (el) el.classList.add('stats-collapsed');
+}
+
+function expandStats() {
+  var el = document.getElementById('stats-row');
+  if (el) el.classList.remove('stats-collapsed');
+}
+
 // ── Open patient detail ───────────────────────────────
 async function openPatient(id) {
   currentPatientId = id;
@@ -1235,6 +1260,7 @@ async function openPatient(id) {
     loadEpisodes(id);
 
     // Switch views
+    collapseStats();
     document.getElementById('list-view').style.display = 'none';
     document.getElementById('detail-view').classList.add('open');
   } catch(e) {
@@ -1305,6 +1331,7 @@ function openEpisode(episodeId) {
 
 // ── Show list / back ──────────────────────────────────
 function showList() {
+  expandStats();
   currentPatientId = null;
   document.getElementById('detail-view').classList.remove('open');
   document.getElementById('list-view').style.display = 'block';
@@ -1551,6 +1578,13 @@ async function submitEditPatient() {
 initDark();
 loadStats();
 doSearch('');
+
+// Auto-open patient if ?patient_id=X in URL (e.g. from panel "Edit Patient" button)
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var pid    = parseInt(params.get('patient_id'));
+  if (pid) openPatient(pid);
+})();
 
 // Set today's date on episode modal
 document.getElementById('ep-referral-date').value =
