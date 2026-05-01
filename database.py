@@ -90,12 +90,12 @@ def init_db(db_path):
             pass  # column already exists
 
     # ── Migration: add next appointment fields to episodes ──
-    for col_def in [
+    for col, typedef in [
         ("next_appt",      "TEXT DEFAULT ''"),
         ("next_appt_time", "TEXT DEFAULT ''"),
     ]:
         try:
-            conn.execute(f"ALTER TABLE episodes ADD COLUMN {col_def[0]} {col_def[1]}")
+            conn.execute(f"ALTER TABLE episodes ADD COLUMN {col} {typedef}")
         except sqlite3.OperationalError:
             pass  # column already exists
 
