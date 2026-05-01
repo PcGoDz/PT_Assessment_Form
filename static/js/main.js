@@ -8,6 +8,11 @@ const Main = (function () {
   let autoSaveTimer = null;
   const DRAFT_KEY   = 'pt_assessment_draft';
 
+  var _panelEpisodeId   = null;
+  var _panelPatientId   = null;
+  var _panelPatientData = null;
+  var _panelAssessDate  = null;
+
   // ── Shared MPIS constants ─────────────────────
   var MPIS_DIV  = '==================================================';
   var MPIS_DASH = '--------------------------------------------------';
@@ -20,6 +25,25 @@ const Main = (function () {
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  function _formatAppt(date, time) {
+    if (!date) return '';
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var parts  = date.split('-');
+    if (parts.length < 3) return date;
+    var d   = parseInt(parts[2], 10);
+    var mon = months[parseInt(parts[1], 10) - 1] || '';
+    var t   = '';
+    if (time) {
+      var tp   = time.split(':');
+      var h    = parseInt(tp[0], 10);
+      var m    = tp[1] || '00';
+      var ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      t = ' · ' + h + ':' + m + ' ' + ampm;
+    }
+    return d + ' ' + mon + t;
   }
 
   async function copyText(text) {
@@ -309,6 +333,7 @@ const Main = (function () {
         FormBase.onPtTypeChange();
         if (p.ic && p.ic.length === 12) FormBase.onNricInput(p.ic);
         updateProgress();
+        _panelPatientData = p;
       } catch(e) { console.warn('Patient prefill error:', e); }
     }
 
@@ -329,9 +354,43 @@ const Main = (function () {
             setCurrentId(data.id);
             updateProgress();
             setTimeout(function() { markClean(); }, 100);
+            if (data && data.patient) {
+              _panelAssessDate = data.patient.date || '';
+            }
           }
         })
         .catch(function(e) { console.warn('Auto-load record failed:', e); });
+    }
+
+    // ── Patient chip injection ──────────────────────────────────────
+    if (episodeId) {
+      _panelEpisodeId = episodeId;
+      _panelPatientId = patientId;
+      fetch('/api/episodes/' + episodeId)
+        .then(function(r){ return r.json(); })
+        .then(function(ep){
+          var pt       = _panelPatientData || {};
+          var name     = pt.name || 'Patient';
+          var initials = name.split(' ').map(function(w){ return w[0]; })
+                             .slice(0,2).join('').toUpperCase();
+          var apptLabel = _formatAppt(ep.next_appt, ep.next_appt_time);
+
+          var chip = document.createElement('button');
+          chip.type      = 'button';
+          chip.className = 'patient-chip';
+          chip.id        = 'pt-context-chip';
+          chip.innerHTML =
+            '<span class="patient-chip-avatar">' + escapeHtml(initials) + '</span>' +
+            '<span class="patient-chip-name">'   + escapeHtml(name)     + '</span>' +
+            (apptLabel
+              ? '<span class="patient-chip-appt"> &middot; ' + escapeHtml(apptLabel) + '</span>'
+              : '');
+          chip.onclick = openPatientPanel;
+
+          var navGroup = document.getElementById('topbar-nav-group');
+          if (navGroup) navGroup.insertBefore(chip, navGroup.firstChild);
+        })
+        .catch(function(e){ console.warn('Patient chip fetch failed:', e); });
     }
 
     // ── 3. Lock patient identity fields — prevent changing NRIC/type for existing patient
@@ -1324,6 +1383,119 @@ const Main = (function () {
     } catch(e) { return 'MS'; }
   }
 
+  // ── Patient panel ─────────────────────────────
+  function openPatientPanel() {
+    if (!_panelEpisodeId || !_panelPatientData) return;
+    var p   = _panelPatientData;
+    var ep  = _panelEpisodeId;
+
+    // Avatar initials
+    var initials = (p.name || '?').split(' ')
+      .map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+    var avEl = document.getElementById('pp-avatar');
+    if (avEl) avEl.textContent = initials;
+
+    // Name + badge
+    var nmEl = document.getElementById('pp-name');
+    if (nmEl) nmEl.textContent = p.name || '—';
+    var bdEl = document.getElementById('pp-badge');
+    if (bdEl) bdEl.textContent = p.pt_type === 'foreign' ? 'Foreign Patient' : 'Malaysian';
+
+    // Info grid
+    var icEl = document.getElementById('pp-ic');
+    if (icEl) icEl.textContent = p.ic || p.passport || '—';
+    var dobEl = document.getElementById('pp-dob');
+    if (dobEl) dobEl.textContent = p.dob || '—';
+    var asEl = document.getElementById('pp-age-sex');
+    if (asEl) {
+      var age = p.age || '';
+      var sex = p.sex === 'M' ? 'Male' : p.sex === 'F' ? 'Female' : '';
+      asEl.textContent = [age ? age + 'y' : '', sex].filter(Boolean).join(' · ') || '—';
+    }
+
+    // Last visit — fetch latest SOAP note date
+    var lvEl = document.getElementById('pp-last-visit');
+    if (lvEl) {
+      lvEl.textContent = '…';
+      fetch('/api/episodes/' + ep + '/soap')
+        .then(function(r){ return r.json(); })
+        .then(function(soaps){
+          if (soaps && soaps.length) {
+            lvEl.textContent = soaps[soaps.length - 1].note_date || '—';
+          } else {
+            lvEl.textContent = _panelAssessDate || 'No visits yet';
+          }
+        })
+        .catch(function(){ lvEl.textContent = '—'; });
+    }
+
+    // Next appt inputs
+    fetch('/api/episodes/' + ep)
+      .then(function(r){ return r.json(); })
+      .then(function(episode){
+        var dateEl = document.getElementById('pp-appt-date');
+        var timeEl = document.getElementById('pp-appt-time');
+        var saveEl = document.getElementById('pp-appt-save');
+        if (dateEl) dateEl.value = episode.next_appt || '';
+        if (timeEl) timeEl.value = episode.next_appt_time || '';
+        if (saveEl) saveEl.style.display = 'none';
+      });
+
+    // Action buttons
+    var editBtn = document.getElementById('pp-edit-btn');
+    if (editBtn) editBtn.onclick = function() {
+      window.location.href = '/?patient_id=' + (_panelPatientId || '');
+    };
+    var histBtn = document.getElementById('pp-history-btn');
+    if (histBtn) histBtn.onclick = function() {
+      window.location.href = '/episode/' + ep;
+    };
+
+    // Show panel
+    var overlay = document.getElementById('pt-panel-overlay');
+    var panel   = document.getElementById('pt-panel');
+    if (overlay) overlay.classList.add('open');
+    if (panel)   panel.classList.add('open');
+  }
+
+  function closePatientPanel() {
+    var overlay = document.getElementById('pt-panel-overlay');
+    var panel   = document.getElementById('pt-panel');
+    if (overlay) overlay.classList.remove('open');
+    if (panel)   panel.classList.remove('open');
+  }
+
+  function saveNextAppt() {
+    var dateEl = document.getElementById('pp-appt-date');
+    var timeEl = document.getElementById('pp-appt-time');
+    var saveEl = document.getElementById('pp-appt-save');
+    if (!dateEl || !_panelEpisodeId) return;
+    var apptDate = dateEl.value;
+    var apptTime = timeEl ? timeEl.value : '';
+    fetch('/api/episodes/' + _panelEpisodeId + '/appt', {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ next_appt: apptDate, next_appt_time: apptTime })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.ok) {
+        var apptSpan = document.querySelector('#pt-context-chip .patient-chip-appt');
+        var label    = _formatAppt(apptDate, apptTime);
+        if (apptSpan) apptSpan.textContent = label ? ' · ' + label : '';
+        if (saveEl) saveEl.style.display = 'none';
+        showToast('Appointment saved', 'ok');
+      } else {
+        showToast('Save failed', 'err');
+      }
+    })
+    .catch(function(){ showToast('Save failed', 'err'); });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePatientPanel();
+  });
+
   return {
     init:           init,
     go:             go,
@@ -1349,7 +1521,10 @@ const Main = (function () {
     copyToMpisAmputation:     copyToMpisAmputation,
     copyToMpisNeuro:          copyToMpisNeuro,
     copyToMpisAuto:           copyToMpisAuto,
-    toggleDark:     toggleDark
+    toggleDark:     toggleDark,
+    openPatientPanel:  openPatientPanel,
+    closePatientPanel: closePatientPanel,
+    saveNextAppt:      saveNextAppt
   };
 
 })();
