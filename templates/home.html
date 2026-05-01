@@ -85,14 +85,12 @@
     #stats-row {
       overflow: hidden;
       transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity     0.3s ease,
-                  margin-bottom 0.4s ease;
-      max-height: 200px;
+                  opacity     0.3s ease;
+      max-height: 500px;
     }
     #stats-row.stats-collapsed {
-      max-height: 0 !important;
+      max-height: 0;
       opacity: 0;
-      margin-bottom: 0;
     }
 
     /* ── SEARCH + ACTION BAR ── */
@@ -1582,8 +1580,9 @@ doSearch('');
 // Auto-open patient if ?patient_id=X in URL (e.g. from panel "Edit Patient" button)
 (function() {
   var params = new URLSearchParams(window.location.search);
-  var pid    = parseInt(params.get('patient_id'));
-  if (pid) openPatient(pid);
+  var raw = params.get('patient_id');
+  var pid = raw !== null ? parseInt(raw, 10) : NaN;
+  if (Number.isFinite(pid) && pid > 0) openPatient(pid);
 })();
 
 // Set today's date on episode modal
