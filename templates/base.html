@@ -309,8 +309,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <!-- ── Patient Context Panel ──────────────────────── -->
 <div id="pt-panel-overlay" onclick="if(typeof Main!=='undefined')Main.closePatientPanel()"></div>
-<div id="pt-panel" role="dialog" aria-label="Patient details">
-  <button class="pt-panel-close" onclick="if(typeof Main!=='undefined')Main.closePatientPanel()">&#x2715;</button>
+<div id="pt-panel" role="dialog" aria-modal="true" aria-label="Patient details">
+  <button type="button" class="pt-panel-close" onclick="if(typeof Main!=='undefined')Main.closePatientPanel()">&#x2715;</button>
 
   <div class="pt-panel-header">
     <div class="pt-panel-avatar" id="pp-avatar"></div>
@@ -344,14 +344,14 @@ document.addEventListener('DOMContentLoaded', function () {
     <div class="pt-panel-appt-row">
       <input type="date" id="pp-appt-date" class="pt-panel-input" oninput="document.getElementById('pp-appt-save').style.display='inline-flex'">
       <input type="time" id="pp-appt-time" class="pt-panel-input" oninput="document.getElementById('pp-appt-save').style.display='inline-flex'">
-      <button id="pp-appt-save" class="pt-panel-save-btn" style="display:none"
+      <button type="button" id="pp-appt-save" class="pt-panel-save-btn" style="display:none"
         onclick="if(typeof Main!=='undefined')Main.saveNextAppt()">&#10003;</button>
     </div>
   </div>
 
   <div class="pt-panel-actions">
-    <button class="pt-panel-action-btn" id="pp-edit-btn">&#9998; Edit Patient</button>
-    <button class="pt-panel-action-btn" id="pp-history-btn">&#128203; Episode History</button>
+    <button type="button" class="pt-panel-action-btn" id="pp-edit-btn">&#9998; Edit Patient</button>
+    <button type="button" class="pt-panel-action-btn" id="pp-history-btn">&#128203; Episode History</button>
   </div>
 </div>
 </body>
