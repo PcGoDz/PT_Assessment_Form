@@ -879,7 +879,7 @@
     </div>
     <div class="modal-fields">
       <div class="modal-field">
-        <label>Referral Date</label>
+        <label>Date of Assessment</label>
         <input type="date" id="ep-referral-date">
       </div>
     </div>
@@ -1305,7 +1305,7 @@ async function loadEpisodes(patientId) {
         '<div class="ep-icon">' + icon + '</div>' +
         '<div class="ep-info">' +
           '<div class="ep-title">' + formLabel + ' Assessment</div>' +
-          '<div class="ep-meta">Referral: ' + (ep.referral_date || '&mdash;') + '</div>' +
+          '<div class="ep-meta">Assessment: ' + (ep.referral_date || '&mdash;') + '</div>' +
           '<div class="ep-stats">' +
             '<span>' + (hasAssess ? '&#10003; Assessment recorded' : '&#9711; No assessment yet') + '</span>' +
             '<span>' + soaps + ' follow-up note' + (soaps !== 1 ? 's' : '') + '</span>' +

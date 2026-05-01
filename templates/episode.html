@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -624,7 +624,7 @@ async function loadEpisode() {
     // Context banner
     document.getElementById('ctx-patient-name').textContent = episode.patient_name;
     document.getElementById('ctx-episode-meta').textContent =
-      formLabel + ' \u00B7 Referral: ' + (episode.referral_date||'—') +
+      formLabel + ' \u00B7 Assessment: ' + (episode.referral_date||'—') +
       '\u00B7 IC: ' + (episode.ic || episode.passport || '—');
 
     var statusBase = (episode.status||'active').split('|')[0];
