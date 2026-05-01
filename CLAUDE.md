@@ -5,13 +5,13 @@ and context established during development. Keep it updated as things change.
 
 ---
 
-## ⚠️ LAST SESSION: 2026-04-28 (NEURO save/PDF fixes + shared component planning)
+## ⚠️ LAST SESSION: 2026-05-01 (MPIS session header modal + 500 error diagnosis)
 
-1. **Where we left off** — NEURO save/PDF fully working. Git repo initialized and pushed to GitHub. pdf_neuro.py rewritten to match KKM 2-column layout using multiple short two_col blocks. Shared table component architecture planned but NOT yet implemented.
-2. **Do this first next session** — Build shared table IIFEs (MmtTable, InvMedTable, refactor MovementTable to be configurable). Do this BEFORE starting HAND — it pays off immediately.
-3. **Traps / gotchas** — Every form's `collect()` MUST include `patient: FormBase.collectPatient()` or the validator 422s on every save (NEURO was missing this). Also: after any pdf_neuro.py change, Flask must be RESTARTED — same error memory addresses = old process still running.
-4. **What's half-done** — Shared table components (MmtTable, InvMedTable, MovementTable refactor) planned and scoped, not started. NEURO exe build still untested.
-5. **What to skip for now** — Validation layer UI, age auto-calc, audit_log ON DELETE CASCADE, UNIQUE constraint, ARIA. All documented, none urgent.
+1. **Where we left off** — MPIS session header modal implemented and pushed. All 6 assessment MPIS formatters refactored into builder/wrapper/finalizer pattern. 500 errors on /api/stats and /api/patients were diagnosed as a stale Flask process (not a code bug). UI redesign brainstorm NOT started — deferred explicitly.
+2. **Do this first next session** — Restart Flask (`python app.py`). Verify patient registration works (should be fine — stale process was the bug). Then start the UI redesign brainstorm — user explicitly wants this for the patient detail page.
+3. **Traps / gotchas** — MPIS formatters are now BUILDERS: `_buildMpisXxx()` returns `parts[]`, does NOT call `copyText`. Public wrappers `copyToMpisXxx()` show modal then call `_doCopyMpis(parts, header)`. Adding a new form = add `_buildMpisXxx()` + `copyToMpisXxx()` wrapper + entry in `copyToMpisAuto()` switch. Never put `copyText` inside a builder.
+4. **What's half-done** — UI redesign (brainstorm not started). Bug 2: SOAP gate before first assessment (not implemented, blocked on "what does completed mean?"). Exe build untested since NEURO. HAND form not started. Shared table IIFEs not started.
+5. **What to skip for now** — Age auto-calc, ARIA, audit_log ON DELETE CASCADE, UNIQUE constraint, draft/final state. All documented, none urgent.
 
 ---
 
@@ -139,12 +139,23 @@ getCurrentFormType() checks d._form_type first (amputation/cr/etc), then d.meta.
 5.  Create pdf_xxx.py with generate_episode_pdf() and generate_xxx_pdf()
 6.  Add to _PDF_GENERATORS and _SINGLE_PDF_GENERATORS in app.py
 7.  Add pdf_xxx.py to pt_assessment.spec under datas (DO NOT FORGET — silent failure)
-8.  Add MPIS formatter copyToMpisXxx() in main.js, wire into copyToMpisAuto()
-    Use the shared helpers — do NOT redeclare locally:
-      var LN   = MPIS_LN;   var DIV = MPIS_DIV;   var dash = MPIS_DASH;
-      function sec(title, val) { mpisSec(parts, title, val); }
-      await copyText(parts.join(LN));   // at the end, replaces try/catch clipboard block
-    Pattern: declare LN/DIV/dash + sec() once at top of the function, use throughout.
+8.  Add MPIS builder + public wrapper in main.js, wire into copyToMpisAuto()
+    NEW PATTERN (since 2026-05-01): builder/wrapper/finalizer split.
+    Step A — builder (private, sync): returns parts array, does NOT call copyText:
+      function _buildMpisXxx() {
+        var parts = []; var LN = MPIS_LN; var DIV = MPIS_DIV; var dash = MPIS_DASH;
+        function sec(title, val) { mpisSec(parts, title, val); }
+        // ... fill parts ...
+        return parts;
+      }
+    Step B — public wrapper (async): shows modal, calls _doCopyMpis:
+      async function copyToMpisXxx() {
+        var h = await showMpisHeaderModal(); if (!h) return;
+        await _doCopyMpis(_buildMpisXxx(), h);
+      }
+    Step C — wire into copyToMpisAuto() switch block (formType === 'XXX' branch).
+    NEVER put copyText() or await inside a builder. _doCopyMpis() handles all copying.
+    NEVER call showMpisHeaderModal() inside a builder — that's the wrapper's job.
 9.  Add clinical templates to clinical_templates.js (assessment categories + SOAP variant)
 10. Add SOAP key to tplMap in showSoapTemplate() in episode.html
 11. Run: node --check static/js/form_xxx.js before packaging
@@ -205,13 +216,18 @@ When adding a new form: add its SOAP key to tplMap.
 ## Database Schema
 
   patients   — id, name, ic, passport, pt_type, dob, sex, country
-  episodes   — id, patient_id, form_type, referral_date, status
-               status: "active" or "discharged|Reason"
+  episodes   — id, patient_id, form_type, referral_date, status, discharge_reason,
+               next_appt, next_appt_time
+               status: "active" or "discharged"
   records    — id, episode_id, form_type, patient_name, patient_rn, patient_date, data_json
-  soap_notes — id, episode_id, session_no, note_date, subjective, objective, analysis, plan
+  soap_notes — id, episode_id, session_no, note_date, subjective, objective, analysis, plan,
+               queue_no, kpi_30min, seen_by, next_appt, next_appt_time
   audit_log  — id, record_id, action, changed_at, data_json
 
 JSON blob is source of truth. SQLite columns are for display/search only.
+New columns added via ALTER TABLE migrations in database.py init_db().
+The CREATE TABLE statements do NOT include these newer columns — they are migration-only.
+episodes.referral_date is displayed as "Date of Assessment" in the UI (label only, column name unchanged).
 
 ---
 
@@ -249,10 +265,16 @@ Shortest path always. 12-21 patients/day.
   BodyChart.populate(). Store as bodyChart: { markers: [...], notes: str } (camelCase).
 - clinical_templates.js must be a clean IIFE — orphaned code outside functions
   breaks the entire module silently (learned the hard way this session)
-- MPIS formatters share constants and helpers defined at top of Main IIFE:
-    MPIS_LN, MPIS_DIV, MPIS_DASH — never redeclare locally as String.fromCharCode etc.
-    mpisSec(parts, title, val) — replaces inline function sec() in each formatter
-    copyText(str) — replaces the 5-line try/catch clipboard block
+- MPIS formatters use builder/wrapper/finalizer pattern (refactored 2026-05-01):
+    _buildMpisXxx() — private, sync, returns parts[] array. ZERO copyText calls inside.
+    copyToMpisXxx() — public async wrapper, shows modal, calls _doCopyMpis(parts, header)
+    _doCopyMpis(parts, header) — wraps with POMR header/footer, calls copyText once
+    showMpisHeaderModal() — Promise-based, resolves with header object or null (cancel)
+    cancelMpisModal() / confirmMpisModal() — called from base.html button onclick attrs
+    MPIS_LN, MPIS_DIV, MPIS_DASH — shared constants, never redeclare locally
+    mpisSec(parts, title, val) — shared section helper
+    copyText(str) — one call only, inside _doCopyMpis. Never call it in a builder.
+  POMR format: TARIKH / NOMBOR GILIRAN / KPI-SS-30 MINIT / DILIHAT / [content] / TEMUJANJI
   XSS: user-supplied strings injected into innerHTML must go through escapeHtml()
   (available as a shared helper in Main) — patient names, dates, form types.
 
@@ -662,49 +684,44 @@ Shortest path always. 12-21 patients/day.
 
 ### High Priority
 - [x] Git push — pushed to GitHub (PcGoDz/PT_Assessment_Form) — DONE 2026-04-28
-- [ ] Full end-to-end exe build test (all 6 forms — NEURO code is fixed but build is untested)
+- [ ] UI redesign brainstorm — user explicitly requested, patient detail page (hierarchy: Home → Patient → Episode → Form)
+- [ ] Full end-to-end exe build test (all 6 forms — build untested since NEURO was added)
 - [ ] HAND form (next new form — simpler scope, good warmup)
 
 ### Medium Priority
-- [ ] Validation layer — UI enforcement (hard stop before save — REQUIRED_FIELDS covers all 6 forms, just needs frontend to surface the errors)
+- [ ] Validation layer — UI enforcement (REQUIRED_FIELDS covers all 6 forms, needs frontend to surface errors)
+- [ ] Bug 2: SOAP gate — prevent adding SOAP before first assessment is saved (blocked: clarify what "completed" means)
 - [ ] Geriatric duplicate RN/IC fields cleanup (cosmetic, low effort)
 - [ ] Age auto-calculation bug (NRIC->age, DOB->age) — still unresolved, deprioritised
 
 ### Lower Priority
 - [ ] Draft vs Final state for assessment records
 - [ ] Versioning UI (audit_log data exists, no UI yet)
-- [ ] Remaining 9 forms: HAND, BURN, SCI, VESTIBULAR, FACIAL, PAEDIATRIC, LYMPHOEDEMA, NCD, GENERAL
-- [ ] POMR-aligned MPIS output for assessment forms (currently uses assessment format)
+- [ ] Remaining 9 forms: BURN, SCI, VESTIBULAR, FACIAL, PAEDIATRIC, LYMPHOEDEMA, NCD, GENERAL
+- [ ] Shared table IIFEs: MmtTable, InvMedTable, refactor MovementTable (planned but not started)
 - [ ] Accessibility: ARIA labels on toast, progress bar, sidebar nav items (low clinical priority)
 
-### Done this session (2026-04-28 — NEURO form build)
-- [x] NEURO form — full HTML (11 sections, chip UI, Ashworth dropdowns, MRMI auto-total, outcome flags)
-- [x] form_neuro.js — collect/populate/reset, NeuroForm IIFE, window.Form + window.ActiveForm
-- [x] pdf_neuro.py — 2-page KKM layout, ICF impression, MRMI table, body chart, sign_chop_block
-- [x] copyToMpisNeuro() in main.js + NEURO dispatch in copyToMpisAuto()
-- [x] NEURO_SOAP templates in clinical_templates.js (objective/analysis/plan)
-- [x] tplMap NEURO entry in episode.html
-- [x] pdf_neuro.py added to pt_assessment.spec datas
-- [x] All 6 registries updated: FORM_REGISTRY ready=True, FORM_TEMPLATES, _PDF_GENERATORS, _SINGLE_PDF_GENERATORS, REQUIRED_FIELDS, spec
+### Done this session (2026-05-01 — MPIS modal + label fixes)
+- [x] MPIS session header modal added to base.html (`#mpis-overlay` + `#mpis-modal`)
+- [x] Modal CSS added to style.css (`.mpis-overlay`, `.mpis-modal`, `.mpis-modal-grid`, `.mpis-field`, etc.)
+- [x] All 6 MPIS formatters refactored: `copyToMpisXxx()` → `_buildMpisXxx()` (builder, returns parts[])
+- [x] `_doCopyMpis(parts, header)` finalizer added — wraps content with POMR header/footer, calls copyText
+- [x] `showMpisHeaderModal()` / `cancelMpisModal()` / `confirmMpisModal()` added to Main IIFE
+- [x] `copyToMpisAuto()` refactored — shows modal once, dispatches to correct builder, calls _doCopyMpis
+- [x] Public wrappers `copyToMpisXxx()` — one-liners: await modal, if (!h) return, await _doCopyMpis
+- [x] Main.cancelMpisModal + Main.confirmMpisModal exported in return {} block
+- [x] "Date of Referral" → "Date of Assessment" in home.html (New Episode modal label + episode card text)
+- [x] "Referral: " → "Assessment: " in episode.html context banner (PowerShell regex — em-dash in file)
+- [x] Static KKM form serial number removed from topbar in base.html
+- [x] 500 errors diagnosed as stale Flask process (not code bugs) — restarting Flask is the fix
 
-### Done this session (2026-04-28 — NEURO bug fixes)
-- [x] Removed duplicate bodychart.js script tag from neuro.html extra_js (SyntaxError on load)
-- [x] Replaced body-chart-container placeholder div with full SVG HTML — BodyChart.init() needs real DOM nodes
-- [x] Removed Sex and RN fields from neuro.html (auto-derived from NRIC; RN = NRIC)
-- [x] Added complaint-text textarea below complaint chips
-- [x] Added `.chip` / `.chip-group` CSS to style.css (was completely missing — chips rendered as plain text)
-- [x] Fixed NEURO episode modal card in home.html (removed `soon` class, added onclick, updated icon)
-- [x] Added ClinicalTemplates.addButton() calls in neuro.html extra_js (6 template buttons)
-- [x] Added `meta: { form: 'NEURO' }` to form_neuro.js collect() — fixed 422 on save/PDF
-
-### Done this session (2026-04-28 — NEURO save/PDF rewrite + Git setup)
+### Done this session (2026-04-28 — NEURO form build + bug fixes + Git setup)
+- [x] NEURO form — full HTML, form_neuro.js, pdf_neuro.py, MPIS, SOAP templates, spec, all registries
+- [x] NEURO bug fixes: chip CSS, body chart SVG, duplicate script, 422 validator, modal card, template buttons
 - [x] Git repository initialised and pushed to GitHub (https://github.com/PcGoDz/PT_Assessment_Form)
-- [x] Added `patient: FormBase.collectPatient()` to form_neuro.js collect() — fixed 422 on every save and export (SEPARATE bug from meta.form — this one prevented validate_record() finding patient.name/date)
-- [x] Added `FormBase.populatePatient(d.patient)` and `FormBase.resetPatient()` to populate() and reset()
-- [x] Fixed topbar resize: overflow-x:auto on .topbar-actions, nowrap + ellipsis on .topbar-sub, media query hiding .topbar-sub at <900px
-- [x] pdf_neuro.py completely rewritten — 2-column KKM layout across 4 two_col blocks, matches real fisio/b.pen. 21/2022 form. Page 1: subjective/history (L) + body chart/vitals/tone (R). Page 1-2: inv/social (L) + objective/coordination/others (R). PageBreak + page 3: MRMI/gait/endurance (L) + impression/goals/plan (R)
-- [x] Fixed floating tables on PDF page 3 — MRMI table, legend, and outcome_t moved inside rs() as `(None, table)` rows instead of sibling flowables
-- [x] Corrected KKM NEURO ref number from `MOH/P/FIS/27.25(HB)-e` to `fisio/b.pen. 21/2022`
+- [x] NEURO 422 fix pass 2: patient: FormBase.collectPatient() + populatePatient/resetPatient
+- [x] Topbar resize CSS fix (scrollable actions row, .topbar-sub hidden at <900px)
+- [x] pdf_neuro.py full rewrite — 2-column KKM layout, 4 two_col blocks, correct ref number
 
 ---
 
@@ -736,17 +753,28 @@ Shortest path always. 12-21 patients/day.
 MPIS = Malaysian Patient Information System (hospital web app, plain text paste only).
 copyToMpisAuto() in main.js dispatches based on form type (assessment forms).
 copySOAPtoMpis() in episode.html handles SOAP/follow-up notes — outputs POMR format.
-POMR format uses Malay headers (TARIKH, NOMBOR GILIRAN, DILIHAT, TEMUJANJI) + English SOAP.
-  MS         -> copyToMpis()
-  SPINE      -> copyToMpisSpine()
-  GERIATRIC  -> copyToMpisGeriatric()
-  CR         -> copyToMpisCr()
-  AMPUTATION -> copyToMpisAmputation()
-  NEURO      -> copyToMpisNeuro()
+POMR format uses Malay headers (TARIKH, NOMBOR GILIRAN, KPI-SS-30 MINIT, DILIHAT, TEMUJANJI) + English content.
+
+**Assessment MPIS flow (since 2026-05-01):**
+All 6 assessment formatters trigger `#mpis-modal` (in base.html) to collect session header
+fields (Tarikh, Nombor Giliran, KPI-SS-30 Minit, Dilihat, Temujanji Tarikh, Temujanji Masa)
+BEFORE copying. The modal is promise-based — cancel resolves null, confirm resolves header obj.
+
+  MS         -> copyToMpis()           (calls _buildMpisMs())
+  SPINE      -> copyToMpisSpine()      (calls _buildMpisSpine())
+  GERIATRIC  -> copyToMpisGeriatric()  (calls _buildMpisGeriatric())
+  CR         -> copyToMpisCr()         (calls _buildMpisCr())
+  AMPUTATION -> copyToMpisAmputation() (calls _buildMpisAmputation())
+  NEURO      -> copyToMpisNeuro()      (calls _buildMpisNeuro())
+
+Modal HTML: `#mpis-overlay` + `#mpis-modal` in base.html (always present).
+Modal CSS: `.mpis-overlay` / `.mpis-modal` block in style.css before TOAST section.
+Modal state: `_mpisModalResolve` — module-level var in Main IIFE.
+Public API: `Main.cancelMpisModal()`, `Main.confirmMpisModal()` (called from base.html buttons).
 
 ---
 
-## What's Done (as of 2026-04-28)
+## What's Done (as of 2026-05-01)
 
 - [x] Patient registration with NRIC auto-derive (DOB/age/sex)
 - [x] Patient edit modal in home.html
@@ -788,6 +816,10 @@ POMR format uses Malay headers (TARIKH, NOMBOR GILIRAN, DILIHAT, TEMUJANJI) + En
 - [x] **Topbar resize CSS fix — scrollable actions row, .topbar-sub hidden at <900px**
 - [x] **pdf_neuro.py full rewrite — 2-column KKM borang layout, 4 two_col blocks, correct ref number fisio/b.pen. 21/2022**
 - [x] **Floating table fix on PDF page 3 — nested tables placed inside rs() rows not as siblings**
+- [x] **MPIS session header modal — all 6 assessment formatters show session header prompt before copy**
+- [x] **MPIS builder/wrapper/finalizer pattern — builders return parts[], _doCopyMpis wraps + copies**
+- [x] **"Date of Referral" → "Date of Assessment" label change (home.html + episode.html)**
+- [x] **Static KKM serial number removed from topbar**
 
 ---
 
@@ -1178,6 +1210,142 @@ No new features. Files changed: `database.py`, `templates/home.html`.
   inside the `with` block — it's redundant and misleading.
 
 ---
+
+## Lessons Learned — MPIS Modal Session 2026-05-01
+
+1. **Stale Flask process is the most common 500 mystery.** When all API endpoints return 500
+   with HTML (doctype visible), and local Python tests pass fine, the running server is an old
+   process. Same error memory addresses across two requests confirms it. Diagnosis: run
+   `python -c "import app; ..."` with Flask test client — if that returns 200, restart the server.
+   The code is fine. This is a process problem, not a code problem.
+
+2. **Promise-based modal pattern for async user input.** The MPIS session header modal needed
+   to pause copyToMpisXxx() while waiting for user input, then resume with the header object.
+   Pattern: `showMpisHeaderModal()` returns a `new Promise(resolve => { _mpisModalResolve = resolve; })`.
+   The confirm/cancel buttons call `_mpisModalResolve(header)` / `_mpisModalResolve(null)`.
+   The async wrapper: `var h = await showMpisHeaderModal(); if (!h) return;`. Clean, no callbacks.
+
+3. **Builder/wrapper/finalizer is the right split for any operation with shared pre/post work.**
+   With 6 formatters all needing the same modal + POMR header/footer, the wrong design is
+   putting modal logic in each formatter. The right design: builders return pure data (parts[]),
+   a single finalizer wraps + copies, wrappers sequence them. Adding formatter 7 = one builder
+   function + one 2-line wrapper. Zero changes to finalizer, modal, or copyToMpisAuto switch.
+
+4. **Label changes that don't touch DB columns need to be searched carefully.**
+   "Date of Referral" lived in: home.html (New Episode modal label), home.html (episode card text),
+   episode.html (context banner). Three separate locations, two templates. grep for the string
+   first — don't assume it's in one place. The episode.html banner also had an em-dash character
+   that prevented Edit tool from matching. Fix: PowerShell `$content -replace` with regex.
+
+5. **`node --check` is the final gate before commit for any main.js change.**
+   The MPIS refactor touched ~300 lines across 6 functions. `node --check` caught nothing,
+   which confirmed the syntax was clean. Never commit a main.js change without running this.
+   Also useful: grep for "await copyText" in main.js after refactor — should appear exactly once
+   (inside `_doCopyMpis`). Any other match = a builder that wasn't cleaned up.
+
+### What we should have done differently
+
+- **Diagnose the stale process earlier.** When the user reported 500s on basic GET endpoints,
+  the first step should have been "restart Flask." Instead, we ran several Python import tests
+  before arriving at the same conclusion. The tell: HTML in a JSON endpoint response = wrong process.
+  New rule: 500 on GET + HTML response → restart Flask first, investigate after.
+
+- **The label rename should have been one grep sweep first, then edit all occurrences.**
+  We edited home.html, then found episode.html had a different format with em-dash issues.
+  A `grep -rn "Referral" templates/` would have shown all locations upfront.
+
+### Known issues (updated as of 2026-05-01)
+
+**Still open:**
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place
+- `audit_log` FK has no ON DELETE CASCADE — orphaned audit rows harmless but untidy
+- `pt_assessment.spec` datas includes `templates/pdf` redundantly
+- No ARIA attributes anywhere — low clinical priority
+- `.topbar-sub` CSS media query in style.css targets a removed element (harmless dead selector)
+- Bug 2: SOAP gate before first assessment — not implemented, pending scope clarification
+- Full exe build untested since NEURO was added
+
+**Fixed this session:**
+- MPIS session header modal — all 6 assessment formatters prompt for session info before copy ✓
+- All 6 MPIS formatters refactored to builder/wrapper/finalizer pattern ✓
+- "Date of Referral" → "Date of Assessment" label across home.html + episode.html ✓
+- Static KKM serial number removed from topbar ✓
+- 500 errors: confirmed stale Flask process, not code bugs ✓
+
+---
+
+## HANDOVER NOTE — MPIS Session Header Modal 2026-05-01
+
+### What happened this session
+
+Two main work streams: (1) implemented the MPIS session header modal for all 6 assessment
+formatters, and (2) diagnosed 500 errors as a stale Flask process. Also label rename and
+topbar cleanup. Session ended with context compaction mid-CLAUDE.md update.
+
+**Files modified:**
+
+- `templates/base.html` — Added `#mpis-overlay` and `#mpis-modal` HTML (before patient panel comment).
+  Modal has 6 fields: Tarikh (date), Nombor Giliran (text), KPI-SS-30 Minit (select), Dilihat (text),
+  Temujanji Tarikh (date), Temujanji Masa (time). Cancel → `Main.cancelMpisModal()`, confirm → `Main.confirmMpisModal()`.
+  Also: removed `.topbar-sep` + `.topbar-sub` divs (static KKM serial number).
+
+- `static/css/style.css` — Added `.mpis-overlay` + `.mpis-modal` CSS block before TOAST section.
+  Grid layout: 2 columns, smooth show transition via transform + opacity on `.show` class.
+
+- `static/js/main.js` — Major MPIS refactor:
+  - Added `_mpisModalResolve` module-level state var
+  - Renamed all 6 formatters: `copyToMpisXxx()` → `_buildMpisXxx()` (sync, returns parts[])
+  - Removed trailing `await copyText(...)` from each builder (replaced with `return parts`)
+  - Added: `showMpisHeaderModal()`, `cancelMpisModal()`, `confirmMpisModal()`, `_doCopyMpis(parts, header)`
+  - Rewrote all 6 public `copyToMpisXxx()` wrappers as async one-liners
+  - Rewrote `copyToMpisAuto()` to show modal once then dispatch to builder
+  - Added `cancelMpisModal` + `confirmMpisModal` to return {} export
+
+- `templates/home.html` — "Date of Referral" → "Date of Assessment" (modal label + episode card text)
+
+- `templates/episode.html` — "Referral: " → "Assessment: " in context banner
+  (required PowerShell regex due to em-dash multibyte chars in file)
+
+**Key design decisions:**
+
+- **Builder/wrapper/finalizer**: the cleanest separation for 6 formatters sharing modal + POMR wrapping.
+  Each builder is pure (no side effects), the finalizer is the single clipboard write point.
+- **Promise-based modal**: module-level `_mpisModalResolve` bridges async wrappers to button clicks.
+  No callbacks, no event emitters — just a Promise + a stored resolve function.
+- **POMR output format**: TARIKH / NOMBOR GILIRAN / KPI-SS-30 MINIT / DILIHAT / [content] / TEMUJANJI.
+  Empty fields are omitted (only push if value is non-empty). Matches dept Word template exactly.
+
+### Retrospective
+
+**What went well:**
+- The builder pattern was obvious once we saw the problem. The refactor was mechanical,
+  `node --check` passed first time, and grep-for-`await copyText` confirmed exactly 1 hit.
+- 500 error diagnosis was systematic and conclusive: Flask test client all 200 → stale process.
+
+**What was fiddly:**
+- episode.html em-dash caused Edit tool to fail silently (old_string not matching). Had to use
+  PowerShell regex. Lesson: for files with non-ASCII characters, reach for PowerShell earlier.
+- Context compaction mid-CLAUDE.md write. The summary captured everything needed to resume.
+
+**What we'd do differently:**
+- Grep all template files for a label before starting an edit. Would have caught all 3 locations
+  of "Referral" upfront instead of discovering episode.html separately.
+- "Restart Flask first" should be step 1 for any 500 mystery, not step N.
+
+### Next session priorities
+
+1. Restart Flask → verify patient registration works (was 500 due to stale process, should be fine now)
+2. UI redesign brainstorm — user explicitly asked, patient detail page hierarchy needs rethinking
+3. Full exe build test — all 6 forms, first test since NEURO added
+4. HAND form — next new form when UI brainstorm is done
+
+### Architecture reminders / new rules
+
+- **MPIS builder pattern is the standard.** New formatter = `_buildMpisXxx()` + `copyToMpisXxx()` wrapper + switch case in `copyToMpisAuto()`. Never put `copyText` or `showMpisHeaderModal` inside a builder.
+- **episodes.referral_date is labelled "Date of Assessment" in the UI.** The column name is unchanged — only the display label changed. Do not rename the DB column.
+- **Stale process rule:** 500 on any GET endpoint + HTML in response body → restart Flask before debugging code.
 
 ## HANDOVER NOTE — Frontend Refactor Session 2026-04-27
 
