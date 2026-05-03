@@ -1683,6 +1683,7 @@ async function openPatient(id) {
     document.getElementById('detail-view').style.display = '';
     document.getElementById('detail-view').classList.add('open');
   } catch(e) {
+    showDash();
     showToast('Could not load patient', 'err');
   }
 }
@@ -1725,8 +1726,8 @@ async function loadEpisodes(patientId) {
         (isActive ? '' : ' style="opacity:0.65;cursor:default"') + '>' +
         '<div class="ep-icon">' + icon + '</div>' +
         '<div class="ep-info">' +
-          '<div class="ep-title">' + formLabel + ' Assessment</div>' +
-          '<div class="ep-meta">Assessment: ' + (ep.referral_date || '&mdash;') + '</div>' +
+          '<div class="ep-title">' + esc(formLabel) + ' Assessment</div>' +
+          '<div class="ep-meta">Assessment: ' + (esc(ep.referral_date) || '&mdash;') + '</div>' +
           '<div class="ep-stats">' +
             '<span>' + (hasAssess ? '&#10003; Assessment recorded' : '&#9711; No assessment yet') + '</span>' +
             '<span>' + soaps + ' follow-up note' + (soaps !== 1 ? 's' : '') + '</span>' +
@@ -1734,7 +1735,7 @@ async function loadEpisodes(patientId) {
         '</div>' +
         '<div class="ep-actions">' +
           actionBtn +
-          '<span class="status-pill ' + statusCls + '" title="' + statusReason + '">' + statusBase + '</span>' +
+          '<span class="status-pill ' + statusCls + '" title="' + esc(statusReason) + '">' + esc(statusBase) + '</span>' +
         '</div>' +
         (isActive ? '<span class="ep-arrow">&#8250;</span>' : '') +
         '</div>';
