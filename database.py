@@ -91,8 +91,9 @@ def init_db(db_path):
 
     # ── Migration: add next appointment fields to episodes ──
     for col, typedef in [
-        ("next_appt",      "TEXT DEFAULT ''"),
-        ("next_appt_time", "TEXT DEFAULT ''"),
+        ("next_appt",        "TEXT DEFAULT ''"),
+        ("next_appt_time",   "TEXT DEFAULT ''"),
+        ("discharge_reason", "TEXT DEFAULT ''"),
     ]:
         try:
             conn.execute(f"ALTER TABLE episodes ADD COLUMN {col} {typedef}")
