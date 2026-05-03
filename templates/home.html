@@ -1482,7 +1482,7 @@ async function submitNewPatient() {
     if (!res.ok) { showToast(j.error || 'Failed', 'err'); return; }
     closeModal('modal-new-patient');
     showToast('Patient registered', 'ok');
-    loadStats();
+    loadActivePatients();
     openPatient(j.id);
   } catch(e) {
     showToast('Error: ' + e.message, 'err');
@@ -1814,7 +1814,7 @@ async function submitDischarge() {
     closeModal('modal-discharge');
     showToast('Episode discharged', 'ok');
     loadEpisodes(currentPatientId);
-    loadStats();
+    loadActivePatients();
   } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }
 
@@ -1830,7 +1830,7 @@ async function reactivateEpisode(episodeId, e) {
     if (!res.ok) { showToast('Failed to reactivate', 'err'); return; }
     showToast('Episode reactivated', 'ok');
     loadEpisodes(currentPatientId);
-    loadStats();
+    loadActivePatients();
   } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }
 
@@ -1852,7 +1852,7 @@ async function deleteCurrentPatient() {
     if (!res.ok) { showToast(j.error || 'Failed to delete', 'err'); return; }
     showToast('Patient deleted', 'ok');
     showDash();
-    loadStats();
+    loadActivePatients();
   } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }
 
