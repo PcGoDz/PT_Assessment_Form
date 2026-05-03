@@ -8,7 +8,8 @@ from database import (
     create_patient, search_patients, get_patient, update_patient, delete_patient,
     create_episode, get_patient_episodes, get_episode, update_episode_status,
     update_episode_appt,
-    get_episode_record, save_soap, get_soap_notes, delete_soap
+    get_episode_record, save_soap, get_soap_notes, delete_soap,
+    get_dashboard_seen_today, get_active_patients_summary
 )
 
 
@@ -271,6 +272,29 @@ def api_stats():
         return jsonify(stats)
     finally:
         conn.close()
+
+
+@app.route('/api/dashboard/seen-today')
+def api_dashboard_seen_today():
+    rows, err = get_dashboard_seen_today(DB_PATH)
+    if err:
+        return jsonify({'error': err}), 500
+    form_labels = {f['id']: f['label'] for f in FORM_REGISTRY}
+    for row in rows:
+        row['form_label'] = form_labels.get(row['form_type'], row['form_type'])
+        row['time_str'] = row['created_at'][11:16] if row['created_at'] else ''
+    return jsonify(rows)
+
+
+@app.route('/api/dashboard/active-patients')
+def api_dashboard_active_patients():
+    rows, err = get_active_patients_summary(DB_PATH)
+    if err:
+        return jsonify({'error': err}), 500
+    form_labels = {f['id']: f['label'] for f in FORM_REGISTRY}
+    for row in rows:
+        row['form_label'] = form_labels.get(row['form_type'], row['form_type'])
+    return jsonify(rows)
 
 
 # ── Records API (kept for form save/load) ────────────────────────
