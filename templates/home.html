@@ -491,94 +491,84 @@
 <body>
 
 <div class="home-shell">
-  <header class="home-topbar">
-    <div class="home-topbar-logo">PT Assessment System</div>
-    <div class="home-topbar-sep"></div>
-    <div class="home-topbar-sub">KKM Physiotherapy Dept</div>
-    <div class="home-topbar-actions">
-      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">&#9790;</button>
-      <button class="btn-primary" onclick="openNewPatientModal()">+ New Patient</button>
+  <header class="dash-header">
+    <div class="dash-date" id="dash-date"></div>
+    <div class="dash-greeting">Good morning 👋</div>
+    <div class="dash-search-wrap" onclick="openFabSheet()" role="button" tabindex="0" aria-label="Search patients">
+      <span class="dash-search-icon">🔍</span>
+      <span class="dash-search-placeholder">Search patients…</span>
     </div>
+    <button class="dash-header-fab" onclick="openFabSheet()">+ New</button>
+    <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"
+      title="Toggle dark mode"
+      style="position:absolute;top:14px;right:60px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius);color:white;padding:5px 8px;cursor:pointer;font-size:14px;">&#9790;</button>
   </header>
 
-  <main class="home-main">
+  <main>
 
-    <!-- Stats Row -->
-    <div class="stats-row" id="stats-row">
-      <div class="stat-card">
-        <div class="stat-label">Total Patients</div>
-        <div class="stat-value" id="stat-patients">—</div>
-        <div class="stat-sub">registered</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Active Episodes</div>
-        <div class="stat-value" id="stat-active">—</div>
-        <div class="stat-sub">ongoing</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Assessments</div>
-        <div class="stat-value" id="stat-assessments">—</div>
-        <div class="stat-sub">total records</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Follow-up Notes</div>
-        <div class="stat-value" id="stat-soaps">—</div>
-        <div class="stat-sub">SOAP notes</div>
-      </div>
-    </div>
+    <!-- ── Dashboard view (default) ─────────────────── -->
+    <div id="dash-view" class="dash-content">
 
-    <!-- Patient list view -->
-    <div id="list-view">
-      <div class="search-bar">
-        <div class="search-wrap">
-          <input type="text" class="search-input" id="search-input"
-            placeholder="Search by patient name or IC / passport number..."
-            oninput="onSearch(this.value)">
+      <!-- Seen Today -->
+      <div class="dash-section">
+        <div class="dash-section-heading" id="seen-heading">Seen Today · 0</div>
+        <div id="seen-today-wrap">
+          <div class="dash-empty-state">No records yet today — tap + to start</div>
         </div>
       </div>
 
+      <!-- Active Patients -->
+      <div class="dash-section">
+        <div class="dash-section-heading" id="active-heading">Active Patients · 0</div>
+        <div id="active-patients-wrap">
+          <div class="dash-empty-state">No active episodes found</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── List view (search results) ───────────────── -->
+    <div id="list-view" class="dash-content" style="display:none;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <button class="btn-ghost" onclick="showDash()" style="padding:6px 12px;font-size:12px;">&#8592; Dashboard</button>
+        <span id="list-query-label" style="font-size:13px;color:var(--text-muted);"></span>
+      </div>
       <div class="table-card">
         <div class="table-header">
-          <span class="table-title">Patients</span>
+          <span class="table-title">Search Results</span>
           <span class="table-count" id="table-count">—</span>
         </div>
         <div id="patient-table-wrap">
           <div class="empty-state">
             <div class="empty-icon">&#128100;</div>
-            <div class="empty-title">No patients yet</div>
-            <div class="empty-sub">Click "+ New Patient" to register the first patient</div>
+            <div class="empty-title">No patients found</div>
+            <div class="empty-sub">Try a different name or IC number</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Patient detail view -->
-    <div id="detail-view" class="detail-panel">
-      <!-- Breadcrumb + context banner -->
-      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius);padding:8px 14px;display:flex;align-items:center;gap:10px;">
+    <!-- ── Patient detail view ───────────────────────── -->
+    <div id="detail-view" class="detail-panel dash-content" style="padding-top:16px;display:none;">
+      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius);padding:8px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <span style="font-size:16px;">&#128100;</span>
         <div>
           <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);margin-bottom:1px;">Patient Record</div>
           <div style="font-size:13px;font-weight:600;color:var(--text)" id="breadcrumb-name">—</div>
         </div>
-        <div style="margin-left:auto;font-size:11px;color:var(--accent-mid);cursor:pointer;" onclick="showList()">&#8592; Back to all patients</div>
+        <div style="margin-left:auto;font-size:11px;color:var(--accent-mid);cursor:pointer;" onclick="showDash()">&#8592; Dashboard</div>
       </div>
 
       <div class="detail-header">
-        <button class="back-btn" onclick="showList()">&#8592; All Patients</button>
+        <button class="back-btn" onclick="showDash()">&#8592; Dashboard</button>
         <div style="flex:1"></div>
-        <button class="btn-ghost" id="edit-patient-btn"
-          onclick="openEditPatientModal()"
-          title="Edit patient details">
-          &#9998; Edit Patient
-        </button>
+        <button class="btn-ghost" id="edit-patient-btn" onclick="openEditPatientModal()" title="Edit patient details">&#9998; Edit Patient</button>
         <button class="btn-ghost" id="delete-patient-btn"
           style="color:var(--danger);border-color:var(--danger);opacity:0.7"
-          onclick="deleteCurrentPatient()"
-          title="Permanently delete this patient and all records">
+          onclick="deleteCurrentPatient()" title="Permanently delete this patient and all records">
           &#128465; Delete Patient
         </button>
-        <button class="btn-primary" onclick="openNewEpisodeModal()">+ New Episode / Referral</button>
+        <button class="btn-primary" onclick="openNewEpisodeModal()">+ New Episode</button>
       </div>
 
       <div class="patient-info-card" id="patient-info-card">
@@ -589,7 +579,6 @@
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
           <div class="patient-id-badge" id="pt-id-badge">—</div>
-          <div style="font-size:11px;color:var(--text-faint);">Click an episode below or add a new one</div>
         </div>
       </div>
 
@@ -602,13 +591,98 @@
           <div class="empty-state">
             <div class="empty-icon">&#128203;</div>
             <div class="empty-title">No episodes yet</div>
-            <div class="empty-sub">Click "+ New Episode" to start the first referral</div>
+            <div class="empty-sub">Click &quot;+ New Episode&quot; to begin the first assessment</div>
           </div>
         </div>
       </div>
     </div>
 
   </main>
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openFabSheet()" aria-label="New patient or episode">
+  <span style="font-size:18px;font-weight:900;">+</span>
+  <span>New</span>
+</button>
+
+<!-- Bottom Sheet: Patient actions -->
+<div class="sheet-overlay" id="patient-sheet-overlay" onclick="onSheetOverlayClick(event)">
+  <div class="bottom-sheet" id="patient-sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+
+    <div class="sheet-header">
+      <div class="sheet-avatar" id="sheet-avatar">?</div>
+      <div>
+        <div class="sheet-patient-name" id="sheet-name">—</div>
+        <div class="sheet-patient-meta" id="sheet-meta">—</div>
+      </div>
+      <button class="sheet-close" onclick="closePatientSheet()">&#x2715;</button>
+    </div>
+
+    <div class="sheet-body">
+      <div class="sheet-episode-pill" id="sheet-episode-pill">
+        <div class="sheet-episode-label">Active Episode</div>
+        <div class="sheet-episode-name" id="sheet-episode-name">—</div>
+        <div class="sheet-episode-meta" id="sheet-episode-meta">—</div>
+      </div>
+
+      <button class="sheet-primary-btn" id="sheet-soap-btn" onclick="sheetNewSoap()">
+        <span style="font-size:20px;">📝</span>
+        <div>
+          <div>New SOAP Note</div>
+          <div class="sheet-primary-sub">Continue this episode</div>
+        </div>
+        <span class="btn-arrow">›</span>
+      </button>
+
+      <div class="sheet-secondary-row" id="sheet-secondary-row">
+        <button class="sheet-secondary-btn" onclick="sheetNewAssessment()">
+          <span style="font-size:16px;">🗂️</span>
+          <span>New Assessment</span>
+        </button>
+        <button class="sheet-secondary-btn" onclick="sheetViewEpisode()">
+          <span style="font-size:16px;">📂</span>
+          <span>View Episode</span>
+        </button>
+      </div>
+
+      <div class="sheet-profile-link" onclick="sheetViewProfile()">View patient profile →</div>
+
+      <hr class="sheet-divider">
+      <div class="sheet-section-label">Episodes of Care</div>
+      <div id="sheet-episodes-list"></div>
+    </div>
+    <div style="height:16px;"></div>
+  </div>
+</div>
+
+<!-- Context menu for discharged episode ⋯ -->
+<div class="ctx-menu" id="ctx-menu" style="position:fixed;">
+  <button class="ctx-menu-item" onclick="ctxReactivate()">🔄 Reactivate episode</button>
+  <hr class="ctx-menu-divider">
+  <button class="ctx-menu-item" onclick="ctxViewEpisode()">📂 View episode history</button>
+</div>
+
+<!-- FAB Search Sheet -->
+<div class="sheet-overlay" id="fab-sheet-overlay" onclick="onFabOverlayClick(event)">
+  <div class="bottom-sheet search-sheet" id="fab-sheet">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div style="padding:4px 20px 14px;">
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;">Find or register a patient</div>
+      <div class="search-sheet-input-wrap">
+        <span style="font-size:14px;color:var(--accent-mid);">🔍</span>
+        <input type="text" class="search-sheet-input" id="fab-search-input"
+          placeholder="Type name or IC number…"
+          oninput="onFabSearch(this.value)">
+      </div>
+      <div class="search-sheet-results" id="fab-search-results"></div>
+      <div class="search-register-row">
+        <span class="search-register-hint">Not in the list?</span>
+        <button class="search-register-btn" onclick="fabRegisterNew()">Register new</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Toast -->
@@ -949,6 +1023,345 @@ var sortKey          = 'name';
 var sortAsc          = true;
 var lastPatients     = [];
 
+// ── Dashboard state ──────────────────────────────
+var sheetPatientId   = null;
+var sheetEpisodeId   = null;
+var ctxEpisodeId     = null;
+var fabSearchTimer   = null;
+var FORM_LABELS = {
+  MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric',
+  CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological'
+};
+
+// ── Date display ──────────────────────────────────
+function initDashDate() {
+  var el = document.getElementById('dash-date');
+  if (!el) return;
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June',
+                'July','August','September','October','November','December'];
+  var d = new Date();
+  el.textContent = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// ── Load Seen Today ───────────────────────────────
+async function loadSeenToday() {
+  try {
+    var res  = await fetch('/api/dashboard/seen-today');
+    var rows = await res.json();
+    renderSeenToday(rows);
+  } catch(e) { console.error('loadSeenToday', e); }
+}
+
+function renderSeenToday(rows) {
+  var wrap    = document.getElementById('seen-today-wrap');
+  var heading = document.getElementById('seen-heading');
+  heading.textContent = 'Seen Today · ' + rows.length;
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="dash-empty-state">No records yet today — tap + to start</div>';
+    return;
+  }
+  var html = '<div class="seen-timeline">';
+  rows.forEach(function(r) {
+    var isSoap = r.note_type === 'soap';
+    var dotCls = isSoap ? 'soap' : 'assess';
+    var typePill = isSoap
+      ? '<span class="seen-card-type-pill soap">Follow-up</span>'
+      : '<span class="seen-card-type-pill assess">Initial</span>';
+    html += '<div class="seen-item">' +
+      '<div class="seen-connector">' +
+        '<div class="seen-dot ' + dotCls + '"></div>' +
+        '<div class="seen-line"></div>' +
+      '</div>' +
+      '<div class="seen-card" onclick="openPatientSheet(' + r.patient_id + ')">' +
+        '<div class="seen-card-top">' +
+          '<div class="seen-card-name">' + esc(r.patient_name) + '</div>' +
+          '<div class="seen-card-time">' + esc(r.time_str) + '</div>' +
+        '</div>' +
+        '<div class="seen-card-sub">' + esc(r.form_label) + typePill + '</div>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+// ── Load Active Patients ──────────────────────────
+async function loadActivePatients() {
+  try {
+    var res  = await fetch('/api/dashboard/active-patients');
+    var rows = await res.json();
+    renderActivePatients(rows);
+  } catch(e) { console.error('loadActivePatients', e); }
+}
+
+function lastSeenLabel(dateStr) {
+  if (!dateStr) return 'No activity';
+  var last = new Date(dateStr);
+  var now  = new Date();
+  var diffMs   = now - last;
+  var diffDays = Math.floor(diffMs / 86400000);
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return '1 day ago';
+  return diffDays + ' days ago';
+}
+
+function lastSeenClass(dateStr) {
+  if (!dateStr) return '';
+  var diffDays = Math.floor((new Date() - new Date(dateStr)) / 86400000);
+  if (diffDays === 0) return 'recent';
+  if (diffDays >= 7)  return 'overdue';
+  return '';
+}
+
+function renderActivePatients(rows) {
+  var wrap    = document.getElementById('active-patients-wrap');
+  var heading = document.getElementById('active-heading');
+  heading.textContent = 'Active Patients · ' + rows.length;
+  if (!rows.length) {
+    wrap.innerHTML = '<div class="dash-empty-state">No active episodes found</div>';
+    return;
+  }
+  var html = '<div class="active-pts-grid">';
+  rows.forEach(function(r) {
+    var label    = esc(r.form_label || r.form_type);
+    var lastTxt  = esc(lastSeenLabel(r.last_activity));
+    var lastCls  = lastSeenClass(r.last_activity);
+    html += '<div class="active-pt-card" onclick="openPatientSheet(' + r.patient_id + ')">' +
+      '<div class="active-pt-name">' + esc(r.patient_name) + '</div>' +
+      '<div class="active-pt-ep">'   + label + '</div>' +
+      '<div class="active-pt-last ' + lastCls + '">' + lastTxt + '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+// ── Bottom Sheet ──────────────────────────────────
+async function openPatientSheet(patientId) {
+  sheetPatientId = patientId;
+  sheetEpisodeId = null;
+  try {
+    var res     = await fetch('/api/patients/' + patientId);
+    var patient = await res.json();
+    var initials = (patient.name || '?').split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+    document.getElementById('sheet-avatar').textContent = initials;
+    document.getElementById('sheet-name').textContent   = patient.name || '—';
+    var sex = patient.sex === 'M' ? 'M' : patient.sex === 'F' ? 'F' : '';
+    var dob = patient.dob || '';
+    var age = dob ? calcAge(dob) : null;
+    document.getElementById('sheet-meta').textContent =
+      [sex, age !== null ? age + ' yrs' : '', patient.ic || patient.passport].filter(Boolean).join(' · ');
+
+    var epRes = await fetch('/api/patients/' + patientId + '/episodes');
+    var episodes = await epRes.json();
+    renderSheetEpisodes(episodes);
+
+    document.getElementById('patient-sheet-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } catch(e) { console.error('openPatientSheet', e); }
+}
+
+function renderSheetEpisodes(episodes) {
+  var active = episodes.filter(function(e){ return e.status === 'active'; });
+  var discharged = episodes.filter(function(e){ return e.status === 'discharged' || (e.status && e.status.startsWith('discharged')); });
+
+  var primary = active[0] || null;
+  if (primary) {
+    sheetEpisodeId = primary.id;
+    var fl = FORM_LABELS[primary.form_type] || primary.form_type;
+    document.getElementById('sheet-episode-name').textContent = fl + ' Assessment';
+    document.getElementById('sheet-episode-meta').textContent =
+      'Since ' + (primary.referral_date || '—') + ' · ' + (primary.soap_count || 0) + ' notes';
+    document.getElementById('sheet-episode-pill').style.display = '';
+    document.getElementById('sheet-soap-btn').style.display = '';
+    document.getElementById('sheet-secondary-row').style.display = '';
+  } else {
+    document.getElementById('sheet-episode-pill').style.display = 'none';
+    document.getElementById('sheet-soap-btn').style.display = 'none';
+    document.getElementById('sheet-secondary-row').style.display = 'none';
+  }
+
+  var listHtml = '';
+  active.forEach(function(ep) {
+    var fl = FORM_LABELS[ep.form_type] || ep.form_type;
+    listHtml += '<div class="sheet-episode-row active-ep" onclick="window.location.href=\'/episode/' + ep.id + '\'">' +
+      '<div class="sheet-ep-row-top">' +
+        '<div><div class="sheet-ep-row-name">' + esc(fl) + ' Assessment</div>' +
+        '<div class="sheet-ep-row-meta">Since ' + esc(ep.referral_date || '—') + ' · ' + (ep.soap_count||0) + ' notes · <span style="color:var(--success)">Active</span></div></div>' +
+        '<span class="sheet-ep-row-arrow">›</span>' +
+      '</div>' +
+    '</div>';
+  });
+  discharged.forEach(function(ep) {
+    var fl = FORM_LABELS[ep.form_type] || ep.form_type;
+    var dcReason = ep.discharge_reason || '';
+    var reasonPill = dcReason
+      ? '<div class="dc-reason-pill"><span class="dc-reason-label">D/C reason</span><span class="dc-reason-text">' + esc(dcReason) + '</span></div>'
+      : '';
+    listHtml += '<div class="sheet-episode-row discharged-ep" style="position:relative;">' +
+      '<div class="sheet-ep-row-top">' +
+        '<div><div class="sheet-ep-row-name" style="color:var(--text-muted);">' + esc(fl) + ' Assessment</div>' +
+        '<div class="sheet-ep-row-meta">' + esc(ep.referral_date || '—') + ' · ' + (ep.soap_count||0) + ' notes · <span style="color:var(--text-faint)">Discharged</span></div>' +
+        reasonPill + '</div>' +
+        '<button class="sheet-ep-menu-btn" onclick="openCtxMenu(event,' + ep.id + ')" title="Options">⋯</button>' +
+      '</div>' +
+    '</div>';
+  });
+  document.getElementById('sheet-episodes-list').innerHTML = listHtml || '<div style="font-size:12px;color:var(--text-faint);padding:8px 0;">No episodes yet</div>';
+}
+
+function closePatientSheet() {
+  document.getElementById('patient-sheet-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  closeCtxMenu();
+}
+
+function onSheetOverlayClick(e) {
+  if (e.target === document.getElementById('patient-sheet-overlay')) closePatientSheet();
+}
+
+function sheetNewSoap() {
+  if (!sheetEpisodeId) return;
+  closePatientSheet();
+  window.location.href = '/episode/' + sheetEpisodeId + '?new_soap=1';
+}
+
+function sheetNewAssessment() {
+  closePatientSheet();
+  openNewEpisodeModal();
+}
+
+function sheetViewEpisode() {
+  if (!sheetEpisodeId) return;
+  closePatientSheet();
+  window.location.href = '/episode/' + sheetEpisodeId;
+}
+
+function sheetViewProfile() {
+  if (!sheetPatientId) return;
+  closePatientSheet();
+  openPatient(sheetPatientId);
+}
+
+// ── Context menu (⋯ for discharged episodes) ──────
+function openCtxMenu(e, episodeId) {
+  e.stopPropagation();
+  ctxEpisodeId = episodeId;
+  var menu = document.getElementById('ctx-menu');
+  menu.classList.add('open');
+  var rect = e.target.getBoundingClientRect();
+  menu.style.top  = (rect.bottom + 4) + 'px';
+  menu.style.left = Math.max(8, rect.right - 190) + 'px';
+}
+
+function closeCtxMenu() {
+  document.getElementById('ctx-menu').classList.remove('open');
+  ctxEpisodeId = null;
+}
+
+async function ctxReactivate() {
+  if (!ctxEpisodeId) return;
+  var id = ctxEpisodeId;
+  closeCtxMenu();
+  closePatientSheet();
+  try {
+    var res = await fetch('/api/episodes/' + id + '/status', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status: 'active' })
+    });
+    if (!res.ok) { showToast('Failed to reactivate', 'err'); return; }
+    showToast('Episode reactivated', 'ok');
+    loadActivePatients();
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+function ctxViewEpisode() {
+  if (!ctxEpisodeId) return;
+  var id = ctxEpisodeId;
+  closeCtxMenu();
+  closePatientSheet();
+  window.location.href = '/episode/' + id;
+}
+
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('ctx-menu');
+  if (menu && menu.classList.contains('open') && !menu.contains(e.target)) closeCtxMenu();
+});
+
+// ── FAB Search Sheet ──────────────────────────────
+function openFabSheet() {
+  document.getElementById('fab-sheet-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('fab-search-results').innerHTML = '';
+  var inp = document.getElementById('fab-search-input');
+  inp.value = '';
+  setTimeout(function(){ inp.focus(); }, 120);
+}
+
+function closeFabSheet() {
+  document.getElementById('fab-sheet-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function onFabOverlayClick(e) {
+  if (e.target === document.getElementById('fab-sheet-overlay')) closeFabSheet();
+}
+
+function onFabSearch(val) {
+  clearTimeout(fabSearchTimer);
+  fabSearchTimer = setTimeout(function(){ doFabSearch(val); }, 280);
+}
+
+async function doFabSearch(q) {
+  if (!q.trim()) { document.getElementById('fab-search-results').innerHTML = ''; return; }
+  try {
+    var res     = await fetch('/api/patients/search?q=' + encodeURIComponent(q));
+    var results = await res.json();
+    renderFabResults(results);
+  } catch(e) { console.error('doFabSearch', e); }
+}
+
+function renderFabResults(patients) {
+  var wrap = document.getElementById('fab-search-results');
+  if (!patients.length) { wrap.innerHTML = '<div style="font-size:12px;color:var(--text-faint);padding:8px 0;">No patients found</div>'; return; }
+  var html = '';
+  patients.forEach(function(p) {
+    var initials = (p.name||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+    var age = p.dob ? calcAge(p.dob) : null;
+    var episodeInfo = p.active_form_type ? (FORM_LABELS[p.active_form_type] || p.active_form_type) + ' · Active' : (p.episode_count > 0 ? 'Discharged' : 'No episodes');
+    html += '<div class="search-result-item" onclick="onFabSelect(' + p.id + ')">' +
+      '<div class="search-result-avatar">' + esc(initials) + '</div>' +
+      '<div>' +
+        '<div class="search-result-name">' + esc(p.name) + '</div>' +
+        '<div class="search-result-meta">' + (p.sex||'') + (age !== null ? ' · ' + age + ' yrs' : '') + ' · ' + esc(episodeInfo) + '</div>' +
+      '</div>' +
+      '<span class="search-result-arrow">Select →</span>' +
+    '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+async function onFabSelect(patientId) {
+  closeFabSheet();
+  await openPatientSheet(patientId);
+}
+
+function fabRegisterNew() {
+  closeFabSheet();
+  openNewPatientModal();
+}
+
+// ── View management ───────────────────────────────
+function showDash() {
+  document.getElementById('dash-view').style.display = '';
+  document.getElementById('list-view').style.display = 'none';
+  var dv = document.getElementById('detail-view');
+  dv.classList.remove('open');
+  dv.style.display = 'none';
+  currentPatientId = null;
+}
+
 // ── Dark mode ─────────────────────────────────────────
 function initDark() {
   if (localStorage.getItem('pt_dark') === '1') {
@@ -1129,6 +1542,12 @@ async function doSearch(q) {
   try {
     var res     = await fetch('/api/patients/search?q=' + encodeURIComponent(q));
     var results = await res.json();
+
+    document.getElementById('dash-view').style.display = 'none';
+    document.getElementById('list-view').style.display = '';
+    var label = document.getElementById('list-query-label');
+    if (label) label.textContent = q.trim() ? 'Results for "' + q.trim() + '"' : 'All patients';
+
     renderPatientTable(results);
 
     // If search has text and zero results, offer to create
@@ -1259,7 +1678,9 @@ async function openPatient(id) {
 
     // Switch views
     collapseStats();
+    document.getElementById('dash-view').style.display = 'none';
     document.getElementById('list-view').style.display = 'none';
+    document.getElementById('detail-view').style.display = '';
     document.getElementById('detail-view').classList.add('open');
   } catch(e) {
     showToast('Could not load patient', 'err');
@@ -1328,12 +1749,12 @@ function openEpisode(episodeId) {
 }
 
 // ── Show list / back ──────────────────────────────────
-function showList() {
+function showPatientList() {
   expandStats();
   currentPatientId = null;
   document.getElementById('detail-view').classList.remove('open');
+  document.getElementById('detail-view').style.display = 'none';
   document.getElementById('list-view').style.display = 'block';
-  doSearch(document.getElementById('search-input').value);
 }
 
 // ── Stats ─────────────────────────────────────────────
@@ -1430,7 +1851,7 @@ async function deleteCurrentPatient() {
     var j   = await res.json();
     if (!res.ok) { showToast(j.error || 'Failed to delete', 'err'); return; }
     showToast('Patient deleted', 'ok');
-    showList();
+    showDash();
     loadStats();
   } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }
@@ -1574,10 +1995,11 @@ async function submitEditPatient() {
 
 // ── Init ──────────────────────────────────────────────
 initDark();
-loadStats();
-doSearch('');
+initDashDate();
+loadSeenToday();
+loadActivePatients();
 
-// Auto-open patient if ?patient_id=X in URL (e.g. from panel "Edit Patient" button)
+// Auto-open patient if ?patient_id=X in URL
 (function() {
   var params = new URLSearchParams(window.location.search);
   var raw = params.get('patient_id');
@@ -1585,7 +2007,6 @@ doSearch('');
   if (Number.isFinite(pid) && pid > 0) openPatient(pid);
 })();
 
-// Set today's date on episode modal
 document.getElementById('ep-referral-date').value =
   new Date().toISOString().split('T')[0];
 </script>
