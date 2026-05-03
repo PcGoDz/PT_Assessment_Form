@@ -267,15 +267,17 @@ def search_patients(db_path, query=''):
         rows = conn.execute('''
             SELECT p.id, p.name, p.ic, p.passport, p.pt_type,
                    p.dob, p.sex, p.country, p.created_at,
-                   COUNT(DISTINCT CASE WHEN e.status='active' THEN e.id END) as active_episodes, COUNT(DISTINCT e.id) as episode_count,
-                   MAX(e.updated_at)     as last_visit
+                   COUNT(DISTINCT CASE WHEN e.status='active' THEN e.id END) as active_episodes,
+                   COUNT(DISTINCT e.id) as episode_count,
+                   MAX(e.updated_at) as last_visit,
+                   (SELECT form_type FROM episodes
+                    WHERE patient_id=p.id AND status='active'
+                    ORDER BY updated_at DESC LIMIT 1) as active_form_type
             FROM patients p
             LEFT JOIN episodes e ON e.patient_id = p.id
-            WHERE LOWER(p.name) LIKE LOWER(?)
-               OR p.ic       LIKE ?
-               OR p.passport LIKE ?
+            WHERE p.name LIKE ? OR p.ic LIKE ? OR p.passport LIKE ?
             GROUP BY p.id
-            ORDER BY p.name COLLATE NOCASE ASC
+            ORDER BY p.name ASC
         ''', (q, q, q)).fetchall()
         return [dict(r) for r in rows], None
     except Exception as e:
@@ -382,6 +384,7 @@ def get_patient_episodes(db_path, patient_id):
     try:
         rows = conn.execute('''
             SELECT e.id, e.form_type, e.referral_date, e.status,
+                   e.discharge_reason,
                    e.created_at, e.updated_at,
                    COUNT(DISTINCT r.id) as has_assessment,
                    COUNT(DISTINCT s.id) as soap_count
@@ -392,6 +395,71 @@ def get_patient_episodes(db_path, patient_id):
             GROUP BY e.id
             ORDER BY e.referral_date DESC
         ''', (patient_id,)).fetchall()
+        return [dict(r) for r in rows], None
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+
+def get_dashboard_seen_today(db_path):
+    conn = get_conn(db_path)
+    try:
+        rows = conn.execute('''
+            SELECT 'assessment' as note_type,
+                   r.id as note_id,
+                   r.episode_id,
+                   p.id as patient_id,
+                   p.name as patient_name,
+                   e.form_type,
+                   r.created_at
+            FROM records r
+            JOIN episodes e ON e.id = r.episode_id
+            JOIN patients p ON p.id = e.patient_id
+            WHERE date(r.created_at) = date('now')
+            UNION ALL
+            SELECT 'soap' as note_type,
+                   s.id as note_id,
+                   s.episode_id,
+                   p.id as patient_id,
+                   p.name as patient_name,
+                   e.form_type,
+                   s.created_at
+            FROM soap_notes s
+            JOIN episodes e ON e.id = s.episode_id
+            JOIN patients p ON p.id = e.patient_id
+            WHERE date(s.created_at) = date('now')
+            ORDER BY created_at ASC
+        ''').fetchall()
+        return [dict(r) for r in rows], None
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+
+def get_active_patients_summary(db_path):
+    conn = get_conn(db_path)
+    try:
+        rows = conn.execute('''
+            SELECT p.id as patient_id,
+                   p.name as patient_name,
+                   e.id as episode_id,
+                   e.form_type,
+                   e.updated_at as episode_updated,
+                   MAX(COALESCE(r.created_at, s.created_at)) as last_activity
+            FROM patients p
+            JOIN episodes e ON e.patient_id = p.id AND e.status = 'active'
+            LEFT JOIN records    r ON r.episode_id = e.id
+            LEFT JOIN soap_notes s ON s.episode_id = e.id
+            WHERE e.id = (
+                SELECT id FROM episodes
+                WHERE patient_id = p.id AND status = 'active'
+                ORDER BY updated_at DESC LIMIT 1
+            )
+            GROUP BY p.id
+            ORDER BY last_activity DESC NULLS LAST
+        ''').fetchall()
         return [dict(r) for r in rows], None
     except Exception as e:
         return [], str(e)
@@ -420,14 +488,16 @@ def update_episode_status(db_path, episode_id, status, reason=None):
     now  = datetime.now().isoformat(timespec='seconds')
     conn = get_conn(db_path)
     try:
-        # Store discharge reason in status field if provided
-        status_val = status
         if reason and status != 'active':
-            status_val = status + '|' + reason
-        conn.execute(
-            'UPDATE episodes SET status=?, updated_at=? WHERE id=?',
-            (status_val, now, episode_id)
-        )
+            conn.execute(
+                'UPDATE episodes SET status=?, discharge_reason=?, updated_at=? WHERE id=?',
+                (status, reason, now, episode_id)
+            )
+        else:
+            conn.execute(
+                'UPDATE episodes SET status=?, updated_at=? WHERE id=?',
+                (status, now, episode_id)
+            )
         conn.commit()
         return True, None
     except Exception as e:
