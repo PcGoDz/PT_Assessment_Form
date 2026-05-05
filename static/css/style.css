@@ -817,11 +817,22 @@ body.dark .dash-header { background: linear-gradient(135deg, #0f1f35, #1a3060); 
 .fab:active { transform: translateY(0); }
 
 /* On desktop: inline button in header instead of fixed FAB */
+/* Header action cluster (dark toggle + New button) */
+.dash-header-actions {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* On mobile: hide the header-fab, show fixed FAB instead */
+@media (max-width: 768px) {
+  .dash-header-fab { display: none; }
+}
 @media (min-width: 769px) {
   .fab { display: none; }
   .dash-header-fab {
-    position: absolute;
-    top: 20px; right: 20px;
     background: rgba(255,255,255,0.18);
     color: #fff;
     border: 1.5px solid rgba(255,255,255,0.35);
@@ -834,9 +845,6 @@ body.dark .dash-header { background: linear-gradient(135deg, #0f1f35, #1a3060); 
     transition: background 0.15s;
   }
   .dash-header-fab:hover { background: rgba(255,255,255,0.28); }
-}
-@media (max-width: 768px) {
-  .dash-header-fab { display: none; }
 }
 
 /* Dashboard content */
@@ -1062,6 +1070,7 @@ body.dark .dash-header { background: linear-gradient(135deg, #0f1f35, #1a3060); 
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 8px; margin-bottom: 10px;
 }
+.sheet-secondary-row-3 { grid-template-columns: 1fr 1fr 1fr; }
 .sheet-secondary-btn {
   display: flex; align-items: center; gap: 8px;
   background: var(--surface2);

@@ -1380,6 +1380,13 @@ const Main = (function () {
       var dd    = String(now.getDate()).padStart(2, '0');
       var el    = document.getElementById('mpis-tarikh');
       if (el) el.value = yyyy + '-' + mm + '-' + dd;
+      // Pre-fill Temujanji from patient panel next-appt fields (set by initFormContext)
+      var ppDate = document.getElementById('pp-appt-date');
+      var ppTime = document.getElementById('pp-appt-time');
+      var apptDate = document.getElementById('mpis-appt-date');
+      var apptTime = document.getElementById('mpis-appt-time');
+      if (apptDate && ppDate && ppDate.value) apptDate.value = ppDate.value;
+      if (apptTime && ppTime && ppTime.value) apptTime.value = ppTime.value;
       var overlay = document.getElementById('mpis-overlay');
       var modal   = document.getElementById('mpis-modal');
       if (overlay) overlay.classList.add('show');

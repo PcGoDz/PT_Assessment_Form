@@ -493,15 +493,16 @@
 <div class="home-shell">
   <header class="dash-header">
     <div class="dash-date" id="dash-date"></div>
-    <div class="dash-greeting">Good morning 👋</div>
+    <div class="dash-greeting" id="dash-greeting">Good morning 👋</div>
     <div class="dash-search-wrap" onclick="openFabSheet()" role="button" tabindex="0" aria-label="Search patients">
       <span class="dash-search-icon">🔍</span>
       <span class="dash-search-placeholder">Search patients…</span>
     </div>
-    <button class="dash-header-fab" onclick="openFabSheet()">+ New</button>
-    <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()"
-      title="Toggle dark mode"
-      style="position:absolute;top:14px;right:60px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);border-radius:var(--radius);color:white;padding:5px 8px;cursor:pointer;font-size:14px;">&#9790;</button>
+    <!-- Top-right cluster keeps dark toggle and + New from overlapping -->
+    <div class="dash-header-actions">
+      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">&#9790;</button>
+      <button class="dash-header-fab" onclick="openFabSheet()">+ New</button>
+    </div>
   </header>
 
   <main>
@@ -627,16 +628,20 @@
         <div class="sheet-episode-meta" id="sheet-episode-meta">—</div>
       </div>
 
-      <button class="sheet-primary-btn" id="sheet-soap-btn" onclick="sheetNewSoap()">
-        <span style="font-size:20px;">📝</span>
+      <button class="sheet-primary-btn" id="sheet-soap-btn" onclick="sheetViewProfile()">
+        <span style="font-size:20px;">👤</span>
         <div>
-          <div>New SOAP Note</div>
-          <div class="sheet-primary-sub">Continue this episode</div>
+          <div>View Patient Profile</div>
+          <div class="sheet-primary-sub">Open patient record</div>
         </div>
         <span class="btn-arrow">›</span>
       </button>
 
-      <div class="sheet-secondary-row" id="sheet-secondary-row">
+      <div class="sheet-secondary-row sheet-secondary-row-3" id="sheet-secondary-row">
+        <button class="sheet-secondary-btn" onclick="sheetNewSoap()">
+          <span style="font-size:16px;">📝</span>
+          <span>New SOAP</span>
+        </button>
         <button class="sheet-secondary-btn" onclick="sheetNewAssessment()">
           <span style="font-size:16px;">🗂️</span>
           <span>New Assessment</span>
@@ -646,8 +651,6 @@
           <span>View Episode</span>
         </button>
       </div>
-
-      <div class="sheet-profile-link" onclick="sheetViewProfile()">View patient profile →</div>
 
       <hr class="sheet-divider">
       <div class="sheet-section-label">Episodes of Care</div>
@@ -1036,12 +1039,20 @@ var FORM_LABELS = {
 // ── Date display ──────────────────────────────────
 function initDashDate() {
   var el = document.getElementById('dash-date');
-  if (!el) return;
+  var gr = document.getElementById('dash-greeting');
   var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var months = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December'];
   var d = new Date();
-  el.textContent = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  if (el) el.textContent = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+  if (gr) {
+    var h = d.getHours();
+    var msg = h < 12 ? 'Good morning 👋'
+            : h < 17 ? 'Good afternoon 🌤'
+            : h < 21 ? 'Good evening 🌙'
+            :           'Good night 🌜';
+    gr.textContent = msg;
+  }
 }
 
 // ── Load Seen Today ───────────────────────────────
@@ -1228,6 +1239,8 @@ function sheetNewSoap() {
 }
 
 function sheetNewAssessment() {
+  // Sync currentPatientId so submitNewEpisode() can use it
+  currentPatientId = sheetPatientId;
   closePatientSheet();
   openNewEpisodeModal();
 }
