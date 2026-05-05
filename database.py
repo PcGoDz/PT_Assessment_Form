@@ -413,7 +413,7 @@ def get_dashboard_seen_today(db_path):
                    p.id as patient_id,
                    p.name as patient_name,
                    e.form_type,
-                   r.created_at
+                   r.created_at as created_at
             FROM records r
             JOIN episodes e ON e.id = r.episode_id
             JOIN patients p ON p.id = e.patient_id
