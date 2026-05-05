@@ -114,6 +114,11 @@
     <div class="topbar-logo">PT Assessment System</div>
     <button class="tbtn" onclick="toggleSidebar()" title="Toggle sidebar" style="margin-left:6px;padding:4px 8px;font-size:13px" id="sidebar-toggle-btn">&#9776;</button>
     <div class="topbar-actions">
+      {% if is_form_page %}
+      <button class="change-form-btn" onclick="openFormPickerSheet()" id="change-form-btn">
+        &#128203; Change Form
+      </button>
+      {% endif %}
       <!-- Nav group: Return / Save & Return injected by initFormContext() when episode context present -->
       <div id="topbar-nav-group" style="display:flex;gap:6px;align-items:center;"></div>
       <div class="tbtn-sep" id="topbar-nav-sep" style="display:none"></div>
@@ -303,6 +308,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 });
+
+// ── Mobile Form Picker Sheet ──────────────────────
+function openFormPickerSheet() {
+  document.getElementById('form-picker-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFormPickerSheet() {
+  document.getElementById('form-picker-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function onFormPickerOverlayClick(e) {
+  if (e.target === document.getElementById('form-picker-overlay')) closeFormPickerSheet();
+}
+
+function selectFormPicker(formId) {
+  closeFormPickerSheet();
+  var params = new URLSearchParams(window.location.search);
+  var epId = params.get('episode_id') || '';
+  var ptId = params.get('patient_id') || '';
+  var url  = '/form/' + formId;
+  if (epId || ptId) url += '?episode_id=' + epId + '&patient_id=' + ptId;
+  window.location.href = url;
+}
 </script>
 
 <!-- ── MPIS Session Header Modal ───────────────────── -->
@@ -391,6 +421,35 @@ document.addEventListener('DOMContentLoaded', function () {
   <div class="pt-panel-actions">
     <button type="button" class="pt-panel-action-btn" id="pp-edit-btn">&#9998; Edit Patient</button>
     <button type="button" class="pt-panel-action-btn" id="pp-history-btn">&#128203; Episode History</button>
+  </div>
+</div>
+
+<!-- Mobile Form Picker Sheet -->
+<div class="sheet-overlay" id="form-picker-overlay" onclick="onFormPickerOverlayClick(event)">
+  <div class="bottom-sheet" id="form-picker-sheet" style="max-width:480px;">
+    <div class="sheet-handle-wrap"><div class="sheet-handle"></div></div>
+    <div style="padding:4px 20px 0;">
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Select Assessment Form</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Switching form keeps the current episode context.</div>
+    </div>
+    <div class="form-picker-sheet" id="form-picker-sheet-content">
+      {% for group in FORM_GROUPS %}
+      <div class="form-picker-group">
+        <div class="form-picker-group-label">{{ group }}</div>
+        <div class="form-picker-grid">
+          {% for form in FORM_REGISTRY if form.group == group %}
+          <button class="form-picker-chip {% if not form.ready %}soon-chip{% endif %}"
+            {% if form.ready %}onclick="selectFormPicker('{{ form.id }}')"{% else %}disabled title="Coming soon"{% endif %}>
+            {% if form.icon is defined %}<span>{{ form.icon | safe }}</span>{% endif %}
+            <span>{{ form.label }}</span>
+            {% if not form.ready %}<span style="font-size:9px;opacity:0.6;margin-left:2px;">(Soon)</span>{% endif %}
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="height:20px;"></div>
   </div>
 </div>
 </body>
