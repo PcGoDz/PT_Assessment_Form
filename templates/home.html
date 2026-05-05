@@ -1712,7 +1712,7 @@ async function loadEpisodes(patientId) {
       var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;', AMPUTATION:'&#129452;', NEURO:'&#9889;' }[ep.form_type] || '&#128203;';
       var rawStatus  = ep.status || 'active';
       var statusBase = rawStatus.split('|')[0];  // strip reason
-      var statusReason = rawStatus.includes('|') ? rawStatus.split('|')[1] : '';
+      var statusReason = ep.discharge_reason || (rawStatus.includes('|') ? rawStatus.split('|')[1] : '');
       var statusCls  = 'status-' + statusBase.replace(/\s+/g,'-').toLowerCase();
       var hasAssess = ep.has_assessment > 0;
       var soaps     = ep.soap_count || 0;
