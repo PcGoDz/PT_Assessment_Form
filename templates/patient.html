@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ patient.name }} — PT Assessment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .pt-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+    }
+
+    /* ── Topbar ── */
+    .pt-topbar {
+      background: var(--accent);
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 14px;
+      height: 52px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .pt-topbar-logo { font-weight: 600; font-size: 15px; }
+    .pt-topbar-sep  { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+    .pt-topbar-sub  { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .pt-topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    .tbtn {
+      padding: 6px 13px; border-radius: var(--radius); font-size: 12px;
+      font-weight: 500; cursor: pointer;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.1); color: white;
+      font-family: inherit; transition: background 0.15s;
+    }
+    .tbtn:hover { background: rgba(255,255,255,0.22); }
+    .tbtn.primary { background: white; color: var(--accent); border-color: white; }
+    .tbtn.primary:hover { background: #e8eef8; }
+
+    .dark-toggle {
+      background: none; border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: var(--radius); color: white; cursor: pointer;
+      font-size: 15px; padding: 5px 9px; line-height: 1;
+    }
+    .dark-toggle:hover { background: rgba(255,255,255,0.15); }
+
+    /* ── Main content ── */
+    .pt-main {
+      flex: 1;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb {
+      font-size: 12px;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .breadcrumb a {
+      color: var(--accent-mid);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .breadcrumb a:hover { text-decoration: underline; }
+
+    /* ── Hero card ── */
+    .hero-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      border-left: 4px solid var(--accent);
+      padding: 22px 26px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .hero-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 600;
+      flex-shrink: 0;
+      letter-spacing: -1px;
+    }
+    .hero-info { flex: 1; }
+    .hero-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .hero-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .hero-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Section card ── */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .section-header {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    /* ── Details grid ── */
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+    .detail-item {
+      padding: 16px 20px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-item:nth-child(3n) { border-right: none; }
+    .detail-item:nth-last-child(-n+3) { border-bottom: none; }
+    .detail-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-faint);
+      margin-bottom: 5px;
+    }
+    .detail-value {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .detail-value.mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+    }
+    .detail-value.faint { color: var(--text-faint); font-weight: 400; font-style: italic; }
+
+    /* ── Episode list ── */
+    .episodes-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .ep-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: all 0.12s;
+      background: var(--bg);
+      text-decoration: none;
+    }
+    .ep-card:hover {
+      border-color: var(--accent-mid);
+      background: var(--accent-light);
+      box-shadow: 0 2px 6px rgba(74,122,200,0.1);
+    }
+    .ep-card.discharged {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .ep-card.discharged:hover {
+      border-color: var(--border);
+      background: var(--bg);
+      box-shadow: none;
+    }
+    .ep-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius);
+      background: var(--accent-light);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .ep-info { flex: 1; }
+    .ep-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .ep-meta  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .ep-pill {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+    .ep-pill.active     { background: var(--success-light); color: var(--success); }
+    .ep-pill.discharged { background: var(--surface2); color: var(--text-faint); }
+    .ep-arrow { color: var(--text-faint); font-size: 16px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-faint);
+    }
+    .empty-icon  { font-size: 28px; margin-bottom: 10px; }
+    .empty-title { font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; }
+    .empty-sub   { font-size: 12px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      padding: 8px 16px;
+      background: var(--accent); color: white;
+      border: none; border-radius: var(--radius);
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-ghost {
+      padding: 8px 14px;
+      background: none; color: var(--text-muted);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      font-family: inherit; font-size: 13px;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-danger {
+      padding: 8px 14px;
+      background: none; color: var(--danger);
+      border: 1px solid var(--danger); border-radius: var(--radius);
+      font-family: inherit; font-size: 13px;
+      cursor: pointer; transition: all 0.12s; opacity: 0.7;
+    }
+    .btn-danger:hover { opacity: 1; background: var(--danger-light); }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      width: 100%; max-width: 480px;
+      padding: 24px; position: relative;
+      animation: modal-in 0.18s ease;
+    }
+    @keyframes modal-in {
+      from { transform: translateY(-12px); opacity: 0; }
+      to   { transform: translateY(0);     opacity: 1; }
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      background: none; border: none; font-size: 18px;
+      cursor: pointer; color: var(--text-faint); line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 18px; }
+    .modal-fields { display: flex; flex-direction: column; gap: 12px; }
+    .modal-field  { display: flex; flex-direction: column; gap: 4px; }
+    .modal-field label {
+      font-size: 11px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+    .modal-field input, .modal-field select {
+      font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+      padding: 7px 10px; border: 1px solid var(--border);
+      border-radius: var(--radius); background: var(--bg); color: var(--text);
+      outline: none; transition: border-color 0.15s;
+    }
+    .modal-field input:focus, .modal-field select:focus {
+      border-color: var(--accent-mid);
+      box-shadow: 0 0 0 3px rgba(74,122,200,0.12);
+    }
+    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--text); color: white;
+      padding: 10px 20px; border-radius: 30px;
+      font-size: 13px; opacity: 0;
+      transition: opacity 0.2s; pointer-events: none;
+      z-index: 999; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+    .toast.ok  { background: var(--success); }
+    .toast.err { background: var(--danger); }
+
+    /* ── Dark mode ── */
+    body.dark .pt-topbar   { background: #1e2a3e; }
+    body.dark .ep-card     { background: var(--surface2); }
+    body.dark .ep-card:hover { background: var(--accent-light); }
+    body.dark .modal       { background: var(--surface); }
+    body.dark .modal-field input,
+    body.dark .modal-field select { background: var(--surface2); color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="pt-shell">
+  <header class="pt-topbar">
+    <div class="pt-topbar-logo">PT Assessment System</div>
+    <div class="pt-topbar-sep"></div>
+    <div class="pt-topbar-sub">Patient Profile</div>
+    <div class="pt-topbar-actions">
+      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">&#9790;</button>
+      <button class="tbtn" onclick="window.location.href='/'">&#8592; All Patients</button>
+    </div>
+  </header>
+
+  <main class="pt-main">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+      <a onclick="window.location.href='/'">&#8962; Patients</a>
+      <span>&#8250;</span>
+      <span>{{ patient.name }}</span>
+    </div>
+
+    <!-- Hero card -->
+    <div class="hero-card">
+      <div class="hero-avatar" id="hero-avatar">
+        {% set parts = patient.name.split() %}
+        {% if parts|length >= 2 %}{{ parts[0][0] }}{{ parts[1][0] }}{% else %}{{ patient.name[0] }}{% endif %}
+      </div>
+      <div class="hero-info">
+        <div class="hero-name">{{ patient.name }}</div>
+        <div class="hero-sub">
+          {% set meta = [] %}
+          {% if patient.sex == 'M' %}{% set _ = meta.append('Male') %}{% elif patient.sex == 'F' %}{% set _ = meta.append('Female') %}{% endif %}
+          {% if patient.dob %}{% set _ = meta.append(patient.dob) %}{% endif %}
+          {% if patient.pt_type == 'local' %}{% set _ = meta.append('Malaysia') %}{% elif patient.country %}{% set _ = meta.append(patient.country) %}{% endif %}
+          {{ meta | join(' · ') or 'No additional info' }}
+        </div>
+      </div>
+      <div class="hero-badge">{{ patient.ic or patient.passport or 'No ID' }}</div>
+      <div class="hero-actions">
+        <button class="btn-ghost" onclick="openEditModal()">&#9998; Edit</button>
+        <button class="btn-danger" onclick="confirmDelete()">&#128465; Delete</button>
+      </div>
+    </div>
+
+    <!-- Details card -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Patient Details</span>
+        <span style="font-size:11px;color:var(--text-faint);">Registered {{ patient.created_at[:10] if patient.created_at else '—' }}</span>
+      </div>
+      <div class="details-grid">
+        <div class="detail-item">
+          <div class="detail-label">Full Name</div>
+          <div class="detail-value">{{ patient.name }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Patient Type</div>
+          <div class="detail-value">{{ 'Malaysian' if patient.pt_type == 'local' else 'Foreign / International' }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">{{ 'NRIC' if patient.pt_type == 'local' else 'Passport No.' }}</div>
+          <div class="detail-value mono">{{ patient.ic if patient.pt_type == 'local' else patient.passport or '—' }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Date of Birth</div>
+          <div class="detail-value">{{ patient.dob or '—' }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Sex</div>
+          <div class="detail-value">
+            {% if patient.sex == 'M' %}Male{% elif patient.sex == 'F' %}Female{% else %}<span class="detail-value faint">Not recorded</span>{% endif %}
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Country of Origin</div>
+          <div class="detail-value">
+            {% if patient.pt_type == 'local' %}Malaysia{% elif patient.country %}{{ patient.country }}{% else %}<span class="detail-value faint">Not recorded</span>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Episodes card -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Episodes</span>
+        <span style="font-size:11px;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;">
+          {{ episodes|length }} episode{{ 's' if episodes|length != 1 else '' }}
+        </span>
+      </div>
+      {% if episodes %}
+      <div class="episodes-list">
+        {% for ep in episodes %}
+        {% set form_labels = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric','CR':'Cardiorespiratory','AMPUTATION':'Amputation','NEURO':'Neurological'} %}
+        {% set form_icons  = {'MS':'&#129460;','SPINE':'&#128279;','GERIATRIC':'&#9878;','CR':'&#129728;','AMPUTATION':'&#129452;','NEURO':'&#9889;'} %}
+        {% set label = form_labels.get(ep.form_type, ep.form_type) %}
+        {% set icon  = form_icons.get(ep.form_type, '&#128203;') %}
+        {% set is_active = ep.status == 'active' %}
+        <div class="ep-card {{ '' if is_active else 'discharged' }}"
+          {% if is_active %}onclick="window.location.href='/episode/{{ ep.id }}'"{% endif %}>
+          <div class="ep-icon">{{ icon | safe }}</div>
+          <div class="ep-info">
+            <div class="ep-title">{{ label }} Assessment</div>
+            <div class="ep-meta">
+              Assessment: {{ ep.referral_date or '—' }}
+              &nbsp;·&nbsp; {{ ep.soap_count or 0 }} follow-up note{{ 's' if (ep.soap_count or 0) != 1 else '' }}
+            </div>
+          </div>
+          <span class="ep-pill {{ 'active' if is_active else 'discharged' }}">
+            {{ ep.status.split('|')[0] if ep.status else 'active' }}
+          </span>
+          {% if is_active %}<span class="ep-arrow">&#8250;</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">&#128203;</div>
+        <div class="empty-title">No episodes yet</div>
+        <div class="empty-sub">Go back to patient list to start a new episode</div>
+      </div>
+      {% endif %}
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Edit Patient Modal -->
+<div class="modal-backdrop" id="modal-edit">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&#x2715;</button>
+    <div class="modal-title">Edit Patient Details</div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Patient Type</label>
+        <select id="ed-type" onchange="onEdTypeChange()">
+          <option value="local">Malaysian (NRIC)</option>
+          <option value="foreign">Foreign (Passport)</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Full Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="ed-name" placeholder="Patient full name">
+        <small id="ed-name-err" style="color:var(--danger);display:none;margin-top:2px"></small>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field" id="ed-nric-field">
+          <label>NRIC <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="ed-nric" placeholder="12 digits" maxlength="12">
+          <small id="ed-nric-err" style="color:var(--danger);display:none;margin-top:2px"></small>
+        </div>
+        <div class="modal-field" id="ed-passport-field" style="display:none">
+          <label>Passport No. <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="ed-passport" placeholder="Passport number">
+        </div>
+        <div class="modal-field">
+          <label>Date of Birth</label>
+          <input type="date" id="ed-dob">
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-field">
+          <label>Sex</label>
+          <select id="ed-sex">
+            <option value="">— Select —</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+        <div class="modal-field" id="ed-country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="ed-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option><option>Myanmar</option><option>Philippines</option>
+              <option>Thailand</option><option>Vietnam</option><option>Cambodia</option>
+              <option>Laos</option><option>Brunei</option><option>Singapore</option><option>Timor-Leste</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option><option>India</option><option>Pakistan</option>
+              <option>Nepal</option><option>Sri Lanka</option><option>Afghanistan</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option><option>Taiwan</option><option>Japan</option>
+              <option>South Korea</option><option>Hong Kong</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option>Saudi Arabia</option><option>Yemen</option><option>Iraq</option>
+              <option>Iran</option><option>Jordan</option><option>Syria</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Australia</option><option>United Kingdom</option><option>United States</option>
+              <option>Other (not listed)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var PATIENT_ID = {{ patient.id }};
+
+// ── Dark mode ─────────────────────────────────────────────────────
+function initDark() {
+  if (localStorage.getItem('pt_dark') === '1') {
+    document.body.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = '☀';
+  }
+}
+function toggleDark() {
+  var isDark = document.body.classList.toggle('dark');
+  localStorage.setItem('pt_dark', isDark ? '1' : '0');
+  document.getElementById('dark-toggle').textContent = isDark ? '☀' : '☾';
+}
+
+// ── Toast ─────────────────────────────────────────────────────────
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(function() { t.className = 'toast'; }, 2400);
+}
+
+// ── Modal ─────────────────────────────────────────────────────────
+function openEditModal() {
+  document.getElementById('ed-type').value    = '{{ patient.pt_type or "local" }}';
+  document.getElementById('ed-name').value    = '{{ patient.name | replace("'", "\\'") }}';
+  document.getElementById('ed-nric').value    = '{{ patient.ic or "" }}';
+  document.getElementById('ed-passport').value= '{{ patient.passport or "" }}';
+  document.getElementById('ed-dob').value     = '{{ patient.dob or "" }}';
+  document.getElementById('ed-sex').value     = '{{ patient.sex or "" }}';
+  document.getElementById('ed-name-err').style.display = 'none';
+  document.getElementById('ed-nric-err').style.display = 'none';
+  onEdTypeChange();
+  var cEl = document.getElementById('ed-country');
+  if (cEl) cEl.value = '{{ patient.country or "" }}';
+  document.getElementById('modal-edit').classList.add('open');
+  setTimeout(function() { document.getElementById('ed-name').focus(); }, 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-edit').classList.remove('open');
+}
+
+document.getElementById('modal-edit').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function onEdTypeChange() {
+  var local = document.getElementById('ed-type').value === 'local';
+  document.getElementById('ed-nric-field').style.display    = local ? '' : 'none';
+  document.getElementById('ed-passport-field').style.display= local ? 'none' : '';
+  document.getElementById('ed-country-field').style.display = local ? 'none' : '';
+}
+
+async function submitEdit() {
+  var name = document.getElementById('ed-name').value.trim();
+  var nameErr = document.getElementById('ed-name-err');
+  if (!name) {
+    nameErr.textContent = 'Name is required'; nameErr.style.display = '';
+    return;
+  }
+  if (/\d/.test(name)) {
+    nameErr.textContent = 'Name must not contain numbers'; nameErr.style.display = '';
+    return;
+  }
+  nameErr.style.display = 'none';
+
+  var type = document.getElementById('ed-type').value;
+  var nric = document.getElementById('ed-nric').value.trim();
+  var pass = document.getElementById('ed-passport').value.trim();
+  var nricErr = document.getElementById('ed-nric-err');
+
+  if (type === 'local' && !/^\d{12}$/.test(nric)) {
+    nricErr.textContent = 'NRIC must be exactly 12 digits'; nricErr.style.display = '';
+    return;
+  }
+  nricErr.style.display = 'none';
+  if (type === 'foreign' && !pass) { showToast('Passport is required', 'err'); return; }
+
+  var countryEl = document.getElementById('ed-country');
+  try {
+    var res = await fetch('/api/patients/' + PATIENT_ID, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name: name, type: type, nric: nric, passport: pass,
+        dob: document.getElementById('ed-dob').value,
+        sex: document.getElementById('ed-sex').value,
+        country: countryEl ? countryEl.value : ''
+      })
+    });
+    var j = await res.json();
+    if (!res.ok) {
+      var msg = Array.isArray(j.error) ? j.error.join(', ') : (j.error || 'Failed to save');
+      showToast(msg, 'err'); return;
+    }
+    closeModal();
+    showToast('Patient updated', 'ok');
+    setTimeout(function() { window.location.reload(); }, 700);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+// ── Delete ────────────────────────────────────────────────────────
+async function confirmDelete() {
+  var name = '{{ patient.name | replace("'", "\\'") }}';
+  if (!confirm('Delete ' + name + '? This will permanently remove ALL episodes, assessments and follow-up notes. Cannot be undone.')) return;
+  if (!confirm('FINAL WARNING: Permanently delete ' + name + ' and all their clinical records?')) return;
+
+  try {
+    var res = await fetch('/api/patients/' + PATIENT_ID, { method: 'DELETE' });
+    var j   = await res.json();
+    if (!res.ok) { showToast(j.error || 'Failed to delete', 'err'); return; }
+    showToast('Patient deleted', 'ok');
+    setTimeout(function() { window.location.href = '/'; }, 800);
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+
+initDark();
+</script>
+</body>
+</html>

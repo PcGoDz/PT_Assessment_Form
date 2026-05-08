@@ -18,3 +18,10 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Git worktrees
+thirsty-cerf-9bb47d/
+*-cerf-*/
+
+# Superpowers tool temp files
+.superpowers/

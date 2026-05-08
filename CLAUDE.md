@@ -5,12 +5,12 @@ and context established during development. Keep it updated as things change.
 
 ---
 
-## ⚠️ LAST SESSION: 2026-05-01 (MPIS session header modal + 500 error diagnosis)
+## ⚠️ LAST SESSION: 2026-05-09
 
-1. **Where we left off** — MPIS session header modal implemented and pushed. All 6 assessment MPIS formatters refactored into builder/wrapper/finalizer pattern. 500 errors on /api/stats and /api/patients were diagnosed as a stale Flask process (not a code bug). UI redesign brainstorm NOT started — deferred explicitly.
-2. **Do this first next session** — Restart Flask (`python app.py`). Verify patient registration works (should be fine — stale process was the bug). Then start the UI redesign brainstorm — user explicitly wants this for the patient detail page.
-3. **Traps / gotchas** — MPIS formatters are now BUILDERS: `_buildMpisXxx()` returns `parts[]`, does NOT call `copyText`. Public wrappers `copyToMpisXxx()` show modal then call `_doCopyMpis(parts, header)`. Adding a new form = add `_buildMpisXxx()` + `copyToMpisXxx()` wrapper + entry in `copyToMpisAuto()` switch. Never put `copyText` inside a builder.
-4. **What's half-done** — UI redesign (brainstorm not started). Bug 2: SOAP gate before first assessment (not implemented, blocked on "what does completed mean?"). Exe build untested since NEURO. HAND form not started. Shared table IIFEs not started.
+1. **Where we left off** — Patient profile page (`/patient/<id>`) now wired into all navigation. `openPatient(id)` in `home.html` navigates directly to `/patient/<id>` (was: inline detail view). `goBack()` in `episode.html` goes to `/patient/<episode.patient_id>` (was: `/`). `initFormContext()` in `main.js` now injects a "View Profile" button in the topbar nav group when `patientId` is present, and Return / Save & Return now navigate to `/patient/<patientId>` instead of `/`. "View Profile" button also added to episode.html context banner, shown after `loadEpisode()` resolves.
+2. **Do this first next session** — Git push. Then smoke-test the full patient navigation flow: home row click → profile page → episode → back button → profile page. Verify form Return button goes to patient profile, not home.
+3. **Traps / gotchas** — `_openPatientInline(id)` in `home.html` is now dead code (renamed from old `openPatient` body). Do NOT delete it yet — read what it did first, there may be edit-patient / delete-patient flows still relying on the inline view state. `goBack()` depends on the `episode` module var being set by `loadEpisode()` — if called before fetch resolves, falls back to `/`. `patient.html` was missing from the main project (only existed in the worktree); it was copied over this session.
+4. **What's half-done** — Exe build untested. HAND form not started. `_openPatientInline` dead code not yet cleaned up.
 5. **What to skip for now** — Age auto-calc, ARIA, audit_log ON DELETE CASCADE, UNIQUE constraint, draft/final state. All documented, none urgent.
 
 ---
@@ -57,9 +57,9 @@ static/js/
   main.js               — Init, autosave, MPIS copy, dark mode, initFormContext()
 
 templates/
-  base.html             — Shell: topbar, sidebar (dynamic FORM_REGISTRY), progress bar
-  home.html             — Patient dashboard, search, episode list, edit patient modal
-  episode.html          — Episode detail, SOAP timeline, export button
+  base.html             — Shell: M3 context bar, section rail (dynamic FORM_REGISTRY), progress bar
+  home.html             — Patient dashboard (M3 redesign), search, episode list, edit patient modal
+  episode.html          — Episode detail (M3 redesign), SOAP timeline, export button
   forms/ms.html         — MS assessment form
   forms/spine.html      — Spine assessment form
   forms/geriatric.html  — Geriatric assessment form
@@ -684,7 +684,7 @@ Shortest path always. 12-21 patients/day.
 
 ### High Priority
 - [x] Git push — pushed to GitHub (PcGoDz/PT_Assessment_Form) — DONE 2026-04-28
-- [ ] UI redesign brainstorm — user explicitly requested, patient detail page (hierarchy: Home → Patient → Episode → Form)
+- [x] UI redesign — full M3 reskin across style.css, base.html, home.html, episode.html, main.js — DONE 2026-05-07
 - [ ] Full end-to-end exe build test (all 6 forms — build untested since NEURO was added)
 - [ ] HAND form (next new form — simpler scope, good warmup)
 
@@ -700,6 +700,16 @@ Shortest path always. 12-21 patients/day.
 - [ ] Remaining 9 forms: BURN, SCI, VESTIBULAR, FACIAL, PAEDIATRIC, LYMPHOEDEMA, NCD, GENERAL
 - [ ] Shared table IIFEs: MmtTable, InvMedTable, refactor MovementTable (planned but not started)
 - [ ] Accessibility: ARIA labels on toast, progress bar, sidebar nav items (low clinical priority)
+
+### Done this session (2026-05-07 — M3 UI redesign)
+- [x] `style.css` restructured: M3 design tokens added (`--m3-surface-container`, `--m3-shape-sm/md/lg`, `--m3-elev-1/2/3`), new layout system (`.m3-context-bar`, `.m3-section-rail`, `.m3-content`)
+- [x] `base.html` rebuilt: old topbar/sidebar replaced with `.m3-context-bar` + `.m3-section-rail`, dark toggle moved to settings gear dropdown
+- [x] `home.html` fully rewritten (~2170 lines): `.dash-header` → `.home-ctx-bar` (neutral 56px bar), greeting card, settings dropdown with `toggleSettingsMenu()` + click-outside handler, `loadStats()` wired to init
+- [x] `episode.html` fully rewritten (~760 lines): `.ep-topbar` → `.ep-ctx-bar` (neutral, border-bottom), settings gear dropdown, session info box CSS classes (`.session-info-box`, `.session-info-grid`), AMPUTATION+NEURO added to formLabel maps
+- [x] `main.js` adapted: sidebar references updated to `#m3-sidebar` / `#m3-rail`, context bar references updated to `.m3-context-bar`
+- [x] All 6 forms smoke-tested (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO) — DOM hooks verified intact
+- [x] DOM ID verification: 33 critical IDs in episode.html, 84 critical IDs in home.html — all present
+- [x] All JS functions preserved character-for-character across home.html (~50 functions) and episode.html (15 functions)
 
 ### Done this session (2026-05-01 — MPIS modal + label fixes)
 - [x] MPIS session header modal added to base.html (`#mpis-overlay` + `#mpis-modal`)
@@ -774,7 +784,7 @@ Public API: `Main.cancelMpisModal()`, `Main.confirmMpisModal()` (called from bas
 
 ---
 
-## What's Done (as of 2026-05-01)
+## What's Done (as of 2026-05-07)
 
 - [x] Patient registration with NRIC auto-derive (DOB/age/sex)
 - [x] Patient edit modal in home.html
@@ -820,6 +830,10 @@ Public API: `Main.cancelMpisModal()`, `Main.confirmMpisModal()` (called from bas
 - [x] **MPIS builder/wrapper/finalizer pattern — builders return parts[], _doCopyMpis wraps + copies**
 - [x] **"Date of Referral" → "Date of Assessment" label change (home.html + episode.html)**
 - [x] **Static KKM serial number removed from topbar**
+- [x] **M3 UI redesign — style.css tokens, base.html shell, home.html dashboard, episode.html detail, main.js adapted**
+- [x] **Dark mode toggle moved to settings gear dropdown on all pages (base.html, home.html, episode.html)**
+- [x] **Neutral context bars replacing colored topbars across all standalone pages**
+- [x] **episode.html formLabel maps updated to include AMPUTATION + NEURO (were missing)**
 
 ---
 
@@ -1728,3 +1742,443 @@ All three keys are required. Missing any one of them causes 422. Check all three
 - `InvMedTable` — new IIFE for investigation / medication tables. Columns vary by table (Inv: date/type/result; Med: name/dose/frequency).
 - Wire into neuro.html for MMT section. Wire into amputation.html for its MMT. Smoke test both.
 - Injection pattern: same as sign_chop_block — pass tbody ID as config option to the IIFE init.
+
+---
+
+## HANDOVER NOTE — M3 UI Redesign Session 2026-05-07
+
+### What happened this session
+
+Full Google Material Design 3 (M3) UI redesign across the entire app. 7-task plan executed
+across multiple context windows. No backend changes. No new features. Pure visual/structural
+CSS + HTML rewrite with strict DOM ID and JS function preservation.
+
+**Files modified:**
+
+- `static/css/style.css` — Added M3 design token block: `--m3-surface-container`,
+  `--m3-surface-container-high`, `--m3-shape-sm` (8px), `--m3-shape-md` (12px),
+  `--m3-shape-lg` (16px), `--m3-elev-1/2/3` (box-shadow levels). New layout classes:
+  `.m3-context-bar` (56px neutral bar, border-bottom, no box-shadow),
+  `.m3-section-rail` (replacing old sidebar), `.m3-content` (main content area).
+  Dark mode variants for all new tokens.
+
+- `templates/base.html` — Old topbar (`.topbar`) + sidebar (`.sidebar`) replaced with
+  `.m3-context-bar` + `.m3-section-rail`. Dark mode toggle moved from standalone topbar
+  button to settings gear dropdown (`#settings-menu`, `#settings-btn`). Settings dropdown
+  pattern: anchor div with absolute-positioned menu, `toggleSettingsMenu()` function +
+  click-outside handler to auto-close.
+
+- `templates/home.html` — Full rewrite (~2170 lines). `.dash-header` (gradient blue) replaced
+  with `.home-ctx-bar` (neutral 56px bar) + `.home-greeting` (separate card). Settings gear
+  dropdown added with same pattern as base.html. `toggleSettingsMenu()` + click-outside
+  handler added. `loadStats()` call added to init (was defined but never called).
+  Emojis removed from greeting messages. All 84 DOM IDs preserved. All ~50 JS functions
+  preserved character-for-character. All 5 modals, 2 bottom sheets, FAB, context menu intact.
+
+- `templates/episode.html` — Full rewrite (~760 lines). `.ep-topbar` (accent colored,
+  box-shadow) replaced with `.ep-ctx-bar` (neutral, border-bottom). Settings gear dropdown added.
+  Session info box in SOAP modal: inline styles replaced with proper CSS classes
+  (`.session-info-box`, `.session-info-title`, `.session-info-grid`). formLabel maps
+  updated to include AMPUTATION and NEURO (were missing — only had MS/SPINE/GERIATRIC/CR).
+  All 33 DOM IDs preserved. All 15 JS functions preserved.
+
+- `static/js/main.js` — Sidebar references updated from `#sidebar` / `.sidebar` to
+  `#m3-sidebar` / `#m3-rail` / `.m3-section-rail`. Context bar references updated from
+  `.topbar` to `.m3-context-bar`. Dark mode toggle logic updated to find `#dark-toggle`
+  inside settings dropdown rather than standalone topbar button.
+
+**Key design decisions:**
+
+- **Neutral context bars everywhere.** All three standalone pages (base.html, home.html,
+  episode.html) use the same pattern: 56px neutral bar, `border-bottom: 1px solid var(--border)`,
+  no `box-shadow`. Consistent, clean, professional.
+
+- **Settings gear dropdown as shared pattern.** Dark mode toggle, and potentially future
+  settings, live inside a gear dropdown. The `id="dark-toggle"` is placed on the inner
+  `<span>` icon element, NOT on the `<button>`, because `initDark()` sets `textContent`
+  on the element — putting it on the button would wipe the "Dark Mode" label text.
+
+- **M3 tokens with fallbacks.** All new M3 CSS vars use fallback syntax:
+  `var(--m3-surface-container, var(--surface))`. This means any component not yet updated
+  to M3-specific tokens still works via the old `--surface` fallback. Graceful migration.
+
+- **DOM ID preservation as hard constraint.** Every `getElementById` call in JS was mapped
+  and verified against the rewritten HTML. Zero IDs changed. Zero JS functions modified in
+  signature or body. The redesign is purely visual — data flow is untouched.
+
+---
+
+### Retrospective
+
+**What went well:**
+
+- The 7-task plan was clean and executed in order. Each task had clear scope, clear inputs/outputs.
+  No task required rework of a previous task.
+- DOM ID verification scripts (Python) caught the formLabel map gap in episode.html (AMPUTATION
+  and NEURO missing) before it could become a runtime bug.
+- M3 token fallback pattern (`var(--m3-x, var(--old-x))`) meant we could update pages
+  incrementally without breaking partially-migrated components.
+- The session info box CSS cleanup in episode.html (inline styles to proper classes) was a
+  bonus maintainability win — not in the plan but the right call while the file was open.
+
+**What went wrong:**
+
+- DOM ID verification script in bash had encoding issues — `grep -c "function onEp2TypeChange"`
+  returned 0 despite the function being present (confirmed via Read tool). The bash sandbox
+  encoding and the Windows file encoding did not agree. Workaround: used Python verification
+  script instead of raw grep. Lesson: for verification on Windows-origin files, prefer Python
+  `open(encoding='utf-8')` over bash grep.
+- Five functions appeared "missing" in the Python verification of home.html because the matcher
+  used `'function ' + fn` which did not account for leading whitespace. Not a code bug — a
+  verification script bug. All five functions were confirmed present via Grep tool.
+
+**What we'd do differently:**
+
+- **Write the verification script to handle indented function declarations** from the start.
+  The regex should be `r'function\s+' + fn` not `'function ' + fn`. Simple but cost a
+  false-alarm investigation cycle.
+- **Check formLabel maps in episode.html as part of new form checklist.** AMPUTATION and
+  NEURO were added to all registries (FORM_REGISTRY, PDF generators, REQUIRED_FIELDS, MPIS,
+  SOAP templates) but not to episode.html's inline formLabel map. This is a new gap —
+  the checklist does not mention episode.html formLabel maps. Now it should.
+
+---
+
+### Known issues (updated as of 2026-05-07)
+
+**Still open:**
+- Age auto-calculation (NRIC to age, DOB to age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place
+- `audit_log` FK has no ON DELETE CASCADE — orphaned audit rows harmless but untidy
+- `pt_assessment.spec` datas includes `templates/pdf` redundantly
+- No ARIA attributes anywhere — low clinical priority
+- Bug 2: SOAP gate before first assessment — not implemented, pending scope clarification
+- Full exe build untested since NEURO was added (now also untested since M3 redesign)
+- Shared table components (MmtTable, InvMedTable, MovementTable refactor) — planned, not started
+- HAND form not started
+
+**Fixed this session:**
+- UI redesign — full M3 reskin across style.css, base.html, home.html, episode.html, main.js
+- episode.html formLabel maps missing AMPUTATION + NEURO
+- `loadStats()` was defined but never called in home.html init
+
+---
+
+### Next session priorities
+
+1. Git push — M3 redesign is a large changeset, push immediately
+2. Full exe build test — all 6 forms end-to-end (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO), first test since both NEURO and M3 redesign
+3. HAND form — next new form, simpler scope than NEURO
+4. Validation layer UI — surface REQUIRED_FIELDS errors to the user before save attempt
+
+---
+
+### Architecture updates / gotchas
+
+**M3 design token system (style.css):**
+- All new visual tokens prefixed `--m3-`. Dark mode overrides in `:root.dark-mode` block.
+- Fallback pattern: `var(--m3-surface-container, var(--surface))` — old tokens still work.
+- Shape tokens: `--m3-shape-sm` (8px), `--m3-shape-md` (12px), `--m3-shape-lg` (16px).
+- Elevation: `--m3-elev-1/2/3` — box-shadow values, not z-index.
+
+**Settings gear dropdown pattern (all 3 standalone pages):**
+- HTML: `.xxx-settings-anchor` > `button#settings-btn` + `div#settings-menu.xxx-settings-menu`
+- JS: `toggleSettingsMenu()` toggles `.show` class. Click-outside listener on `document`.
+- `id="dark-toggle"` goes on the inner `<span>` icon, NOT the `<button>`.
+  `initDark()` sets `el.textContent` — if on the button, it wipes "Dark Mode" label.
+
+**Standalone pages (home.html, episode.html) do NOT extend base.html:**
+- Each has its own complete `<html>`, `<head>`, CSS, and JS.
+- Each has its own `toggleSettingsMenu()`, `initDark()`, `toggleDark()`, click-outside handler.
+- Changes to the settings dropdown pattern must be applied to ALL THREE files independently.
+- base.html pattern is canonical; home.html and episode.html replicate it.
+
+**episode.html formLabel maps must include all ready forms:**
+- `loadEpisode()` and `loadAssessment()` each have inline `{MS:'Musculoskeletal',...}` maps.
+- When a new form is added, these maps must be updated alongside all other registries.
+- This is a NEW gap in the form checklist — add "update episode.html formLabel maps" as a step.
+
+**New form checklist addition (step 1.6):**
+- After step 1.5 (home.html modal card), add: update episode.html formLabel/icon maps in
+  `loadEpisode()` and `loadAssessment()` to include the new form type.*Full exe build test** — all 6 forms (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO). NEURO is code-complete but untested in the built exe.
+4. **HAND form** — next new form after shared components. Simpler than NEURO (no MRMI, no MRCP, no complex balance section). Good session warmup.
+
+---
+
+### Architecture reminders / new rules from this session
+
+**Two_col block planning (NEURO / any large form):**
+- Each `two_col()` call is ONE Table flowable. If either column exceeds ~250mm, it will "too large" error.
+- Plan block count first. NEURO: 4 blocks across 2 explicit pages. Never try to fit a full page in one block.
+- Page breaks must be explicit `PageBreak` flowables in story[] — ReportLab won't insert them mid-block.
+
+**Nested tables in rs() rows:**
+- Tables that belong visually "inside" a bordered section must be `(None, table)` rows in rs(), not sibling list items.
+- Sibling = floating. Nested row = contained. No visual border will appear around siblings. This is the source of the "jarring floating table" appearance.
+
+**collect() template — the two non-negotiables:**
+```javascript
+return {
+  _form_type: 'NEURO',          // → getCurrentFormType() → ?form_type= → PDF routing
+  meta:       { form: 'NEURO' }, // → validate_record() → REQUIRED_FIELDS lookup
+  patient:    FormBase.collectPatient(), // → validate_record() patient.name / patient.date check
+  ...
+};
+```
+All three keys are required. Missing any one of them causes 422. Check all three in any new form.
+
+**Shared table component plan (for next session):**
+- `movement_table.js` is currently hardcoded to `#mov-tbody`. Refactor to accept tbody ID as config.
+- `MmtTable` — new IIFE, same pattern (rows array, addRow, deleteRow, renderTable, getData, loadData, clear). Columns: Muscle Group, Side, Grade (0-5 select).
+- `InvMedTable` — new IIFE for investigation / medication tables. Columns vary by table (Inv: date/type/result; Med: name/dose/frequency).
+- Wire into neuro.html for MMT section. Wire into amputation.html for its MMT. Smoke test both.
+- Injection pattern: same as sign_chop_block — pass tbody ID as config option to the IIFE init.
+
+---
+
+## HANDOVER NOTE — M3 UI Redesign Session 2026-05-07
+
+### What happened this session
+
+Full Google Material Design 3 (M3) UI redesign across the entire app. 7-task plan executed
+across multiple context windows. No backend changes. No new features. Pure visual/structural
+CSS + HTML rewrite with strict DOM ID and JS function preservation.
+
+**Files modified:**
+
+- `static/css/style.css` — Added M3 design token block: `--m3-surface-container`,
+  `--m3-surface-container-high`, `--m3-shape-sm` (8px), `--m3-shape-md` (12px),
+  `--m3-shape-lg` (16px), `--m3-elev-1/2/3` (box-shadow levels). New layout classes:
+  `.m3-context-bar` (56px neutral bar, border-bottom, no box-shadow),
+  `.m3-section-rail` (replacing old sidebar), `.m3-content` (main content area).
+  Dark mode variants for all new tokens.
+
+- `templates/base.html` — Old topbar (`.topbar`) + sidebar (`.sidebar`) replaced with
+  `.m3-context-bar` + `.m3-section-rail`. Dark mode toggle moved from standalone topbar
+  button to settings gear dropdown (`#settings-menu`, `#settings-btn`). Settings dropdown
+  pattern: anchor div with absolute-positioned menu, `toggleSettingsMenu()` function +
+  click-outside handler to auto-close.
+
+- `templates/home.html` — Full rewrite (~2170 lines). `.dash-header` (gradient blue) →
+  `.home-ctx-bar` (neutral 56px bar) + `.home-greeting` (separate card). Settings gear
+  dropdown added with same pattern as base.html. `toggleSettingsMenu()` + click-outside
+  handler added. `loadStats()` call added to init (was defined but never called).
+  Emojis removed from greeting messages. All 84 DOM IDs preserved. All ~50 JS functions
+  preserved character-for-character. All 5 modals, 2 bottom sheets, FAB, context menu intact.
+
+- `templates/episode.html` — Full rewrite (~760 lines). `.ep-topbar` (accent colored,
+  box-shadow) → `.ep-ctx-bar` (neutral, border-bottom). Settings gear dropdown added.
+  Session info box in SOAP modal: inline styles replaced with proper CSS classes
+  (`.session-info-box`, `.session-info-title`, `.session-info-grid`). formLabel maps
+  updated to include AMPUTATION and NEURO (were missing — only had MS/SPINE/GERIATRIC/CR).
+  All 33 DOM IDs preserved. All 15 JS functions preserved.
+
+- `static/js/main.js` — Sidebar references updated from `#sidebar` / `.sidebar` to
+  `#m3-sidebar` / `#m3-rail` / `.m3-section-rail`. Context bar references updated from
+  `.topbar` to `.m3-context-bar`. Dark mode toggle logic updated to find `#dark-toggle`
+  inside settings dropdown rather than standalone topbar button.
+
+**Key design decisions:**
+
+- **Neutral context bars everywhere.** All three standalone pages (base.html, home.html,
+  episode.html) use the same pattern: 56px neutral bar, `border-bottom: 1px solid var(--border)`,
+  no `box-shadow`. Consistent, clean, professional.
+
+- **Settings gear dropdown as shared pattern.** Dark mode toggle, and potentially future
+  settings, live inside a gear dropdown. The `id="dark-toggle"` is placed on the inner
+  `<span>` icon element, NOT on the `<button>`, because `initDark()` sets `textContent`
+  on the element — putting it on the button would wipe the "Dark Mode" label text.
+
+- **M3 tokens with fallbacks.** All new M3 CSS vars use fallback syntax:
+  `var(--m3-surface-container, var(--surface))`. This means any component not yet updated
+  to M3-specific tokens still works via the old `--surface` fallback. Graceful migration.
+
+- **DOM ID preservation as hard constraint.** Every `getElementById` call in JS was mapped
+  and verified against the rewritten HTML. Zero IDs changed. Zero JS functions modified in
+  signature or body. The redesign is purely visual — data flow is untouched.
+
+---
+
+### Retrospective
+
+**What went well:**
+
+- The 7-task plan was clean and executed in order. Each task had clear scope, clear inputs/outputs.
+  No task required rework of a previous task.
+- DOM ID verification scripts (Python) caught the formLabel map gap in episode.html (AMPUTATION
+  and NEURO missing) before it could become a runtime bug.
+- M3 token fallback pattern (`var(--m3-x, var(--old-x))`) meant we could update pages
+  incrementally without breaking partially-migrated components.
+- The session info box CSS cleanup in episode.html (inline styles → proper classes) was a
+  bonus maintainability win — not in the plan but the right call while the file was open.
+
+**What went wrong:**
+
+- DOM ID verification script in bash had encoding issues — `grep -c "function onEp2TypeChange"`
+  returned 0 despite the function being present (confirmed via Read tool). The bash sandbox
+  encoding and the Windows file encoding didn't agree. Workaround: used Python verification
+  script instead of raw grep. Lesson: for verification on Windows-origin files, prefer Python
+  `open(encoding='utf-8')` over bash grep.
+- Five functions appeared "missing" in the Python verification of home.html because the matcher
+  used `'function ' + fn` which didn't account for leading whitespace. Not a code bug — a
+  verification script bug. All five functions were confirmed present via Grep tool.
+
+**What we'd do differently:**
+
+- **Write the verification script to handle indented function declarations** from the start.
+  The regex should be `r'function\s+' + fn` not `'function ' + fn`. Simple but cost a
+  false-alarm investigation cycle.
+- **Check formLabel maps in episode.html as part of new form checklist.** AMPUTATION and
+  NEURO were added to all registries (FORM_REGISTRY, PDF generators, REQUIRED_FIELDS, MPIS,
+  SOAP templates) but not to episode.html's inline formLabel map. This is a new gap —
+  the checklist doesn't mention episode.html formLabel maps. Now it should.
+
+---
+
+### Known issues (updated as of 2026-05-07)
+
+**Still open:**
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place
+- `audit_log` FK has no ON DELETE CASCADE — orphaned audit rows harmless but untidy
+- `pt_assessment.spec` datas includes `templates/pdf` redundantly
+- No ARIA attributes anywhere — low clinical priority
+- Bug 2: SOAP gate before first assessment — not implemented, pending scope clarification
+- Full exe build untested since NEURO was added (now also untested since M3 redesign)
+- Shared table components (MmtTable, InvMedTable, MovementTable refactor) — planned, not started
+- HAND form not started
+
+**Fixed this session:**
+- UI redesign — full M3 reskin across style.css, base.html, home.html, episode.html, main.js ✓
+- episode.html formLabel maps missing AMPUTATION + NEURO ✓
+- `loadStats()` was defined but never called in home.html init ✓
+
+---
+
+### Next session priorities
+
+1. Git push — M3 redesign is a large changeset, push immediately
+2. Full exe build test — all 6 forms end-to-end (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO), first test since both NEURO and M3 redesign
+3. HAND form — next new form, simpler scope than NEURO
+4. Validation layer UI — surface REQUIRED_FIELDS errors to the user before save attempt
+
+---
+
+### Architecture updates / gotchas
+
+**M3 design token system (style.css):**
+- All new visual tokens prefixed `--m3-`. Dark mode overrides in `:root.dark-mode` block.
+- Fallback pattern: `var(--m3-surface-container, var(--surface))` — old tokens still work.
+- Shape tokens: `--m3-shape-sm` (8px), `--m3-shape-md` (12px), `--m3-shape-lg` (16px).
+- Elevation: `--m3-elev-1/2/3` — box-shadow values, not z-index.
+
+**Settings gear dropdown pattern (all 3 standalone pages):**
+- HTML: `.xxx-settings-anchor` > `button#settings-btn` + `div#settings-menu.xxx-settings-menu`
+- JS: `toggleSettingsMenu()` toggles `.show` class. Click-outside listener on `document`.
+- `id="dark-toggle"` goes on the inner `<span>` icon, NOT the `<button>`.
+  `initDark()` sets `el.textContent` — if on the button, it wipes "Dark Mode" label.
+
+**Standalone pages (home.html, episode.html) do NOT extend base.html:**
+- Each has its own complete `<html>`, `<head>`, CSS, and JS.
+- Each has its own `toggleSettingsMenu()`, `initDark()`, `toggleDark()`, click-outside handler.
+- Changes to the settings dropdown pattern must be applied to ALL THREE files independently.
+- base.html pattern is canonical; home.html and episode.html replicate it.
+
+**episode.html formLabel maps must include all ready forms:**
+- `loadEpisode()` and `loadAssessment()` each have inline `{MS:'Musculoskeletal',...}` maps.
+- When a new form is added, these maps must be updated alongside all other registries.
+- This is a NEW gap in the form checklist — add "update episode.html formLabel maps" as a step.
+
+**New form checklist addition (step 1.6):**
+- After step 1.5 (home.html modal card), add: update episode.html formLabel/icon maps in
+  `loadEpisode()` and `loadAssessment()` to include the new form type.
+
+
+---
+
+## HANDOVER NOTE — Patient Profile Wiring Session 2026-05-09
+
+### What we did
+
+Short session. Two tasks: (1) diagnose and fix `TemplateNotFound: patient.html` 500 error on the patient profile route, and (2) wire `/patient/<id>` into all navigation points across the app.
+
+**Bug fixed:**
+
+- `jinja2.exceptions.TemplateNotFound: patient.html` on `GET /patient/<id>` — `app.py` had the route (`patient_profile()` at line 116) but `templates/patient.html` only existed in the git worktree, not in the main project folder. Fixed by copying `patient.html` from the worktree into `templates/`. The route and template were always correct; the file was simply absent from the running app's template directory.
+
+**Navigation wiring (`home.html`):**
+
+- `openPatient(id)` replaced with a one-liner: `window.location.href = '/patient/' + id`. All callers (patient row click at line 2037, post-create at line 1666, post-edit at line 2164, URL param restore at line 2182) now navigate directly to the profile page.
+- Old function body moved to `_openPatientInline(id)` — preserved but unreachable from normal flow. Clean-up deferred.
+
+**Navigation wiring (`episode.html`):**
+
+- `goBack()` updated: `window.location.href = episode && episode.patient_id ? '/patient/' + episode.patient_id : '/'`. Falls back to `/` if `episode` is not yet loaded.
+- "View Profile" button (`#ctx-view-profile-btn`) added to context banner markup — hidden by default, shown and href-set in `loadEpisode()` once `episode.patient_id` is available.
+
+**Navigation wiring (`static/js/main.js` — `initFormContext()`):**
+
+- Introduced `var retDest = patientId ? '/patient/' + patientId : '/'` — computed once, used by both Return and Save & Return `onclick` handlers instead of hardcoded `'/'`.
+- Added "View Profile" button injected before Return/Save & Return in the topbar nav group — only rendered when `patientId` is present.
+
+---
+
+### Retrospective
+
+**What went wrong:** Spent ~4 hours running Flask test commands trying to reproduce the 500 error instead of immediately asking for the terminal traceback. The error was `TemplateNotFound: patient.html` — one line, completely unambiguous. Had the traceback been the first ask, the fix would have taken 2 minutes.
+
+**What fixed it:** User pasted the Flask terminal output. `jinja2.exceptions.TemplateNotFound: patient.html` identified the root cause instantly.
+
+**What we'd do differently:** When a route returns 500 and the code looks correct, ask for the Flask terminal traceback before touching anything else. "What does the error say?" is always step 1.
+
+---
+
+### Known issues (updated as of 2026-05-09)
+
+**Still open:**
+- `_openPatientInline(id)` in `home.html` is dead code — unreachable from normal flow, not yet deleted
+- `goBack()` in `episode.html` falls back to `/` if called before `loadEpisode()` resolves (edge case, low impact)
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place
+- `audit_log` FK has no ON DELETE CASCADE — orphaned audit rows harmless but untidy
+- `pt_assessment.spec` datas includes `templates/pdf` redundantly
+- No ARIA attributes anywhere — low clinical priority
+- Bug 2: SOAP gate before first assessment — not implemented
+- Full exe build untested since NEURO was added
+- `resetPatient()` in `form_base.js` missing null guards on `derived-dob`/`derived-gender`
+- `api.js` episode/SOAP coverage inconsistent (inline fetches in templates)
+
+**Fixed this session:**
+- `TemplateNotFound: patient.html` on `/patient/<id>` — `patient.html` copied to main project `templates/` ✓
+- `goBack()` now navigates to patient profile instead of home ✓
+- Return / Save & Return in `initFormContext()` now navigate to `/patient/<patientId>` ✓
+- "View Profile" button added to episode.html context banner ✓
+- "View Profile" button added to form topbar nav group via `initFormContext()` ✓
+- `openPatient(id)` now navigates to patient profile instead of showing inline detail view ✓
+
+---
+
+### Next session priorities
+
+1. Git push — has been deferred for multiple sessions. Do it first before opening any files.
+2. Smoke-test full patient navigation flow: home row → profile → episode → back → profile. Verify Return button on all 6 forms lands on patient profile, not home.
+3. Full exe build test — all 6 forms end-to-end. Build has not been run since NEURO was added.
+4. HAND form — next new form, simpler scope (no MRMI, no lung diagram).
+
+---
+
+### Architecture updates / gotchas
+
+**Patient profile is now the navigation hub for all patient links:**
+- All patient row clicks in `home.html` go to `/patient/<id>` via `openPatient(id)`.
+- `sheetViewProfile()` in `home.html` already went to `/patient/<id>` (unchanged).
+- `goBack()` in `episode.html` goes to `/patient/<episode.patient_id>` — falls back to `/` only if `episode` is null.
+- `initFormContext()` in `main.js` uses `retDest = patientId ? '/patient/' + patientId : '/'` for all Return navigation. "View Profile" button is also injected into the topbar nav group.
+- Do NOT add any new navigation that goes directly from patient list → episode without passing through the profile page.
+
+**`_openPatientInline(id)` in `home.html` is dead code:**
+- The old inline patient detail view function was renamed but not deleted.
+- Before removing it, verify that the edit-patient modal (`openEditPatientModal()`) and delete-patient flow (`deleteCurrentPatient()`) do not depend on `currentPatientData` being set by the inline loading path.

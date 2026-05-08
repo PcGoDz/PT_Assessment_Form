@@ -2,7 +2,7 @@ import sys
 import os
 import threading
 import webbrowser
-from flask import Flask, render_template, request, jsonify, make_response
+from flask import Flask, render_template, request, jsonify, make_response, redirect
 from database import (
     init_db, get_conn, save_record, list_records, load_record, delete_record,
     create_patient, search_patients, get_patient, update_patient, delete_patient,
@@ -113,6 +113,15 @@ FORM_TEMPLATES = {
     'NEURO':       'forms/neuro.html',
 }
 
+@app.route('/patient/<int:patient_id>')
+def patient_profile(patient_id):
+    patient, err = get_patient(DB_PATH, patient_id)
+    if err or not patient:
+        return redirect('/')
+    episodes, _ = get_patient_episodes(DB_PATH, patient_id)
+    return render_template('patient.html', patient=patient, episodes=episodes or [])
+
+
 @app.route('/form/<form_id>')
 def form_view(form_id):
     form_id  = form_id.upper()
@@ -126,7 +135,7 @@ def form_view(form_id):
         patient, _ = get_patient(DB_PATH, patient_id)
     return render_template(template,
         episode_id=episode_id, patient_id=patient_id,
-        patient=patient, current_form=form_id)
+        patient=patient, current_form=form_id, is_form_page=True)
 
 
 # ── Patient API ──────────────────────────────────────────────────

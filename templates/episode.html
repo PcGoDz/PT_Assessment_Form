@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -10,34 +10,130 @@
   <style>
     .ep-shell { min-height:100vh; display:flex; flex-direction:column; background:var(--bg); }
 
-    .ep-topbar {
-      background: var(--accent); color: white;
-      display: flex; align-items: center;
-      padding: 0 28px; gap: 14px; height: 52px;
-      position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    /* ── M3 CONTEXT BAR ── */
+    .ep-ctx-bar {
+      height: 56px;
+      background: var(--m3-surface-container, var(--surface));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sp-4, 16px);
+      gap: var(--sp-3, 12px);
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .ep-topbar-logo { font-weight:600; font-size:15px; }
-    .ep-topbar-sep  { width:1px; height:20px; background:rgba(255,255,255,0.2); }
-    .ep-topbar-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
-
-    .dark-toggle {
-      background:none; border:1.5px solid rgba(255,255,255,0.3);
-      border-radius:var(--radius); color:white; cursor:pointer;
-      font-size:15px; padding:5px 9px; line-height:1;
+    .ep-ctx-back {
+      font-size: 18px;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--m3-shape-sm, var(--radius));
+      transition: background 0.12s;
     }
-    .dark-toggle:hover { background:rgba(255,255,255,0.15); }
-
-    .tbtn {
-      padding:6px 13px; border-radius:var(--radius); font-size:12px;
-      font-weight:500; cursor:pointer; border:1.5px solid rgba(255,255,255,0.3);
-      background:rgba(255,255,255,0.1); color:white; font-family:inherit;
-      transition:background 0.15s;
+    .ep-ctx-back:hover { background: var(--m3-surface-container-high, var(--surface2)); }
+    .ep-ctx-title-group { display: flex; flex-direction: column; min-width: 0; }
+    .ep-ctx-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .tbtn:hover { background:rgba(255,255,255,0.22); }
-    .tbtn.primary { background:white; color:var(--accent); border-color:white; }
-    .tbtn.primary:hover { background:#e8eef8; }
+    .ep-ctx-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ep-ctx-spacer { flex: 1; }
+    .ep-ctx-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--m3-shape-sm, var(--radius));
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+    .ep-ctx-action:hover {
+      background: var(--m3-surface-container-high, var(--surface2));
+      color: var(--text);
+    }
+    .ep-ctx-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: var(--m3-shape-sm, var(--radius));
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.12s;
+      white-space: nowrap;
+    }
+    .ep-ctx-primary:hover { opacity: 0.88; }
 
+    /* Settings dropdown */
+    .ep-settings-anchor { position: relative; }
+    .ep-settings-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
+      box-shadow: var(--m3-elev-2, 0 4px 16px rgba(0,0,0,0.12));
+      min-width: 200px;
+      z-index: 110;
+      padding: 4px 0;
+      animation: ep-fade-in 0.12s ease;
+    }
+    .ep-settings-menu.open { display: block; }
+    .ep-settings-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.1s;
+    }
+    .ep-settings-item:hover { background: var(--m3-surface-container-high, var(--surface2)); }
+    .ep-settings-icon { font-size: 16px; width: 20px; text-align: center; color: var(--text-muted); }
+    .ep-settings-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+    @keyframes ep-fade-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MAIN ── */
     .ep-main {
       flex:1; max-width:1000px; width:100%;
       margin:0 auto; padding:24px; display:flex;
@@ -58,7 +154,7 @@
     /* Context banner */
     .context-banner {
       background:var(--accent-light); border:1px solid var(--accent-mid);
-      border-radius:var(--radius); padding:10px 16px;
+      border-radius:var(--m3-shape-sm, var(--radius)); padding:10px 16px;
       display:flex; align-items:center; gap:12px;
     }
     .context-banner-icon { font-size:20px; }
@@ -71,19 +167,22 @@
 
     /* Cards */
     .card {
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:var(--radius-lg);
-      box-shadow:0 1px 3px rgba(0,0,0,0.08);
+      background:var(--m3-surface-container, var(--surface));
+      border:1px solid var(--border);
+      border-radius:var(--m3-shape-md, var(--radius-lg));
+      box-shadow:var(--m3-elev-1, 0 1px 3px rgba(0,0,0,0.08));
     }
     .card-header {
-      background:var(--surface2); border-bottom:1px solid var(--border);
+      background:var(--m3-surface-container-high, var(--surface2));
+      border-bottom:1px solid var(--border);
       padding:11px 18px; display:flex; align-items:center;
       justify-content:space-between;
-      border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+      border-radius:var(--m3-shape-md, var(--radius-lg)) var(--m3-shape-md, var(--radius-lg)) 0 0;
     }
     .card-header h2 {
       font-size:12px; font-weight:600; color:var(--text);
       letter-spacing:0.03em; text-transform:uppercase;
+      margin:0;
     }
     .card-body { padding:18px; }
 
@@ -93,7 +192,7 @@
       padding:16px 18px;
     }
     .assess-icon {
-      width:44px; height:44px; border-radius:var(--radius);
+      width:44px; height:44px; border-radius:var(--m3-shape-sm, var(--radius));
       background:var(--accent-light); color:var(--accent);
       display:flex; align-items:center; justify-content:center;
       font-size:20px; flex-shrink:0;
@@ -128,8 +227,9 @@
     }
 
     .soap-card {
-      flex:1; background:var(--surface); border:1px solid var(--border);
-      border-radius:var(--radius-lg); margin-bottom:12px;
+      flex:1; background:var(--m3-surface-container, var(--surface));
+      border:1px solid var(--border);
+      border-radius:var(--m3-shape-md, var(--radius-lg)); margin-bottom:12px;
       transition:box-shadow 0.12s;
     }
     .soap-card:hover { border-color:var(--accent-mid); box-shadow:0 2px 8px rgba(74,122,200,0.12); }
@@ -137,8 +237,8 @@
     .soap-card-header {
       display:flex; align-items:center; gap:10px;
       padding:10px 14px; border-bottom:1px solid var(--border);
-      background:var(--surface2);
-      border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+      background:var(--m3-surface-container-high, var(--surface2));
+      border-radius:var(--m3-shape-md, var(--radius-lg)) var(--m3-shape-md, var(--radius-lg)) 0 0;
     }
     .soap-session {
       font-family:'IBM Plex Mono', monospace;
@@ -149,7 +249,7 @@
     .soap-date { font-size:12px; color:var(--text-muted); }
     .soap-actions { margin-left:auto; display:flex; gap:6px; }
     .soap-btn {
-      font-size:11px; padding:3px 9px; border-radius:var(--radius);
+      font-size:11px; padding:3px 9px; border-radius:var(--m3-shape-xs, var(--radius));
       border:1px solid var(--border); background:none;
       cursor:pointer; font-family:inherit; color:var(--text-muted);
       transition:all 0.12s;
@@ -184,8 +284,9 @@
     }
     .modal-backdrop.open { display:flex; }
     .modal {
-      background:var(--surface); border-radius:var(--radius-lg);
-      box-shadow:0 8px 40px rgba(0,0,0,0.25);
+      background:var(--m3-surface-container, var(--surface));
+      border-radius:var(--m3-shape-lg, var(--radius-lg));
+      box-shadow:var(--m3-elev-3, 0 8px 40px rgba(0,0,0,0.25));
       width:100%; max-width:560px; padding:24px;
       position:relative; animation:modal-in 0.18s ease;
       max-height:90vh; overflow-y:auto;
@@ -212,7 +313,7 @@
     .soap-form-field textarea {
       font-family:'IBM Plex Sans', sans-serif; font-size:13px;
       padding:8px 10px; border:1px solid var(--border);
-      border-radius:var(--radius); background:var(--bg);
+      border-radius:var(--m3-shape-sm, var(--radius)); background:var(--bg);
       color:var(--text); resize:vertical; min-height:80px;
       outline:none; transition:border-color 0.15s;
     }
@@ -221,22 +322,30 @@
       box-shadow:0 0 0 3px rgba(74,122,200,0.12);
       background:white;
     }
-    .soap-form-field input[type=date] {
+    .soap-form-field input[type=date],
+    .soap-form-field input[type=time],
+    .soap-form-field input[type=text],
+    .soap-form-field select {
       font-family:'IBM Plex Sans', sans-serif; font-size:13px;
       padding:7px 10px; border:1px solid var(--border);
-      border-radius:var(--radius); background:var(--bg);
+      border-radius:var(--m3-shape-sm, var(--radius)); background:var(--bg);
       color:var(--text); outline:none;
+    }
+    .soap-form-field input:focus,
+    .soap-form-field select:focus {
+      border-color:var(--accent-mid);
+      box-shadow:0 0 0 3px rgba(74,122,200,0.12);
     }
     .modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
     .btn-primary {
       padding:8px 16px; background:var(--accent); color:white;
-      border:none; border-radius:var(--radius); font-family:inherit;
+      border:none; border-radius:var(--m3-shape-sm, var(--radius)); font-family:inherit;
       font-size:13px; font-weight:500; cursor:pointer;
     }
     .btn-primary:hover { opacity:0.88; }
     .btn-ghost {
       padding:8px 16px; background:none; color:var(--text-muted);
-      border:1px solid var(--border); border-radius:var(--radius);
+      border:1px solid var(--border); border-radius:var(--m3-shape-sm, var(--radius));
       font-family:inherit; font-size:13px; cursor:pointer;
     }
     .btn-ghost:hover { background:var(--surface2); color:var(--text); }
@@ -254,25 +363,73 @@
     .toast.err { background:var(--danger); }
 
     /* Dark mode */
-    body.dark .ep-topbar { background:#1e2a3e; }
     body.dark .soap-form-field textarea { background:var(--surface2); color:var(--text); }
     body.dark .soap-form-field textarea:focus { background:var(--surface); }
-    body.dark .soap-form-field input[type=date] { background:var(--surface2); color:var(--text); }
+    body.dark .soap-form-field input[type=date],
+    body.dark .soap-form-field input[type=time],
+    body.dark .soap-form-field input[type=text],
+    body.dark .soap-form-field select { background:var(--surface2); color:var(--text); }
+
+    /* Session info box in SOAP modal */
+    .session-info-box {
+      border:1px solid var(--border);
+      border-radius:var(--m3-shape-sm, 8px);
+      padding:10px 12px;
+      background:var(--m3-surface-container-high, var(--surface2));
+    }
+    .session-info-title {
+      font-size:11px; font-weight:600; text-transform:uppercase;
+      letter-spacing:0.04em; color:var(--text-muted); margin-bottom:8px;
+    }
+    .session-info-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:8px;
+    }
+    .session-info-grid .soap-form-field label {
+      font-size:11px; color:var(--text-muted);
+    }
+    .session-info-grid input,
+    .session-info-grid select {
+      padding:6px 8px; border:1px solid var(--border);
+      border-radius:6px; font-size:12px;
+      background:var(--m3-surface-container, var(--surface)); color:var(--text);
+      font-family:inherit; outline:none;
+    }
+    .session-info-grid input:focus,
+    .session-info-grid select:focus {
+      border-color:var(--accent-mid);
+    }
   </style>
 </head>
 <body>
 <div class="ep-shell">
 
-  <header class="ep-topbar">
-    <div class="ep-topbar-logo">PT Assessment System</div>
-    <div class="ep-topbar-sep"></div>
-    <div id="topbar-episode-label" style="font-size:12px;color:rgba(255,255,255,0.6);">Episode</div>
-    <div class="ep-topbar-actions">
-      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">&#9790;</button>
-      <button class="tbtn" onclick="goBack()">&#8592; Patient</button>
-      <button class="tbtn" onclick="exportEpisodePdf()" title="Export full episode PDF">&#8615; Export PDF</button>
-      <button class="tbtn primary" onclick="openSoapModal()">+ Add Follow-up</button>
+  <!-- ── M3 CONTEXT BAR ── -->
+  <header class="ep-ctx-bar">
+    <a href="/" class="ep-ctx-back" title="Home">&#8962;</a>
+
+    <div class="ep-ctx-title-group">
+      <div class="ep-ctx-title" id="topbar-episode-label">Episode</div>
     </div>
+
+    <div class="ep-ctx-spacer"></div>
+
+    <button class="ep-ctx-action" onclick="exportEpisodePdf()" title="Export full episode PDF">&#128196; Export PDF</button>
+
+    <!-- Settings -->
+    <div class="ep-settings-anchor">
+      <button class="ep-ctx-action" onclick="toggleSettingsMenu()" id="settings-btn" style="padding:7px 10px" title="Settings">&#9881;</button>
+      <div class="ep-settings-menu" id="settings-menu">
+        <button class="ep-settings-item" onclick="toggleDark();toggleSettingsMenu()">
+          <span class="ep-settings-icon" id="dark-toggle">&#9790;</span> Dark Mode
+        </button>
+        <div class="ep-settings-divider"></div>
+        <button class="ep-settings-item" onclick="goBack();toggleSettingsMenu()">
+          <span class="ep-settings-icon">&#8592;</span> Back to Patient
+        </button>
+      </div>
+    </div>
+
+    <button class="ep-ctx-primary" onclick="openSoapModal()">+ Follow-up</button>
   </header>
 
   <main class="ep-main">
@@ -281,7 +438,7 @@
     <div class="breadcrumb">
       <a onclick="window.location.href='/'">&#8962; Patients</a>
       <span>&#8250;</span>
-      <a id="bc-patient" onclick="goBack()">—</a>
+      <a id="bc-patient" onclick="goBack()">&mdash;</a>
       <span>&#8250;</span>
       <span id="bc-episode">Episode</span>
     </div>
@@ -291,11 +448,12 @@
       <div class="context-banner-icon">&#128203;</div>
       <div>
         <div class="context-banner-label">Episode Record</div>
-        <div class="context-banner-name" id="ctx-patient-name">—</div>
-        <div class="context-banner-meta" id="ctx-episode-meta">—</div>
+        <div class="context-banner-name" id="ctx-patient-name">&mdash;</div>
+        <div class="context-banner-meta" id="ctx-episode-meta">&mdash;</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
         <span class="status-pill" id="ctx-status-pill" style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:3px 8px;border-radius:10px;background:var(--success-light);color:var(--success);">active</span>
+        <button id="ctx-view-profile-btn" onclick="goBack()" style="display:none;font-size:11px;font-weight:500;padding:5px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);cursor:pointer;font-family:inherit;">&#128100; View Profile</button>
       </div>
     </div>
 
@@ -327,7 +485,7 @@
           <div class="empty-timeline">
             <div class="empty-timeline-icon">&#128221;</div>
             <div class="empty-timeline-title">No follow-up notes yet</div>
-            <div class="empty-timeline-sub">Click &ldquo;+ Add Follow-up&rdquo; to record the next session</div>
+            <div class="empty-timeline-sub">Click &ldquo;+ Follow-up&rdquo; to record the next session</div>
           </div>
         </div>
       </div>
@@ -352,16 +510,16 @@
       </div>
 
       <!-- Session Header (POMR / MPIS admin fields) -->
-      <div style="border:1px solid var(--border);border-radius:8px;padding:10px 12px;background:var(--bg-secondary);">
-        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-bottom:8px;">Session Info (MPIS Header)</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="session-info-box">
+        <div class="session-info-title">Session Info (MPIS Header)</div>
+        <div class="session-info-grid">
           <div class="soap-form-field">
-            <label style="font-size:11px;color:var(--text-muted);">Nombor Giliran</label>
-            <input type="text" id="soap-queue-no" placeholder="e.g. D003" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+            <label>Nombor Giliran</label>
+            <input type="text" id="soap-queue-no" placeholder="e.g. D003">
           </div>
           <div class="soap-form-field">
-            <label style="font-size:11px;color:var(--text-muted);">KPI-SS-30 Minit</label>
-            <select id="soap-kpi-30min" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+            <label>KPI-SS-30 Minit</label>
+            <select id="soap-kpi-30min">
               <option value="">— Select —</option>
               <option value="Achieved">Achieved</option>
               <option value="Not Achieved">Not Achieved</option>
@@ -369,16 +527,16 @@
             </select>
           </div>
           <div class="soap-form-field" style="grid-column:span 2">
-            <label style="font-size:11px;color:var(--text-muted);">Dilihat (Seen By)</label>
-            <input type="text" id="soap-seen-by" placeholder="Therapist name" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+            <label>Dilihat (Seen By)</label>
+            <input type="text" id="soap-seen-by" placeholder="Therapist name">
           </div>
           <div class="soap-form-field">
-            <label style="font-size:11px;color:var(--text-muted);">Temujanji — Tarikh</label>
-            <input type="date" id="soap-next-appt" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+            <label>Temujanji — Tarikh</label>
+            <input type="date" id="soap-next-appt">
           </div>
           <div class="soap-form-field">
-            <label style="font-size:11px;color:var(--text-muted);">Temujanji — Masa</label>
-            <input type="time" id="soap-next-appt-time" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface);color:var(--text);">
+            <label>Temujanji — Masa</label>
+            <input type="time" id="soap-next-appt-time">
           </div>
         </div>
       </div>
@@ -431,17 +589,30 @@
 var EPISODE_ID = {{ episode_id }};
 var episode    = null;
 
+// ── Settings menu ─────────────────────────────────────
+function toggleSettingsMenu() {
+  var menu = document.getElementById('settings-menu');
+  menu.classList.toggle('open');
+}
+document.addEventListener('click', function(e) {
+  var anchor = document.querySelector('.ep-settings-anchor');
+  var menu = document.getElementById('settings-menu');
+  if (anchor && menu && !anchor.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+});
+
 // ── Dark mode ──────────────────────────────────────────
 function initDark() {
   if (localStorage.getItem('pt_dark') === '1') {
     document.body.classList.add('dark');
-    document.getElementById('dark-toggle').textContent = '\u2600';
+    document.getElementById('dark-toggle').textContent = '☀';
   }
 }
 function toggleDark() {
   var isDark = document.body.classList.toggle('dark');
   localStorage.setItem('pt_dark', isDark ? '1' : '0');
-  document.getElementById('dark-toggle').textContent = isDark ? '\u2600' : '\u263E';
+  document.getElementById('dark-toggle').textContent = isDark ? '☀' : '☾';
 }
 
 // ── Toast ──────────────────────────────────────────────
@@ -611,11 +782,11 @@ async function loadEpisode() {
     var res = await fetch('/api/episodes/' + EPISODE_ID);
     episode  = await res.json();
 
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory'}[episode.form_type] || episode.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological'}[episode.form_type] || episode.form_type;
 
-    // Topbar
+    // Context bar
     document.getElementById('topbar-episode-label').textContent =
-      episode.patient_name + ' \u2014 ' + formLabel;
+      episode.patient_name + ' — ' + formLabel;
 
     // Breadcrumb
     document.getElementById('bc-patient').textContent = episode.patient_name;
@@ -624,8 +795,14 @@ async function loadEpisode() {
     // Context banner
     document.getElementById('ctx-patient-name').textContent = episode.patient_name;
     document.getElementById('ctx-episode-meta').textContent =
-      formLabel + ' \u00B7 Assessment: ' + (episode.referral_date||'—') +
-      '\u00B7 IC: ' + (episode.ic || episode.passport || '—');
+      formLabel + ' · Assessment: ' + (episode.referral_date||'—') +
+      ' · IC: ' + (episode.ic || episode.passport || '—');
+
+    var profileBtn = document.getElementById('ctx-view-profile-btn');
+    if (profileBtn && episode.patient_id) {
+      profileBtn.style.display = '';
+      profileBtn.onclick = function() { window.location.href = '/patient/' + episode.patient_id; };
+    }
 
     var statusBase = (episode.status||'active').split('|')[0];
     var pill = document.getElementById('ctx-status-pill');
@@ -646,7 +823,7 @@ async function loadAssessment(ep) {
   try {
     var res  = await fetch('/api/episodes/' + EPISODE_ID + '/record');
     var data = await res.json();
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory'}[ep.form_type] || ep.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological'}[ep.form_type] || ep.form_type;
     var formPath  = '/form/' + ep.form_type.toLowerCase();
     var btnWrap   = document.getElementById('assess-btn-wrap');
     var actions   = document.getElementById('assess-actions');
@@ -687,7 +864,7 @@ async function loadSoaps() {
         '<div class="empty-timeline">' +
         '<div class="empty-timeline-icon">&#128221;</div>' +
         '<div class="empty-timeline-title">No follow-up notes yet</div>' +
-        '<div class="empty-timeline-sub">Click &ldquo;+ Add Follow-up&rdquo; to record the next session</div>' +
+        '<div class="empty-timeline-sub">Click &ldquo;+ Follow-up&rdquo; to record the next session</div>' +
         '</div>';
       return;
     }
@@ -732,7 +909,7 @@ function exportEpisodePdf() {
 }
 
 function goBack() {
-  window.location.href = '/';
+  window.location.href = episode && episode.patient_id ? '/patient/' + episode.patient_id : '/';
 }
 
 function esc(str) {

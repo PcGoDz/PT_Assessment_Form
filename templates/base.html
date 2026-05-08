@@ -6,6 +6,7 @@
   <title>PT Assessment System</title>
   <link rel="stylesheet" href="/static/css/style.css">
 <style>
+/* ── Inline styles that must stay in base (used by main.js / movement_table.js) ── */
 .draft-banner {
   display: none;
   background: var(--warn-light);
@@ -13,7 +14,6 @@
   padding: 8px 20px;
   font-size: 12px;
   color: var(--warn);
-  display: none;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
@@ -108,100 +108,126 @@
 {% if patient %}
 <script id="patient-json" type="application/json">{{ patient | tojson }}</script>
 {% endif %}
-<div class="shell">
+<div class="m3-shell">
 
-  <header class="topbar">
-    <div class="topbar-logo">PT Assessment System</div>
-    <button class="tbtn" onclick="toggleSidebar()" title="Toggle sidebar" style="margin-left:6px;padding:4px 8px;font-size:13px" id="sidebar-toggle-btn">&#9776;</button>
-    <div class="topbar-actions">
-      {% if is_form_page %}
-      <button class="change-form-btn" onclick="openFormPickerSheet()" id="change-form-btn">
-        &#128203; Change Form
-      </button>
-      {% endif %}
-      <!-- Nav group: Return / Save & Return injected by initFormContext() when episode context present -->
-      <div id="topbar-nav-group" style="display:flex;gap:6px;align-items:center;"></div>
-      <div class="tbtn-sep" id="topbar-nav-sep" style="display:none"></div>
+  <!-- ── M3 CONTEXT BAR ──────────────────────────────── -->
+  <header class="m3-context-bar">
+    <!-- Back / Home -->
+    <a href="/" class="m3-ctx-back" title="Home" style="text-decoration:none">&#8962;</a>
 
-      <!-- Form group -->
-      <button class="tbtn" onclick="Main.newForm()">+ New</button>
-      <button class="tbtn danger" onclick="Main.clearForm()">Clear</button>
-      <div class="tbtn-sep"></div>
-
-      <!-- Utility group -->
-      <button class="dark-toggle" id="dark-toggle" onclick="Main.toggleDark()" title="Toggle dark mode">&#9790;</button>
-      <button class="tbtn" onclick="Main.copyToMpisAuto()" title="Copy plain text for MPIS">Copy to MPIS</button>
-      <button class="tbtn" onclick="Main.exportPdf(Main.getCurrentId(), Main.getCurrentFormType())" id="btn-export-pdf">Export KKM PDF</button>
-      <div class="tbtn-sep"></div>
-
-      <!-- Primary action -->
-      <button class="tbtn primary" onclick="Main.saveRecord()">Save Record</button>
+    <!-- Title -->
+    <div class="m3-ctx-title-group">
+      <div class="m3-ctx-title">{% block form_name %}Assessment{% endblock %}</div>
     </div>
+
+    <!-- Patient chip (injected by initFormContext when patient context exists) -->
+    <div id="topbar-nav-group" style="display:flex;gap:8px;align-items:center;"></div>
+    <div id="topbar-nav-sep" style="display:none"></div>
+
+    <div class="m3-ctx-spacer"></div>
+
+    <!-- Actions (right side) -->
+    {% if is_form_page %}
+    <button class="m3-ctx-action" onclick="Main.copyToMpisAuto()" title="Copy plain text for MPIS">
+      &#128203; <span>MPIS</span>
+    </button>
+    <button class="m3-ctx-action" onclick="Main.exportPdf(Main.getCurrentId(), Main.getCurrentFormType())" id="btn-export-pdf" title="Export KKM PDF">
+      &#128196; <span>PDF</span>
+    </button>
+    {% endif %}
+
+    <!-- Settings gear -->
+    <div class="m3-settings-anchor">
+      <button class="m3-ctx-action icon-only" onclick="toggleSettingsMenu()" title="Settings" id="settings-btn">&#9881;</button>
+      <div class="m3-settings-menu" id="settings-menu">
+        <button class="m3-settings-item" onclick="Main.toggleDark();toggleSettingsMenu()">
+          <span class="m3-settings-icon" id="dark-toggle">&#9790;</span> Dark Mode
+        </button>
+        <button class="m3-settings-item" onclick="Main.newForm();toggleSettingsMenu()">
+          <span class="m3-settings-icon">&#10010;</span> New Form
+        </button>
+        <div class="m3-settings-divider"></div>
+        <button class="m3-settings-item" onclick="Main.clearForm();toggleSettingsMenu()">
+          <span class="m3-settings-icon">&#128465;</span> Clear <span class="m3-kbd" style="margin-left:auto">Ctrl+Shift+X</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Primary action: Save -->
+    {% if is_form_page %}
+    <button class="m3-ctx-primary" onclick="Main.saveRecord()">
+      &#10003; <span>Save</span>
+    </button>
+    {% endif %}
   </header>
 
+  <!-- ── DRAFT BANNER ────────────────────────────────── -->
   <div id="draft-banner" class="draft-banner">
     <span id="draft-banner-msg" class="draft-banner-msg"></span>
     <button onclick="Main.restoreDraft()" class="draft-btn restore">Restore</button>
     <button onclick="Main.dismissDraft()" class="draft-btn">Dismiss</button>
   </div>
-  <div class="content-area">
 
-    <aside class="sidebar">
-      <div class="sidebar-label">Assessment Forms</div>
+  <!-- ── BODY (main + rail) ──────────────────────────── -->
+  <div class="m3-body">
 
-      {% for group in FORM_GROUPS %}
-      <div class="sidebar-group-label" onclick="toggleSidebarGroup(this)"
-        style="font-size:9px;font-weight:700;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;padding:8px 14px 2px;margin-top:4px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
-        <span>{{ group }}</span>
-        <span class="group-chevron" style="font-size:8px;transition:transform 0.2s">▼</span>
-      </div>
-      <div class="sidebar-group-items">
-      {% for form in FORM_REGISTRY if form.group == group %}
-        {% if form.ready %}
-        <a href="#" onclick="navigateForm('{{ form.id | lower }}');return false;" style="text-decoration:none">
-          <div class="nav-item {% if form.id == current_form %}active{% endif %}">
-            <span class="nav-icon">{{ form.icon | safe }}</span> {{ form.label }}
-            <span class="nav-badge">{{ form.badge }}</span>
-          </div>
-        </a>
-        {% else %}
-        <div class="nav-item soon">
-          <span class="nav-icon">{{ form.icon | safe }}</span> {{ form.label }}
-          <span class="nav-badge" style="background:var(--text-faint)">Soon</span>
-        </div>
-        {% endif %}
-      {% endfor %}
-      </div><!-- end sidebar-group-items -->
-      {% endfor %}
-
-      <div class="nav-divider"></div>
-      <div class="sidebar-label" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding-right:14px;"
-           onclick="toggleJumpTo()" title="Toggle Jump To">
-        Jump To
-        <span id="jumpto-arrow" style="font-size:9px;transition:transform 0.2s;">&#9650;</span>
-      </div>
-      <div id="jumpto-nav">
-        {% block sidebar_nav %}{% endblock %}
-      </div>
-
-      <div class="nav-divider"></div>
-      <div class="records-panel">
-        <h4>Saved Records</h4>
-        <div id="records-list"><div class="no-records">No records yet</div></div>
-      </div>
-    </aside>
-
-    <main class="main">
+    <!-- Main content area -->
+    <main class="m3-main main">
       {% block content %}{% endblock %}
       <div style="height:60px"></div>
     </main>
 
-  </div>
-</div>
+    <!-- Right rail (section nav + form switcher + saved records) -->
+    {% if is_form_page %}
+    <aside class="m3-rail" id="section-rail">
 
-<div class="status-bar">
+      <!-- Form switcher dropdown -->
+      <div class="m3-form-dropdown" id="form-dropdown">
+        <button class="m3-form-dropdown-trigger" onclick="toggleFormDropdown()">
+          <span id="current-form-icon">&#128203;</span>
+          <span id="current-form-label">{{ current_form or 'Select Form' }}</span>
+          <span class="m3-form-dropdown-chevron">&#9662;</span>
+        </button>
+        <div class="m3-form-dropdown-list">
+          {% for group in FORM_GROUPS %}
+          <div class="m3-form-group-label">{{ group }}</div>
+          {% for form in FORM_REGISTRY if form.group == group %}
+          <button class="m3-form-option {% if form.id == current_form %}active-form{% endif %} {% if not form.ready %}soon{% endif %}"
+            {% if form.ready %}onclick="navigateForm('{{ form.id | lower }}')"{% else %}disabled{% endif %}>
+            <span class="m3-form-option-icon">{{ form.icon | safe }}</span>
+            {{ form.label }}
+            {% if not form.ready %}<span class="m3-form-option-badge">Soon</span>{% endif %}
+          </button>
+          {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="m3-rail-divider"></div>
+
+      <!-- Section navigation (Jump To) -->
+      <div class="m3-rail-label">Sections</div>
+      <div id="jumpto-nav">
+        {% block section_nav %}{% endblock %}
+        {# backwards compat: old forms using sidebar_nav still work #}
+        {% block sidebar_nav %}{% endblock %}
+      </div>
+
+      <div class="m3-rail-divider"></div>
+
+      <!-- Saved Records -->
+      <div class="m3-rail-records">
+        <h4>Saved Records</h4>
+        <div id="records-list"><div class="no-records">No records yet</div></div>
+      </div>
+    </aside>
+    {% endif %}
+
+  </div><!-- end m3-body -->
+
+<!-- ── FLOATING STATUS PILL ────────────────────────── -->
+<div class="m3-status-pill status-bar">
   <div class="sdot"></div>
-  <span style="font-size:12px;color:var(--text-muted);">{% block form_name %}Assessment{% endblock %}</span>
   <div id="draft-indicator" style="display:none;font-size:11px;color:var(--warn);align-items:center;gap:4px;">
     <div style="width:6px;height:6px;border-radius:50%;background:var(--warn);"></div>
     draft saved
@@ -214,6 +240,8 @@
 
 <div class="toast" id="toast"></div>
 
+</div><!-- end m3-shell -->
+
 <script src="/static/js/api.js"></script>
 <script src="/static/js/movement_table.js"></script>
 <script src="/static/js/bodychart.js"></script>
@@ -222,18 +250,39 @@
 <script src="/static/js/main.js"></script>
 {% block extra_js %}{% endblock %}
 <script>
-// ── Sidebar Jump To toggle ─────────────────────────────
+// ── Settings dropdown toggle ─────────────────────────
+function toggleSettingsMenu() {
+  var menu = document.getElementById('settings-menu');
+  if (menu) menu.classList.toggle('open');
+}
+// Close on outside click
+document.addEventListener('click', function(e) {
+  var anchor = document.querySelector('.m3-settings-anchor');
+  var menu   = document.getElementById('settings-menu');
+  if (anchor && menu && !anchor.contains(e.target)) menu.classList.remove('open');
+});
+
+// ── Form dropdown toggle ─────────────────────────────
+function toggleFormDropdown() {
+  var dd = document.getElementById('form-dropdown');
+  if (dd) dd.classList.toggle('open');
+}
+// Close on outside click
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('form-dropdown');
+  if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+});
+
+// ── Jump To toggle (rail) ────────────────────────────
 function toggleJumpTo() {
-  var nav    = document.getElementById('jumpto-nav');
-  var arrow  = document.getElementById('jumpto-arrow');
+  var nav   = document.getElementById('jumpto-nav');
+  var arrow = document.getElementById('jumpto-arrow');
   if (!nav) return;
   var collapsed = nav.style.display === 'none';
-  nav.style.display   = collapsed ? '' : 'none';
-  arrow.style.transform = collapsed ? '' : 'rotate(180deg)';
+  nav.style.display     = collapsed ? '' : 'none';
+  if (arrow) arrow.style.transform = collapsed ? '' : 'rotate(180deg)';
   localStorage.setItem('pt_jumpto_collapsed', collapsed ? '0' : '1');
 }
-
-// Restore state on load
 (function() {
   if (localStorage.getItem('pt_jumpto_collapsed') === '1') {
     var nav   = document.getElementById('jumpto-nav');
@@ -242,88 +291,51 @@ function toggleJumpTo() {
     if (arrow) arrow.style.transform = 'rotate(180deg)';
   }
 })();
-</script>
-<script>
-// ── Sidebar collapse ──────────────────────────────────
-function toggleSidebar() {
-  var sidebar = document.querySelector('.sidebar');
-  var main    = document.querySelector('.main');
-  if (!sidebar) return;
-  var hidden = sidebar.style.display === 'none';
-  sidebar.style.display = hidden ? '' : 'none';
-  if (main) main.style.marginLeft = hidden ? '' : '0';
-  localStorage.setItem('pt_sidebar_hidden', hidden ? '0' : '1');
+
+// ── Rail collapse (for mobile button or future use) ──
+function toggleRail() {
+  var rail = document.getElementById('section-rail');
+  if (rail) rail.classList.toggle('collapsed');
 }
 
 // ── Context-aware form navigation ─────────────────────
 function navigateForm(formId) {
-  // Preserve episode_id and patient_id from current URL
-  var params  = new URLSearchParams(window.location.search);
-  var ep      = params.get('episode_id');
-  var pt      = params.get('patient_id');
-  var url     = '/form/' + formId;
-  var qs      = [];
+  var params = new URLSearchParams(window.location.search);
+  var ep     = params.get('episode_id');
+  var pt     = params.get('patient_id');
+  var url    = '/form/' + formId;
+  var qs     = [];
   if (ep) qs.push('episode_id=' + ep);
   if (pt) qs.push('patient_id=' + pt);
   if (qs.length) url += '?' + qs.join('&');
 
-  // Warn if dirty
   if (typeof Main !== 'undefined' && Main.isDirty) {
     if (!confirm('You have unsaved changes. Switch form anyway?')) return;
   }
   window.location.href = url;
 }
 
-// ── Collapsible sidebar groups ────────────────────────
-function toggleSidebarGroup(labelEl) {
-  var items    = labelEl.nextElementSibling;
-  var chevron  = labelEl.querySelector('.group-chevron');
-  var collapsed = items.style.display === 'none';
-  items.style.display  = collapsed ? '' : 'none';
-  if (chevron) chevron.style.transform = collapsed ? '' : 'rotate(-90deg)';
-  // Persist state
-  var key = 'sg_' + labelEl.querySelector('span').textContent.trim();
-  localStorage.setItem(key, collapsed ? '1' : '0');
-}
-
-// Restore collapsed state on load
-document.addEventListener('DOMContentLoaded', function () {
-  // Restore sidebar visibility
-  if (localStorage.getItem('pt_sidebar_hidden') === '1') {
-    var sidebar = document.querySelector('.sidebar');
-    var main    = document.querySelector('.main');
-    if (sidebar) sidebar.style.display = 'none';
-    if (main)    main.style.marginLeft = '0';
+// ── Keyboard shortcuts ───────────────────────────────
+document.addEventListener('keydown', function(e) {
+  // Ctrl+Shift+X = Clear Form
+  if (e.ctrlKey && e.shiftKey && e.key === 'X') {
+    e.preventDefault();
+    if (typeof Main !== 'undefined') Main.clearForm();
   }
-
-  // Restore group collapsed states
-  document.querySelectorAll('.sidebar-group-label').forEach(function (lbl) {
-    var key       = 'sg_' + lbl.querySelector('span').textContent.trim();
-    var collapsed = localStorage.getItem(key) === '0';
-    if (collapsed) {
-      var items   = lbl.nextElementSibling;
-      var chevron = lbl.querySelector('.group-chevron');
-      if (items)   items.style.display = 'none';
-      if (chevron) chevron.style.transform = 'rotate(-90deg)';
-    }
-  });
 });
 
-// ── Mobile Form Picker Sheet ──────────────────────
+// ── Mobile Form Picker Sheet ──────────────────────────
 function openFormPickerSheet() {
-  document.getElementById('form-picker-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  var el = document.getElementById('form-picker-overlay');
+  if (el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
 }
-
 function closeFormPickerSheet() {
-  document.getElementById('form-picker-overlay').classList.remove('open');
-  document.body.style.overflow = '';
+  var el = document.getElementById('form-picker-overlay');
+  if (el) { el.classList.remove('open'); document.body.style.overflow = ''; }
 }
-
 function onFormPickerOverlayClick(e) {
   if (e.target === document.getElementById('form-picker-overlay')) closeFormPickerSheet();
 }
-
 function selectFormPicker(formId) {
   closeFormPickerSheet();
   var params = new URLSearchParams(window.location.search);
@@ -333,6 +345,10 @@ function selectFormPicker(formId) {
   if (epId || ptId) url += '?episode_id=' + epId + '&patient_id=' + ptId;
   window.location.href = url;
 }
+
+// ── Legacy sidebar compat (old functions still callable) ──
+function toggleSidebar() { toggleRail(); }
+function toggleSidebarGroup() {} // no-op in new layout
 </script>
 
 <!-- ── MPIS Session Header Modal ───────────────────── -->
@@ -372,7 +388,7 @@ function selectFormPicker(formId) {
   </div>
   <div class="mpis-modal-actions">
     <button type="button" class="draft-btn" onclick="if(typeof Main!=='undefined')Main.cancelMpisModal()">Cancel</button>
-    <button type="button" class="tbtn primary" onclick="if(typeof Main!=='undefined')Main.confirmMpisModal()">Copy to MPIS</button>
+    <button type="button" class="m3-ctx-primary" onclick="if(typeof Main!=='undefined')Main.confirmMpisModal()">Copy to MPIS</button>
   </div>
 </div>
 

@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
   <style>
-    /* ── HOME-SPECIFIC STYLES ── */
+    /* ── HOME M3 SHELL ── */
     .home-shell {
       min-height: 100vh;
       display: flex;
@@ -16,25 +16,107 @@
       background: var(--bg);
     }
 
-    .home-topbar {
-      background: var(--accent);
-      color: white;
+    /* ── M3 CONTEXT BAR (matches base.html) ── */
+    .home-ctx-bar {
+      height: 56px;
+      background: var(--m3-surface-container, var(--surface));
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 0 28px;
-      gap: 14px;
-      height: 52px;
+      padding: 0 var(--sp-4, 16px);
+      gap: var(--sp-3, 12px);
       flex-shrink: 0;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
-    .home-topbar-logo { font-weight: 600; font-size: 15px; }
-    .home-topbar-sep  { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
-    .home-topbar-sub  { font-size: 12px; color: rgba(255,255,255,0.6); }
-    .home-topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+    .home-ctx-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .home-ctx-spacer { flex: 1; }
+    .home-ctx-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--m3-shape-sm, var(--radius));
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+    .home-ctx-action:hover {
+      background: var(--m3-surface-container-high, var(--surface2));
+      color: var(--text);
+    }
+    .home-ctx-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: var(--m3-shape-sm, var(--radius));
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.12s;
+      white-space: nowrap;
+    }
+    .home-ctx-primary:hover { opacity: 0.88; }
 
+    /* Settings dropdown (same as base.html) */
+    .home-settings-anchor { position: relative; }
+    .home-settings-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
+      box-shadow: var(--m3-elev-2, 0 4px 16px rgba(0,0,0,0.12));
+      min-width: 200px;
+      z-index: 110;
+      padding: 4px 0;
+      animation: m3-fade-in 0.12s ease;
+    }
+    .home-settings-menu.open { display: block; }
+    .home-settings-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.1s;
+    }
+    .home-settings-item:hover { background: var(--m3-surface-container-high, var(--surface2)); }
+    .home-settings-icon { font-size: 16px; width: 20px; text-align: center; color: var(--text-muted); }
+    .home-settings-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+    @keyframes m3-fade-in {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── MAIN CONTENT AREA ── */
     .home-main {
       flex: 1;
       max-width: 1100px;
@@ -46,6 +128,57 @@
       gap: 24px;
     }
 
+    /* ── GREETING BANNER ── */
+    .home-greeting {
+      padding: 20px 24px;
+      background: var(--m3-surface-container, var(--surface));
+      border: 1px solid var(--border);
+      border-radius: var(--m3-shape-lg, var(--radius-lg));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .home-greeting-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .home-greeting-date {
+      font-size: 11px;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .home-greeting-msg {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .home-greeting-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--m3-shape-sm, var(--radius));
+      padding: 9px 14px;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      min-width: 280px;
+    }
+    .home-greeting-search:hover {
+      border-color: var(--accent-mid);
+      box-shadow: 0 0 0 3px rgba(74,122,200,0.08);
+    }
+    .home-greeting-search-icon { font-size: 14px; color: var(--text-faint); flex-shrink: 0; }
+    .home-greeting-search-text { font-size: 13px; color: var(--text-faint); }
+
+    @media (max-width: 768px) {
+      .home-greeting { flex-direction: column; align-items: stretch; }
+      .home-greeting-search { min-width: unset; }
+    }
+
     /* ── STATS ROW ── */
     .stats-row {
       display: grid;
@@ -53,9 +186,9 @@
       gap: 14px;
     }
     .stat-card {
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
       padding: 16px 20px;
       display: flex;
       flex-direction: column;
@@ -81,38 +214,35 @@
       margin-top: 2px;
     }
 
-    /* ── Stats accordion ── */
+    /* Stats accordion */
     #stats-row {
       overflow: hidden;
-      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-                  opacity     0.3s ease;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
       max-height: 500px;
     }
-    #stats-row.stats-collapsed {
-      max-height: 0;
-      opacity: 0;
+    #stats-row.stats-collapsed { max-height: 0; opacity: 0; }
+
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
     }
 
-    /* ── SEARCH + ACTION BAR ── */
+    /* ── SEARCH BAR (list view) ── */
     .search-bar {
       display: flex;
       gap: 10px;
       align-items: center;
       margin-bottom: 10px;
     }
-    .search-wrap {
-      flex: 1;
-      position: relative;
-    }
+    .search-wrap { flex: 1; position: relative; }
     .search-icon { display: none; }
     .search-input {
       width: 100%;
       padding: 9px 14px;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       font-family: 'IBM Plex Sans', sans-serif;
       font-size: 13px;
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       color: var(--text);
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
@@ -123,11 +253,11 @@
     }
     .search-input::placeholder { color: var(--text-faint); }
 
-    /* ── PATIENT TABLE ── */
+    /* ── PATIENT TABLE (list view) ── */
     .table-card {
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
       overflow: hidden;
     }
     .table-header {
@@ -136,7 +266,7 @@
       justify-content: space-between;
       padding: 14px 18px;
       border-bottom: 1px solid var(--border);
-      background: var(--surface2);
+      background: var(--m3-surface-container-high, var(--surface2));
     }
     .table-title {
       font-size: 12px;
@@ -151,10 +281,7 @@
       font-family: 'IBM Plex Mono', monospace;
     }
 
-    .pt-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    .pt-table { width: 100%; border-collapse: collapse; }
     .pt-table th {
       font-size: 10px;
       font-weight: 600;
@@ -164,7 +291,7 @@
       padding: 10px 18px;
       text-align: left;
       border-bottom: 1px solid var(--border);
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       white-space: nowrap;
     }
     .pt-table td {
@@ -175,10 +302,7 @@
       vertical-align: middle;
     }
     .pt-table tr:last-child td { border-bottom: none; }
-    .pt-table tbody tr {
-      cursor: pointer;
-      transition: background 0.1s;
-    }
+    .pt-table tbody tr { cursor: pointer; transition: background 0.1s; }
     .pt-table tbody tr:hover { background: var(--accent-light); }
 
     .pt-name { font-weight: 500; }
@@ -200,9 +324,9 @@
       padding: 48px 24px;
       color: var(--text-faint);
     }
-    .empty-icon { font-size: 32px; margin-bottom: 10px; }
+    .empty-icon  { font-size: 32px; margin-bottom: 10px; }
     .empty-title { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
-    .empty-sub { font-size: 12px; }
+    .empty-sub   { font-size: 12px; }
 
     /* ── MODAL ── */
     .modal-backdrop {
@@ -216,9 +340,9 @@
     }
     .modal-backdrop.open { display: flex; }
     .modal {
-      background: var(--surface);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 8px 40px rgba(0,0,0,0.25);
+      background: var(--m3-surface-container, var(--surface));
+      border-radius: var(--m3-shape-lg, var(--radius-lg));
+      box-shadow: var(--m3-elev-3, 0 8px 40px rgba(0,0,0,0.25));
       width: 100%;
       max-width: 480px;
       padding: 24px;
@@ -257,7 +381,7 @@
     }
     .form-card {
       border: 2px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
       padding: 16px;
       cursor: pointer;
       transition: all 0.15s;
@@ -305,7 +429,7 @@
       font-size: 13px;
       padding: 7px 10px;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       background: var(--bg);
       color: var(--text);
       outline: none;
@@ -334,7 +458,7 @@
     .back-btn {
       background: none;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       padding: 6px 12px;
       font-size: 12px;
       cursor: pointer;
@@ -348,9 +472,9 @@
     .back-btn:hover { background: var(--surface2); color: var(--text); }
 
     .patient-info-card {
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
       padding: 18px 22px;
       display: flex;
       align-items: center;
@@ -375,19 +499,19 @@
     .patient-id-badge {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 11px;
-      background: var(--surface2);
+      background: var(--m3-surface-container-high, var(--surface2));
       border: 1px solid var(--border);
       padding: 3px 8px;
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-xs, var(--radius));
       color: var(--text-muted);
     }
 
     /* Episodes list */
     .episodes-grid { display: flex; flex-direction: column; gap: 10px; }
     .episode-card {
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
       padding: 16px 20px;
       display: flex;
       align-items: center;
@@ -401,7 +525,7 @@
     }
     .ep-icon {
       width: 38px; height: 38px;
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       background: var(--accent-light);
       color: var(--accent);
       display: flex;
@@ -410,7 +534,7 @@
       font-size: 16px;
       flex-shrink: 0;
     }
-    .ep-info { flex: 1; }
+    .ep-info  { flex: 1; }
     .ep-title { font-size: 13px; font-weight: 600; color: var(--text); }
     .ep-meta  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     .ep-stats { display: flex; gap: 12px; font-size: 11px; color: var(--text-faint); }
@@ -423,7 +547,7 @@
       transition:all 0.12s;
     }
     .ep-action-btn:hover { background:var(--surface2); color:var(--text); }
-    .ep-action-btn.danger:hover { border-color:var(--danger); color:var(--danger); }
+    .ep-action-btn.danger:hover  { border-color:var(--danger); color:var(--danger); }
     .ep-action-btn.success:hover { border-color:var(--success); color:var(--success); }
 
     .status-pill {
@@ -444,7 +568,7 @@
       background: var(--accent);
       color: white;
       border: none;
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       font-family: inherit;
       font-size: 13px;
       font-weight: 500;
@@ -457,7 +581,7 @@
       background: none;
       color: var(--text-muted);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       font-family: inherit;
       font-size: 13px;
       cursor: pointer;
@@ -479,8 +603,7 @@
     .toast.ok  { background: var(--success); }
     .toast.err { background: var(--danger); }
 
-    /* ── DARK MODE ── */
-    body.dark .home-topbar { background: #1e2a3e; }
+    /* ── DARK MODE overrides ── */
     body.dark .search-input { background: var(--surface); }
     body.dark .modal { background: var(--surface); }
     body.dark .form-card { background: var(--surface2); }
@@ -491,21 +614,68 @@
 <body>
 
 <div class="home-shell">
-  <header class="dash-header">
-    <div class="dash-date" id="dash-date"></div>
-    <div class="dash-greeting" id="dash-greeting">Good morning 👋</div>
-    <div class="dash-search-wrap" onclick="openFabSheet()" role="button" tabindex="0" aria-label="Search patients">
-      <span class="dash-search-icon">🔍</span>
-      <span class="dash-search-placeholder">Search patients…</span>
+
+  <!-- ── M3 CONTEXT BAR ──────────────────────────────── -->
+  <header class="home-ctx-bar">
+    <div class="home-ctx-title">PT Assessment</div>
+    <div class="home-ctx-spacer"></div>
+
+    <!-- Settings gear -->
+    <div class="home-settings-anchor">
+      <button class="home-ctx-action" onclick="toggleSettingsMenu()" id="settings-btn" style="padding:7px 10px" title="Settings">&#9881;</button>
+      <div class="home-settings-menu" id="settings-menu">
+        <button class="home-settings-item" onclick="toggleDark();toggleSettingsMenu()">
+          <span class="home-settings-icon" id="dark-toggle">&#9790;</span> Dark Mode
+        </button>
+        <div class="home-settings-divider"></div>
+        <button class="home-settings-item" onclick="loadStats();toggleSettingsMenu()">
+          <span class="home-settings-icon">&#128202;</span> Refresh Stats
+        </button>
+      </div>
     </div>
-    <!-- Top-right cluster keeps dark toggle and + New from overlapping -->
-    <div class="dash-header-actions">
-      <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()" title="Toggle dark mode">&#9790;</button>
-      <button class="dash-header-fab" onclick="openFabSheet()">+ New</button>
-    </div>
+
+    <button class="home-ctx-primary" onclick="openFabSheet()">+ New Patient</button>
   </header>
 
-  <main>
+  <main class="home-main">
+
+    <!-- ── Greeting banner ── -->
+    <div class="home-greeting">
+      <div class="home-greeting-text">
+        <div class="home-greeting-date" id="dash-date"></div>
+        <div class="home-greeting-msg" id="dash-greeting">Good morning</div>
+      </div>
+      <div class="home-greeting-search" onclick="openFabSheet()" role="button" tabindex="0" aria-label="Search patients">
+        <span class="home-greeting-search-icon">&#128269;</span>
+        <span class="home-greeting-search-text">Search patients...</span>
+      </div>
+    </div>
+
+    <!-- ── Stats row ── -->
+    <div id="stats-row">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Patients</div>
+          <div class="stat-value" id="stat-patients">0</div>
+          <div class="stat-sub">registered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Episodes</div>
+          <div class="stat-value" id="stat-active">0</div>
+          <div class="stat-sub">in progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Assessments</div>
+          <div class="stat-value" id="stat-assessments">0</div>
+          <div class="stat-sub">total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">SOAP Notes</div>
+          <div class="stat-value" id="stat-soaps">0</div>
+          <div class="stat-sub">follow-ups</div>
+        </div>
+      </div>
+    </div>
 
     <!-- ── Dashboard view (default) ─────────────────── -->
     <div id="dash-view" class="dash-content">
@@ -537,7 +707,7 @@
       <div class="table-card">
         <div class="table-header">
           <span class="table-title">Search Results</span>
-          <span class="table-count" id="table-count">—</span>
+          <span class="table-count" id="table-count">&mdash;</span>
         </div>
         <div id="patient-table-wrap">
           <div class="empty-state">
@@ -551,11 +721,11 @@
 
     <!-- ── Patient detail view ───────────────────────── -->
     <div id="detail-view" class="detail-panel dash-content" style="padding-top:16px;display:none;">
-      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--radius);padding:8px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <div style="background:var(--accent-light);border:1px solid var(--accent-mid);border-radius:var(--m3-shape-sm, var(--radius));padding:8px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;">
         <span style="font-size:16px;">&#128100;</span>
         <div>
           <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--accent);margin-bottom:1px;">Patient Record</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)" id="breadcrumb-name">—</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)" id="breadcrumb-name">&mdash;</div>
         </div>
         <div style="margin-left:auto;font-size:11px;color:var(--accent-mid);cursor:pointer;" onclick="showDash()">&#8592; Dashboard</div>
       </div>
@@ -575,18 +745,18 @@
       <div class="patient-info-card" id="patient-info-card">
         <div class="patient-avatar" id="pt-avatar">?</div>
         <div class="patient-details">
-          <div class="patient-fullname" id="pt-fullname">—</div>
-          <div class="patient-meta" id="pt-meta">—</div>
+          <div class="patient-fullname" id="pt-fullname">&mdash;</div>
+          <div class="patient-meta" id="pt-meta">&mdash;</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-          <div class="patient-id-badge" id="pt-id-badge">—</div>
+          <div class="patient-id-badge" id="pt-id-badge">&mdash;</div>
         </div>
       </div>
 
       <div class="table-card">
         <div class="table-header">
           <span class="table-title">Episodes / Referrals</span>
-          <span class="table-count" id="episode-count">—</span>
+          <span class="table-count" id="episode-count">&mdash;</span>
         </div>
         <div id="episodes-wrap">
           <div class="empty-state">
@@ -615,8 +785,8 @@
     <div class="sheet-header">
       <div class="sheet-avatar" id="sheet-avatar">?</div>
       <div>
-        <div class="sheet-patient-name" id="sheet-name">—</div>
-        <div class="sheet-patient-meta" id="sheet-meta">—</div>
+        <div class="sheet-patient-name" id="sheet-name">&mdash;</div>
+        <div class="sheet-patient-meta" id="sheet-meta">&mdash;</div>
       </div>
       <button class="sheet-close" onclick="closePatientSheet()">&#x2715;</button>
     </div>
@@ -624,30 +794,30 @@
     <div class="sheet-body">
       <div class="sheet-episode-pill" id="sheet-episode-pill">
         <div class="sheet-episode-label">Active Episode</div>
-        <div class="sheet-episode-name" id="sheet-episode-name">—</div>
-        <div class="sheet-episode-meta" id="sheet-episode-meta">—</div>
+        <div class="sheet-episode-name" id="sheet-episode-name">&mdash;</div>
+        <div class="sheet-episode-meta" id="sheet-episode-meta">&mdash;</div>
       </div>
 
       <button class="sheet-primary-btn" id="sheet-soap-btn" onclick="sheetViewProfile()">
-        <span style="font-size:20px;">👤</span>
+        <span style="font-size:20px;">&#128100;</span>
         <div>
           <div>View Patient Profile</div>
           <div class="sheet-primary-sub">Open patient record</div>
         </div>
-        <span class="btn-arrow">›</span>
+        <span class="btn-arrow">&#8250;</span>
       </button>
 
       <div class="sheet-secondary-row sheet-secondary-row-3" id="sheet-secondary-row">
         <button class="sheet-secondary-btn" onclick="sheetNewSoap()">
-          <span style="font-size:16px;">📝</span>
+          <span style="font-size:16px;">&#128221;</span>
           <span>New SOAP</span>
         </button>
         <button class="sheet-secondary-btn" onclick="sheetNewAssessment()">
-          <span style="font-size:16px;">🗂️</span>
+          <span style="font-size:16px;">&#128451;</span>
           <span>New Assessment</span>
         </button>
         <button class="sheet-secondary-btn" onclick="sheetViewEpisode()">
-          <span style="font-size:16px;">📂</span>
+          <span style="font-size:16px;">&#128194;</span>
           <span>View Episode</span>
         </button>
       </div>
@@ -660,11 +830,11 @@
   </div>
 </div>
 
-<!-- Context menu for discharged episode ⋯ -->
+<!-- Context menu for discharged episode -->
 <div class="ctx-menu" id="ctx-menu" style="position:fixed;">
-  <button class="ctx-menu-item" onclick="ctxReactivate()">🔄 Reactivate episode</button>
+  <button class="ctx-menu-item" onclick="ctxReactivate()">&#128260; Reactivate episode</button>
   <hr class="ctx-menu-divider">
-  <button class="ctx-menu-item" onclick="ctxViewEpisode()">📂 View episode history</button>
+  <button class="ctx-menu-item" onclick="ctxViewEpisode()">&#128194; View episode history</button>
 </div>
 
 <!-- FAB Search Sheet -->
@@ -674,9 +844,9 @@
     <div style="padding:4px 20px 14px;">
       <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px;">Find or register a patient</div>
       <div class="search-sheet-input-wrap">
-        <span style="font-size:14px;color:var(--accent-mid);">🔍</span>
+        <span style="font-size:14px;color:var(--accent-mid);">&#128269;</span>
         <input type="text" class="search-sheet-input" id="fab-search-input"
-          placeholder="Type name or IC number…"
+          placeholder="Type name or IC number..."
           oninput="onFabSearch(this.value)">
       </div>
       <div class="search-sheet-results" id="fab-search-results"></div>
@@ -1036,6 +1206,20 @@ var FORM_LABELS = {
   CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological'
 };
 
+// ── Settings menu ────────────────────────────────
+function toggleSettingsMenu() {
+  var menu = document.getElementById('settings-menu');
+  menu.classList.toggle('open');
+}
+// Close settings when clicking outside
+document.addEventListener('click', function(e) {
+  var anchor = document.querySelector('.home-settings-anchor');
+  var menu = document.getElementById('settings-menu');
+  if (anchor && menu && !anchor.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+});
+
 // ── Date display ──────────────────────────────────
 function initDashDate() {
   var el = document.getElementById('dash-date');
@@ -1047,10 +1231,10 @@ function initDashDate() {
   if (el) el.textContent = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
   if (gr) {
     var h = d.getHours();
-    var msg = h < 12 ? 'Good morning 👋'
-            : h < 17 ? 'Good afternoon 🌤'
-            : h < 21 ? 'Good evening 🌙'
-            :           'Good night 🌜';
+    var msg = h < 12 ? 'Good morning'
+            : h < 17 ? 'Good afternoon'
+            : h < 21 ? 'Good evening'
+            :           'Good night';
     gr.textContent = msg;
   }
 }
@@ -1097,7 +1281,7 @@ function renderSeenToday(rows) {
   wrap.innerHTML = html;
 }
 
-// ── Load Active Patients ──────────────────────────
+// ── Load Active Patients ─────────────────────────
 async function loadActivePatients() {
   try {
     var res  = await fetch('/api/dashboard/active-patients');
@@ -1107,21 +1291,22 @@ async function loadActivePatients() {
 }
 
 function lastSeenLabel(dateStr) {
-  if (!dateStr) return 'No activity';
-  var last = new Date(dateStr);
-  var now  = new Date();
-  var diffMs   = now - last;
-  var diffDays = Math.floor(diffMs / 86400000);
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return '1 day ago';
-  return diffDays + ' days ago';
+  if (!dateStr) return 'No visits';
+  var d = new Date(dateStr);
+  var now = new Date();
+  var diff = Math.floor((now - d) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  if (diff <= 7)  return diff + 'd ago';
+  if (diff <= 30) return Math.floor(diff / 7) + 'w ago';
+  return Math.floor(diff / 30) + 'mo ago';
 }
 
 function lastSeenClass(dateStr) {
   if (!dateStr) return '';
-  var diffDays = Math.floor((new Date() - new Date(dateStr)) / 86400000);
-  if (diffDays === 0) return 'recent';
-  if (diffDays >= 7)  return 'overdue';
+  var diff = Math.floor((new Date() - new Date(dateStr)) / 86400000);
+  if (diff <= 3) return 'recent';
+  if (diff > 14) return 'overdue';
   return '';
 }
 
@@ -1134,98 +1319,98 @@ function renderActivePatients(rows) {
     return;
   }
   var html = '<div class="active-pts-grid">';
-  rows.forEach(function(r) {
-    var label    = esc(r.form_label || r.form_type);
-    var lastTxt  = esc(lastSeenLabel(r.last_activity));
-    var lastCls  = lastSeenClass(r.last_activity);
-    html += '<div class="active-pt-card" onclick="openPatientSheet(' + r.patient_id + ')">' +
-      '<div class="active-pt-name">' + esc(r.patient_name) + '</div>' +
-      '<div class="active-pt-ep">'   + label + '</div>' +
-      '<div class="active-pt-last ' + lastCls + '">' + lastTxt + '</div>' +
+  rows.forEach(function(p) {
+    var lbl = lastSeenLabel(p.last_visit);
+    var cls = lastSeenClass(p.last_visit);
+    var epLabel = FORM_LABELS[p.form_type] || p.form_type || '';
+    html += '<div class="active-pt-card" onclick="openPatientSheet(' + p.patient_id + ')">' +
+      '<div class="active-pt-name">' + esc(p.patient_name) + '</div>' +
+      '<div class="active-pt-ep">' + esc(epLabel) + '</div>' +
+      '<div class="active-pt-last ' + cls + '">' + lbl + '</div>' +
     '</div>';
   });
   html += '</div>';
   wrap.innerHTML = html;
 }
 
-// ── Bottom Sheet ──────────────────────────────────
+// ── Patient Bottom Sheet ─────────────────────────
 async function openPatientSheet(patientId) {
   sheetPatientId = patientId;
-  sheetEpisodeId = null;
   try {
-    var res     = await fetch('/api/patients/' + patientId);
-    var patient = await res.json();
-    var initials = (patient.name || '?').split(' ').map(function(w){ return w[0]; }).slice(0,2).join('').toUpperCase();
+    var res = await fetch('/api/patients/' + patientId);
+    var p   = await res.json();
+    var initials = (p.name || '?').split(' ').map(function(w) { return w[0]; }).slice(0,2).join('').toUpperCase();
     document.getElementById('sheet-avatar').textContent = initials;
-    document.getElementById('sheet-name').textContent   = patient.name || '—';
-    var sex = patient.sex === 'M' ? 'M' : patient.sex === 'F' ? 'F' : '';
-    var dob = patient.dob || '';
-    var age = dob ? calcAge(dob) : null;
-    document.getElementById('sheet-meta').textContent =
-      [sex, age !== null ? age + ' yrs' : '', patient.ic || patient.passport].filter(Boolean).join(' · ');
+    document.getElementById('sheet-name').textContent   = p.name || '—';
+    var sex = p.sex === 'M' ? 'Male' : p.sex === 'F' ? 'Female' : '';
+    var meta = [sex, p.ic || p.passport, p.dob].filter(Boolean).join(' · ');
+    document.getElementById('sheet-meta').textContent = meta || 'No details';
 
-    var epRes = await fetch('/api/patients/' + patientId + '/episodes');
-    var episodes = await epRes.json();
-    renderSheetEpisodes(episodes);
+    // Load episodes
+    var eres = await fetch('/api/patients/' + patientId + '/episodes');
+    var eps  = await eres.json();
+    var active = eps.find(function(e) { return e.status === 'active'; });
+    var pill = document.getElementById('sheet-episode-pill');
+    var secRow = document.getElementById('sheet-secondary-row');
 
-    document.getElementById('patient-sheet-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  } catch(e) { console.error('openPatientSheet', e); }
+    if (active) {
+      sheetEpisodeId = active.id;
+      var fLabel = FORM_LABELS[active.form_type] || active.form_type;
+      document.getElementById('sheet-episode-name').textContent = fLabel + ' Assessment';
+      document.getElementById('sheet-episode-meta').textContent = 'Assessment: ' + (active.referral_date || '—');
+      pill.style.display = '';
+      secRow.style.display = '';
+    } else {
+      sheetEpisodeId = null;
+      pill.style.display = 'none';
+      secRow.style.display = 'none';
+    }
+
+    renderSheetEpisodes(eps);
+
+    var overlay = document.getElementById('patient-sheet-overlay');
+    overlay.classList.add('open');
+  } catch(e) {
+    console.error('openPatientSheet', e);
+    showToast('Could not load patient', 'err');
+  }
 }
 
 function renderSheetEpisodes(episodes) {
-  var active = episodes.filter(function(e){ return e.status === 'active'; });
-  var discharged = episodes.filter(function(e){ return e.status === 'discharged' || (e.status && e.status.startsWith('discharged')); });
-
-  var primary = active[0] || null;
-  if (primary) {
-    sheetEpisodeId = primary.id;
-    var fl = FORM_LABELS[primary.form_type] || primary.form_type;
-    document.getElementById('sheet-episode-name').textContent = fl + ' Assessment';
-    document.getElementById('sheet-episode-meta').textContent =
-      'Since ' + (primary.referral_date || '—') + ' · ' + (primary.soap_count || 0) + ' notes';
-    document.getElementById('sheet-episode-pill').style.display = '';
-    document.getElementById('sheet-soap-btn').style.display = '';
-    document.getElementById('sheet-secondary-row').style.display = '';
-  } else {
-    document.getElementById('sheet-episode-pill').style.display = 'none';
-    document.getElementById('sheet-soap-btn').style.display = 'none';
-    document.getElementById('sheet-secondary-row').style.display = 'none';
+  var wrap = document.getElementById('sheet-episodes-list');
+  if (!episodes.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-faint)">No episodes</div>';
+    return;
   }
-
-  var listHtml = '';
-  active.forEach(function(ep) {
-    var fl = FORM_LABELS[ep.form_type] || ep.form_type;
-    listHtml += '<div class="sheet-episode-row active-ep" onclick="window.location.href=\'/episode/' + ep.id + '\'">' +
-      '<div class="sheet-ep-row-top">' +
-        '<div><div class="sheet-ep-row-name">' + esc(fl) + ' Assessment</div>' +
-        '<div class="sheet-ep-row-meta">Since ' + esc(ep.referral_date || '—') + ' · ' + (ep.soap_count||0) + ' notes · <span style="color:var(--success)">Active</span></div></div>' +
-        '<span class="sheet-ep-row-arrow">›</span>' +
-      '</div>' +
-    '</div>';
-  });
-  discharged.forEach(function(ep) {
-    var fl = FORM_LABELS[ep.form_type] || ep.form_type;
-    var dcReason = ep.discharge_reason || '';
-    var reasonPill = dcReason
-      ? '<div class="dc-reason-pill"><span class="dc-reason-label">D/C reason</span><span class="dc-reason-text">' + esc(dcReason) + '</span></div>'
+  wrap.innerHTML = episodes.map(function(ep) {
+    var fLabel = FORM_LABELS[ep.form_type] || ep.form_type;
+    var isActive = ep.status === 'active';
+    var cls = isActive ? 'active-ep' : 'discharged-ep';
+    var statusReason = ep.discharge_reason || (ep.status.includes('|') ? ep.status.split('|')[1] : '');
+    var dcPill = (!isActive && statusReason)
+      ? '<div class="dc-reason-pill"><span class="dc-reason-label">D/C:</span><span class="dc-reason-text">' + esc(statusReason) + '</span></div>'
       : '';
-    listHtml += '<div class="sheet-episode-row discharged-ep" style="position:relative;">' +
+    var arrow = isActive
+      ? '<span class="sheet-ep-row-arrow">›</span>'
+      : '<button class="sheet-ep-menu-btn" onclick="openCtxMenu(event,' + ep.id + ')" title="Actions">⋯</button>';
+    return '<div class="sheet-episode-row ' + cls + '"' +
+      (isActive ? ' onclick="sheetViewEpisode(' + ep.id + ')"' : '') + '>' +
       '<div class="sheet-ep-row-top">' +
-        '<div><div class="sheet-ep-row-name" style="color:var(--text-muted);">' + esc(fl) + ' Assessment</div>' +
-        '<div class="sheet-ep-row-meta">' + esc(ep.referral_date || '—') + ' · ' + (ep.soap_count||0) + ' notes · <span style="color:var(--text-faint)">Discharged</span></div>' +
-        reasonPill + '</div>' +
-        '<button class="sheet-ep-menu-btn" onclick="openCtxMenu(event,' + ep.id + ')" title="Options">⋯</button>' +
+        '<div>' +
+          '<div class="sheet-ep-row-name">' + esc(fLabel) + '</div>' +
+          '<div class="sheet-ep-row-meta">Assessment: ' + esc(ep.referral_date || '—') + '</div>' +
+          dcPill +
+        '</div>' +
+        arrow +
       '</div>' +
     '</div>';
-  });
-  document.getElementById('sheet-episodes-list').innerHTML = listHtml || '<div style="font-size:12px;color:var(--text-faint);padding:8px 0;">No episodes yet</div>';
+  }).join('');
 }
 
 function closePatientSheet() {
   document.getElementById('patient-sheet-overlay').classList.remove('open');
-  document.body.style.overflow = '';
-  closeCtxMenu();
+  sheetPatientId = null;
+  sheetEpisodeId = null;
 }
 
 function onSheetOverlayClick(e) {
@@ -1233,116 +1418,101 @@ function onSheetOverlayClick(e) {
 }
 
 function sheetNewSoap() {
-  if (!sheetEpisodeId) return;
-  closePatientSheet();
-  window.location.href = '/episode/' + sheetEpisodeId + '?new_soap=1';
+  if (sheetEpisodeId) window.location.href = '/episode/' + sheetEpisodeId + '?action=new-soap';
 }
-
 function sheetNewAssessment() {
-  // Sync currentPatientId so submitNewEpisode() can use it
-  currentPatientId = sheetPatientId;
-  closePatientSheet();
-  openNewEpisodeModal();
+  if (sheetEpisodeId) window.location.href = '/episode/' + sheetEpisodeId;
 }
-
-function sheetViewEpisode() {
-  if (!sheetEpisodeId) return;
-  closePatientSheet();
-  window.location.href = '/episode/' + sheetEpisodeId;
+function sheetViewEpisode(epId) {
+  var id = epId || sheetEpisodeId;
+  if (id) window.location.href = '/episode/' + id;
 }
-
 function sheetViewProfile() {
-  if (!sheetPatientId) return;
+  var id = sheetPatientId;
+  if (!id) return;
   closePatientSheet();
-  openPatient(sheetPatientId);
+  window.location.href = '/patient/' + id;
 }
 
-// ── Context menu (⋯ for discharged episodes) ──────
+// ── Context menu (discharged episode ⋯) ──────────
 function openCtxMenu(e, episodeId) {
   e.stopPropagation();
   ctxEpisodeId = episodeId;
   var menu = document.getElementById('ctx-menu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top  = e.clientY + 'px';
   menu.classList.add('open');
-  var rect = e.target.getBoundingClientRect();
-  menu.style.top  = (rect.bottom + 4) + 'px';
-  menu.style.left = Math.max(8, rect.right - 190) + 'px';
+  setTimeout(function() {
+    document.addEventListener('click', closeCtxMenu, { once: true });
+  }, 10);
 }
-
 function closeCtxMenu() {
   document.getElementById('ctx-menu').classList.remove('open');
-  ctxEpisodeId = null;
 }
-
 async function ctxReactivate() {
-  if (!ctxEpisodeId) return;
-  var id = ctxEpisodeId;
   closeCtxMenu();
-  closePatientSheet();
+  if (!ctxEpisodeId) return;
   try {
-    var res = await fetch('/api/episodes/' + id + '/status', {
-      method: 'PUT', headers: {'Content-Type':'application/json'},
+    var res = await fetch('/api/episodes/' + ctxEpisodeId + '/status', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ status: 'active' })
     });
-    if (!res.ok) { showToast('Failed to reactivate', 'err'); return; }
+    if (!res.ok) { showToast('Failed', 'err'); return; }
     showToast('Episode reactivated', 'ok');
+    if (sheetPatientId) openPatientSheet(sheetPatientId);
     loadActivePatients();
-  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+  } catch(e) { showToast('Error', 'err'); }
 }
-
 function ctxViewEpisode() {
-  if (!ctxEpisodeId) return;
-  var id = ctxEpisodeId;
   closeCtxMenu();
-  closePatientSheet();
-  window.location.href = '/episode/' + id;
+  if (ctxEpisodeId) window.location.href = '/episode/' + ctxEpisodeId;
 }
 
-document.addEventListener('click', function(e) {
-  var menu = document.getElementById('ctx-menu');
-  if (menu && menu.classList.contains('open') && !menu.contains(e.target)) closeCtxMenu();
-});
-
-// ── FAB Search Sheet ──────────────────────────────
+// ── FAB Search Sheet ─────────────────────────────
 function openFabSheet() {
-  document.getElementById('fab-sheet-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  document.getElementById('fab-search-results').innerHTML = '';
-  var inp = document.getElementById('fab-search-input');
-  inp.value = '';
-  setTimeout(function(){ inp.focus(); }, 120);
+  var overlay = document.getElementById('fab-sheet-overlay');
+  overlay.classList.add('open');
+  setTimeout(function() {
+    document.getElementById('fab-search-input').focus();
+  }, 150);
 }
-
 function closeFabSheet() {
   document.getElementById('fab-sheet-overlay').classList.remove('open');
-  document.body.style.overflow = '';
+  document.getElementById('fab-search-input').value = '';
+  document.getElementById('fab-search-results').innerHTML = '';
 }
-
 function onFabOverlayClick(e) {
   if (e.target === document.getElementById('fab-sheet-overlay')) closeFabSheet();
 }
 
 function onFabSearch(val) {
   clearTimeout(fabSearchTimer);
-  fabSearchTimer = setTimeout(function(){ doFabSearch(val); }, 280);
+  fabSearchTimer = setTimeout(function() { doFabSearch(val); }, 250);
 }
 
 async function doFabSearch(q) {
-  if (!q.trim()) { document.getElementById('fab-search-results').innerHTML = ''; return; }
+  var wrap = document.getElementById('fab-search-results');
+  if (!q.trim()) { wrap.innerHTML = ''; return; }
   try {
     var res     = await fetch('/api/patients/search?q=' + encodeURIComponent(q));
     var results = await res.json();
     renderFabResults(results);
-  } catch(e) { console.error('doFabSearch', e); }
+  } catch(e) { console.error('fabSearch error', e); }
 }
 
 function renderFabResults(patients) {
   var wrap = document.getElementById('fab-search-results');
-  if (!patients.length) { wrap.innerHTML = '<div style="font-size:12px;color:var(--text-faint);padding:8px 0;">No patients found</div>'; return; }
+  if (!patients.length) {
+    wrap.innerHTML = '<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-faint)">No matching patients</div>';
+    return;
+  }
   var html = '';
   patients.forEach(function(p) {
-    var initials = (p.name||'?').split(' ').map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
-    var age = p.dob ? calcAge(p.dob) : null;
-    var episodeInfo = p.active_form_type ? (FORM_LABELS[p.active_form_type] || p.active_form_type) + ' · Active' : (p.episode_count > 0 ? 'Discharged' : 'No episodes');
+    var initials = (p.name || '?').split(' ').map(function(w) { return w[0]; }).slice(0,2).join('').toUpperCase();
+    var id = p.ic || p.passport || '';
+    var age = calcAge(p.dob);
+    var episodeInfo = (p.episode_count || 0) + ' episode' + ((p.episode_count || 0) !== 1 ? 's' : '');
     html += '<div class="search-result-item" onclick="onFabSelect(' + p.id + ')">' +
       '<div class="search-result-avatar">' + esc(initials) + '</div>' +
       '<div>' +
@@ -1379,13 +1549,13 @@ function showDash() {
 function initDark() {
   if (localStorage.getItem('pt_dark') === '1') {
     document.body.classList.add('dark');
-    document.getElementById('dark-toggle').textContent = '\u2600';
+    document.getElementById('dark-toggle').textContent = '☀';
   }
 }
 function toggleDark() {
   var isDark = document.body.classList.toggle('dark');
   localStorage.setItem('pt_dark', isDark ? '1' : '0');
-  document.getElementById('dark-toggle').textContent = isDark ? '\u2600' : '\u263E';
+  document.getElementById('dark-toggle').textContent = isDark ? '☀' : '☾';
 }
 
 // ── Toast ─────────────────────────────────────────────
@@ -1411,7 +1581,6 @@ document.querySelectorAll('.modal-backdrop').forEach(function(el) {
 
 // ── New Patient Modal ─────────────────────────────────
 function openNewPatientModal() {
-  // Clear fields
   ['np-name','np-nric','np-passport','np-dob'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
@@ -1434,7 +1603,6 @@ function onNpTypeChange() {
 function onNpNric(val) {
   var c = val.replace(/\D/g, '');
   var errEl = document.getElementById('np-nric-err');
-  // Clear error while typing
   if (errEl) errEl.style.display = 'none';
   if (c.length < 12) return;
   if (c.length > 12) {
@@ -1445,7 +1613,6 @@ function onNpNric(val) {
   var thisYY = new Date().getFullYear() % 100;
   var yr = parseInt(yy) <= thisYY ? '20'+yy : '19'+yy;
   var dobStr = yr+'-'+mm+'-'+dd;
-  // Validate the derived date
   var dob = new Date(dobStr);
   if (isNaN(dob.getTime()) || dob.getMonth() !== parseInt(mm)-1) {
     if (errEl) { errEl.textContent = 'NRIC contains invalid date — please check IC number'; errEl.style.display = ''; }
@@ -1513,7 +1680,6 @@ function openNewEpisodeModal() {
   openModal('modal-new-episode');
 }
 
-// Store current patient data for pre-filling form
 var currentPatientData = null;
 
 function selectForm(el) {
@@ -1538,7 +1704,6 @@ async function submitNewEpisode() {
     if (!res.ok) { showToast(j.error || 'Failed', 'err'); return; }
     closeModal('modal-new-episode');
     showToast('Episode created', 'ok');
-    // Go to episode detail page
     window.location.href = '/episode/' + j.id;
   } catch(e) {
     showToast('Error: ' + e.message, 'err');
@@ -1563,7 +1728,6 @@ async function doSearch(q) {
 
     renderPatientTable(results);
 
-    // If search has text and zero results, offer to create
     if (q.trim() && results.length === 0) {
       document.getElementById('not-found-query').textContent = q.trim();
       openModal('modal-not-found');
@@ -1666,19 +1830,21 @@ function expandStats() {
 
 // ── Open patient detail ───────────────────────────────
 async function openPatient(id) {
+  window.location.href = '/patient/' + id;
+}
+async function _openPatientInline(id) {
   currentPatientId = id;
   try {
     var res     = await fetch('/api/patients/' + id);
     var patient = await res.json();
 
-    // Fill patient info card
     var initials = (patient.name || '?').split(' ').map(function(w) {
       return w[0];
     }).slice(0,2).join('').toUpperCase();
     document.getElementById('pt-avatar').textContent       = initials;
     document.getElementById('pt-fullname').textContent     = patient.name;
     document.getElementById('breadcrumb-name').textContent = patient.name;
-    currentPatientData = patient; // store for form pre-fill
+    currentPatientData = patient;
 
     var sex = patient.sex === 'M' ? 'Male' : patient.sex === 'F' ? 'Female' : '';
     var meta = [sex, patient.dob, patient.country].filter(Boolean).join(' · ');
@@ -1686,10 +1852,8 @@ async function openPatient(id) {
     document.getElementById('pt-id-badge').textContent =
       patient.ic || patient.passport || 'No ID';
 
-    // Load episodes
     loadEpisodes(id);
 
-    // Switch views
     collapseStats();
     document.getElementById('dash-view').style.display = 'none';
     document.getElementById('list-view').style.display = 'none';
@@ -1724,7 +1888,7 @@ async function loadEpisodes(patientId) {
       var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological' }[ep.form_type] || ep.form_type;
       var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;', AMPUTATION:'&#129452;', NEURO:'&#9889;' }[ep.form_type] || '&#128203;';
       var rawStatus  = ep.status || 'active';
-      var statusBase = rawStatus.split('|')[0];  // strip reason
+      var statusBase = rawStatus.split('|')[0];
       var statusReason = ep.discharge_reason || (rawStatus.includes('|') ? rawStatus.split('|')[1] : '');
       var statusCls  = 'status-' + statusBase.replace(/\s+/g,'-').toLowerCase();
       var hasAssess = ep.has_assessment > 0;
@@ -1853,7 +2017,6 @@ async function deleteCurrentPatient() {
   if (!currentPatientId) return;
   var name = document.getElementById('pt-fullname').textContent || 'this patient';
 
-  // Two-step confirmation — deliberate
   var step1 = confirm('Delete ' + name + '? This will permanently remove ALL episodes, assessments and follow-up notes. Cannot be undone.');
   if (!step1) return;
 
@@ -2012,6 +2175,7 @@ initDark();
 initDashDate();
 loadSeenToday();
 loadActivePatients();
+loadStats();
 
 // Auto-open patient if ?patient_id=X in URL
 (function() {

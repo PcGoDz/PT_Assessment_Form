@@ -1277,3 +1277,545 @@ body.dark .dash-header { background: linear-gradient(135deg, #0f1f35, #1a3060); 
 }
 .form-picker-chip:hover:not(.soon-chip) { border-color: var(--accent-mid); background: var(--accent-light); }
 .form-picker-chip.soon-chip { opacity: 0.4; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   M3 REDESIGN — Google Material 3 inspired layout system
+   Phase 1: additive only — old classes untouched, new classes below.
+   base.html will swap to these once they're wired up.
+══════════════════════════════════════════════════════════════════════ */
+
+/* ── M3 DESIGN TOKENS ────────────────────────────── */
+:root {
+  /* Elevation (Material shadow tiers) */
+  --m3-elev-1: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --m3-elev-2: 0 2px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.06);
+  --m3-elev-3: 0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06);
+
+  /* Spacing scale (4px base) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* Surface tones (M3 layered surfaces) */
+  --m3-surface-dim: #f0ede8;
+  --m3-surface-container: #f5f2ed;
+  --m3-surface-container-high: #eae7e2;
+  --m3-surface-container-highest: #e2dfda;
+  --m3-on-surface-variant: #49454f;
+
+  /* Shape */
+  --m3-shape-xs: 4px;
+  --m3-shape-sm: 8px;
+  --m3-shape-md: 12px;
+  --m3-shape-lg: 16px;
+  --m3-shape-xl: 28px;
+
+  /* Motion */
+  --m3-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --m3-ease-decel: cubic-bezier(0, 0, 0, 1);
+  --m3-dur-short: 150ms;
+  --m3-dur-med: 250ms;
+  --m3-dur-long: 350ms;
+
+  /* Rail width */
+  --m3-rail-w: 260px;
+  --m3-rail-collapsed-w: 0px;
+  --m3-context-h: 56px;
+}
+
+body.dark {
+  --m3-elev-1: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --m3-elev-2: 0 2px 6px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.2);
+  --m3-elev-3: 0 4px 12px rgba(0,0,0,0.4), 0 2px 4px rgba(0,0,0,0.2);
+  --m3-surface-dim: #1e1e22;
+  --m3-surface-container: #222226;
+  --m3-surface-container-high: #2a2a2e;
+  --m3-surface-container-highest: #333338;
+  --m3-on-surface-variant: #c4c0ca;
+}
+
+/* ── M3 SHELL LAYOUT ─────────────────────────────── */
+.m3-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ── M3 CONTEXT BAR (replaces topbar) ─────────────── */
+.m3-context-bar {
+  height: var(--m3-context-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sp-4);
+  gap: var(--sp-3);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--m3-elev-1);
+}
+
+/* Back / Home button (leftmost) */
+.m3-ctx-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+  flex-shrink: 0;
+  transition: background var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m3-ctx-back:hover { background: var(--m3-surface-container-high); }
+
+/* Title area */
+.m3-ctx-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.m3-ctx-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m3-ctx-title-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+/* Patient chip in context bar */
+.m3-patient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 14px 6px 6px;
+  border-radius: var(--m3-shape-xl);
+  border: 1px solid var(--border);
+  background: var(--m3-surface-container);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--m3-dur-short) var(--m3-ease-standard),
+              box-shadow var(--m3-dur-short) var(--m3-ease-standard);
+  white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m3-patient-chip:hover {
+  background: var(--m3-surface-container-high);
+  box-shadow: var(--m3-elev-1);
+}
+.m3-patient-chip-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Spacer pushes actions right */
+.m3-ctx-spacer { flex: 1; min-width: var(--sp-4); }
+
+/* Context bar action buttons */
+.m3-ctx-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 40px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--m3-shape-xl);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--m3-dur-short) var(--m3-ease-standard),
+              color var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m3-ctx-action:hover { background: var(--m3-surface-container-high); color: var(--text); }
+.m3-ctx-action.icon-only { width: 40px; padding: 0; font-size: 18px; }
+
+/* Primary action (Save) */
+.m3-ctx-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 40px;
+  padding: 0 var(--sp-6);
+  border-radius: var(--m3-shape-xl);
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: var(--m3-elev-1);
+  transition: background var(--m3-dur-short) var(--m3-ease-standard),
+              box-shadow var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m3-ctx-primary:hover {
+  box-shadow: var(--m3-elev-2);
+  filter: brightness(1.08);
+}
+
+/* ── M3 BODY (context bar + content area) ──────── */
+.m3-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── M3 MAIN CONTENT ──────────────────────────────── */
+.m3-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+/* ── M3 SECTION RAIL (right side, replaces sidebar) ── */
+.m3-rail {
+  width: var(--m3-rail-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-4) 0;
+  transition: width var(--m3-dur-med) var(--m3-ease-standard),
+              opacity var(--m3-dur-med) var(--m3-ease-standard);
+}
+.m3-rail.collapsed {
+  width: var(--m3-rail-collapsed-w);
+  overflow: hidden;
+  opacity: 0;
+  padding: 0;
+  border-left: none;
+}
+
+/* Rail section labels */
+.m3-rail-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: var(--sp-2) var(--sp-4) var(--sp-2);
+  font-weight: 600;
+}
+
+/* Rail nav items (section jump links / form switcher) */
+.m3-rail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 10px var(--sp-4);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-radius: 0 var(--m3-shape-xl) var(--m3-shape-xl) 0;
+  margin-right: var(--sp-3);
+  transition: background var(--m3-dur-short) var(--m3-ease-standard),
+              color var(--m3-dur-short) var(--m3-ease-standard);
+  user-select: none;
+}
+.m3-rail-item:hover { background: var(--m3-surface-container); color: var(--text); }
+.m3-rail-item.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+}
+.m3-rail-item.soon { opacity: 0.4; cursor: not-allowed; }
+.m3-rail-item.soon:hover { background: transparent; }
+.m3-rail-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+.m3-rail-badge {
+  margin-left: auto;
+  font-size: 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+/* Rail divider */
+.m3-rail-divider { height: 1px; background: var(--border); margin: var(--sp-3) 0; }
+
+/* Rail saved records panel */
+.m3-rail-records {
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+.m3-rail-records h4 {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: var(--sp-2);
+  font-weight: 600;
+}
+
+/* ── M3 CARDS (updated with more whitespace) ──────── */
+.m3-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--m3-shape-md);
+  box-shadow: var(--m3-elev-1);
+  overflow: hidden;
+}
+.m3-card-header {
+  background: var(--m3-surface-container);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-3) var(--sp-5);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.m3-card-header h2 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.m3-card-body { padding: var(--sp-5); }
+
+/* ── M3 FLOATING STATUS (progress pill) ───────────── */
+.m3-status-pill {
+  position: fixed;
+  bottom: var(--sp-4);
+  right: var(--sp-5);
+  z-index: 90;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--m3-shape-xl);
+  padding: var(--sp-2) var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  box-shadow: var(--m3-elev-2);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── M3 SETTINGS DROPDOWN ─────────────────────────── */
+.m3-settings-anchor { position: relative; }
+.m3-settings-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--m3-shape-md);
+  box-shadow: var(--m3-elev-3);
+  min-width: 200px;
+  z-index: 200;
+  padding: var(--sp-1) 0;
+  overflow: hidden;
+}
+.m3-settings-menu.open { display: block; }
+.m3-settings-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: background var(--m3-dur-short) var(--m3-ease-standard);
+  border: none;
+  background: none;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+}
+.m3-settings-item:hover { background: var(--m3-surface-container); }
+.m3-settings-icon { font-size: 16px; width: 20px; text-align: center; color: var(--text-muted); }
+.m3-settings-divider { height: 1px; background: var(--border); margin: var(--sp-1) 0; }
+
+/* ── M3 FORM SWITCHER DROPDOWN (in rail) ──────────── */
+.m3-form-dropdown {
+  position: relative;
+}
+.m3-form-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: var(--m3-shape-sm);
+  margin: 0 var(--sp-3) var(--sp-2);
+  border: 1px solid transparent;
+  transition: border-color var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m3-form-dropdown-trigger:hover { border-color: var(--accent-mid); }
+.m3-form-dropdown-chevron {
+  margin-left: auto;
+  font-size: 12px;
+  transition: transform var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m3-form-dropdown.open .m3-form-dropdown-chevron { transform: rotate(180deg); }
+
+.m3-form-dropdown-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: var(--sp-3);
+  right: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--m3-shape-md);
+  box-shadow: var(--m3-elev-3);
+  z-index: 210;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: var(--sp-1) 0;
+}
+.m3-form-dropdown.open .m3-form-dropdown-list { display: block; }
+.m3-form-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  padding: var(--sp-2) var(--sp-3) var(--sp-1);
+}
+.m3-form-option {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  transition: background var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m3-form-option:hover { background: var(--m3-surface-container); }
+.m3-form-option.active-form { color: var(--accent); font-weight: 600; background: var(--accent-light); }
+.m3-form-option.soon { opacity: 0.4; cursor: not-allowed; }
+.m3-form-option.soon:hover { background: transparent; }
+.m3-form-option-icon { font-size: 14px; width: 18px; text-align: center; }
+.m3-form-option-badge {
+  margin-left: auto;
+  font-size: 9px;
+  color: var(--text-faint);
+  background: var(--m3-surface-container-high);
+  padding: 1px 5px;
+  border-radius: 8px;
+}
+
+/* ── M3 DRAFT BANNER ──────────────────────────────── */
+.m3-draft-banner {
+  display: none;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--warn-light);
+  border-bottom: 1px solid var(--warn);
+  font-size: 13px;
+  color: var(--warn);
+}
+.m3-draft-banner.show { display: flex; }
+.m3-draft-banner button {
+  margin-left: auto;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--m3-shape-sm);
+  border: 1px solid var(--warn);
+  background: transparent;
+  color: var(--warn);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--m3-dur-short) var(--m3-ease-standard);
+}
+.m3-draft-banner button:hover { background: rgba(138,90,0,0.1); }
+
+/* ── M3 RESPONSIVE ────────────────────────────────── */
+@media (max-width: 900px) {
+  .m3-rail { display: none; }
+  .m3-main { padding: var(--sp-4); }
+}
+@media (max-width: 600px) {
+  .m3-context-bar { padding: 0 var(--sp-3); gap: var(--sp-2); }
+  .m3-ctx-action:not(.icon-only) { display: none; }
+  .m3-ctx-primary span { display: none; }
+  .m3-main { padding: var(--sp-3); gap: var(--sp-4); }
+}
+
+/* ── M3 FORM CONTENT AREA (generous breathing room) ── */
+.m3-main .card { margin-bottom: var(--sp-2); }
+.m3-main .card-body { padding: var(--sp-5) var(--sp-6); }
+.m3-main .fg { gap: var(--sp-4); }
+.m3-main .fg.c2 { gap: var(--sp-4) var(--sp-6); }
+
+/* ── M3 TOAST (updated position for rail layout) ──── */
+.m3-toast-anchor {
+  position: fixed;
+  bottom: var(--sp-6);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+}
+
+/* ── M3 KEYBOARD SHORTCUT HINT ────────────────────── */
+.m3-kbd {
+  display: inline-block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  background: var(--m3-surface-container-highest);
+  border: 1px solid var(--border);
+  border-radius: var(--m3-shape-xs);
+  padding: 1px 5px;
+  color: var(--text-faint);
+  line-height: 1.6;
+}

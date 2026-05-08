@@ -379,13 +379,13 @@ const Main = (function () {
 
           var chip = document.createElement('button');
           chip.type      = 'button';
-          chip.className = 'patient-chip';
+          chip.className = 'm3-patient-chip';
           chip.id        = 'pt-context-chip';
           chip.innerHTML =
-            '<span class="patient-chip-avatar">' + escapeHtml(initials) + '</span>' +
-            '<span class="patient-chip-name">'   + escapeHtml(name)     + '</span>' +
+            '<span class="m3-patient-chip-avatar">' + escapeHtml(initials) + '</span>' +
+            '<span>' + escapeHtml(name) + '</span>' +
             (apptLabel
-              ? '<span class="patient-chip-appt"> &middot; ' + escapeHtml(apptLabel) + '</span>'
+              ? '<span style="color:var(--text-muted);font-size:11px"> &middot; ' + escapeHtml(apptLabel) + '</span>'
               : '');
           chip.onclick = openPatientPanel;
 
@@ -412,22 +412,33 @@ const Main = (function () {
       var navSep   = document.getElementById('topbar-nav-sep');
       if (navGroup && !navGroup.querySelector('.ctx-ret-btn')) {
         var retBtn = document.createElement('button');
-        retBtn.className   = 'tbtn ctx-ret-btn';
-        retBtn.textContent = '← Return';
+        retBtn.className   = 'm3-ctx-action ctx-ret-btn';
+        retBtn.innerHTML   = '&#8592; Return';
         retBtn.title       = 'Return to patient';
+        var retDest = patientId ? '/patient/' + patientId : '/';
         retBtn.onclick = function() {
           if (isDirty && !confirm('You have unsaved changes. Return anyway?')) return;
-          window.location.href = '/';
+          window.location.href = retDest;
         };
 
         var saveRetBtn = document.createElement('button');
-        saveRetBtn.className   = 'tbtn primary ctx-ret-btn';
+        saveRetBtn.className   = 'm3-ctx-primary ctx-ret-btn';
         saveRetBtn.textContent = 'Save & Return';
         saveRetBtn.onclick = async function() {
           await saveRecord();
-          setTimeout(function() { window.location.href = '/'; }, 800);
+          setTimeout(function() { window.location.href = retDest; }, 800);
         };
 
+        if (patientId) {
+          var profileBtn = document.createElement('button');
+          profileBtn.className   = 'm3-ctx-action ctx-ret-btn';
+          profileBtn.innerHTML   = '&#128100; View Profile';
+          profileBtn.title       = 'View patient profile';
+          profileBtn.onclick = function() {
+            window.location.href = '/patient/' + patientId;
+          };
+          navGroup.appendChild(profileBtn);
+        }
         navGroup.appendChild(retBtn);
         navGroup.appendChild(saveRetBtn);
         if (navSep) navSep.style.display = '';
