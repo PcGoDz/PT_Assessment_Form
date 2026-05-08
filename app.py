@@ -98,6 +98,15 @@ def episode_detail(episode_id):
     return render_template('episode.html', episode_id=episode_id)
 
 
+@app.route('/patient/<int:patient_id>')
+def patient_profile(patient_id):
+    patient, err = get_patient(DB_PATH, patient_id)
+    if err or not patient:
+        return render_template('home.html')
+    episodes, _ = get_patient_episodes(DB_PATH, patient_id)
+    return render_template('patient.html', patient=patient, episodes=episodes or [])
+
+
 # ── Form templates — add new forms here only ────────────────────
 FORM_TEMPLATES = {
     'MS':          'forms/ms.html',
