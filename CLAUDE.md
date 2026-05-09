@@ -7,9 +7,9 @@ and context established during development. Keep it updated as things change.
 
 ## ⚠️ LAST SESSION: 2026-05-09
 
-1. **Where we left off** — Patient profile page (`/patient/<id>`) now wired into all navigation. `openPatient(id)` in `home.html` navigates directly to `/patient/<id>` (was: inline detail view). `goBack()` in `episode.html` goes to `/patient/<episode.patient_id>` (was: `/`). `initFormContext()` in `main.js` now injects a "View Profile" button in the topbar nav group when `patientId` is present, and Return / Save & Return now navigate to `/patient/<patientId>` instead of `/`. "View Profile" button also added to episode.html context banner, shown after `loadEpisode()` resolves.
-2. **Do this first next session** — Git push. Then smoke-test the full patient navigation flow: home row click → profile page → episode → back button → profile page. Verify form Return button goes to patient profile, not home.
-3. **Traps / gotchas** — `_openPatientInline(id)` in `home.html` is now dead code (renamed from old `openPatient` body). Do NOT delete it yet — read what it did first, there may be edit-patient / delete-patient flows still relying on the inline view state. `goBack()` depends on the `episode` module var being set by `loadEpisode()` — if called before fetch resolves, falls back to `/`. `patient.html` was missing from the main project (only existed in the worktree); it was copied over this session.
+1. **Where we left off** — UI fixes shipped: discharge action added to home.html active episode bottom sheet (`#ctx-menu-active`, `openActiveCtxMenu()`, `ctxDischarge()`), discharge/reactivate buttons added to patient.html episode cards with full modal, `.home-main` max-width removed, `.dash-content` max-width centering removed from `style.css`, M3 SVG chevron applied to all `select` elements. `seed_db.py` rewritten — 10 dummy patients, all active, `--reset` flag supported.
+2. **Do this first next session** — Smoke-test discharge flow end-to-end: home bottom sheet → `⋯` on active episode → "Discharge episode" → modal → confirm → episode moves to discharged. Also test from `/patient/<id>` card. Then test `python seed_db.py --reset` produces clean 10-patient DB.
+3. **Traps / gotchas** — Layout had TWO max-width constraints: `.home-main` (in `home.html` inline style) AND `.dash-content` (in `style.css` line ~862). We only fixed `.home-main` first pass — "Seen Today" and "Active Patients" stayed centered until `.dash-content` was also fixed. If layout looks squeezed again, grep `style.css` for `max-width` and `margin: 0 auto` before touching HTML. `_openPatientInline(id)` in `home.html` is still dead code — do not delete without checking edit/delete patient flows.
 4. **What's half-done** — Exe build untested. HAND form not started. `_openPatientInline` dead code not yet cleaned up.
 5. **What to skip for now** — Age auto-calc, ARIA, audit_log ON DELETE CASCADE, UNIQUE constraint, draft/final state. All documented, none urgent.
 
@@ -834,6 +834,13 @@ Public API: `Main.cancelMpisModal()`, `Main.confirmMpisModal()` (called from bas
 - [x] **Dark mode toggle moved to settings gear dropdown on all pages (base.html, home.html, episode.html)**
 - [x] **Neutral context bars replacing colored topbars across all standalone pages**
 - [x] **episode.html formLabel maps updated to include AMPUTATION + NEURO (were missing)**
+- [x] **Discharge action added to home.html active episode bottom sheet (`#ctx-menu-active`, `openActiveCtxMenu()`, `ctxDischarge()` wired to existing `#modal-discharge`)**
+- [x] **Discharge modal + reactivate button added to patient.html episode cards**
+- [x] **`.home-main` max-width removed (home.html inline style)**
+- [x] **`.dash-content` max-width + margin:0 auto removed (style.css) — was centering "Seen Today" and "Active Patients" sections**
+- [x] **`.active-pts-grid` changed from `repeat(4,1fr)` to `repeat(auto-fill, minmax(200px, 1fr))` — fills full width responsively**
+- [x] **M3 SVG chevron applied to all `select` elements — `appearance:none` + inline SVG background, light (`#49454f`) and dark (`#c4c0ca`) variants**
+- [x] **`seed_db.py` rewritten — 10 dummy patients (MS×2, SPINE×2, GERIATRIC×3, NEURO, AMPUTATION, CR), all active, skip-by-IC idempotency, `--reset` flag**
 
 ---
 
@@ -2182,3 +2189,79 @@ Short session. Two tasks: (1) diagnose and fix `TemplateNotFound: patient.html` 
 **`_openPatientInline(id)` in `home.html` is dead code:**
 - The old inline patient detail view function was renamed but not deleted.
 - Before removing it, verify that the edit-patient modal (`openEditPatientModal()`) and delete-patient flow (`deleteCurrentPatient()`) do not depend on `currentPatientData` being set by the inline loading path.
+
+---
+
+## HANDOVER NOTE — UI Fixes + Seed Script Session 2026-05-09
+
+### What we did
+
+- Added `#ctx-menu-active` HTML element in `home.html` immediately after `#ctx-menu`. Added `openActiveCtxMenu(e, episodeId)`, `closeActiveCtxMenu()`, `ctxDischarge()`, `ctxViewActiveEpisode()` functions after `ctxViewEpisode()`. Replaced the `›` arrow span on active episode rows in `renderSheetEpisodes()` with a `⋯` button calling `openActiveCtxMenu()`. `ctxDischarge()` assigns `dischargeEpisodeId` and calls `openModal('modal-discharge')` — reuses the existing discharge modal without any new markup.
+- Added discharge/reactivate to `patient.html` episode cards: `.ep-actions` CSS class wrapping the status pill + conditional button. Active cards get a `.btn-danger` "Discharge" button (`event.stopPropagation()` to prevent card navigation). Discharged cards get a `.btn-ghost` "Reactivate" button. Added `#modal-discharge` modal markup (ported from `home.html`), plus `openDischargeModal()`, `closeDischargeModal()`, `onDcReasonChange()`, `submitDischarge()`, `reactivateEpisode()` — on success both call `window.location.reload()`.
+- Removed `max-width: 1100px` and `margin: 0 auto` from `.home-main` in `home.html` inline `<style>` block.
+- Removed `max-width: 480px/900px` and `margin: 0 auto` from `.dash-content` in `style.css` (line ~862). This was the actual cause of the "Seen Today" and "Active Patients" sections being centred/narrow after the first fix.
+- Changed `.active-pts-grid` in `style.css` from `repeat(4, 1fr)` to `repeat(auto-fill, minmax(200px, 1fr))` — fills full viewport width on dept PC, collapses to `1fr 1fr` at ≤600px.
+- Applied M3 custom chevron to all `select` elements in `style.css`: `appearance: none`, `-webkit-appearance: none`, inline SVG background-image with fill `#49454f` (light) and `#c4c0ca` (dark via `body.dark select`).
+- Rewrote `seed_db.py` — 10 dummy patients (MS×2, SPINE×2, GERIATRIC×3, NEURO×1, AMPUTATION×1, CR×1), all active episodes, skip-by-IC idempotency, `--reset` flag wipes and re-inserts. Confirmed working against `pt_data/records.db`.
+
+---
+
+### Retrospective
+
+**What went wrong:**
+- Layout fix required two passes. First pass removed `max-width` from `.home-main` (correct). But `.dash-content` in `style.css` had its own `max-width: 480px/900px; margin: 0 auto` that was not touched — leaving "Seen Today" and "Active Patients" still centred. Only caught after the user reported the layout was still broken. Root cause: two separate constraint sources, only one was in scope when reading the HTML file.
+
+**What fixed it:**
+- Grepped `style.css` for `max-width` and `margin: 0 auto`, found `.dash-content` rule at line 862, removed constraints in one targeted edit.
+
+**What we'd do differently:**
+- When fixing a layout constraint, grep the entire codebase (`home.html` + `style.css`) for both `max-width` and `margin.*auto` before touching anything. A layout can be constrained from multiple places — confirm the full chain before declaring fixed.
+
+---
+
+### Known issues (updated as of 2026-05-09)
+
+**Still open:**
+- `_openPatientInline(id)` in `home.html` — dead code, not yet removed. Check `openEditPatientModal()` and `deleteCurrentPatient()` dependency on `currentPatientData` before deleting.
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place
+- `audit_log` FK has no ON DELETE CASCADE — orphaned rows harmless but untidy
+- No ARIA attributes anywhere — low clinical priority
+- `resetPatient()` in `form_base.js` missing null guards on `derived-dob`/`derived-gender`
+- Full exe build untested since NEURO + M3 redesign + discharge fixes
+
+**Fixed this session:**
+- Discharge missing from home.html active episode bottom sheet ✓
+- Discharge/reactivate missing from patient.html ✓
+- Home page layout squeezed (`.home-main` + `.dash-content` both fixed) ✓
+- `select` elements retaining native OS chrome ✓
+- `seed_db.py` blocked on re-run without manual DB deletion ✓
+
+---
+
+### Next session priorities
+
+1. Smoke-test discharge full flow: home bottom sheet `⋯` → discharge modal → confirm → episode moves to discharged with `⋯` Reactivate menu
+2. Smoke-test discharge from `/patient/<id>` card → modal → reload → discharged pill + Reactivate button
+3. Full exe build test — all 6 forms, first build since NEURO + M3 + discharge changes
+4. HAND form — next new form, simpler scope (no MRMI, no lung diagram)
+
+---
+
+### Architecture updates / gotchas
+
+**Two max-width sources for home page layout — both must be clear:**
+- `.home-main` — inline `<style>` in `home.html`. Now: `flex:1; width:100%; padding:28px 24px`.
+- `.dash-content` — `style.css` line ~862. Now: `width:100%; padding:0 0 100px`. No `max-width`, no `margin: 0 auto`.
+- If layout looks centred again, grep both files. Do not assume one source.
+
+**`seed_db.py` usage:**
+- `python seed_db.py` — adds missing patients, skips by IC if already in DB. Safe to re-run.
+- `python seed_db.py --reset` — wipes the 10 seeded patients (by IC match) and re-inserts fresh.
+- DB path: `pt_data/records.db` relative to the script. Same path `app.py` uses via `data_path()`.
+
+**Discharge in patient.html uses `classList.add('open')` not `openModal()`:**
+- `patient.html` has no `openModal()` helper — it's a standalone page, not on `base.html`.
+- `home.html` uses `openModal('modal-discharge')` — available because home is also standalone but has its own `openModal()` defined.
+- Do not copy `openModal()` calls between pages without checking the helper exists on the target page.
