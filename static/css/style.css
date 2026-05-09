@@ -860,12 +860,11 @@ body.dark .dash-header { background: linear-gradient(135deg, #0f1f35, #1a3060); 
 
 /* Dashboard content */
 .dash-content {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 16px 16px 100px;
+  width: 100%;
+  padding: 0 0 100px;
 }
 @media (min-width: 769px) {
-  .dash-content { max-width: 900px; padding-bottom: 32px; }
+  .dash-content { padding-bottom: 32px; }
 }
 
 .dash-section { margin-bottom: 24px; }
@@ -955,11 +954,11 @@ body.dark .dash-header { background: linear-gradient(135deg, #0f1f35, #1a3060); 
 /* Active Patients grid */
 .active-pts-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 8px;
 }
-@media (min-width: 769px) {
-  .active-pts-grid { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 600px) {
+  .active-pts-grid { grid-template-columns: 1fr 1fr; }
 }
 .active-pt-card {
   background: var(--surface);
