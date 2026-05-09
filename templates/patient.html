@@ -17,8 +17,8 @@
 
     /* ── Topbar ── */
     .pt-topbar {
-      background: var(--accent);
-      color: white;
+      background: var(--m3-surface-container, var(--surface));
+      color: var(--text);
       display: flex;
       align-items: center;
       padding: 0 28px;
@@ -28,30 +28,31 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+      box-shadow: none;
     }
     .pt-topbar-logo { font-weight: 600; font-size: 15px; }
-    .pt-topbar-sep  { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
-    .pt-topbar-sub  { font-size: 12px; color: rgba(255,255,255,0.6); }
+    .pt-topbar-sep  { width: 1px; height: 20px; background: var(--border); }
+    .pt-topbar-sub  { font-size: 12px; color: var(--text-faint); }
     .pt-topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 
     .tbtn {
-      padding: 6px 13px; border-radius: var(--radius); font-size: 12px;
+      padding: 6px 13px; border-radius: var(--m3-shape-sm, var(--radius)); font-size: 12px;
       font-weight: 500; cursor: pointer;
-      border: 1.5px solid rgba(255,255,255,0.3);
-      background: rgba(255,255,255,0.1); color: white;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--text-muted);
       font-family: inherit; transition: background 0.15s;
     }
-    .tbtn:hover { background: rgba(255,255,255,0.22); }
-    .tbtn.primary { background: white; color: var(--accent); border-color: white; }
-    .tbtn.primary:hover { background: #e8eef8; }
+    .tbtn:hover { background: var(--m3-surface-container-high, var(--surface2)); color: var(--text); }
+    .tbtn.primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .tbtn.primary:hover { opacity: 0.88; background: var(--accent); }
 
     .dark-toggle {
-      background: none; border: 1.5px solid rgba(255,255,255,0.3);
-      border-radius: var(--radius); color: white; cursor: pointer;
+      background: none; border: 1px solid var(--border);
+      border-radius: var(--m3-shape-sm, var(--radius)); color: var(--text-muted); cursor: pointer;
       font-size: 15px; padding: 5px 9px; line-height: 1;
     }
-    .dark-toggle:hover { background: rgba(255,255,255,0.15); }
+    .dark-toggle:hover { background: var(--m3-surface-container-high, var(--surface2)); }
 
     /* ── Main content ── */
     .pt-main {
@@ -59,7 +60,7 @@
       max-width: 900px;
       width: 100%;
       margin: 0 auto;
-      padding: 28px 24px;
+      padding: 32px 28px;
       display: flex;
       flex-direction: column;
       gap: 20px;
@@ -82,11 +83,11 @@
 
     /* ── Hero card ── */
     .hero-card {
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      border-left: 4px solid var(--accent);
-      padding: 22px 26px;
+      border-radius: var(--m3-shape-lg, var(--radius-lg));
+      padding: 24px 28px;
+      box-shadow: var(--m3-elev-1);
       display: flex;
       align-items: center;
       gap: 20px;
@@ -122,7 +123,7 @@
       background: var(--surface2);
       border: 1px solid var(--border);
       padding: 4px 10px;
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       color: var(--text-muted);
       white-space: nowrap;
     }
@@ -135,15 +136,16 @@
 
     /* ── Section card ── */
     .section-card {
-      background: var(--surface);
+      background: var(--m3-surface-container, var(--surface));
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
       overflow: hidden;
+      box-shadow: var(--m3-elev-1);
     }
     .section-header {
-      background: var(--surface2);
+      background: var(--m3-surface-container-high, var(--surface2));
       border-bottom: 1px solid var(--border);
-      padding: 11px 20px;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -163,7 +165,7 @@
       gap: 0;
     }
     .detail-item {
-      padding: 16px 20px;
+      padding: 16px 24px;
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
@@ -192,20 +194,21 @@
     .episodes-list { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .ep-card {
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       padding: 14px 16px;
       display: flex;
       align-items: center;
       gap: 14px;
       cursor: pointer;
       transition: all 0.12s;
-      background: var(--bg);
+      background: var(--m3-surface-container, var(--surface));
+      box-shadow: var(--m3-elev-1);
       text-decoration: none;
     }
     .ep-card:hover {
       border-color: var(--accent-mid);
       background: var(--accent-light);
-      box-shadow: 0 2px 6px rgba(74,122,200,0.1);
+      box-shadow: var(--m3-elev-2);
     }
     .ep-card.discharged {
       opacity: 0.6;
@@ -218,7 +221,7 @@
     }
     .ep-icon {
       width: 36px; height: 36px;
-      border-radius: var(--radius);
+      border-radius: var(--m3-shape-sm, var(--radius));
       background: var(--accent-light);
       color: var(--accent);
       display: flex;
@@ -256,7 +259,7 @@
     .btn-primary {
       padding: 8px 16px;
       background: var(--accent); color: white;
-      border: none; border-radius: var(--radius);
+      border: none; border-radius: var(--m3-shape-sm, var(--radius));
       font-family: inherit; font-size: 13px; font-weight: 500;
       cursor: pointer; transition: opacity 0.15s;
     }
@@ -264,7 +267,7 @@
     .btn-ghost {
       padding: 8px 14px;
       background: none; color: var(--text-muted);
-      border: 1px solid var(--border); border-radius: var(--radius);
+      border: 1px solid var(--border); border-radius: var(--m3-shape-sm, var(--radius));
       font-family: inherit; font-size: 13px;
       cursor: pointer; transition: all 0.12s;
     }
@@ -272,7 +275,7 @@
     .btn-danger {
       padding: 8px 14px;
       background: none; color: var(--danger);
-      border: 1px solid var(--danger); border-radius: var(--radius);
+      border: 1px solid var(--danger); border-radius: var(--m3-shape-sm, var(--radius));
       font-family: inherit; font-size: 13px;
       cursor: pointer; transition: all 0.12s; opacity: 0.7;
     }
@@ -317,7 +320,7 @@
     .modal-field input, .modal-field select {
       font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
       padding: 7px 10px; border: 1px solid var(--border);
-      border-radius: var(--radius); background: var(--bg); color: var(--text);
+      border-radius: var(--m3-shape-sm, var(--radius)); background: var(--bg); color: var(--text);
       outline: none; transition: border-color 0.15s;
     }
     .modal-field input:focus, .modal-field select:focus {
@@ -342,8 +345,6 @@
     .toast.err { background: var(--danger); }
 
     /* ── Dark mode ── */
-    body.dark .pt-topbar   { background: #1e2a3e; }
-    body.dark .ep-card     { background: var(--surface2); }
     body.dark .ep-card:hover { background: var(--accent-light); }
     body.dark .modal       { background: var(--surface); }
     body.dark .modal-field input,
