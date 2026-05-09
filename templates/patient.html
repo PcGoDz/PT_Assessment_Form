@@ -241,6 +241,7 @@
     .ep-pill.active     { background: var(--success-light); color: var(--success); }
     .ep-pill.discharged { background: var(--surface2); color: var(--text-faint); }
     .ep-arrow { color: var(--text-faint); font-size: 16px; }
+    .ep-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
     .empty-state {
       text-align: center;
@@ -458,9 +459,18 @@
               &nbsp;·&nbsp; {{ ep.soap_count or 0 }} follow-up note{{ 's' if (ep.soap_count or 0) != 1 else '' }}
             </div>
           </div>
-          <span class="ep-pill {{ 'active' if is_active else 'discharged' }}">
-            {{ ep.status.split('|')[0] if ep.status else 'active' }}
-          </span>
+          <div class="ep-actions">
+            <span class="ep-pill {{ 'active' if is_active else 'discharged' }}">
+              {{ ep.status.split('|')[0] if ep.status else 'active' }}
+            </span>
+            {% if is_active %}
+            <button class="btn-danger" onclick="event.stopPropagation(); openDischargeModal({{ ep.id }})"
+              style="font-size:11px;padding:4px 10px;">Discharge</button>
+            {% else %}
+            <button class="btn-ghost" onclick="reactivateEpisode({{ ep.id }})"
+              style="font-size:11px;padding:4px 10px;">Reactivate</button>
+            {% endif %}
+          </div>
           {% if is_active %}<span class="ep-arrow">&#8250;</span>{% endif %}
         </div>
         {% endfor %}
@@ -474,6 +484,44 @@
       {% endif %}
     </div>
 
+  <!-- Modal: Discharge Episode -->
+<div class="modal-backdrop" id="modal-discharge">
+  <div class="modal">
+    <button class="modal-close" onclick="closeDischargeModal()">&#x2715;</button>
+    <div class="modal-title">Discharge Patient</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+      Select reason for discharge. This can be reversed by reactivating the episode.
+    </div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Discharge Reason</label>
+        <select id="dc-reason" onchange="onDcReasonChange()">
+          <option value="">— Select reason —</option>
+          <option value="Discharged (goals met)">Discharged — Goals met</option>
+          <option value="Defaulted">Defaulted (missed appointments)</option>
+          <option value="Deceased">Deceased</option>
+          <option value="Transferred / Moved">Transferred / Moved away</option>
+          <option value="Referred elsewhere">Referred elsewhere</option>
+          <option value="Self-discharged">Self-discharged (against advice)</option>
+          <option value="Other">Other (specify)</option>
+        </select>
+      </div>
+      <div class="modal-field" id="dc-other-field" style="display:none">
+        <label>Specify Reason</label>
+        <input type="text" id="dc-other" placeholder="Enter reason...">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeDischargeModal()">Cancel</button>
+      <button class="btn-primary" style="background:var(--danger)" onclick="submitDischarge()">Discharge</button>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('modal-discharge').addEventListener('click', function(e) {
+  if (e.target === this) closeDischargeModal();
+});
+</script>
   </main>
 </div>
 
@@ -680,6 +728,56 @@ async function confirmDelete() {
   } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }
 
+// ── Discharge ─────────────────────────────────────────
+var dischargeEpisodeId = null;
+
+function openDischargeModal(episodeId) {
+  dischargeEpisodeId = episodeId;
+  document.getElementById('dc-reason').value = '';
+  document.getElementById('dc-other').value  = '';
+  document.getElementById('dc-other-field').style.display = 'none';
+  document.getElementById('modal-discharge').classList.add('open');
+}
+function closeDischargeModal() {
+  document.getElementById('modal-discharge').classList.remove('open');
+}
+function onDcReasonChange() {
+  var val = document.getElementById('dc-reason').value;
+  document.getElementById('dc-other-field').style.display = val === 'Other' ? '' : 'none';
+}
+async function submitDischarge() {
+  var reason = document.getElementById('dc-reason').value;
+  if (!reason) { showToast('Please select a reason', 'err'); return; }
+  if (reason === 'Other') {
+    var other = document.getElementById('dc-other').value.trim();
+    if (!other) { showToast('Please specify the reason', 'err'); return; }
+    reason = 'Other: ' + other;
+  }
+  try {
+    var res = await fetch('/api/episodes/' + dischargeEpisodeId + '/status', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status: 'discharged', reason: reason })
+    });
+    if (!res.ok) { showToast('Failed to discharge', 'err'); return; }
+    closeDischargeModal();
+    showToast('Episode discharged', 'ok');
+    setTimeout(function() { window.location.reload(); }, 700);
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
+async function reactivateEpisode(episodeId) {
+  if (!confirm('Reactivate this episode?')) return;
+  try {
+    var res = await fetch('/api/episodes/' + episodeId + '/status', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status: 'active' })
+    });
+    if (!res.ok) { showToast('Failed to reactivate', 'err'); return; }
+    showToast('Episode reactivated', 'ok');
+    setTimeout(function() { window.location.reload(); }, 700);
+  } catch(e) { showToast('Error: ' + e.message, 'err'); }
+}
 initDark();
 </script>
 </body>
