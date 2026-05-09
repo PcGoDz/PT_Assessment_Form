@@ -834,6 +834,12 @@
   <hr class="ctx-menu-divider">
   <button class="ctx-menu-item" onclick="ctxViewEpisode()">&#128194; View episode history</button>
 </div>
+<!-- Context menu for active episode -->
+<div class="ctx-menu" id="ctx-menu-active" style="position:fixed;">
+  <button class="ctx-menu-item" onclick="ctxDischarge()">&#128682; Discharge episode</button>
+  <hr class="ctx-menu-divider">
+  <button class="ctx-menu-item" onclick="ctxViewActiveEpisode()">&#128194; View episode</button>
+</div>
 
 <!-- FAB Search Sheet -->
 <div class="sheet-overlay" id="fab-sheet-overlay" onclick="onFabOverlayClick(event)">
@@ -1389,7 +1395,7 @@ function renderSheetEpisodes(episodes) {
       ? '<div class="dc-reason-pill"><span class="dc-reason-label">D/C:</span><span class="dc-reason-text">' + esc(statusReason) + '</span></div>'
       : '';
     var arrow = isActive
-      ? '<span class="sheet-ep-row-arrow">›</span>'
+      ? '<button class="sheet-ep-menu-btn" onclick="openActiveCtxMenu(event,' + ep.id + ')" title="Actions">⋯</button>'
       : '<button class="sheet-ep-menu-btn" onclick="openCtxMenu(event,' + ep.id + ')" title="Actions">⋯</button>';
     return '<div class="sheet-episode-row ' + cls + '"' +
       (isActive ? ' onclick="sheetViewEpisode(' + ep.id + ')"' : '') + '>' +
@@ -1465,6 +1471,36 @@ async function ctxReactivate() {
 function ctxViewEpisode() {
   closeCtxMenu();
   if (ctxEpisodeId) window.location.href = '/episode/' + ctxEpisodeId;
+}
+// ── Context menu (active episode ⋯) ──────────────
+var activeCtxEpisodeId = null;
+
+function openActiveCtxMenu(e, episodeId) {
+  e.stopPropagation();
+  activeCtxEpisodeId = episodeId;
+  var menu = document.getElementById('ctx-menu-active');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top  = e.clientY + 'px';
+  menu.classList.add('open');
+  setTimeout(function() {
+    document.addEventListener('click', closeActiveCtxMenu, { once: true });
+  }, 10);
+}
+function closeActiveCtxMenu() {
+  document.getElementById('ctx-menu-active').classList.remove('open');
+}
+function ctxDischarge() {
+  closeActiveCtxMenu();
+  if (!activeCtxEpisodeId) return;
+  dischargeEpisodeId = activeCtxEpisodeId;
+  document.getElementById('dc-reason').value = '';
+  document.getElementById('dc-other').value  = '';
+  document.getElementById('dc-other-field').style.display = 'none';
+  openModal('modal-discharge');
+}
+function ctxViewActiveEpisode() {
+  closeActiveCtxMenu();
+  if (activeCtxEpisodeId) window.location.href = '/episode/' + activeCtxEpisodeId;
 }
 
 // ── FAB Search Sheet ─────────────────────────────
