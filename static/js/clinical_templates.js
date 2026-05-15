@@ -412,6 +412,21 @@ const ClinicalTemplates = (function () {
       ],
     },
 
+    HAND_SOAP: {
+      objective: [
+        'Wrist flexion __° (was __°). Extension __° (was __°). Grip strength __ kg R, __ kg L. Oedema [stable/reduced].',
+        'ROM unchanged from last session. Grip strength __ kg. Patient reports pain __/10 at rest, __/10 with activity.',
+      ],
+      analysis: [
+        'ROM improving as expected. Patient tolerating exercise progression well. On track for [goal].',
+        'Plateau in ROM gains. Consider [technique change/referral for further investigation]. Continue current programme.',
+      ],
+      plan: [
+        'Progress to next stage of rehabilitation protocol. Increase resistance for strengthening. Continue HEP reinforcement.',
+        'Maintain current exercise programme. Review in [timeframe]. Consider discharge planning if goals met.',
+      ],
+    },
+
   };
 
   // ── HAND form templates (registered directly for addButton compatibility) ──
@@ -443,22 +458,7 @@ const ClinicalTemplates = (function () {
     '1. Splinting — [resting/functional] splint for [duration/usage schedule].\n2. Oedema management — elevation, retrograde massage, compression.\n3. ROM exercises — AROM/PROM [joint] [frequency].\n4. Strengthening — grip/pinch exercises progressed as tolerated.\n5. Education — joint protection, activity modification, HEP.',
     '1. Wound care + dressing as per surgical protocol.\n2. Oedema management — elevation + retrograde massage.\n3. Guarded AROM within prescribed range — [degrees] flexion/extension limit.\n4. Progress splint weaning per surgeon instruction.\n5. Strengthening commenced at [week] post-op per protocol.',
   ];
-  var HAND_SOAP = {
-    objective: [
-      'Wrist flexion __° (was __°). Extension __° (was __°). Grip strength __ kg R, __ kg L. Oedema [stable/reduced].',
-      'ROM unchanged from last session. Grip strength __ kg. Patient reports pain __/10 at rest, __/10 with activity.',
-    ],
-    analysis: [
-      'ROM improving as expected. Patient tolerating exercise progression well. On track for [goal].',
-      'Plateau in ROM gains. Consider [technique change/referral for further investigation]. Continue current programme.',
-    ],
-    plan: [
-      'Progress to next stage of rehabilitation protocol. Increase resistance for strengthening. Continue HEP reinforcement.',
-      'Maintain current exercise programme. Review in [timeframe]. Consider discharge planning if goals met.',
-    ],
-  };
-
-  // Register HAND templates in the templates dict
+  // Register HAND assessment templates in the templates dict (flat keys for addButton compatibility)
   var templates = {};
   templates['HAND_OBS']        = HAND_OBS;
   templates['HAND_PALP']       = HAND_PALP;
@@ -466,7 +466,6 @@ const ClinicalTemplates = (function () {
   templates['HAND_STG']        = HAND_STG;
   templates['HAND_LTG']        = HAND_LTG;
   templates['HAND_PLAN']       = HAND_PLAN;
-  templates['HAND_SOAP']       = HAND_SOAP;
 
   // ── State ───────────────────────────────────────────────────────
   var activeField = null;
