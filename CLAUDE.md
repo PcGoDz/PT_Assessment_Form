@@ -5,13 +5,13 @@ and context established during development. Keep it updated as things change.
 
 ---
 
-## ⚠️ LAST SESSION: 2026-05-09
+## ⚠️ LAST SESSION: 2026-05-16
 
-1. **Where we left off** — UI fixes shipped: discharge action added to home.html active episode bottom sheet (`#ctx-menu-active`, `openActiveCtxMenu()`, `ctxDischarge()`), discharge/reactivate buttons added to patient.html episode cards with full modal, `.home-main` max-width removed, `.dash-content` max-width centering removed from `style.css`, M3 SVG chevron applied to all `select` elements. `seed_db.py` rewritten — 10 dummy patients, all active, `--reset` flag supported.
-2. **Do this first next session** — Smoke-test discharge flow end-to-end: home bottom sheet → `⋯` on active episode → "Discharge episode" → modal → confirm → episode moves to discharged. Also test from `/patient/<id>` card. Then test `python seed_db.py --reset` produces clean 10-patient DB.
-3. **Traps / gotchas** — Layout had TWO max-width constraints: `.home-main` (in `home.html` inline style) AND `.dash-content` (in `style.css` line ~862). We only fixed `.home-main` first pass — "Seen Today" and "Active Patients" stayed centered until `.dash-content` was also fixed. If layout looks squeezed again, grep `style.css` for `max-width` and `margin: 0 auto` before touching HTML. `_openPatientInline(id)` in `home.html` is still dead code — do not delete without checking edit/delete patient flows.
-4. **What's half-done** — Exe build untested. HAND form not started. `_openPatientInline` dead code not yet cleaned up.
-5. **What to skip for now** — Age auto-calc, ARIA, audit_log ON DELETE CASCADE, UNIQUE constraint, draft/final state. All documented, none urgent.
+1. **Where we left off** — HAND form fully implemented across 14 files (8 tasks): `handchart.js`, `form_hand.js`, `hand.html`, `pdf_hand.py`, all backend registries (`app.py`, `database.py`, `pt_assessment.spec`, `base.html`), UI wiring (`home.html`, `episode.html`), MPIS builder (`main.js`), and clinical templates (`clinical_templates.js`). Critical bug fixed before push: `HAND_SOAP` was in `templates[...]` (flat dict) instead of `TEMPLATES[...]` — SOAP template buttons would have silently done nothing.
+2. **Do this first next session** — Smoke-test HAND form end-to-end: open a HAND episode, fill diagnosis + pt_impression, click Save Record (expect 200), click Export KKM PDF (verify `fisio / b.pen. 12 / Pind. 2 / 2019` in header), place markers on both hand SVGs, click Copy to MPIS, click all 6 assessment template buttons and SOAP template buttons.
+3. **Traps / gotchas** — `HAND_SOAP` must live in `TEMPLATES` (const at top of IIFE), not in `templates` (flat dict). Any SOAP template stored in `templates` as a dict object will silently fail `.length` check in `show()`. Assessment templates (arrays) live in `templates` correctly — only SOAP dicts go into `TEMPLATES`. Also: `pdf_hand.py` has unused imports (`Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB`) — harmless but should be pruned.
+4. **What's half-done** — Exe build untested since NEURO + M3 + discharge fixes + HAND form. `_openPatientInline(id)` dead code in `home.html` not cleaned up. `clinical_templates.js` comment at line 4 lists only MS/SPINE/GERIATRIC/CR — stale.
+5. **What to skip for now** — Age auto-calc, ARIA, audit_log ON DELETE CASCADE, UNIQUE constraint, draft/final state, shared table IIFEs. All documented, none urgent.
 
 ---
 
@@ -38,12 +38,14 @@ pdf_geriatric.py        — Geriatric PDF generator
 pdf_cr.py               — CR PDF generator (LungDiagramFlowable with clipPath zone colouring)
 pdf_amputation.py       — Amputation PDF generator
 pdf_neuro.py            — Neurology PDF generator (2-page, ICF impression, MRMI, outcomes)
+pdf_hand.py             — Hand PDF generator (HandChartFlowable, 5 two_col blocks)
 pdf_base.py             — Legacy canvas primitives (kept for BodyChartFlowable)
 pdf_generator.py        — Legacy standalone (reference only, not used)
 
 static/js/
   api.js                — All fetch calls to Flask
   bodychart.js          — Body chart SVG marker logic (IIFE)
+  handchart.js          — Hand chart SVG marker logic — R+L palmar, IIFE (HandChart)
   lungchart.js          — Lung auscultation diagram, 6 zones, radiological view
   form_base.js          — Shared patient fields, NRIC derive, age calc (window.FormBase)
   form_ms.js            — MS collect/populate/reset -> window.ActiveForm + window.Form
@@ -52,8 +54,9 @@ static/js/
   form_cr.js            — CR collect/populate/reset -> window.ActiveForm + window.Form
   form_amputation.js    — Amputation collect/populate/reset -> window.ActiveForm + window.Form
   form_neuro.js         — Neuro collect/populate/reset -> window.ActiveForm + window.Form
+  form_hand.js          — Hand collect/populate/reset -> window.ActiveForm + window.Form
   movement_table.js     — Dynamic ROM table (IIFE)
-  clinical_templates.js — Best Statement templates (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO + SOAP variants)
+  clinical_templates.js — Best Statement templates (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO, HAND + SOAP variants)
   main.js               — Init, autosave, MPIS copy, dark mode, initFormContext()
 
 templates/
@@ -66,6 +69,7 @@ templates/
   forms/cr.html         — CR assessment form (interactive lung diagram)
   forms/amputation.html — Amputation assessment form
   forms/neuro.html      — Neurology assessment form (11 sections, chip UI, MRMI, outcomes)
+  forms/hand.html       — Hand assessment form (13 sections, R+L hand chart, static 44-row ROM table)
 ```
 
 ---
@@ -81,7 +85,7 @@ Groups: Musculoskeletal, Neurological, Cardiorespiratory, Rehabilitation
 |-------------|-------------------|-------|
 | MS          | Musculoskeletal   | YES   |
 | SPINE       | Musculoskeletal   | YES   |
-| HAND        | Musculoskeletal   | NO    |
+| HAND        | Musculoskeletal   | YES   |
 | AMPUTATION  | Musculoskeletal   | YES   |
 | BURN        | Musculoskeletal   | NO    |
 | NEURO       | Neurological      | YES   |
@@ -105,8 +109,8 @@ Two export routes in app.py:
   Priority: ?form_type= query param > _form_type in data > meta.form > MS fallback.
 
 Both dicts must be updated when adding a new form:
-  _PDF_GENERATORS        = { MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO }
-  _SINGLE_PDF_GENERATORS = { MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO }
+  _PDF_GENERATORS        = { MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO, HAND }
+  _SINGLE_PDF_GENERATORS = { MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO, HAND }
 
 Export KKM PDF button passes getCurrentFormType() as ?form_type= so the correct
 generator is always used regardless of what's stored in the record.
@@ -207,6 +211,7 @@ clinical_templates.js categories:
   CR_SOAP        — secretion clearance, SpO2, ventilator weaning, exercise tolerance
   AMPUTATION_SOAP — MRMI scoring template, residual limb, prosthetic progress
   NEURO_SOAP     — tone/spasticity, MRMI/Berg/TUG outcomes, gait observation, neuroplasticity
+  HAND_SOAP      — wrist ROM progress, grip/pinch, oedema, rehab stage progression
 
 showSoapTemplate() in episode.html selects via tplMap based on episode.form_type.
 When adding a new form: add its SOAP key to tplMap.
@@ -685,8 +690,8 @@ Shortest path always. 12-21 patients/day.
 ### High Priority
 - [x] Git push — pushed to GitHub (PcGoDz/PT_Assessment_Form) — DONE 2026-04-28
 - [x] UI redesign — full M3 reskin across style.css, base.html, home.html, episode.html, main.js — DONE 2026-05-07
-- [ ] Full end-to-end exe build test (all 6 forms — build untested since NEURO was added)
-- [ ] HAND form (next new form — simpler scope, good warmup)
+- [ ] Full end-to-end exe build test (all 7 forms — build untested since NEURO was added)
+- [x] HAND form — full implementation complete 2026-05-16
 
 ### Medium Priority
 - [ ] Validation layer — UI enforcement (REQUIRED_FIELDS covers all 6 forms, needs frontend to surface errors)
@@ -700,6 +705,20 @@ Shortest path always. 12-21 patients/day.
 - [ ] Remaining 9 forms: BURN, SCI, VESTIBULAR, FACIAL, PAEDIATRIC, LYMPHOEDEMA, NCD, GENERAL
 - [ ] Shared table IIFEs: MmtTable, InvMedTable, refactor MovementTable (planned but not started)
 - [ ] Accessibility: ARIA labels on toast, progress bar, sidebar nav items (low clinical priority)
+
+### Done this session (2026-05-16 — HAND form)
+- [x] `handchart.js` — IIFE `HandChart` with `init()`, `getData()`, `loadData()`, `clearAll()`, `remove()`. Click-to-place markers on `#hand-svg-r` and `#hand-svg-l`. 6 marker types matching `bodychart.js` colour scheme. `hand:'R'|'L'` field instead of `view:'ant'|'post'`.
+- [x] `form_hand.js` — 13-section IIFE: collect/populate/reset for all fields. `initChips()` event-delegation pattern. `onManagementChange()` reveals `#surgery-date-row` when Surgical. `onHealthChange()` reveals `#sq-health-notes-row` when Other. Dynamic circumference table. `window.ActiveForm` + `window.Form` contract fulfilled.
+- [x] `hand.html` — 13 HTML sections extending `base.html`. Inline `#hand-svg-r` / `#hand-svg-l` SVGs with `#markers-r` / `#markers-l` groups. Static 44-row ROM table via Jinja2 loop. 5 chip groups. 6 `ClinicalTemplates.addButton()` calls with textarea ID as first arg (not container div).
+- [x] `pdf_hand.py` — `HandChartFlowable` draws two palmar outlines + coloured marker circles. 5 `two_col()` blocks. ROM table full-width between blocks 3 and 4 (conditional). `_ensure_dict()` on all nested fields. `sign_chop_block()` footer. `generate_hand_pdf()` + `generate_episode_pdf()`. KKM ref `fisio / b.pen. 12 / Pind. 2 / 2019`. Smoke test: 6503 bytes.
+- [x] `app.py` — FORM_REGISTRY HAND `ready=True`, `FORM_TEMPLATES['HAND']`, `_PDF_GENERATORS['HAND']`, `_SINGLE_PDF_GENERATORS['HAND']`, `import pdf_hand`
+- [x] `database.py` — `REQUIRED_FIELDS['HAND']`: diagnosis + pt_impression
+- [x] `pt_assessment.spec` — `('pdf_hand.py', '.')` added to datas
+- [x] `base.html` — `<script src="/static/js/handchart.js">` added after bodychart.js
+- [x] `home.html` — HAND modal card activated (onclick, no soon class, `&#9995;` icon), formLabel + icon maps updated
+- [x] `episode.html` — `tplMap` HAND→HAND_SOAP, both formLabel maps updated
+- [x] `main.js` — `HandChart.init()` guard in `init()`, `_buildMpisHand()` builder, `copyToMpisHand()` async wrapper, switch case in `copyToMpisAuto()`, exported in return {}
+- [x] `clinical_templates.js` — HAND_OBS, HAND_PALP, HAND_IMPRESSION, HAND_STG, HAND_LTG, HAND_PLAN in flat `templates` dict; `HAND_SOAP` moved into `TEMPLATES` const (critical bug fix — was silently failing `show()` lookup)
 
 ### Done this session (2026-05-07 — M3 UI redesign)
 - [x] `style.css` restructured: M3 design tokens added (`--m3-surface-container`, `--m3-shape-sm/md/lg`, `--m3-elev-1/2/3`), new layout system (`.m3-context-bar`, `.m3-section-rail`, `.m3-content`)
@@ -749,6 +768,7 @@ Shortest path always. 12-21 patients/day.
 - Geriatric: fisio / b.pen. 15 / 2019
 - CR:        fisio / b.pen. 11 / Pind. 2 / 2019
 - Amputation: fisio / b.pen. 16 / 2019
+- Hand:       fisio / b.pen. 12 / Pind. 2 / 2019
 - Neurology: fisio/b.pen. 21/2022
 
 ### Lung Diagram (CR)
@@ -776,6 +796,7 @@ BEFORE copying. The modal is promise-based — cancel resolves null, confirm res
   CR         -> copyToMpisCr()         (calls _buildMpisCr())
   AMPUTATION -> copyToMpisAmputation() (calls _buildMpisAmputation())
   NEURO      -> copyToMpisNeuro()      (calls _buildMpisNeuro())
+  HAND       -> copyToMpisHand()       (calls _buildMpisHand())
 
 Modal HTML: `#mpis-overlay` + `#mpis-modal` in base.html (always present).
 Modal CSS: `.mpis-overlay` / `.mpis-modal` block in style.css before TOAST section.
@@ -784,7 +805,7 @@ Public API: `Main.cancelMpisModal()`, `Main.confirmMpisModal()` (called from bas
 
 ---
 
-## What's Done (as of 2026-05-07)
+## What's Done (as of 2026-05-16)
 
 - [x] Patient registration with NRIC auto-derive (DOB/age/sex)
 - [x] Patient edit modal in home.html
@@ -841,6 +862,8 @@ Public API: `Main.cancelMpisModal()`, `Main.confirmMpisModal()` (called from bas
 - [x] **`.active-pts-grid` changed from `repeat(4,1fr)` to `repeat(auto-fill, minmax(200px, 1fr))` — fills full width responsively**
 - [x] **M3 SVG chevron applied to all `select` elements — `appearance:none` + inline SVG background, light (`#49454f`) and dark (`#c4c0ca`) variants**
 - [x] **`seed_db.py` rewritten — 10 dummy patients (MS×2, SPINE×2, GERIATRIC×3, NEURO, AMPUTATION, CR), all active, skip-by-IC idempotency, `--reset` flag**
+- [x] **HAND form — full implementation: `handchart.js` (R+L palmar SVG IIFE), `form_hand.js` (13 sections, chip delegation, reveal helpers), `hand.html` (44-row static ROM table, inline SVGs), `pdf_hand.py` (HandChartFlowable, 5 two_col blocks, ROM table full-width), MPIS builder `_buildMpisHand()`, clinical templates (HAND_OBS/PALP/IMPRESSION/STG/LTG/PLAN + HAND_SOAP), all 4 registries (FORM_REGISTRY, _PDF_GENERATORS, _SINGLE_PDF_GENERATORS, REQUIRED_FIELDS)**
+- [x] **HAND form critical fix — `HAND_SOAP` moved from `templates[...]` flat dict into `TEMPLATES` const so `showSoapTemplate()` correctly resolves `objective`/`analysis`/`plan` sub-keys**
 
 ---
 
@@ -2265,3 +2288,98 @@ Short session. Two tasks: (1) diagnose and fix `TemplateNotFound: patient.html` 
 - `patient.html` has no `openModal()` helper — it's a standalone page, not on `base.html`.
 - `home.html` uses `openModal('modal-discharge')` — available because home is also standalone but has its own `openModal()` defined.
 - Do not copy `openModal()` calls between pages without checking the helper exists on the target page.
+
+---
+
+## HANDOVER NOTE — HAND Form Implementation 2026-05-16
+
+### What we did
+
+Full HAND (Hand Assessment) form implementation — form 7 of 15. Executed via subagent-driven development (8 tasks, 3 reviewers per task, 1 final reviewer). 14 commits pushed to GitHub. One critical bug caught and fixed in final review before push.
+
+**Files created:**
+
+- `static/js/handchart.js` — IIFE `const HandChart`. `init()` attaches click listeners to `#hand-svg-r` and `#hand-svg-l`, returns early if any required IDs absent. `renderMarker()` uses `document.getElementById('markers-' + m.hand.toLowerCase())` directly (no dead `svg.getElementById` fallback). Public API: `{ init, getData, loadData, clearAll, remove }`. Marker field is `hand:'R'|'L'` (not `view:'ant'|'post'` as in bodychart.js).
+
+- `static/js/form_hand.js` — IIFE `var HandForm`. `collect()` returns `{ _form_type:'HAND', meta:{form:'HAND'}, patient:FormBase.collectPatient(), handChart:{markers:HandChart.getData(), notes:gv('chart-notes')}, ... }`. `initChips()` uses event delegation on `.chip-group` containers (not per-chip listeners). `onManagementChange()` shows `#surgery-date-row` when value is `'Surgical'`. `onHealthChange()` shows `#sq-health-notes-row` when value is `'Other'`. Dynamic circumference table with `addCircRow()` / `removeCircRow(btn)`. `window.ActiveForm = HandForm; window.Form = { collect, populate, reset, onPtTypeChange: FormBase.onPtTypeChange, onNricInput: FormBase.onNricInput, onDobChange: FormBase.onDobChange }`.
+
+- `templates/forms/hand.html` — Extends `base.html`. Inline SVGs: `id="hand-svg-r"` (thumb on left = palmar R) and `id="hand-svg-l"` (thumb on right = palmar L), each with `<g id="markers-r">` / `<g id="markers-l">`. 44-row static ROM table via `{% for row in rom_rows %}` Jinja2 loop, `id="rom-tbody"`. 5 chip groups. DOMContentLoaded block calls `HandForm.initChips()` and 6 `ClinicalTemplates.addButton()` calls with textarea ID as first arg (e.g. `addButton('observation-notes', 'HAND_OBS', '')`).
+
+- `pdf_hand.py` — `TITLE = 'HAND ASSESSMENT'`, `REF = 'fisio / b.pen. 12 / Pind. 2 / 2019'`. `HAND_MARKER_COLORS` / `HAND_MARKER_LABELS` (renamed from `MARKER_COLORS` to avoid import conflict with `pdf_platypus_base`). `HandChartFlowable` draws two palmar outlines (palm rect + 4 fingers + thumb ellipse) + coloured circles for each marker. `_build_story()` has 5 `two_col()` blocks with full-width ROM table between blocks 3 and 4. `generate_hand_pdf(data)` + `generate_episode_pdf(assessment_data, soap_notes, episode_info=None)`. Smoke test: 6503 bytes.
+
+**Files modified:**
+
+- `app.py` — `import pdf_hand`, `FORM_REGISTRY` HAND `ready=True`, `FORM_TEMPLATES['HAND'] = 'forms/hand.html'`, `_PDF_GENERATORS['HAND'] = pdf_hand.generate_episode_pdf`, `_SINGLE_PDF_GENERATORS['HAND'] = pdf_hand.generate_hand_pdf`
+- `database.py` — `REQUIRED_FIELDS['HAND'] = [('diagnosis', 'Diagnosis is required'), ('pt_impression', 'PT Impression is required')]`
+- `pt_assessment.spec` — `('pdf_hand.py', '.')` added to datas list
+- `templates/base.html` — `<script src="/static/js/handchart.js"></script>` added after bodychart.js (hardcoded path, not url_for — matches existing pattern)
+- `templates/home.html` — HAND modal card: `soon` class removed, "Soon" badge removed, `onclick="selectForm(this)"` added, icon `&#9995;`. formLabel map + icon map updated.
+- `templates/episode.html` — `tplMap` HAND→HAND_SOAP, both `loadEpisode()` and `loadAssessment()` formLabel maps updated.
+- `static/js/main.js` — `HandChart.init()` guard block in `init()` (checks `typeof HandChart !== 'undefined' && document.getElementById('hand-svg-r')`). `_buildMpisHand()` sync builder (returns parts[]). `copyToMpisHand()` async wrapper. `formType === 'HAND'` case in `copyToMpisAuto()`. `copyToMpisHand` exported in return {}.
+- `static/js/clinical_templates.js` — 6 assessment template vars (`HAND_OBS`, `HAND_PALP`, `HAND_IMPRESSION`, `HAND_STG`, `HAND_LTG`, `HAND_PLAN`) registered in `templates` flat dict. `HAND_SOAP` registered inside `TEMPLATES` const (alongside `MS_SOAP`, `NEURO_SOAP`, etc.) — see critical bug below.
+
+---
+
+### Retrospective
+
+**What went wrong:** `HAND_SOAP` was initially stored as `templates['HAND_SOAP']` (a plain object `{objective:[...], analysis:[...], plan:[...]}`), following the same pattern as the assessment templates. But `ClinicalTemplates.show(fieldId, formType, category)` resolves via `(TEMPLATES[formType] || {})[category] || templates[formType] || []`. When `templates[formType]` returns a dict (not an array), `items.length` is `undefined` → falsy → silent return. SOAP template buttons would have done nothing on click.
+
+**What fixed it:** Final code reviewer (dispatched after all 8 tasks individually approved) caught the integration mismatch. Fix: moved `HAND_SOAP` into the `TEMPLATES` const where all other `*_SOAP` templates live. Removed the `templates['HAND_SOAP']` line. Verified with `node --check` + grep confirming single occurrence at `TEMPLATES.HAND_SOAP`.
+
+**What we'd do differently:** The distinction between `TEMPLATES` (nested dicts, for SOAP sub-key lookup) and `templates` (flat arrays, for assessment addButton fallback) is not documented anywhere in the IIFE — only apparent by reading `show()`. Add a comment to `clinical_templates.js` above each block explicitly stating which dict SOAP vs assessment templates belong in. Would have prevented the mis-registration in the first place.
+
+---
+
+### Known issues (updated as of 2026-05-16)
+
+**Still open:**
+- `_openPatientInline(id)` in `home.html` — dead code, not yet removed. Check `openEditPatientModal()` and `deleteCurrentPatient()` dependency on `currentPatientData` before deleting.
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved, deprioritised
+- Geriatric duplicate RN/IC fields — cosmetic, low priority
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place
+- `audit_log` FK has no ON DELETE CASCADE — orphaned audit rows harmless but untidy
+- `pt_assessment.spec` datas includes `templates/pdf` redundantly
+- No ARIA attributes anywhere — low clinical priority
+- Bug 2: SOAP gate before first assessment — not implemented
+- Full exe build untested since NEURO + M3 + discharge fixes + HAND
+- `resetPatient()` in `form_base.js` missing null guards on `derived-dob`/`derived-gender`
+- `api.js` episode/SOAP coverage inconsistent (inline fetches in templates)
+- `pdf_hand.py` unused imports: `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB` — harmless but noisy
+- `pdf_hand.py` ROM column widths sum to 179mm vs 186mm CW — 7mm gap on right side of table, cosmetic
+- `clinical_templates.js` comment line 4 stale — lists only MS/SPINE/GERIATRIC/CR, missing HAND/NEURO/AMPUTATION
+
+**Fixed this session:**
+- HAND form full implementation (all 4 registries, all JS/HTML/PDF/MPIS/templates) ✓
+- `HAND_SOAP` silent failure in `showSoapTemplate()` — moved into `TEMPLATES` const ✓
+
+---
+
+### Next session priorities
+
+1. Smoke-test HAND form end-to-end: save, PDF export, hand chart markers, MPIS copy, all 6 template buttons, all 3 SOAP template buttons.
+2. Full exe build test — all 7 forms (MS, SPINE, GERIATRIC, CR, AMPUTATION, NEURO, HAND). Build has not run since NEURO was added.
+3. Validation layer UI — surface REQUIRED_FIELDS 422 errors to the user before save attempt. Backend already done; frontend needs to parse and display the error list from the 422 response body.
+4. Next new form — BURN (Musculoskeletal) is the next not-ready form in the same group as HAND.
+
+---
+
+### Architecture updates / gotchas
+
+**`TEMPLATES` vs `templates` in `clinical_templates.js` — the critical distinction:**
+- `TEMPLATES` (const, top of IIFE) — stores SOAP templates as `{ objective:[...], analysis:[...], plan:[...] }` dicts. Keys: `MS_SOAP`, `CR_SOAP`, `SPINE_SOAP`, `GERIATRIC_SOAP`, `AMPUTATION_SOAP`, `NEURO_SOAP`, `HAND_SOAP`, and assessment categories like `MS: { observation:[...] }`.
+- `templates` (var, mid-IIFE) — stores flat arrays for assessment-form `addButton` fallback. Keys: `HAND_OBS`, `HAND_PALP`, `HAND_IMPRESSION`, `HAND_STG`, `HAND_LTG`, `HAND_PLAN`.
+- `show()` lookup: `(TEMPLATES[formType] || {})[category] || templates[formType] || []`. SOAP calls pass `category='objective'` etc. Assessment calls pass `category=''` and fall through to `templates[formType]`.
+- **Rule:** SOAP dicts → `TEMPLATES`. Assessment arrays → `templates`. Never swap them.
+
+**`ClinicalTemplates.addButton(fieldId, formType, category)` calling convention for HAND:**
+- First arg: the **textarea's ID** (e.g. `'observation-notes'`), NOT a container div ID.
+- Second arg: the flat template key (e.g. `'HAND_OBS'`).
+- Third arg: `''` (empty string) — causes fallback to `templates['HAND_OBS']` array.
+- The `addButton()` call injects the button next to the textarea's `<label>`, not into a named container.
+
+**`handchart.js` IDs — must all be present in `hand.html` or `HandChart.init()` returns early:**
+- `#hctype-sel` — marker type dropdown
+- `#hand-svg-r` — right hand SVG (with `<g id="markers-r">` inside)
+- `#hand-svg-l` — left hand SVG (with `<g id="markers-l">` inside)
+- `#hand-marker-list` — marker list display element
+- Missing any of these → `init()` returns without attaching events. No error thrown.
