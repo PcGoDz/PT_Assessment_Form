@@ -130,6 +130,7 @@ REQUIRED_FIELDS = {
     'CR':          [('diagnosis', 'Diagnosis is required')],
     'AMPUTATION':  [('impression', 'PT Impression is required')],
     'NEURO':       [('diagnosis', 'Diagnosis is required'), ('pt_impression', 'PT Impression is required')],
+    'HAND':        [('diagnosis', 'Diagnosis is required'), ('pt_impression', 'PT Impression is required')],
 }
 
 

@@ -19,6 +19,7 @@ import pdf_geriatric
 import pdf_cr
 import pdf_amputation
 import pdf_neuro
+import pdf_hand
 
 _PDF_GENERATORS = {
     'MS':         pdf_ms.generate_episode_pdf,
@@ -27,6 +28,7 @@ _PDF_GENERATORS = {
     'CR':         pdf_cr.generate_episode_pdf,
     'AMPUTATION': pdf_amputation.generate_episode_pdf,
     'NEURO':      pdf_neuro.generate_episode_pdf,
+    'HAND':       pdf_hand.generate_episode_pdf,
 }
 
 _SINGLE_PDF_GENERATORS = {
@@ -36,6 +38,7 @@ _SINGLE_PDF_GENERATORS = {
     'CR':         pdf_cr.generate_cr_pdf,
     'AMPUTATION': pdf_amputation.generate_amputation_pdf,
     'NEURO':      pdf_neuro.generate_neuro_pdf,
+    'HAND':       pdf_hand.generate_hand_pdf,
 }
 
 
@@ -68,7 +71,7 @@ FORM_REGISTRY = [
     # ── Musculoskeletal ──────────────────────────────
     { 'id': 'MS',          'label': 'Musculoskeletal',    'icon': '&#129460;', 'badge': 'MS',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'SPINE',       'label': 'Spine',              'icon': '&#128279;', 'badge': 'SP',  'group': 'Musculoskeletal',  'ready': True  },
-    { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',  'ready': False },
+    { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',  'ready': False },
     # ── Neurological ─────────────────────────────────
@@ -111,6 +114,7 @@ FORM_TEMPLATES = {
     'CR':          'forms/cr.html',
     'AMPUTATION':  'forms/amputation.html',
     'NEURO':       'forms/neuro.html',
+    'HAND':        'forms/hand.html',
 }
 
 @app.route('/patient/<int:patient_id>')

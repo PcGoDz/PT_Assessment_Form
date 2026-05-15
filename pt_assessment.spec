@@ -18,6 +18,7 @@ a = Analysis(
         ('pdf_cr.py', '.'),
         ('pdf_amputation.py', '.'),
         ('pdf_neuro.py', '.'),
+        ('pdf_hand.py', '.'),
         ('templates/pdf', 'templates/pdf'),
     ],
     hiddenimports=[
