@@ -5,13 +5,15 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   HandForm.initChips();
-  /* Clinical template buttons */
-  ClinicalTemplates.addButton('obs-btn-container',    'observation-notes', 'HAND_OBS');
-  ClinicalTemplates.addButton('palp-btn-container',   'palpation-notes',   'HAND_PALP');
-  ClinicalTemplates.addButton('imp-btn-container',    'pt-impression',     'HAND_IMPRESSION');
-  ClinicalTemplates.addButton('stg-btn-container',    'stg',               'HAND_STG');
-  ClinicalTemplates.addButton('ltg-btn-container',    'ltg',               'HAND_LTG');
-  ClinicalTemplates.addButton('plan-btn-container',   'plan',              'HAND_PLAN');
+  /* Clinical template buttons — addButton(fieldId, formType, category)
+     HAND templates are stored as flat arrays in templates[formType],
+     so formType = template key and category is unused (falls through). */
+  ClinicalTemplates.addButton('observation-notes', 'HAND_OBS',        '');
+  ClinicalTemplates.addButton('palpation-notes',   'HAND_PALP',       '');
+  ClinicalTemplates.addButton('pt-impression',     'HAND_IMPRESSION', '');
+  ClinicalTemplates.addButton('stg',               'HAND_STG',        '');
+  ClinicalTemplates.addButton('ltg',               'HAND_LTG',        '');
+  ClinicalTemplates.addButton('plan',              'HAND_PLAN',       '');
 });
 </script>
 {% endblock %}
