@@ -666,6 +666,7 @@ function showSoapTemplate(fieldId, category) {
     'GERIATRIC':   'GERIATRIC_SOAP',
     'AMPUTATION':  'AMPUTATION_SOAP',
     'NEURO':       'NEURO_SOAP',
+    'HAND':        'HAND_SOAP',
   };
   var tplKey = tplMap[formType] || 'MS_SOAP';
   ClinicalTemplates.show(fieldId, tplKey, category);
@@ -782,7 +783,7 @@ async function loadEpisode() {
     var res = await fetch('/api/episodes/' + EPISODE_ID);
     episode  = await res.json();
 
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological'}[episode.form_type] || episode.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological',HAND:'Hand'}[episode.form_type] || episode.form_type;
 
     // Context bar
     document.getElementById('topbar-episode-label').textContent =
@@ -823,7 +824,7 @@ async function loadAssessment(ep) {
   try {
     var res  = await fetch('/api/episodes/' + EPISODE_ID + '/record');
     var data = await res.json();
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological'}[ep.form_type] || ep.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological',HAND:'Hand'}[ep.form_type] || ep.form_type;
     var formPath  = '/form/' + ep.form_type.toLowerCase();
     var btnWrap   = document.getElementById('assess-btn-wrap');
     var actions   = document.getElementById('assess-actions');
