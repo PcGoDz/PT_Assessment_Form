@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Users\\\\legac\\\\Downloads\\\\hand_form_handover_extracted\")",
+      "Bash(copy \"C:\\\\Users\\\\legac\\\\Downloads\\\\hand_form_handover_extracted\\\\handover\\\\2026-05-12-hand-form.md\" \"C:\\\\Users\\\\legac\\\\Downloads\\\\FOR_CLAUDE\\\\PT_Assessment\\\\docs\\\\superpowers\\\\specs\\\\2026-05-12-hand-form.md\")",
+      "Bash(cp \"C:/Users/legac/Downloads/hand_form_handover_extracted/handover/2026-05-12-hand-form.md\" \"C:/Users/legac/Downloads/FOR_CLAUDE/PT_Assessment/docs/superpowers/specs/2026-05-12-hand-form.md\")",
+      "Bash(node --check static/js/handchart.js)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(node --check static/js/form_hand.js)",
+      "Bash(python -c \"import database; print\\('database OK'\\)\")",
+      "Bash(python -c \"import app; print\\('app OK'\\)\")",
+      "Bash(node --check static/js/main.js)",
+      "Bash(node --check static/js/clinical_templates.js)",
+      "Bash(python -c \"import pdf_hand; print\\('Import OK'\\)\")",
+      "Bash(python3 -c \"import pdf_hand; print\\('Import OK'\\)\")",
+      "Bash(py -c \"import pdf_hand; print\\('Import OK'\\)\")",
+      "Bash(py -c ' *)",
+      "Bash(del \"C:\\\\Users\\\\legac\\\\Downloads\\\\FOR_CLAUDE\\\\PT_Assessment\\\\test_hand.pdf\")",
+      "Bash(python -c \"from reportlab.lib.colors import HexColor; c = HexColor\\('#e53935'\\); print\\(dir\\(c\\)\\)\")",
+      "Bash(python -c \"import sys; data=sys.stdin.read\\(\\); print\\([x for x in data.replace\\('[',''\\).replace\\(']',''\\).replace\\(\\\\\"'\\\\\",''\\).split\\(','\\) if 'hex' in x.lower\\(\\)]\\)\")"
+    ]
+  }
+}
