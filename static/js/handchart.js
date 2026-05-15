@@ -1,4 +1,4 @@
-var HandChart = (function () {
+const HandChart = (function () {
   'use strict';
 
   var COLORS = {
@@ -46,11 +46,7 @@ var HandChart = (function () {
   }
 
   function renderMarker(svg, m) {
-    var group = svg.getElementById ? svg.getElementById('markers-' + m.hand.toLowerCase())
-                                   : null;
-    if (!group) {
-      group = document.getElementById('markers-' + m.hand.toLowerCase());
-    }
+    var group = document.getElementById('markers-' + m.hand.toLowerCase());
     if (!group) return;
 
     var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
