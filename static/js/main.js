@@ -452,6 +452,9 @@ const Main = (function () {
     if (typeof BodyChart !== 'undefined' && document.getElementById('svg-ant')) {
       BodyChart.init();
     }
+    if (typeof HandChart !== 'undefined' && document.getElementById('hand-svg-r')) {
+      HandChart.init();
+    }
     if (typeof MovementTable !== 'undefined' && document.getElementById('mov-tbody')) {
       MovementTable.init();
     }
@@ -1021,6 +1024,7 @@ const Main = (function () {
     else if (formType === 'CR')         parts = _buildMpisCr();
     else if (formType === 'AMPUTATION') parts = _buildMpisAmputation();
     else if (formType === 'NEURO')      parts = _buildMpisNeuro();
+    else if (formType === 'HAND')       parts = _buildMpisHand();
     else                                parts = _buildMpisMs();
     await _doCopyMpis(parts, header);
   }
@@ -1381,6 +1385,42 @@ const Main = (function () {
     return parts;
   }
 
+  function _buildMpisHand() {
+    var d    = window.ActiveForm ? window.ActiveForm.collect() : {};
+    var LN   = MPIS_LN;
+    var DIV  = MPIS_DIV;
+    var dash = MPIS_DASH;
+    var parts = [];
+    function sec(title, val) { mpisSec(parts, title, val); }
+
+    sec('DIAGNOSIS', d.diagnosis);
+    sec('MANAGEMENT', d.managementType + (d.managementType === 'Surgical' && d.surgeryDate ? ' — ' + d.surgeryDate : ''));
+    sec('DOMINANT HAND', d.sqDominantHand);
+    sec('COMPLAINT', d.chiefComplaint);
+    sec('ONSET', d.onsetDate);
+    sec('MECHANISM', d.mechanism);
+    sec('PAIN (R/L)', (d.painScoreR || dash) + ' / ' + (d.painScoreL || dash));
+    if (d.painNature && d.painNature.length) sec('PAIN NATURE', d.painNature.join(', '));
+    sec('AGGRAVATING', d.painAggravate);
+    sec('RELIEVING',   d.painRelieve);
+    sec('OBSERVATION', d.observationNotes);
+    if (d.skinCondition  && d.skinCondition.length)  sec('SKIN',     d.skinCondition.join(', '));
+    if (d.deformity      && d.deformity.length)       sec('DEFORMITY',d.deformity.join(', '));
+    if (d.swelling       && d.swelling.length)         sec('SWELLING', d.swelling.join(', '));
+    sec('TENDERNESS',  d.tenderness);
+    sec('TEMPERATURE', d.temperature);
+    sec('PALPATION',   d.palpationNotes);
+    sec('GRIP (R/L)',  (d.gripStrengthR || dash) + ' / ' + (d.gripStrengthL || dash) + ' kg');
+    sec('PINCH (R/L)', (d.pinchStrengthR || dash) + ' / ' + (d.pinchStrengthL || dash) + ' kg');
+    sec('SENSATION',   d.sensationNotes);
+    sec('PT IMPRESSION', d.ptImpression);
+    sec('STG', d.stg);
+    sec('LTG', d.ltg);
+    sec('PLAN', d.plan);
+
+    return parts;
+  }
+
   // ── MPIS session header modal ──────────────────
   function showMpisHeaderModal() {
     return new Promise(function(resolve) {
@@ -1462,6 +1502,11 @@ const Main = (function () {
   async function copyToMpis()           { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisMs(),          h); }
   async function copyToMpisAmputation() { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisAmputation(), h); }
   async function copyToMpisNeuro()      { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisNeuro(),      h); }
+  async function copyToMpisHand() {
+    var h = await showMpisHeaderModal();
+    if (!h) return;
+    await _doCopyMpis(_buildMpisHand(), h);
+  }
 
   function getCurrentFormType() {
     try {
@@ -1608,6 +1653,7 @@ const Main = (function () {
     copyToMpisCr:             copyToMpisCr,
     copyToMpisAmputation:     copyToMpisAmputation,
     copyToMpisNeuro:          copyToMpisNeuro,
+    copyToMpisHand:           copyToMpisHand,
     copyToMpisAuto:           copyToMpisAuto,
     toggleDark:     toggleDark,
     openPatientPanel:  openPatientPanel,
