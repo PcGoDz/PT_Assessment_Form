@@ -411,6 +411,52 @@ const ClinicalTemplates = (function () {
         'Continue current plan. Review goals next session.',
       ],
     },
+
+    HAND: {
+      observation: [
+        'Hand appears well-formed with no gross deformity. Skin intact, normal colour and texture. No oedema observed.',
+        'Post-operative wound noted at [site] — [healing stage]. Sutures [present/removed]. No signs of infection. Moderate periarticular oedema.',
+        'Diffuse oedema noted over [dorsal/palmar] aspect. [Deformity type] deformity observed at [joint]. Skin intact. No wound.',
+      ],
+      palpation: [
+        'Tenderness on palpation over [joint] joint — [mild/moderate/severe]. Temperature [normal/warm]. No crepitus noted.',
+        'Tenderness along [tendon name] tendon sheath. Temperature [normal/warm]. Crepitus [absent/present] on AROM.',
+        'Tenderness at carpal tunnel. Tinel\'s [positive/negative] at wrist. Phalen\'s [positive/negative] at 60 seconds.',
+      ],
+      impression: [
+        'Pain, oedema and restricted ROM of [joint] following [fracture type] fracture managed [conservatively/surgically]. Reduced grip strength and functional hand use.',
+        'Post-operative tendon repair at [tendon]. Restricted AROM within protective range. No signs of re-rupture. Oedema present.',
+        'Carpal tunnel syndrome — positive Tinel\'s and Phalen\'s bilaterally. Reduced light touch [median nerve distribution]. Grip and pinch strength reduced.',
+        'Radial nerve palsy — wrist drop present. MMT [0–2]/5 wrist extensors. Sensation intact over first dorsal web space. Functional grip severely limited.',
+      ],
+      stg: [
+        '1. Reduce pain score from __/10 to __/10 within 2 weeks.\n2. Reduce periarticular oedema — circumference __ cm by 2 weeks.\n3. Improve AROM wrist flexion/extension by 15° within 2 weeks.',
+        '1. Achieve functional wrist ROM (>50° flex/ext) within 4 weeks.\n2. Grip strength >10 kg within 4 weeks.\n3. Pinch strength adequate for key grip within 4 weeks.',
+      ],
+      ltg: [
+        '1. Full pain-free AROM of [joint] within 8 weeks.\n2. Grip strength >[target] kg within 8 weeks.\n3. Return to [occupation/ADL] within 8–12 weeks.',
+        '1. Independent ADL with affected hand within 3 months.\n2. Return to work — [date/timeframe].\n3. Maintain ROM gains and prevent recurrence.',
+      ],
+      treatment: [
+        '1. Splinting — [resting/functional] splint for [duration/usage schedule].\n2. Oedema management — elevation, retrograde massage, compression.\n3. ROM exercises — AROM/PROM [joint] [frequency].\n4. Strengthening — grip/pinch exercises progressed as tolerated.\n5. Education — joint protection, activity modification, HEP.',
+        '1. Wound care + dressing as per surgical protocol.\n2. Oedema management — elevation + retrograde massage.\n3. Guarded AROM within prescribed range — [degrees] flexion/extension limit.\n4. Progress splint weaning per surgeon instruction.\n5. Strengthening commenced at [week] post-op per protocol.',
+      ],
+    },
+
+    HAND_SOAP: {
+      objective: [
+        'Wrist flexion __° (was __°). Extension __° (was __°). Grip strength __ kg R, __ kg L. Oedema [stable/reduced].',
+        'ROM unchanged from last session. Grip strength __ kg. Patient reports pain __/10 at rest, __/10 with activity.',
+      ],
+      analysis: [
+        'ROM improving as expected. Patient tolerating exercise progression well. On track for [goal].',
+        'Plateau in ROM gains. Consider [technique change/referral for further investigation]. Continue current programme.',
+      ],
+      plan: [
+        'Progress to next stage of rehabilitation protocol. Increase resistance for strengthening. Continue HEP reinforcement.',
+        'Maintain current exercise programme. Review in [timeframe]. Consider discharge planning if goals met.',
+      ],
+    },
   };
 
   // ── State ───────────────────────────────────────────────────────
