@@ -338,7 +338,6 @@ def _build_story(d):
     story.append(two_col(left2(), right2(), lw=LW2, rw=RW2))
     return story
 
-    # ── Left column / Right column split ──────────────────────────
 def generate_amputation_pdf(data):
     return build_pdf(_build_story(data))
 
