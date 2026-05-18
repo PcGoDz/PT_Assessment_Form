@@ -1495,19 +1495,6 @@ const Main = (function () {
     await copyText(out.join(LN));
   }
 
-  // ── MPIS public wrappers ───────────────────────
-  async function copyToMpisSpine()      { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisSpine(),      h); }
-  async function copyToMpisGeriatric()  { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisGeriatric(),  h); }
-  async function copyToMpisCr()         { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisCr(),         h); }
-  async function copyToMpis()           { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisMs(),          h); }
-  async function copyToMpisAmputation() { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisAmputation(), h); }
-  async function copyToMpisNeuro()      { var h = await showMpisHeaderModal(); if (!h) return; await _doCopyMpis(_buildMpisNeuro(),      h); }
-  async function copyToMpisHand() {
-    var h = await showMpisHeaderModal();
-    if (!h) return;
-    await _doCopyMpis(_buildMpisHand(), h);
-  }
-
   function getCurrentFormType() {
     try {
       var d = window.ActiveForm && window.ActiveForm.collect(currentId);
@@ -1647,13 +1634,6 @@ const Main = (function () {
     setCurrentId:   function(id) { currentId = id; },
     clearDirty:     function() { isDirty = false; },
     get isDirty()   { return isDirty; },
-    copyToMpis:               copyToMpis,
-    copyToMpisSpine:          copyToMpisSpine,
-    copyToMpisGeriatric:      copyToMpisGeriatric,
-    copyToMpisCr:             copyToMpisCr,
-    copyToMpisAmputation:     copyToMpisAmputation,
-    copyToMpisNeuro:          copyToMpisNeuro,
-    copyToMpisHand:           copyToMpisHand,
     copyToMpisAuto:           copyToMpisAuto,
     toggleDark:     toggleDark,
     openPatientPanel:  openPatientPanel,
