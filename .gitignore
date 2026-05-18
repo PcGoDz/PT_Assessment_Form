@@ -20,6 +20,7 @@ env/
 Thumbs.db
 
 # Git worktrees
+.worktrees/
 thirsty-cerf-9bb47d/
 *-cerf-*/
 
