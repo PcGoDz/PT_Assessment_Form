@@ -9,7 +9,6 @@ a = Analysis(
         ('templates', 'templates'),
         ('static', 'static'),
         ('database.py', '.'),
-        ('pdf_generator.py', '.'),
         ('pdf_base.py', '.'),
         ('pdf_platypus_base.py', '.'),
         ('pdf_ms.py', '.'),
