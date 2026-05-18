@@ -1,0 +1,88 @@
+# BACKLOG.md — Known Issues & Deferred Work
+
+---
+
+## 🔁 PERSISTENT REMINDER — Git Push
+
+`git add -A && git commit -m "session checkpoint" && git push`
+
+Has been deferred multiple sessions. Do this BEFORE opening any files in a new session.
+
+---
+
+## Open bugs / Cleanup
+
+- `_openPatientInline(id)` in `home.html` — dead code, not yet removed. Check `openEditPatientModal()` and `deleteCurrentPatient()` dependency on `currentPatientData` before deleting.
+- `pdf_hand.py` unused imports: `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB` — harmless but noise.
+- `clinical_templates.js` comment at line 4 lists only MS/SPINE/GERIATRIC/CR — stale, doesn't include HAND/AMPUTATION/NEURO.
+- `resetPatient()` in `form_base.js` missing null guards on `derived-dob` / `derived-gender`.
+- Geriatric form has duplicate RN/IC fields — cosmetic, low priority.
+- No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place.
+- `audit_log` FK has no ON DELETE CASCADE — orphaned rows harmless but untidy.
+
+---
+
+## Deferred work
+
+- Age auto-calculation (NRIC→age, DOB→age) — unresolved.
+- No ARIA attributes anywhere — low clinical priority.
+- Full exe build test outstanding since NEURO + M3 redesign + discharge changes + visual polish + HAND form.
+- BURN form (next probable form to implement, also Musculoskeletal group).
+- SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
+- PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
+
+---
+
+## Nice-to-haves
+
+- Draft/final state for records (currently records save in single state)
+- Shared table IIFEs (movement_table.js pattern could be extended to other tables)
+- Audit log UI viewer (audit_log table is logged but not surfaced anywhere)
+- Patient profile page improvements (currently functional but not polished)
+
+---
+
+## Two max-width sources for home page layout (gotcha trap)
+
+Both must be clear:
+- `.home-main` — inline `<style>` in `home.html`. Now: `flex:1; width:100%; padding:28px 24px`.
+- `.dash-content` — `style.css` line ~862. Now: `width:100%; padding:0 0 100px`. No `max-width`, no `margin: 0 auto`.
+
+If layout looks centred again, grep both files. Do not assume one source.
+
+---
+
+## M3 token elevation tiers (reference for future UI work)
+
+- Resting cards (stat, hero, section, seen, active-pt, ep-card): `box-shadow: var(--m3-elev-1)`
+- Hover state: `box-shadow: var(--m3-elev-2)`
+- Modals/overlays: `box-shadow: var(--m3-elev-3)`
+- Empty states, flat sections: no elevation
+- Context bars: no elevation (border-bottom instead)
+
+---
+
+## Neutral topbar colour rule (all standalone pages)
+
+All standalone pages (base.html, home.html, episode.html, patient.html) use neutral M3 context bars.
+
+Pattern: `background: var(--m3-surface-container, var(--surface)); color: var(--text); border-bottom: 1px solid var(--border); box-shadow: none`.
+
+Any future standalone page must follow this pattern. No accent-coloured topbars.
+
+White-alpha values are accent-topbar artifacts — when converting from accent to neutral, grep for `rgba(255,255,255` and `rgba(0,0,0`. Common conversions:
+- Separators: `rgba(255,255,255,0.2)` → `var(--border)`
+- Text muted: `rgba(255,255,255,0.6)` → `var(--text-faint)`
+- Button borders: `rgba(255,255,255,0.3)` → `var(--border)`
+
+Stale `body.dark` overrides for M3-token components are maintenance traps — do NOT add per-component dark overrides for components using M3 tokens. The token handles dark mode via the `body.dark` block in token definition section.
+
+---
+
+## Discharge in patient.html (gotcha)
+
+`patient.html` has no `openModal()` helper — it's a standalone page, not on base.html. Uses `classList.add('open')` directly.
+
+`home.html` uses `openModal('modal-discharge')` — available because home has its own `openModal()` defined.
+
+Do not copy `openModal()` calls between pages without checking the helper exists on the target page.
