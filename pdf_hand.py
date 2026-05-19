@@ -14,7 +14,8 @@ from pdf_platypus_base import (
     build_pdf, soap_page, sign_chop_block,
     box, two_col, kv, gap, patient_bar, page_header, data_table,
     S_NORMAL, S_BOLD, S_SMALL, S_LABEL,
-    CW, LW, RW, ML, MR, MT, MB, BLACK, LGREY
+    CW, LW, RW, ML, MR, MT, MB, BLACK, LGREY,
+    ensure_dict, generate_episode_pdf_base
 )
 
 TITLE = ['KEMENTERIAN KESIHATAN MALAYSIA',
@@ -39,15 +40,6 @@ HAND_MARKER_LABELS = {
     'swelling': 'Swelling',
     'scar':     'Scar',
 }
-
-
-def _ensure_dict(val):
-    if isinstance(val, str):
-        try:
-            return json.loads(val)
-        except Exception:
-            return {}
-    return val or {}
 
 
 class HandChartFlowable(Flowable):
@@ -125,15 +117,15 @@ def _build_story(data):
         except Exception:
             data = {}
 
-    patient    = _ensure_dict(data.get('patient', {}))
-    hand_chart = _ensure_dict(data.get('handChart', {}))
+    patient    = ensure_dict(data.get('patient', {}))
+    hand_chart = ensure_dict(data.get('handChart', {}))
     markers    = hand_chart.get('markers', [])
-    rom_data   = _ensure_dict(data.get('rom', {}))
+    rom_data   = ensure_dict(data.get('rom', {}))
     rom_table  = rom_data.get('table', [])
-    circ_data  = _ensure_dict(data.get('circumference', {}))
+    circ_data  = ensure_dict(data.get('circumference', {}))
     circ_table = circ_data.get('table', [])
-    other_tests = _ensure_dict(data.get('otherTests', {}))
-    neuro      = _ensure_dict(data.get('neuro', {}))
+    other_tests = ensure_dict(data.get('otherTests', {}))
+    neuro      = ensure_dict(data.get('neuro', {}))
 
     story = []
     story += page_header(TITLE, REF)
@@ -309,24 +301,4 @@ def generate_hand_pdf(data):
 
 def generate_episode_pdf(assessment_data, soap_notes, episode_info=None):
     """Generate full episode PDF: assessment + SOAP notes. Returns bytes."""
-    story = []
-    patient = _ensure_dict((assessment_data or {}).get('patient', {}))
-
-    if assessment_data:
-        story += _build_story(assessment_data)
-    else:
-        story += page_header(TITLE, REF)
-        story.append(
-            Paragraph('No initial assessment recorded for this episode.', S_NORMAL)
-        )
-
-    notes = soap_notes or []
-    for i in range(0, len(notes), 2):
-        story.append(PageBreak())
-        pair = []
-        pair += soap_page(patient, notes[i], episode_info)
-        if i + 1 < len(notes):
-            pair += soap_page(patient, notes[i + 1], episode_info)
-        story.append(KeepTogether(pair))
-
-    return build_pdf(story)
+    return generate_episode_pdf_base(_build_story, TITLE, REF, assessment_data, soap_notes, episode_info)
