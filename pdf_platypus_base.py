@@ -12,6 +12,7 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.pdfgen import canvas as rl_canvas
 import io
+import json
 
 from reportlab.platypus import Flowable
 
@@ -145,7 +146,6 @@ def ensure_dict(val):
     """Coerce a SQLite JSON string, None, or any non-dict to a plain dict."""
     if isinstance(val, str):
         try:
-            import json
             return json.loads(val)
         except Exception:
             return {}
