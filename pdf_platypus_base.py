@@ -12,6 +12,7 @@ from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 from reportlab.pdfgen import canvas as rl_canvas
 import io
+import json
 
 from reportlab.platypus import Flowable
 
@@ -140,6 +141,16 @@ S_SECTION = ParagraphStyle('section',
 
 
 # ── Core building blocks ──────────────────────────────────────────
+
+def ensure_dict(val):
+    """Coerce a SQLite JSON string, None, or any non-dict to a plain dict."""
+    if isinstance(val, str):
+        try:
+            return json.loads(val)
+        except Exception:
+            return {}
+    return val if isinstance(val, dict) else {}
+
 
 def gap(h=2):
     """Vertical spacer in mm."""
@@ -570,3 +581,26 @@ def build_pdf(story):
     )
     doc.build(story)
     return buf.getvalue()
+
+
+def generate_episode_pdf_base(build_story_fn, title, ref, assessment_data, soap_notes, episode_info=None):
+    """Shared episode PDF assembly: assessment pages + paginated SOAP notes (2 per page)."""
+    story   = []
+    patient = ensure_dict((assessment_data or {}).get('patient', {}))
+
+    if assessment_data:
+        story += build_story_fn(assessment_data)
+    else:
+        story += page_header(title, ref)
+        story.append(Paragraph('No initial assessment recorded for this episode.', S_NORMAL))
+
+    notes = soap_notes or []
+    for i in range(0, len(notes), 2):
+        story.append(PageBreak())
+        pair  = []
+        pair += soap_page(patient, notes[i], episode_info)
+        if i + 1 < len(notes):
+            pair += soap_page(patient, notes[i + 1], episode_info)
+        story.append(KeepTogether(pair))
+
+    return build_pdf(story)

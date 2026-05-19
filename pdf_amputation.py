@@ -9,7 +9,8 @@ from pdf_platypus_base import (
     box, two_col, plan_section, soap_page, sign_chop_block,
     data_table, gap, tick, cbtick,
     S_LABEL, S_NORMAL, S_SMALL, S_BOLD,
-    CW, LW2, RW2, BLACK, LGREY
+    CW, LW2, RW2, BLACK, LGREY,
+    ensure_dict, generate_episode_pdf_base
 )
 
 REF   = 'fisio / b.pen. 16 / 2019'
@@ -19,19 +20,9 @@ TITLE = ['KEMENTERIAN KESIHATAN MALAYSIA',
 
 
 def _build_story(d):
-    import json as _json
-
-    def _ensure_dict(val):
-        if isinstance(val, str):
-            try:
-                return _json.loads(val)
-            except Exception:
-                return {}
-        return val if isinstance(val, dict) else {}
-
     story   = []
-    patient = _ensure_dict(d.get('patient'))
-    bc      = _ensure_dict(d.get('bodyChart') or d.get('body_chart'))
+    patient = ensure_dict(d.get('patient'))
+    bc      = ensure_dict(d.get('bodyChart') or d.get('body_chart'))
 
     PAD = [
         ('TOPPADDING',    (0,0), (-1,-1), 3),
@@ -343,23 +334,4 @@ def generate_amputation_pdf(data):
 
 
 def generate_episode_pdf(assessment_data, soap_notes, episode_info=None):
-    import json
-    story   = []
-    patient = (assessment_data or {}).get('patient', {})
-
-    if assessment_data:
-        story += _build_story(assessment_data)
-    else:
-        story += page_header(TITLE, REF)
-        story.append(Paragraph('No initial assessment recorded for this episode.', S_NORMAL))
-
-    notes = soap_notes or []
-    for i in range(0, len(notes), 2):
-        story.append(PageBreak())
-        pair = []
-        pair += soap_page(patient, notes[i], episode_info)
-        if i + 1 < len(notes):
-            pair += soap_page(patient, notes[i + 1], episode_info)
-        story.append(KeepTogether(pair))
-
-    return build_pdf(story)
+    return generate_episode_pdf_base(_build_story, TITLE, REF, assessment_data, soap_notes, episode_info)

@@ -9,7 +9,8 @@ from pdf_platypus_base import (
     box, two_col, plan_section, soap_page,
     data_table, gap, tick, cbtick,
     S_LABEL, S_NORMAL, S_SMALL, S_BOLD,
-    CW, LW2, RW2, BLACK, LGREY
+    CW, LW2, RW2, BLACK, LGREY,
+    ensure_dict, generate_episode_pdf_base
 )
 
 REF   = 'fisio / b.pen. 15 / 2019'
@@ -18,18 +19,11 @@ TITLE = ['KEMENTERIAN KESIHATAN MALAYSIA',
          'GERIATRIC  ASSESSMENT FORM']
 
 
-def _ensure_dict(val):
-    if isinstance(val, str):
-        import json
-        try: return json.loads(val)
-        except: return {}
-    return val if isinstance(val, dict) else {}
-
 def _build_story(d):
     story   = []
-    patient = _ensure_dict(d.get('patient'))
+    patient = ensure_dict(d.get('patient'))
     bc_raw  = d.get('bodyChart') or d.get('body_chart')
-    bc      = {'markers': bc_raw} if isinstance(bc_raw, list) else _ensure_dict(bc_raw)
+    bc      = {'markers': bc_raw} if isinstance(bc_raw, list) else ensure_dict(bc_raw)
 
     # ── PAGE 1 ────────────────────────────────────────────────────
     story += page_header(TITLE, REF)
@@ -314,20 +308,4 @@ def generate_geriatric_pdf(data):
     return build_pdf(_build_story(data))
 
 def generate_episode_pdf(assessment_data, soap_notes, episode_info=None):
-    story   = []
-    patient = (assessment_data or {}).get('patient', {})
-    if assessment_data:
-        story += _build_story(assessment_data)
-    else:
-        story += page_header(TITLE, REF)
-        story.append(Paragraph('No initial assessment recorded for this episode.', S_NORMAL))
-    # Pair notes explicitly — 2 per page, PageBreak between pairs
-    notes = soap_notes or []
-    for i in range(0, len(notes), 2):
-        story.append(PageBreak())
-        pair = []
-        pair += soap_page(patient, notes[i], episode_info)
-        if i + 1 < len(notes):
-            pair += soap_page(patient, notes[i + 1], episode_info)
-        story.append(KeepTogether(pair))
-    return build_pdf(story)
+    return generate_episode_pdf_base(_build_story, TITLE, REF, assessment_data, soap_notes, episode_info)
