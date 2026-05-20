@@ -21,6 +21,7 @@ Device: Dept PC (Windows). No internet dependency required.
 - **MPIS integration:** plain-text paste only. No API. Builder/wrapper/finalizer pattern.
 - **Clinical compliance:** Fields must match KKM standardised forms exactly. PT Impression (not Diagnosis). Preserve KKM typos in PDFs.
 - **Ship-crude philosophy:** match existing form patterns even if aesthetically ugly. NO refactors of shared code (form_base.js, pdf_platypus_base.py, bodychart.js, etc.) without explicit request.
+- **UI consistency:** all forms follow DESIGN_SYSTEM.md. MS form (`templates/forms/ms.html`) is the canonical visual reference. Layout primitives (cards, sidebar nav, .fg grid) are non-negotiable across all forms; section structure adapts to clinical domain.
 - **No test suite:** Do NOT push TDD on UI layer. Backend smoke checks OK if quick.
 - **Topbar button order** (left→right): [← Return | Save & Return] | [+ New | Clear] | [🌙 | Copy to MPIS | Export KKM PDF] | [Save Record]. Save Record is always rightmost. Do NOT reorder.
 
@@ -114,6 +115,7 @@ SOAP notes carry session header fields: `queue_no`, `kpi_30min`, `seen_by`, `nex
 
 - **RULES.md** — How to work with Miruya (skill level, partnership rules, communication preferences, behavioral DOs and DON'Ts).
 - **WORKFLOW.md** — Procedures: adding new forms, MPIS builder pattern, build/deploy, debugging steps.
+- **DESIGN_SYSTEM.md** — UI patterns for form templates. Layout primitives (non-negotiable), component recipes, anti-patterns. Read before writing any form HTML.
 - **HANDOVER.md** — Current session state, what's half-done, next session priorities. Overwrite each session.
 - **BACKLOG.md** — Known issues, deferred work, persistent reminders (git push), TODO list.
 - **ARCHIVE/** — Historical handover notes and old lessons-learned sections. Don't load unless investigating history.

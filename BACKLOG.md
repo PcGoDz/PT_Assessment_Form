@@ -14,6 +14,7 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 
 - `_openPatientInline(id)` in `home.html` — dead code, not yet removed. Check `openEditPatientModal()` and `deleteCurrentPatient()` dependency on `currentPatientData` before deleting.
 - `pdf_hand.py` unused imports: `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB` — harmless but noise.
+- 6 `pdf_*.py` files have unused `KeepTogether` import after U12 refactor (`pdf_ms`, `pdf_spine`, `pdf_geriatric`, `pdf_cr`, `pdf_amputation`, `pdf_hand`) — cosmetic, zero runtime/build risk. Spawned as background task.
 - `clinical_templates.js` comment at line 4 lists only MS/SPINE/GERIATRIC/CR — stale, doesn't include HAND/AMPUTATION/NEURO.
 - `resetPatient()` in `form_base.js` missing null guards on `derived-dob` / `derived-gender`.
 - Geriatric form has duplicate RN/IC fields — cosmetic, low priority.
@@ -26,7 +27,7 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
-- Full exe build test outstanding since NEURO + M3 redesign + discharge changes + visual polish + HAND form.
+- Full exe build test outstanding since NEURO + M3 redesign + discharge changes + visual polish + HAND form + U34 + U12 cleanup.
 - BURN form (next probable form to implement, also Musculoskeletal group).
 - SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).

@@ -5,6 +5,7 @@
 1. Add entry to `FORM_REGISTRY` in `app.py`, set `ready=True`
 1.5 Update `home.html` episode modal card for this form: remove `soon` class, remove "Soon" badge, add `onclick="selectForm(this)"`, update icon. Add to formLabel map and icon map in home.html. **The modal is HARDCODED — FORM_REGISTRY does NOT drive it. This step is mandatory.**
 2. Add form to `FORM_TEMPLATES` dict in `app.py` (one line — generic route handles the rest), e.g. `'HAND': 'forms/hand.html'`
+2.5 **Before writing form HTML:** read `DESIGN_SYSTEM.md` and `templates/forms/ms.html`. Mirror layout primitives (`.card` wrappers, sidebar_nav block, `.fg` grid, derived-badge chips). Adapt section structure to clinical domain — section count and labels may differ, layout primitives may not.
 3. Create `templates/forms/xxx.html` extending `base.html`:
    - Only needs: form HTML sections + `extra_js` block with form-specific init
    - NO boilerplate needed — `initFormContext()` handles patient prefill, nav buttons, auto-load
@@ -19,7 +20,7 @@
 5. Create `pdf_xxx.py` with `generate_episode_pdf()` and `generate_xxx_pdf()`
 6. Add to `_PDF_GENERATORS` and `_SINGLE_PDF_GENERATORS` in `app.py`
 7. Add `pdf_xxx.py` to `pt_assessment.spec` under `datas` (DO NOT FORGET — silent failure)
-8. Add MPIS builder + public wrapper in `main.js`, wire into `copyToMpisAuto()` (see MPIS pattern below)
+8. Add MPIS builder in `main.js` and wire into `copyToMpisAuto()` switch block (see MPIS pattern below). Do NOT add a per-form public wrapper — `copyToMpisAuto()` is the single entry point.
 9. Add clinical templates to `clinical_templates.js` (assessment categories + SOAP variant)
 10. Add SOAP key to `tplMap` in `showSoapTemplate()` in `episode.html`
 11. Run `node --check static/js/form_xxx.js` before packaging
@@ -60,15 +61,9 @@ function _buildMpisXxx() {
 }
 ```
 
-**B. Public wrapper (async)** — shows modal, calls `_doCopyMpis`:
-```js
-async function copyToMpisXxx() {
-  var h = await showMpisHeaderModal(); if (!h) return;
-  await _doCopyMpis(_buildMpisXxx(), h);
-}
-```
+**B. Wire into `copyToMpisAuto()`** switch block (formType === 'XXX' branch).
 
-**C. Wire into `copyToMpisAuto()`** switch block (formType === 'XXX' branch).
+> ⚠ Do NOT create a per-form public wrapper (`copyToMpisXxx`). The 7 original per-form wrappers were deleted 2026-05-19 as dead code — `copyToMpisAuto()` is the sole entry point. New forms need only Part A (builder) + Part B (wire into switch).
 
 Rules:
 - NEVER put `copyText()` or `await` inside a builder.
