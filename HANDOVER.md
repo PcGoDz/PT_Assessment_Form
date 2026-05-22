@@ -1,46 +1,69 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-05-19
+Last updated: 2026-05-22
 
 ---
 
 ## Where we left off
 
-Executed PLAN-U12 (pdf consolidation) via subagent-driven-development with worktree isolation (`refactor/u12-pdf-consolidation`). Three commits merged to main and pushed:
-- Added `ensure_dict()` + `generate_episode_pdf_base()` to `pdf_platypus_base.py`; `import json` placed at module level (U1 + fix)
-- Updated all 7 `pdf_*.py` — `generate_episode_pdf` replaced with one-liner delegates, 4 local `_ensure_dict` defs deleted (`pdf_geriatric`, `pdf_amputation`, `pdf_neuro`, `pdf_hand`), `__import__` hack in `pdf_neuro.py` eliminated, all `_ensure_dict(` usages renamed to `ensure_dict(` (U2)
-- Net: 8 files changed, +70 / –188 lines.
+**Session A complete.** Executed the Hand Assessment Form UI Rebuild plan (`docs/superpowers/plans/2026-05-21-hand-form-ui-rebuild.md`) via subagent-driven-development.
+
+Branch: `claude/refactor-hand-form-ui-rebuild`
+Commit: `238bae8` — 7 files changed, +1,434 / –731 lines. **Not yet merged to main.**
+
+### Files changed
+| File | Change |
+|------|--------|
+| `templates/forms/hand.html` | Full rewrite — 19 sections, sidebar nav, canonical DESIGN_SYSTEM classes |
+| `static/js/hand_rom_table.js` | New — HandRomTable IIFE with category→movement cascade, start/end angle pairs |
+| `static/js/hand_circ_table.js` | New — HandCircTable IIFE with 11 KKM locations, L/R columns |
+| `static/js/form_hand.js` | Full rewrite — collect/populate/reset, window.Form contract, VAS pain, irr-chip |
+| `pdf_hand.py` | Updated `_build_story` — new field keys, ROM start/end pairs (°), 4-pinch strength, legacy shape support |
+| `static/css/style.css` | Deleted dead `.surgery-row.show` rule |
+| `BACKLOG.md` | Added ROM asymmetric-entry validation note |
 
 ---
 
-## Half-done
+## Gotchas
 
-- 6 `pdf_*.py` files have now-unused `KeepTogether` imports (`pdf_ms`, `pdf_spine`, `pdf_geriatric`, `pdf_cr`, `pdf_amputation`, `pdf_hand`) — spawned as background task, cosmetic only.
-- `pdf_hand.py` unused imports: `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB` — harmless but noise.
-- Exe build untested since NEURO + M3 + discharge + HAND + U34 + U12 cleanup.
-- HAND form smoke-test never done.
-- `_openPatientInline(id)` dead code in `home.html` not cleaned up.
-- `clinical_templates.js` comment at line 4 lists only MS/SPINE/GERIATRIC/CR — stale.
+- **`pt-ic` → `pt-nric`** in patient field — this is the fix for the Session B patient prefill bug. Verify during smoke test.
+- **`surgery-date-row` reveal:** `onManagementChange()` uses direct `style.display` assignment (canonical pattern). The dead `.surgery-row.show` rule in `style.css` has been deleted in this session.
+- **Breaking data shape changes for existing HAND records** (old records partially populate):
+  - `painScoreR`/`painScoreL` → `painPre`/`painPost`
+  - `chiefComplaint`/`onsetDate`/`mechanism` → `hxCurrent`
+  - Chip arrays `skinCondition`/`deformity`/`swelling`/`pastMedHistory` removed from collect output
+  - ROM: `{table:[{movement,activeL,...}]}` → flat `[{category,movement,active_l_start,active_l_end,...}]` (legacy handled in pdf_hand.py)
+  - Circumference: `{table:[{label,value}]}` → flat `[{location,left_cm,right_cm}]` (legacy rendered in pdf_hand.py)
+- **ROM categories revised vs original plan** — user reviewed against KKM borang and updated:
+  - Added `Elbow` (Flexion, Extension) and `Forearm` (Pronation, Supination)
+  - Moved Supination/Pronation OUT of Wrist (anatomically belongs to Forearm)
+  - Removed Finger Abduction/Adduction from Composite (not on borang); kept TAM/TPM
+  - ROM cells store start/end angle pairs: `active_l_start`/`active_l_end` etc.
+- **`btn-ghost` not perpetuated** — new hand.html uses `btn-sm` (canonical). Separate cleanup task in BACKLOG.
 
 ---
 
 ## Next session priorities
 
-1. **Git push** — already done this session. Next session: confirm remote is current.
-2. **Smoke-test HAND form** — Save Record, Export KKM PDF (verify `fisio / b.pen. 12 / Pind. 2 / 2019` in header), Copy to MPIS, all template buttons.
-3. **Full exe build test** — all 7 ready forms end-to-end (untested since multiple structural changes).
-4. **Clean up `pdf_hand.py` unused imports** — `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB`.
+1. **Smoke-test HAND form on branch** — open new HAND assessment, verify:
+   - Sidebar shows 19 sections, clicking nav scrolls to correct card
+   - ROM table starts empty; "+ Add Row" adds cascading Category→Movement dropdowns with start/end pair inputs
+   - Hand Chart markers place and appear in legend list
+   - Save Record works (no 422)
+   - PDF export shows correct data (fisio / b.pen. 12 / Pind. 2 / 2019 in header, ROM cells as `0°-90°`)
+   - Patient prefill from home page works (pt-nric fix)
+2. **Session B bugs** (after smoke test confirms Session A healthy):
+   - Patient prefill verification (pt-ic → pt-nric may have already fixed this)
+   - Diagnosis validation false-triggering
+   - clinical_templates.js HAND amalgamation issue
+3. **Merge `claude/refactor-hand-form-ui-rebuild` → main** after smoke test passes.
+4. **Full exe build test** — untested since multiple structural changes across sessions.
 5. **Pick next form** — BURN (Musculoskeletal) or SCI (Neurological) from FORM_REGISTRY.
-
----
-
-## Gotchas discovered this session
-
-- Old `pdf_hand.py` `_ensure_dict` used `return val or {}` (passes truthy non-dicts through). New shared `ensure_dict` uses `return val if isinstance(val, dict) else {}` (stricter). Behavioural difference only for truthy non-dict non-strings — never occurs in practice since all affected fields store JSON objects. New behaviour is safer.
-- `pdf_hand.py` has a separate `import json` at module level (line 4) used in `_build_story` for `json.loads(data)` — this is NOT the same as the `ensure_dict` import. Do not remove it.
 
 ---
 
 ## What to skip for now
 
-Age auto-calc, ARIA, audit_log CASCADE, UNIQUE constraint, draft/final, shared table IIFEs. See BACKLOG.md.
+Session B bugs (patient prefill, diagnosis validation, templates dedup), btn-ghost globalisation, show/hide audit, DESIGN_SYSTEM.md gaps. All in BACKLOG.md.
+
+Age auto-calc, ARIA, audit_log CASCADE, UNIQUE constraint, draft/final. See BACKLOG.md.
