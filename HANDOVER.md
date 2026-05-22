@@ -45,20 +45,24 @@ Commit: `238bae8` — 7 files changed, +1,434 / –731 lines. **Not yet merged t
 
 ## Next session priorities
 
-1. **Smoke-test HAND form on branch** — open new HAND assessment, verify:
+1. **🚨 BLOCKING — Fix episode creation (gates all other work).** Regression found 2026-05-22 during smoke test prep. No "+ New Episode" button anywhere in app. Fix both locations:
+   - `patient.html` header — add "+ New Episode" button
+   - `home.html` patient detail panel — add "+ New Episode" button
+   - Check how episode creation was triggered previously (may be a removed/broken route or JS call)
+2. **Smoke-test HAND form on branch** — after episode creation is fixed so a new HAND assessment can actually be opened:
    - Sidebar shows 19 sections, clicking nav scrolls to correct card
    - ROM table starts empty; "+ Add Row" adds cascading Category→Movement dropdowns with start/end pair inputs
    - Hand Chart markers place and appear in legend list
    - Save Record works (no 422)
    - PDF export shows correct data (fisio / b.pen. 12 / Pind. 2 / 2019 in header, ROM cells as `0°-90°`)
    - Patient prefill from home page works (pt-nric fix)
-2. **Session B bugs** (after smoke test confirms Session A healthy):
+3. **Session B bugs** (after smoke test confirms Session A healthy):
    - Patient prefill verification (pt-ic → pt-nric may have already fixed this)
    - Diagnosis validation false-triggering
    - clinical_templates.js HAND amalgamation issue
-3. **Merge `claude/refactor-hand-form-ui-rebuild` → main** after smoke test passes.
-4. **Full exe build test** — untested since multiple structural changes across sessions.
-5. **Pick next form** — BURN (Musculoskeletal) or SCI (Neurological) from FORM_REGISTRY.
+4. **Merge `claude/refactor-hand-form-ui-rebuild` → main** after smoke test passes.
+5. **Full exe build test** — untested since multiple structural changes across sessions.
+6. **Pick next form** — BURN (Musculoskeletal) or SCI (Neurological) from FORM_REGISTRY.
 
 ---
 

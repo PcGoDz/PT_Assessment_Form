@@ -12,6 +12,8 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 
 ## Open bugs / Cleanup
 
+- **🚨 BLOCKING — Episode creation missing (2026-05-22 regression):** No "+ New Episode" button exists anywhere in the app. Dashboard patient detail panel has no episode creation control. Patient profile page (`patient.html`) has no episode creation button — empty state says "Go back to patient list to start a new episode" but no such control exists on the list either. App is unusable without episode creation. Fix: add explicit "+ New Episode" button to (1) patient profile page header and (2) dashboard patient detail panel. **Session B priority #1 — gates all other work.**
+
 - **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.nc` variants. All de-facto canonical from ms.html but undocumented. Surfaced by 2026-05-21 hand form plan audit.
 
 - **Hand form ROM cells — validation pass for asymmetric start/end pair entries.** Rows where only start or only end angle is filled currently render gracefully in PDF (single value with °). No UX validation or warning implemented yet. Session A scope only covered UI rebuild.
