@@ -120,10 +120,12 @@ def _build_story(data):
     patient    = ensure_dict(data.get('patient', {}))
     hand_chart = ensure_dict(data.get('handChart', {}))
     markers    = hand_chart.get('markers', [])
-    rom_data   = ensure_dict(data.get('rom', {}))
-    rom_table  = rom_data.get('table', [])
-    circ_data  = ensure_dict(data.get('circumference', {}))
-    circ_table = circ_data.get('table', [])
+    # rom and circumference are now flat arrays (not wrapped in {table: [...]})
+    # Legacy support: if old shape {table:[...]}, unwrap it
+    _rom_raw = data.get('rom', [])
+    rom_table = _rom_raw.get('table', []) if isinstance(_rom_raw, dict) else (_rom_raw if isinstance(_rom_raw, list) else [])
+    _circ_raw = data.get('circumference', [])
+    circ_table = _circ_raw.get('table', []) if isinstance(_circ_raw, dict) else (_circ_raw if isinstance(_circ_raw, list) else [])
     other_tests = ensure_dict(data.get('otherTests', {}))
     neuro      = ensure_dict(data.get('neuro', {}))
 
@@ -163,36 +165,30 @@ def _build_story(data):
     story.append(two_col(left1, right1))
     story.append(gap(2))
 
-    # ── Block 2: Chief Complaint / Pain (left) | Special Questions + History (right) ──
-    pain_nature = ', '.join(data.get('painNature', []) or [])
-    left2 = box('Chief Complaint & Pain', [
-        kv('Chief Complaint', data.get('chiefComplaint', '')),
-        kv('Date of Onset',   data.get('onsetDate', '')),
-        kv('Mechanism',       data.get('mechanism', '')),
-        kv('Pain Score R',    data.get('painScoreR', '')),
-        kv('Pain Score L',    data.get('painScoreL', '')),
-        kv('Nature of Pain',  pain_nature),
-        kv('Aggravating',     data.get('painAggravate', '')),
-        kv('Relieving',       data.get('painRelieve', '')),
+    # ── Block 2: History & Pain (left) | Special Questions (right) ──
+    left2 = box('History & Pain', [
+        kv('Current History',  data.get('hxCurrent', '')),
+        kv('Past History',     data.get('hxPast', '')),
+        kv('Pain Pre / Post',  '{} / {}'.format(data.get('painPre', ''), data.get('painPost', ''))),
+        kv('Nature of Pain',   data.get('painNature', '')),
+        kv('24hr Behaviour',   data.get('pain24hr', '')),
+        kv('Aggravating',      data.get('painAgg', '')),
+        kv('Easing',           data.get('painEase', '')),
+        kv('Irritability',     data.get('irritability', '')),
     ], width=LW)
 
-    pmh = ', '.join(data.get('pastMedHistory', []) or [])
-    pmh_other = data.get('pastMedOther', '')
-    if pmh and pmh_other:
-        pmh_full = pmh + ', ' + pmh_other
-    elif pmh:
-        pmh_full = pmh
-    else:
-        pmh_full = pmh_other
-
-    right2 = box('Special Questions & History', [
-        kv('General Health',  data.get('sqGeneralHealth', '')),
-        kv('Health Notes',    data.get('sqHealthNotes', '')),
-        kv('Medications',     data.get('sqMedications', '')),
-        kv('Allergies',       data.get('sqAllergies', '')),
-        kv('PMH',             pmh_full),
-        kv('Social History',  data.get('socialHistory', '')),
-        kv('Family History',  data.get('familyHistory', '')),
+    right2 = box('Special Questions', [
+        kv('General Health',   data.get('sqGeneralHealth', '')),
+        kv('Health Notes',     data.get('sqHealthNotes', '')),
+        kv('PMHx / Surgery',   data.get('sqPmhx', '')),
+        kv('Investigations',   data.get('sqInvest', '')),
+        kv('Medications',      data.get('sqMedications', '')),
+        kv('Allergies',        data.get('sqAllergies', '')),
+        kv('Social',           data.get('sqSocial', '')),
+        kv('Occupation',       data.get('sqOccupation', '')),
+        kv('Recreation',       data.get('sqRec', '')),
+        kv('Splinting',        data.get('sqSplinting', '')),
+        kv('Dominant Hand',    data.get('sqDominantHand', '')),
     ], width=RW)
     story.append(two_col(left2, right2))
     story.append(gap(2))
@@ -219,15 +215,30 @@ def _build_story(data):
     story.append(gap(2))
 
     # ── ROM Table (full width, only if data present) ──────────────────────────
+    # New shape: flat array [{category, movement, active_l_start, active_l_end, ...}]
+    # Legacy shape {table:[{movement, activeL, ...}]} already unwrapped above.
     if rom_table:
-        rom_headers = ['Movement', 'Active L', 'Active R', 'Passive L', 'Passive R', 'OP L', 'OP R']
-        rom_col_w   = [65 * mm, 20 * mm, 20 * mm, 20 * mm, 20 * mm, 17 * mm, 17 * mm]
+        def _fmt_rom(r, sk, ek):
+            s = str(r.get(sk) or '').strip()
+            e = str(r.get(ek) or '').strip()
+            if s and e:  return u'{}°-{}°'.format(s, e)
+            elif s:      return u'{}°'.format(s)
+            elif e:      return u'{}°'.format(e)
+            return ''
+
+        rom_headers = ['Category', 'Movement', 'Active L', 'Active R', 'Passive L', 'Passive R', 'OP L', 'OP R']
+        rom_col_w   = [28 * mm, 42 * mm, 17 * mm, 17 * mm, 17 * mm, 17 * mm, 14 * mm, 14 * mm]
         rom_rows    = [
-            [r.get('movement', ''), r.get('activeL', ''), r.get('activeR', ''),
-             r.get('passiveL', ''), r.get('passiveR', ''), r.get('opL', ''), r.get('opR', '')]
+            [r.get('category', ''), r.get('movement', ''),
+             _fmt_rom(r, 'active_l_start',  'active_l_end'),
+             _fmt_rom(r, 'active_r_start',  'active_r_end'),
+             _fmt_rom(r, 'passive_l_start', 'passive_l_end'),
+             _fmt_rom(r, 'passive_r_start', 'passive_r_end'),
+             _fmt_rom(r, 'op_l_start',      'op_l_end'),
+             _fmt_rom(r, 'op_r_start',      'op_r_end')]
             for r in rom_table
         ]
-        story.append(Paragraph('Range of Motion', S_BOLD))
+        story.append(Paragraph('Range of Motion (Assessed joints only)', S_BOLD))
         story.append(Spacer(1, 2 * mm))
         story.append(data_table(rom_headers, rom_rows, rom_col_w))
         story.append(gap(2))
@@ -236,17 +247,27 @@ def _build_story(data):
     def grip_str(val):
         return '{} kg'.format(val) if val else ''
 
-    circ_lines = [
-        '{}: {} cm'.format(r.get('label', ''), r.get('value', ''))
-        for r in circ_table
-    ] if circ_table else []
+    # New shape: {location, left_cm, right_cm}. Legacy shape: {label, value}.
+    def _circ_line(r):
+        if r.get('location'):
+            return '{}: L {}cm  R {}cm'.format(r.get('location', ''), r.get('left_cm', ''), r.get('right_cm', ''))
+        return '{}: {}cm'.format(r.get('label', ''), r.get('value', ''))  # legacy
+    circ_lines = [_circ_line(r) for r in circ_table] if circ_table else []
 
     left4_content = [
-        kv('Grip Strength R',  grip_str(data.get('gripStrengthR', ''))),
-        kv('Grip Strength L',  grip_str(data.get('gripStrengthL', ''))),
-        kv('Pinch Strength R', grip_str(data.get('pinchStrengthR', ''))),
-        kv('Pinch Strength L', grip_str(data.get('pinchStrengthL', ''))),
+        kv('Grip R / L',          '{} / {}'.format(grip_str(data.get('gripStrengthR', '')),  grip_str(data.get('gripStrengthL', '')))),
+        kv('Pinch Lateral R / L', '{} / {}'.format(grip_str(data.get('pinchLateralR', '')),  grip_str(data.get('pinchLateralL', '')))),
+        kv('Pinch Pulp R / L',    '{} / {}'.format(grip_str(data.get('pinchPulpR', '')),     grip_str(data.get('pinchPulpL', '')))),
+        kv('Pinch 3-Point R / L', '{} / {}'.format(grip_str(data.get('pinch3ptR', '')),      grip_str(data.get('pinch3ptL', '')))),
     ]
+    if data.get('pulpOpposition'):
+        left4_content.append(kv('Pulp Opposition', data.get('pulpOpposition', '')))
+    fpc = []
+    for finger, key in [('2nd', 'fpc2nd'), ('3rd', 'fpc3rd'), ('4th', 'fpc4th'), ('5th', 'fpc5th')]:
+        if data.get(key):
+            fpc.append('{}:{}'.format(finger, data.get(key, '')))
+    if fpc:
+        left4_content.append(kv('FPC (cm)', '  '.join(fpc)))
     if circ_lines:
         left4_content.append(kv('Circumference', '\n'.join(circ_lines)))
 
