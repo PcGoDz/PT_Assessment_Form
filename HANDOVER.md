@@ -6,6 +6,17 @@ Last updated: 2026-05-24
 
 ## Where we left off
 
+**Session B continuation complete.** Fixed `_buildMpisHand` MPIS builder crash + all 11 field mismatches from Session A data shape changes.
+
+### Session B continuation changes
+| File | Change |
+|------|--------|
+| `static/js/main.js` | Rewrote `_buildMpisHand` — fixed 11 field mismatches caused by Session A collect() shape changes (see Gotchas for mapping) |
+
+**Layer 5 smoke test:** MPIS copy no longer crashes. POMR format output verified with realistic data. Empty-field guard confirmed (mpisSec skips blank sections, managementType undefined guard added).
+
+---
+
 **Session B complete.** Fixed the blocking episode creation regression.
 
 ### Session B changes
@@ -58,13 +69,17 @@ Commit: `238bae8` — 7 files changed, +1,434 / –731 lines. **Not yet merged t
 
 ## Next session priorities
 
-1. **Smoke-test HAND form on branch** — episode creation now fixed, a new HAND assessment can be opened:
+1. **Smoke-test HAND form on branch** — episode creation + MPIS copy now both fixed:
    - Sidebar shows 19 sections, clicking nav scrolls to correct card
    - ROM table starts empty; "+ Add Row" adds cascading Category→Movement dropdowns with start/end pair inputs
    - Hand Chart markers place and appear in legend list
    - Save Record works (no 422)
    - PDF export shows correct data (fisio / b.pen. 12 / Pind. 2 / 2019 in header, ROM cells as `0°-90°`)
    - Patient prefill from home page works (pt-nric fix)
+   - **PDF tables (ROM, Strength, Circumference, Sensation reflexes)** — check rendering in exported PDF (Session C scope if issues found)
+2. **Known remaining items from smoke test** (backlog candidates):
+   - Hand chart SVG art — R/L visually ambiguous on the chart; consider labelling
+   - Hand chart marker input — currently a dropdown, could be a chip selector for UX
 3. **Session B bugs** (after smoke test confirms Session A healthy):
    - Patient prefill verification (pt-ic → pt-nric may have already fixed this)
    - Diagnosis validation false-triggering
