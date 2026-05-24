@@ -1,10 +1,23 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-05-22
+Last updated: 2026-05-24
 
 ---
 
 ## Where we left off
+
+**Session B complete.** Fixed the blocking episode creation regression.
+
+### Session B changes
+| File | Change |
+|------|--------|
+| `templates/patient.html` | Added `+ New Episode` button to topbar + episodes section header; added full new-episode modal (form picker + date); added `openNewEpisodeModal`, `closeNewEpisodeModal`, `selectEpForm`, `submitNewEpisode` JS; added form-picker CSS; fixed empty-state text |
+
+**Archaeology finding:** home.html already had the `+ New Episode` button (line 742) and full episode creation flow intact. The regression was confined to `patient.html` only — the standalone patient profile page never had episode creation wired up.
+
+**Verified:** Backend `POST /api/patients/<id>/episodes` returns `{success, id}`. New episode appears in list with correct `form_type` and `status: active`. Patient profile page renders 200 with all new elements present.
+
+---
 
 **Session A complete.** Executed the Hand Assessment Form UI Rebuild plan (`docs/superpowers/plans/2026-05-21-hand-form-ui-rebuild.md`) via subagent-driven-development.
 
@@ -45,11 +58,7 @@ Commit: `238bae8` — 7 files changed, +1,434 / –731 lines. **Not yet merged t
 
 ## Next session priorities
 
-1. **🚨 BLOCKING — Fix episode creation (gates all other work).** Regression found 2026-05-22 during smoke test prep. No "+ New Episode" button anywhere in app. Fix both locations:
-   - `patient.html` header — add "+ New Episode" button
-   - `home.html` patient detail panel — add "+ New Episode" button
-   - Check how episode creation was triggered previously (may be a removed/broken route or JS call)
-2. **Smoke-test HAND form on branch** — after episode creation is fixed so a new HAND assessment can actually be opened:
+1. **Smoke-test HAND form on branch** — episode creation now fixed, a new HAND assessment can be opened:
    - Sidebar shows 19 sections, clicking nav scrolls to correct card
    - ROM table starts empty; "+ Add Row" adds cascading Category→Movement dropdowns with start/end pair inputs
    - Hand Chart markers place and appear in legend list
