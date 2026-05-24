@@ -12,6 +12,10 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 
 ## Open bugs / Cleanup
 
+- **HAND template buttons silent failure (Session C fix).** 6 × `.ct-trigger` buttons render on HAND form but click → no action. `show()` in `clinical_templates.js` tries `templates['HAND']` (undefined); HAND templates registered as compound keys (`HAND_OBS`, `HAND_PALP`, `HAND_IMPRESSION`, `HAND_STG`, `HAND_LTG`, `HAND_PLAN`). Fix: extend `show()` lookup OR consolidate to `templates['HAND']` single array.
+
+- **HAND PDF table rendering (Session C fix).** ROM / Strength / Circumference / Sensation reflexes render as narrative text in `pdf_hand.py`. Need ReportLab `Table` objects for ~90% borang fidelity. Reference NEURO 2-column layout pattern in WORKFLOW.md.
+
 - **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.nc` variants. All de-facto canonical from ms.html but undocumented. Surfaced by 2026-05-21 hand form plan audit.
 
 - **Hand form ROM cells — validation pass for asymmetric start/end pair entries.** Rows where only start or only end angle is filled currently render gracefully in PDF (single value with °). No UX validation or warning implemented yet. Session A scope only covered UI rebuild.
@@ -40,6 +44,9 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 
 ## Nice-to-haves
 
+- Hand chart SVG R/L visual disambiguation — R and L hand SVGs look identical; consider labels or colour tint.
+- Hand chart marker input — currently a dropdown selector; chip-style selector (matching ms.html bodychart pattern) would be more consistent.
+- Topbar button order axiom in CLAUDE.md — smoke test flagged a possible order mismatch; confirm with Miruya whether axiom needs updating before next form build.
 - Draft/final state for records (currently records save in single state)
 - Shared table IIFEs (movement_table.js pattern could be extended to other tables)
 - Audit log UI viewer (audit_log table is logged but not surfaced anywhere)
