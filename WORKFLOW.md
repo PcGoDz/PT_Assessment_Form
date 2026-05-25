@@ -131,6 +131,8 @@ Things relearned the hard way. Do not let happen again:
 - When flipping FORM_REGISTRY ready=True, ALSO update home.html episode modal card. Modal is hardcoded, not driven by FORM_REGISTRY.
 - Before using a custom CSS class in a new form, grep for it in style.css. Chip groups, sliders, custom badges look like they work in HTML but are invisible/unstyled until the CSS class exists.
 - When adding clinical templates for a new form, register them under `templates['FORM_TYPE']` (single array), NOT compound keys like `templates['FORM_TYPE_OBS']`. `show()` in `clinical_templates.js` only looks up `templates[formType]` — compound keys silently fall through to `[]` and buttons do nothing. If compound keys must be used, extend `show()` to try `templates[formType + '_' + category.toUpperCase()]` as a fallback.
+- When adding a new field to `form_X.js collect()`, verify a corresponding render block exists in `pdf_X.py`. Silent data loss occurs when collect() captures data that no PDF block touches. `neuro.muscles` (MMT) was collected by `form_hand.js` for the entire HAND form history and silently dropped — undetectable without explicit cross-referencing.
+- Clinical template arrays must contain discrete SMART statements (one statement per array entry, each Specific/Measurable/Achievable/Realistic/Time-bound). Do not copy vague category headers from source KKM documents — author proper SMART statements for the app.
 
 ---
 

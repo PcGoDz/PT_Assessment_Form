@@ -243,60 +243,177 @@ def _build_story(data):
         story.append(data_table(rom_headers, rom_rows, rom_col_w))
         story.append(gap(2))
 
-    # ── Block 4: Strength + Circumference (left) | Sensation + Special Tests + Neuro (right) ──
-    def grip_str(val):
-        return '{} kg'.format(val) if val else ''
+    # ── Block 4: Strength, Tick-if-necessary, Circumference, Sensation,
+    #            Special Tests, Reflexes, MMT — single-column vertical stack ──
 
-    # New shape: {location, left_cm, right_cm}. Legacy shape: {label, value}.
-    def _circ_line(r):
-        if r.get('location'):
-            return '{}: L {}cm  R {}cm'.format(r.get('location', ''), r.get('left_cm', ''), r.get('right_cm', ''))
-        return '{}: {}cm'.format(r.get('label', ''), r.get('value', ''))  # legacy
-    circ_lines = [_circ_line(r) for r in circ_table] if circ_table else []
+    def _has_data(rows):
+        """Return True if any row has at least one non-empty cell after the first."""
+        return any(any(str(cell).strip() for cell in row[1:]) for row in rows)
 
-    left4_content = [
-        kv('Grip R / L',          '{} / {}'.format(grip_str(data.get('gripStrengthR', '')),  grip_str(data.get('gripStrengthL', '')))),
-        kv('Pinch Lateral R / L', '{} / {}'.format(grip_str(data.get('pinchLateralR', '')),  grip_str(data.get('pinchLateralL', '')))),
-        kv('Pinch Pulp R / L',    '{} / {}'.format(grip_str(data.get('pinchPulpR', '')),     grip_str(data.get('pinchPulpL', '')))),
-        kv('Pinch 3-Point R / L', '{} / {}'.format(grip_str(data.get('pinch3ptR', '')),      grip_str(data.get('pinch3ptL', '')))),
+    def _sec(txt):
+        return Paragraph(txt, S_BOLD)
+
+    def _v(d, key):
+        return str(d.get(key) or '')
+
+    # 1 ── Strength ────────────────────────────────────────────────────────────
+    strength_rows = [
+        ['Grip (kg)',          _v(data, 'gripStrengthL'),  _v(data, 'gripStrengthR')],
+        ['Pinch Lateral (kg)', _v(data, 'pinchLateralL'),  _v(data, 'pinchLateralR')],
+        ['Pinch Pulp (kg)',    _v(data, 'pinchPulpL'),     _v(data, 'pinchPulpR')],
+        ['Pinch 3-Point (kg)', _v(data, 'pinch3ptL'),      _v(data, 'pinch3ptR')],
     ]
-    if data.get('pulpOpposition'):
-        left4_content.append(kv('Pulp Opposition', data.get('pulpOpposition', '')))
-    fpc = []
-    for finger, key in [('2nd', 'fpc2nd'), ('3rd', 'fpc3rd'), ('4th', 'fpc4th'), ('5th', 'fpc5th')]:
-        if data.get(key):
-            fpc.append('{}:{}'.format(finger, data.get(key, '')))
-    if fpc:
-        left4_content.append(kv('FPC (cm)', '  '.join(fpc)))
-    if circ_lines:
-        left4_content.append(kv('Circumference', '\n'.join(circ_lines)))
+    if _has_data(strength_rows):
+        story.append(_sec('Strength'))
+        story.append(gap(1))
+        story.append(data_table(
+            ['Test', 'Left', 'Right'],
+            strength_rows,
+            [CW * 0.4, CW * 0.3, CW * 0.3]
+        ))
+        story.append(gap(2))
 
-    left4 = box('Strength & Circumference', left4_content, width=LW)
+    # 2 ── Tick if necessary (FPC + Pulp Opposition) ───────────────────────────
+    fpc_row = [
+        'Finger-to-Proximal Palmar Crease (cm)',
+        _v(data, 'fpc2nd'), _v(data, 'fpc3rd'), _v(data, 'fpc4th'), _v(data, 'fpc5th'),
+    ]
+    pulp_val = _v(data, 'pulpOpposition')
+    has_fpc  = any(str(v).strip() for v in fpc_row[1:])
+    if has_fpc or pulp_val:
+        story.append(_sec('Tick if Necessary'))
+        story.append(gap(1))
+        if has_fpc:
+            story.append(data_table(
+                ['Test', '2nd', '3rd', '4th', '5th'],
+                [fpc_row],
+                [CW * 0.4, CW * 0.15, CW * 0.15, CW * 0.15, CW * 0.15]
+            ))
+        if pulp_val:
+            story.append(gap(1))
+            story.append(kv('Pulp Opposition (notes)', pulp_val))
+        story.append(gap(2))
 
-    def ot(test, side):
-        return (other_tests.get(test) or {}).get(side, '')
+    # 3 ── Circumference ───────────────────────────────────────────────────────
+    if circ_table:
+        circ_rows = [
+            [r.get('location', ''), str(r.get('left_cm') or ''), str(r.get('right_cm') or '')]
+            for r in circ_table
+        ]
+        if _has_data(circ_rows):
+            story.append(_sec('Circumference'))
+            story.append(gap(1))
+            story.append(data_table(
+                ['Location', 'Left (cm)', 'Right (cm)'],
+                circ_rows,
+                [CW * 0.5, CW * 0.25, CW * 0.25]
+            ))
+            story.append(gap(2))
 
-    def rf_val(level, side):
-        return (neuro.get('reflexes') or {}).get(level, {}).get(side, '')
+    # 4 ── Sensation ───────────────────────────────────────────────────────────
+    sensation_rows = [
+        ['Light Touch',                 _v(data, 'lightTouchL'),   _v(data, 'lightTouchR')],
+        ['Pin Prick',                   _v(data, 'pinPrickL'),     _v(data, 'pinPrickR')],
+        ['2-Point Discrimination (mm)', _v(data, 'twoPointDiscL'), _v(data, 'twoPointDiscR')],
+    ]
+    sensation_notes = _v(data, 'sensationNotes')
+    if _has_data(sensation_rows) or sensation_notes:
+        story.append(_sec('Sensation'))
+        story.append(gap(1))
+        if _has_data(sensation_rows):
+            story.append(data_table(
+                ['Test', 'Left', 'Right'],
+                sensation_rows,
+                [CW * 0.5, CW * 0.25, CW * 0.25]
+            ))
+        if sensation_notes:
+            story.append(gap(1))
+            story.append(kv('Sensation Notes', sensation_notes))
+        story.append(gap(2))
 
-    right4 = box('Sensation, Special Tests & Neurology', [
-        kv('Light Touch R / L',  '{} / {}'.format(data.get('lightTouchR', ''), data.get('lightTouchL', ''))),
-        kv('Pin Prick R / L',    '{} / {}'.format(data.get('pinPrickR', ''),   data.get('pinPrickL', ''))),
-        kv('2PD R / L (mm)',     '{} / {}'.format(data.get('twoPointDiscR', ''), data.get('twoPointDiscL', ''))),
-        kv('Sensation Notes',    data.get('sensationNotes', '')),
-        gap(1),
-        kv("Tinel's R / L",     '{} / {}'.format(ot('tinels', 'r'),        ot('tinels', 'l'))),
-        kv("Phalen's R / L",    '{} / {}'.format(ot('phalens', 'r'),       ot('phalens', 'l'))),
-        kv("Finkelstein's R/L", '{} / {}'.format(ot('finkelsteins', 'r'),  ot('finkelsteins', 'l'))),
-        kv("Froment's R / L",   '{} / {}'.format(ot('fromens', 'r'),       ot('fromens', 'l'))),
-        gap(1),
-        kv('Reflexes C5 R/L',   '{} / {}'.format(rf_val('c5', 'r'),   rf_val('c5', 'l'))),
-        kv('Reflexes C6 R/L',   '{} / {}'.format(rf_val('c6', 'r'),   rf_val('c6', 'l'))),
-        kv('Reflexes C7 R/L',   '{} / {}'.format(rf_val('c7', 'r'),   rf_val('c7', 'l'))),
-        kv('Reflexes C8T1 R/L', '{} / {}'.format(rf_val('c8t1', 'r'), rf_val('c8t1', 'l'))),
-    ], width=RW)
-    story.append(two_col(left4, right4))
-    story.append(gap(2))
+    # 5 ── Special Tests ───────────────────────────────────────────────────────
+    def _ot(test, side):
+        return str((other_tests.get(test) or {}).get(side) or '')
+
+    special_rows = [
+        ["Tinel's Sign",       _ot('tinels', 'l'),       _ot('tinels', 'r')],
+        ["Phalen's Test",      _ot('phalens', 'l'),      _ot('phalens', 'r')],
+        ["Finkelstein's Test", _ot('finkelsteins', 'l'), _ot('finkelsteins', 'r')],
+        ["Froment's Sign",     _ot('fromens', 'l'),      _ot('fromens', 'r')],
+    ]
+    custom_tests = data.get('customSpecialTests') or []
+    if _has_data(special_rows) or custom_tests:
+        story.append(_sec('Special Tests'))
+        story.append(gap(1))
+        if _has_data(special_rows):
+            story.append(data_table(
+                ['Test', 'Left', 'Right'],
+                special_rows,
+                [CW * 0.5, CW * 0.25, CW * 0.25]
+            ))
+        if isinstance(custom_tests, list):
+            for ct in custom_tests:
+                if ct and isinstance(ct, dict) and ct.get('name'):
+                    story.append(kv(ct['name'],
+                                    '{} / {}'.format(ct.get('r', ''), ct.get('l', ''))))
+        story.append(gap(2))
+
+    # 6 ── Reflexes ────────────────────────────────────────────────────────────
+    def _rf(level, side):
+        return str((neuro.get('reflexes') or {}).get(level, {}).get(side) or '')
+
+    reflex_rows = [
+        ['C5',    'Biceps',          _rf('c5',   'l'), _rf('c5',   'r')],
+        ['C6',    'Brachioradialis', _rf('c6',   'l'), _rf('c6',   'r')],
+        ['C7',    'Triceps',         _rf('c7',   'l'), _rf('c7',   'r')],
+        ['C8/T1', '—',          _rf('c8t1', 'l'), _rf('c8t1', 'r')],
+    ]
+    if any(_rf(lvl, side) for lvl in ('c5', 'c6', 'c7', 'c8t1') for side in ('l', 'r')):
+        story.append(_sec('Reflexes'))
+        story.append(gap(1))
+        story.append(data_table(
+            ['Root', 'Reflex', 'Left', 'Right'],
+            reflex_rows,
+            [CW * 0.15, CW * 0.35, CW * 0.25, CW * 0.25]
+        ))
+        story.append(gap(2))
+
+    # 7 ── Manual Muscle Test (MMT) — NEW, previously missing ─────────────────
+    muscles = neuro.get('muscles') or {}
+    if isinstance(muscles, str):
+        try:
+            import json as _json
+            muscles = _json.loads(muscles)
+        except Exception:
+            muscles = {}
+
+    mmt_def = [
+        ('Deltoid',            'deltoid'),
+        ('Biceps',             'biceps'),
+        ('Brachioradialis',    'brachiorad'),
+        ('Wrist Extensor',     'wristExt'),
+        ('Wrist Flexor',       'wristFlex'),
+        ('Finger MP Extensor', 'fingerMpExt'),
+        ('Triceps',            'triceps'),
+        ('Finger Flexion',     'fingerFlex'),
+        ('Hand Intrinsics',    'handIntrinsics'),
+    ]
+    mmt_rows = []
+    for label, key in mmt_def:
+        m = muscles.get(key) or {}
+        if isinstance(m, str):
+            m = {}
+        mmt_rows.append([label, str(m.get('l') or ''), str(m.get('r') or '')])
+
+    if _has_data(mmt_rows):
+        story.append(_sec('Manual Muscle Test (MMT)'))
+        story.append(gap(1))
+        story.append(data_table(
+            ['Muscle', 'Left', 'Right'],
+            mmt_rows,
+            [CW * 0.5, CW * 0.25, CW * 0.25]
+        ))
+        story.append(gap(2))
 
     # ── Block 5: PT Impression + STG (left) | LTG + Plan (right) ────────────
     left5 = box('PT Impression & Short-Term Goals', [
