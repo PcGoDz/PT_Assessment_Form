@@ -1,7 +1,7 @@
 // clinical_templates.js
 // Reusable clinical template picker based on KKM Best Statement documents
 // Usage: ClinicalTemplates.show(fieldId, formType, category)
-// formType: 'MS' | 'SPINE' | 'GERIATRIC' | 'CR'
+// formType: 'MS' | 'SPINE' | 'GERIATRIC' | 'CR' | 'AMPUTATION' | 'NEURO' | 'HAND'
 // category: 'impression' | 'stg' | 'ltg' | 'treatment' | 'observation' | 'palpation'
 
 const ClinicalTemplates = (function () {
@@ -447,25 +447,45 @@ const ClinicalTemplates = (function () {
     'Radial nerve palsy — wrist drop present. MMT [0–2]/5 wrist extensors. Sensation intact over first dorsal web space. Functional grip severely limited.',
   ];
   var HAND_STG = [
-    '1. Reduce pain score from __/10 to __/10 within 2 weeks.\n2. Reduce periarticular oedema — circumference __ cm by 2 weeks.\n3. Improve AROM wrist flexion/extension by 15° within 2 weeks.',
-    '1. Achieve functional wrist ROM (>50° flex/ext) within 4 weeks.\n2. Grip strength >10 kg within 4 weeks.\n3. Pinch strength adequate for key grip within 4 weeks.',
+    'Reduce pain score from __/10 to __/10 on NPRS within __ weeks.',
+    'Reduce hand/wrist circumference at __ by __ cm within __ weeks.',
+    'Improve active __ ROM from __° to __° within __ weeks.',
+    'Improve passive __ ROM from __° to __° within __ weeks.',
+    'Achieve grip strength of __ kg on affected side within __ weeks.',
+    'Achieve pinch strength (lateral/pulp/3-point) of __ kg within __ weeks.',
+    'Demonstrate independent donning/doffing of splint within __ sessions.',
+    'Achieve __/5 MMT grade for __ within __ weeks.',
   ];
   var HAND_LTG = [
-    '1. Full pain-free AROM of [joint] within 8 weeks.\n2. Grip strength >[target] kg within 8 weeks.\n3. Return to [occupation/ADL] within 8–12 weeks.',
-    '1. Independent ADL with affected hand within 3 months.\n2. Return to work — [date/timeframe].\n3. Maintain ROM gains and prevent recurrence.',
+    'Achieve functional ROM (>50° flexion/extension) at __ joint within __ months.',
+    'Achieve grip strength >__ kg or __% of unaffected side within __ months.',
+    'Return to occupational tasks (__) without compensatory movement within __ months.',
+    'Independent in ADLs involving affected hand within __ months.',
+    'Return to work/duty (__) within __ months.',
+    'Maintain ROM and strength gains with home exercise programme.',
+    'Prevent recurrence/contracture through patient education and self-management.',
+    'Achieve __/5 MMT grade across all relevant myotomes within __ months.',
   ];
   var HAND_PLAN = [
-    '1. Splinting — [resting/functional] splint for [duration/usage schedule].\n2. Oedema management — elevation, retrograde massage, compression.\n3. ROM exercises — AROM/PROM [joint] [frequency].\n4. Strengthening — grip/pinch exercises progressed as tolerated.\n5. Education — joint protection, activity modification, HEP.',
-    '1. Wound care + dressing as per surgical protocol.\n2. Oedema management — elevation + retrograde massage.\n3. Guarded AROM within prescribed range — [degrees] flexion/extension limit.\n4. Progress splint weaning per surgeon instruction.\n5. Strengthening commenced at [week] post-op per protocol.',
+    'Pain management — TENS / cryotherapy / wax bath, __ minutes per session, __ sessions per week.',
+    'Oedema management — elevation, retrograde massage, compression glove for __ weeks.',
+    'ROM exercises — AROM/PROM for __ joint, __ reps x __ sets, __ times daily.',
+    'Strengthening — graded grip/pinch exercises with putty/hand gripper, progressing from __ to __ resistance.',
+    'Tendon/nerve gliding exercises — __ reps hourly during waking hours.',
+    'Functional training — grasp, pinch, dexterity tasks relevant to patient\'s occupation/ADL.',
+    'Scar management — silicone gel/massage starting __ weeks post-op for __ weeks.',
+    'Patient education — joint protection, activity modification, sensory precautions, HEP review.',
+    'Home exercise programme with written instructions and follow-up at __ weeks.',
   ];
-  // Register HAND assessment templates in the templates dict (flat keys for addButton compatibility)
-  var templates = {};
-  templates['HAND_OBS']        = HAND_OBS;
-  templates['HAND_PALP']       = HAND_PALP;
-  templates['HAND_IMPRESSION'] = HAND_IMPRESSION;
-  templates['HAND_STG']        = HAND_STG;
-  templates['HAND_LTG']        = HAND_LTG;
-  templates['HAND_PLAN']       = HAND_PLAN;
+  // Register HAND templates into TEMPLATES so show() finds them via TEMPLATES[formType][category]
+  TEMPLATES.HAND = {
+    observation: HAND_OBS,
+    palpation:   HAND_PALP,
+    impression:  HAND_IMPRESSION,
+    stg:         HAND_STG,
+    ltg:         HAND_LTG,
+    treatment:   HAND_PLAN,
+  };
 
   // ── State ───────────────────────────────────────────────────────
   var activeField = null;
@@ -476,7 +496,7 @@ const ClinicalTemplates = (function () {
     var field = document.getElementById(fieldId);
     if (!field) return;
 
-    var items = (TEMPLATES[formType] || {})[category] || templates[formType] || [];
+    var items = (TEMPLATES[formType] || {})[category] || [];
     if (!items.length) return;
 
     hide();

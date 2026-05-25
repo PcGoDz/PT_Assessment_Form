@@ -1,510 +1,871 @@
 {% extends "base.html" %}
-{% block title %}Hand Assessment{% endblock %}
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/form_hand.js') }}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  HandForm.initChips();
-  /* Clinical template buttons — addButton(fieldId, formType, category)
-     HAND templates are stored as flat arrays in templates[formType],
-     so formType = template key and category is unused (falls through). */
-  ClinicalTemplates.addButton('observation-notes', 'HAND_OBS',        '');
-  ClinicalTemplates.addButton('palpation-notes',   'HAND_PALP',       '');
-  ClinicalTemplates.addButton('pt-impression',     'HAND_IMPRESSION', '');
-  ClinicalTemplates.addButton('stg',               'HAND_STG',        '');
-  ClinicalTemplates.addButton('ltg',               'HAND_LTG',        '');
-  ClinicalTemplates.addButton('plan',              'HAND_PLAN',       '');
-});
-</script>
-{% endblock %}
-{% block content %}
-<form id="assessment-form" autocomplete="off">
 
-  <!-- ═══ PATIENT INFO (managed by FormBase / initFormContext) ═══ -->
-  <div class="section-card">
-    <div class="section-title">Patient Information</div>
-    <div class="form-row">
-      <div class="field"><label>Patient Name</label><input type="text" id="pt-name" onchange="window.FormBase.onNricInput()"></div>
-      <div class="field"><label>IC / Passport</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <select id="pt-type" onchange="window.FormBase.onPtTypeChange()" style="width:110px;">
-            <option value="IC">IC</option>
-            <option value="Passport">Passport</option>
-          </select>
-          <input type="text" id="pt-ic" placeholder="YYMMDDXXXXXX" oninput="window.FormBase.onNricInput()">
+{% block form_name %}Hand Assessment{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis</div>
+<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128202;</span> Pain Score</div>
+<div class="nav-item" onclick="Main.go('s-chart')"><span class="nav-icon">&#9995;</span> Hand Chart</div>
+<div class="nav-item" onclick="Main.go('s-hx-current')"><span class="nav-icon">&#128214;</span> Current Hx</div>
+<div class="nav-item" onclick="Main.go('s-hx-past')"><span class="nav-icon">&#128218;</span> Past Hx</div>
+<div class="nav-item" onclick="Main.go('s-sq')"><span class="nav-icon">&#10067;</span> Special Qs</div>
+<div class="nav-item" onclick="Main.go('s-obs')"><span class="nav-icon">&#128065;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-palp')"><span class="nav-icon">&#128400;</span> Palpation</div>
+<div class="nav-item" onclick="Main.go('s-rom')"><span class="nav-icon">&#128260;</span> ROM</div>
+<div class="nav-item" onclick="Main.go('s-strength')"><span class="nav-icon">&#128170;</span> Strength</div>
+<div class="nav-item" onclick="Main.go('s-circ')"><span class="nav-icon">&#128207;</span> Circumference</div>
+<div class="nav-item" onclick="Main.go('s-sensation')"><span class="nav-icon">&#9889;</span> Sensation</div>
+<div class="nav-item" onclick="Main.go('s-neuro')"><span class="nav-icon">&#9881;</span> Neurological</div>
+<div class="nav-item" onclick="Main.go('s-special')"><span class="nav-icon">&#128300;</span> Special Tests</div>
+<div class="nav-item" onclick="Main.go('s-impression')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+<div class="nav-item" onclick="Main.go('s-stg')"><span class="nav-icon">&#128204;</span> Short-Term Goals</div>
+<div class="nav-item" onclick="Main.go('s-ltg')"><span class="nav-icon">&#127942;</span> Long-Term Goals</div>
+<div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#128221;</span> Plan</div>
+{% endblock %}
+
+{% block content %}
+<!-- 01 PATIENT INFO -->
+<div class="card" id="s-patient">
+  <div class="card-header">
+    <span class="sec-num">01</span>
+    <h2>Patient Information</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="FormBase.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="FormBase.onPtTypeChange()"> Foreign (Passport)</label>
         </div>
       </div>
-      <div class="field"><label>Date of Assessment</label><input type="date" id="pt-date"></div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="FormBase.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="pt-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option><option>Myanmar</option><option>Philippines</option>
+              <option>Thailand</option><option>Vietnam</option><option>Cambodia</option>
+              <option>Laos</option><option>Brunei</option><option>Singapore</option><option>Timor-Leste</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option><option>India</option><option>Pakistan</option>
+              <option>Nepal</option><option>Sri Lanka</option><option>Afghanistan</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option><option>Taiwan</option><option>Japan</option>
+              <option>South Korea</option><option>Hong Kong</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option>Saudi Arabia</option><option>Yemen</option><option>Iraq</option>
+              <option>Iran</option><option>Jordan</option><option>Syria</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option>Nigeria</option><option>Somalia</option><option>Ghana</option>
+              <option>Ethiopia</option><option>Kenya</option><option>Tanzania</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Australia</option><option>United Kingdom</option><option>United States</option>
+              <option>France</option><option>Germany</option><option>Netherlands</option>
+              <option>Other (not listed)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Assessment Date <span class="req">*</span></label>
+          <input type="date" id="pt-date">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob" onchange="FormBase.onDobChange(this.value)">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pt-age" placeholder="Years" min="0" max="130">
+        </div>
+        <div class="field" id="sex-field" style="display:none">
+          <label>Sex <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="pt-sex" value="M"> Male</label>
+            <label><input type="radio" name="pt-sex" value="F"> Female</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Dominant Hand</label>
+          <select id="sq-dominant-hand">
+            <option value="">— Select —</option>
+            <option>Right</option>
+            <option>Left</option>
+            <option>Ambidextrous</option>
+          </select>
+        </div>
+      </div>
     </div>
-    <div class="form-row">
-      <div class="field"><label>Age</label><input type="number" id="pt-age" min="0" max="120"></div>
-      <div class="field"><label>Diagnosis</label><input type="text" id="diagnosis" placeholder="Primary diagnosis"></div>
-      <div class="field"><label>Referral Source</label>
+  </div>
+</div>
+
+<!-- 02 DIAGNOSIS & DOCTOR'S MANAGEMENT -->
+<div class="card" id="s-dx">
+  <div class="card-header">
+    <span class="sec-num">02</span>
+    <h2>Diagnosis &amp; Doctor's Management</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Diagnosis <span class="req">*</span></label>
+        <textarea id="diagnosis" placeholder="Working diagnosis from referring doctor..."></textarea>
+      </div>
+      <div class="field">
+        <label>Referral Source</label>
         <select id="referral-source">
-          <option value="">— select —</option>
-          <option>Orthopaedic</option><option>Plastic Surgery</option><option>Neurosurgery</option>
-          <option>General Surgery</option><option>Rheumatology</option><option>Self-referral</option><option>Other</option>
+          <option value="">— Select —</option>
+          <option>Orthopaedic</option>
+          <option>Plastic Surgery</option>
+          <option>Neurosurgery</option>
+          <option>General Surgery</option>
+          <option>Rheumatology</option>
+          <option>Self-referral</option>
+          <option>Other</option>
         </select>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="field"><label>Management Type</label>
+      <div class="field">
+        <label>Doctor's Management</label>
         <select id="management-type" onchange="HandForm.onManagementChange()">
-          <option value="">— select —</option>
-          <option>Conservative</option><option>Surgical</option>
+          <option value="">— Select —</option>
+          <option value="Conservative">Conservative</option>
+          <option value="Surgical">Surgical</option>
         </select>
+        <div class="surgery-row" id="surgery-date-row">
+          <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">Surgery date:</span>
+          <input type="date" id="surgery-date" style="flex:1">
+        </div>
       </div>
-      <div class="field" id="surgery-date-row" style="display:none;">
-        <label>Date of Surgery</label><input type="date" id="surgery-date">
+      <div class="field">
+        <label>Surgery / Procedure Type</label>
+        <input type="text" id="surgery-type" placeholder="e.g. ORIF, tendon repair, nerve graft...">
       </div>
-      <div class="field" id="surgery-type-row">
-        <label>Surgery / Procedure Type</label><input type="text" id="surgery-type" placeholder="e.g. ORIF, tendon repair">
+      <div class="field">
+        <label>Problem</label>
+        <textarea id="pt-problem" placeholder="Main presenting problem..." style="min-height:52px"></textarea>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- ═══ HAND CHART ═══ -->
-  <div class="section-card">
-    <div class="section-title">Hand Chart</div>
-    <div class="form-row" style="align-items:center;gap:12px;margin-bottom:8px;">
-      <label style="font-weight:500;">Marker Type:</label>
-      <select id="hctype-sel" style="width:160px;">
-        <option value="pain">Pain</option>
-        <option value="numb">Numbness</option>
-        <option value="tingling">Tingling</option>
-        <option value="weak">Weakness</option>
-        <option value="swelling">Swelling</option>
-        <option value="scar">Scar</option>
-      </select>
-      <button type="button" class="btn-ghost" onclick="HandChart.clearAll()">Clear All</button>
-    </div>
-    <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
-      <!-- RIGHT HAND SVG (palmar view) -->
-      <div style="text-align:center;">
-        <div style="font-weight:600;margin-bottom:4px;">Right Hand (Palmar)</div>
-        <svg id="hand-svg-r" viewBox="0 0 200 300" width="160" height="240"
-             style="border:1px solid var(--border);border-radius:8px;cursor:crosshair;background:var(--surface);">
-          <!-- Palm -->
-          <rect x="55" y="130" width="110" height="100" rx="12" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Thumb (leftmost for right hand) -->
-          <ellipse cx="50" cy="110" rx="18" ry="35" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Index finger -->
-          <rect x="65" y="55" width="22" height="78" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Middle finger -->
-          <rect x="91" y="40" width="22" height="93" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Ring finger -->
-          <rect x="117" y="50" width="22" height="83" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Little finger -->
-          <rect x="143" y="70" width="20" height="65" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <text x="100" y="290" text-anchor="middle" font-size="11" fill="var(--text-muted)">R</text>
-          <g id="markers-r"></g>
-        </svg>
-      </div>
-      <!-- LEFT HAND SVG (palmar view) -->
-      <div style="text-align:center;">
-        <div style="font-weight:600;margin-bottom:4px;">Left Hand (Palmar)</div>
-        <svg id="hand-svg-l" viewBox="0 0 200 300" width="160" height="240"
-             style="border:1px solid var(--border);border-radius:8px;cursor:crosshair;background:var(--surface);">
-          <!-- Thumb on right for left hand (mirror) -->
-          <rect x="35" y="130" width="110" height="100" rx="12" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Little finger (leftmost for left hand) -->
-          <rect x="37" y="70" width="20" height="65" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Ring finger -->
-          <rect x="61" y="50" width="22" height="83" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Middle finger -->
-          <rect x="87" y="40" width="22" height="93" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Index finger -->
-          <rect x="113" y="55" width="22" height="78" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <!-- Thumb (rightmost for left hand) -->
-          <ellipse cx="150" cy="110" rx="18" ry="35" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
-          <text x="100" y="290" text-anchor="middle" font-size="11" fill="var(--text-muted)">L</text>
-          <g id="markers-l"></g>
-        </svg>
-      </div>
-    </div>
-    <!-- Legend -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
-      <span style="font-size:.8rem;color:var(--text-muted);">Legend:</span>
-      <span style="font-size:.8rem;color:#e53935;">&#9679; Pain</span>
-      <span style="font-size:.8rem;color:#1e88e5;">&#9679; Numbness</span>
-      <span style="font-size:.8rem;color:#8e24aa;">&#9679; Tingling</span>
-      <span style="font-size:.8rem;color:#fb8c00;">&#9679; Weakness</span>
-      <span style="font-size:.8rem;color:#00897b;">&#9679; Swelling</span>
-      <span style="font-size:.8rem;color:#6d4c41;">&#9679; Scar</span>
-    </div>
-    <div id="hand-marker-list" style="margin-top:6px;min-height:24px;"></div>
-    <div class="field" style="margin-top:8px;"><label>Chart Notes</label><textarea id="chart-notes" rows="2"></textarea></div>
+<!-- 03 PAIN ASSESSMENT -->
+<div class="card" id="s-pain">
+  <div class="card-header">
+    <span class="sec-num">03</span>
+    <h2>Pain Assessment</h2>
   </div>
-
-  <!-- ═══ CHIEF COMPLAINT ═══ -->
-  <div class="section-card">
-    <div class="section-title">Chief Complaint</div>
-    <div class="form-row">
-      <div class="field" style="flex:2;"><label>Chief Complaint</label><textarea id="chief-complaint" rows="3" placeholder="Patient's own words"></textarea></div>
-      <div class="field"><label>Date of Onset</label><input type="date" id="onset-date"></div>
-    </div>
-    <div class="field"><label>Mechanism of Injury / Onset</label><textarea id="mechanism" rows="2"></textarea></div>
-  </div>
-
-  <!-- ═══ PAIN ═══ -->
-  <div class="section-card">
-    <div class="section-title">Pain Assessment</div>
-    <div class="form-row">
-      <div class="field"><label>Pain Score — Right (0–10)</label><input type="number" id="pain-score-r" min="0" max="10"></div>
-      <div class="field"><label>Pain Score — Left (0–10)</label><input type="number" id="pain-score-l" min="0" max="10"></div>
-    </div>
-    <div class="field">
-      <label>Nature of Pain</label>
-      <div class="chip-group" id="pain-nature-chips">
-        <span class="chip" data-value="Aching">Aching</span>
-        <span class="chip" data-value="Sharp">Sharp</span>
-        <span class="chip" data-value="Burning">Burning</span>
-        <span class="chip" data-value="Throbbing">Throbbing</span>
-        <span class="chip" data-value="Shooting">Shooting</span>
-        <span class="chip" data-value="Constant">Constant</span>
-        <span class="chip" data-value="Intermittent">Intermittent</span>
-        <span class="chip" data-value="Rest pain">Rest pain</span>
-        <span class="chip" data-value="Night pain">Night pain</span>
+  <div class="card-body">
+    <div class="fg">
+      <div class="fg c2">
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="Form.setPain('pre', this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-pre">0</div>
+          </div>
+        </div>
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="Form.setPain('post', this.value)">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pv-post">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Nature of Pain</label>
+          <select id="pain-nature">
+            <option value="">&#8212; Select &#8212;</option>
+            <option>Sharp</option>
+            <option>Dull aching</option>
+            <option>Burning</option>
+            <option>Throbbing / Pulsating</option>
+            <option>Shooting</option>
+            <option>Tingling / Pins &amp; needles</option>
+            <option>Cramping</option>
+            <option>Stiffness / Tightness</option>
+            <option>Mixed (describe in notes)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>24-Hour Behaviour</label>
+          <select id="pain-24hr">
+            <option value="">&#8212; Select &#8212;</option>
+            <option>Constant</option>
+            <option>Intermittent</option>
+            <option>Worse in morning</option>
+            <option>Worse in evening</option>
+            <option>Worse with activity</option>
+            <option>Worse at rest</option>
+            <option>Nocturnal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Aggravating Factors</label>
+          <input type="text" id="pain-agg" placeholder="e.g. gripping, writing, cold...">
+        </div>
+        <div class="field">
+          <label>Easing Factors</label>
+          <input type="text" id="pain-ease" placeholder="e.g. rest, elevation, splint...">
+        </div>
+      </div>
+      <div class="field">
+        <label>Irritability</label>
+        <div class="irr-chips">
+          <button class="irr-chip" id="irr-High"   onclick="Form.pickIrr('High')">High</button>
+          <button class="irr-chip" id="irr-Medium" onclick="Form.pickIrr('Medium')">Medium</button>
+          <button class="irr-chip" id="irr-Low"    onclick="Form.pickIrr('Low')">Low</button>
+        </div>
       </div>
     </div>
-    <div class="form-row">
-      <div class="field"><label>Aggravating Factors</label><textarea id="pain-aggravate" rows="2"></textarea></div>
-      <div class="field"><label>Relieving Factors</label><textarea id="pain-relieve" rows="2"></textarea></div>
+  </div>
+</div>
+
+<!-- 04 HAND CHART -->
+<div class="card" id="s-chart">
+  <div class="card-header">
+    <span class="sec-num">04</span>
+    <h2>Hand Chart</h2>
+  </div>
+  <div class="card-body">
+    <div class="body-chart-wrap">
+      <div class="body-figures">
+        <!-- RIGHT HAND (palmar) -->
+        <div class="fig-wrap">
+          <div class="fig-label">Right Hand (Palmar)</div>
+          <svg id="hand-svg-r" class="bsvg" viewBox="0 0 200 300" width="160" height="240" style="cursor:crosshair">
+            <rect x="55" y="130" width="110" height="100" rx="12" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <ellipse cx="50" cy="110" rx="18" ry="35" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="65" y="55" width="22" height="78" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="91" y="40" width="22" height="93" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="117" y="50" width="22" height="83" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="143" y="70" width="20" height="65" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <text x="100" y="290" text-anchor="middle" font-size="11" fill="var(--text-muted)">R</text>
+            <g id="markers-r"></g>
+          </svg>
+        </div>
+        <!-- LEFT HAND (palmar) -->
+        <div class="fig-wrap">
+          <div class="fig-label">Left Hand (Palmar)</div>
+          <svg id="hand-svg-l" class="bsvg" viewBox="0 0 200 300" width="160" height="240" style="cursor:crosshair">
+            <rect x="35" y="130" width="110" height="100" rx="12" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="37" y="70" width="20" height="65" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="61" y="50" width="22" height="83" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="87" y="40" width="22" height="93" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <rect x="113" y="55" width="22" height="78" rx="10" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <ellipse cx="150" cy="110" rx="18" ry="35" fill="none" stroke="var(--text-muted)" stroke-width="2"/>
+            <text x="100" y="290" text-anchor="middle" font-size="11" fill="var(--text-muted)">L</text>
+            <g id="markers-l"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-controls">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click hand</div>
+          <div>
+            <select id="hctype-sel" style="width:100%;margin-bottom:6px">
+              <option value="pain">&#9679; Pain</option>
+              <option value="numb">&#9679; Numbness</option>
+              <option value="tingling">&#9679; Tingling</option>
+              <option value="weak">&#9679; Weakness</option>
+              <option value="swelling">&#9679; Swelling</option>
+              <option value="scar">&#9679; Scar</option>
+            </select>
+            <div style="font-size:11px;color:var(--text-muted);line-height:1.7">
+              <span style="color:#e53935">&#9679;</span> Pain &nbsp;
+              <span style="color:#1e88e5">&#9679;</span> Numbness &nbsp;
+              <span style="color:#8e24aa">&#9679;</span> Tingling<br>
+              <span style="color:#fb8c00">&#9679;</span> Weakness &nbsp;
+              <span style="color:#00897b">&#9679;</span> Swelling &nbsp;
+              <span style="color:#6d4c41">&#9679;</span> Scar
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="list-header">
+            <span>Marked Locations</span>
+            <button class="btn-sm" onclick="HandChart.clearAll()">Clear all</button>
+          </div>
+          <div class="marker-list" id="hand-marker-list">
+            <div class="empty-hint">No markers yet</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Chart Notes</label>
+          <textarea id="chart-notes" placeholder="Distribution, area of numbness, scar location..." style="min-height:56px"></textarea>
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- ═══ SPECIAL QUESTIONS ═══ -->
-  <div class="section-card">
-    <div class="section-title">Special Questions</div>
-    <div class="form-row">
-      <div class="field"><label>General Health</label>
+<!-- 05 CURRENT HISTORY -->
+<div class="card" id="s-hx-current">
+  <div class="card-header">
+    <span class="sec-num">05</span>
+    <h2>Current History</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Current History <span class="req">*</span></label>
+        <textarea id="hx-current" placeholder="Onset, mechanism of injury, course of symptoms, date of injury..." style="min-height:95px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 PAST HISTORY -->
+<div class="card" id="s-hx-past">
+  <div class="card-header">
+    <span class="sec-num">06</span>
+    <h2>Past History</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="hx-past" placeholder="Previous episodes, relevant medical history, past surgeries, comorbidities..." style="min-height:95px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 SPECIAL QUESTIONS -->
+<div class="card" id="s-sq">
+  <div class="card-header">
+    <span class="sec-num">07</span>
+    <h2>Special Questions</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>General Health</label>
         <select id="sq-general-health" onchange="HandForm.onHealthChange()">
-          <option value="">— select —</option>
-          <option>Good</option><option>Fair</option><option>Poor</option><option>Other</option>
+          <option value="">— Select —</option>
+          <option>Good</option>
+          <option>Fair</option>
+          <option>Poor</option>
+          <option>Other</option>
         </select>
       </div>
-      <div class="field" id="sq-health-notes-row" style="display:none;">
-        <label>Health Notes</label><input type="text" id="sq-health-notes">
+      <div class="field" id="sq-health-notes-row" style="display:none">
+        <label>Health Notes</label>
+        <input type="text" id="sq-health-notes" placeholder="Specify...">
       </div>
-      <div class="field"><label>Dominant Hand</label>
-        <select id="sq-dominant-hand">
-          <option value="">— select —</option>
-          <option>Right</option><option>Left</option><option>Ambidextrous</option>
-        </select>
+      <div class="field" style="grid-column:span 2">
+        <label>PMHx / Previous Surgery</label>
+        <textarea id="sq-pmhx" placeholder="Diabetes, hypertension, RA, previous fractures, surgeries..." style="min-height:52px"></textarea>
       </div>
-    </div>
-    <div class="form-row">
-      <div class="field"><label>Medications</label><textarea id="sq-medications" rows="2" placeholder="Current medications"></textarea></div>
-      <div class="field"><label>Allergies</label><input type="text" id="sq-allergies"></div>
-      <div class="field"><label>Occupation</label><input type="text" id="sq-occupation"></div>
+      <div class="field">
+        <label>Investigations</label>
+        <input type="text" id="sq-invest" placeholder="X-ray, MRI, nerve conduction, EMG...">
+      </div>
+      <div class="field">
+        <label>Medications / Steroids</label>
+        <input type="text" id="sq-medications" placeholder="Current medications...">
+      </div>
+      <div class="field">
+        <label>Allergies</label>
+        <input type="text" id="sq-allergies" placeholder="Drug allergies, latex...">
+      </div>
+      <div class="field">
+        <label>Home / Social Situation</label>
+        <input type="text" id="sq-social" placeholder="Living situation, support, ADL independence...">
+      </div>
+      <div class="field">
+        <label>Occupation</label>
+        <input type="text" id="sq-occupation" placeholder="Job title, physical demands...">
+      </div>
+      <div class="field">
+        <label>Recreation / Hobbies</label>
+        <input type="text" id="sq-rec" placeholder="Sports, instruments, hobbies...">
+      </div>
+      <div class="field">
+        <label>Splinting</label>
+        <div class="radio-group">
+          <label><input type="radio" name="sq-splinting" value="Yes"> Yes</label>
+          <label><input type="radio" name="sq-splinting" value="No"> No</label>
+          <label><input type="radio" name="sq-splinting" value="N/A"> N/A</label>
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- ═══ HISTORY ═══ -->
-  <div class="section-card">
-    <div class="section-title">History</div>
-    <div class="field">
-      <label>Past Medical History</label>
-      <div class="chip-group" id="pmh-chips">
-        <span class="chip" data-value="Diabetes">Diabetes</span>
-        <span class="chip" data-value="Hypertension">Hypertension</span>
-        <span class="chip" data-value="IHD">IHD</span>
-        <span class="chip" data-value="RA">RA</span>
-        <span class="chip" data-value="Osteoporosis">Osteoporosis</span>
-        <span class="chip" data-value="Stroke">Stroke</span>
-        <span class="chip" data-value="Neuropathy">Neuropathy</span>
-        <span class="chip" data-value="Previous fracture">Previous fracture</span>
-        <span class="chip" data-value="Previous surgery">Previous surgery</span>
+<!-- 08 OBSERVATION -->
+<div class="card" id="s-obs">
+  <div class="card-header">
+    <span class="sec-num">08</span>
+    <h2>Observation</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>General <span class="req">*</span></label>
+        <textarea id="observation-notes" placeholder="Posture, use of dominant hand, guarding, affect, use of aids..." style="min-height:95px"></textarea>
       </div>
-    </div>
-    <div class="field"><label>Other Past Medical History</label><input type="text" id="pmh-other"></div>
-    <div class="form-row">
-      <div class="field"><label>Social History</label><textarea id="social-history" rows="2" placeholder="Living situation, ADL independence, supports"></textarea></div>
-      <div class="field"><label>Family History</label><textarea id="family-history" rows="2"></textarea></div>
+      <div class="field">
+        <label>Local</label>
+        <textarea id="wound-notes" placeholder="Skin condition, swelling, erythema, wasting, deformity, scar, wound..." style="min-height:95px"></textarea>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- ═══ OBSERVATION ═══ -->
-  <div class="section-card">
-    <div class="section-title">Observation</div>
-    <div class="field">
-      <label>Skin Condition</label>
-      <div class="chip-group" id="skin-chips">
-        <span class="chip" data-value="Normal">Normal</span>
-        <span class="chip" data-value="Dry">Dry</span>
-        <span class="chip" data-value="Shiny">Shiny</span>
-        <span class="chip" data-value="Macerated">Macerated</span>
-        <span class="chip" data-value="Scar">Scar</span>
-        <span class="chip" data-value="Wound">Wound</span>
-        <span class="chip" data-value="Discolouration">Discolouration</span>
-      </div>
-    </div>
-    <div class="field">
-      <label>Deformity</label>
-      <div class="chip-group" id="deformity-chips">
-        <span class="chip" data-value="None">None</span>
-        <span class="chip" data-value="Mallet finger">Mallet finger</span>
-        <span class="chip" data-value="Boutonniere">Boutonniere</span>
-        <span class="chip" data-value="Swan neck">Swan neck</span>
-        <span class="chip" data-value="Claw hand">Claw hand</span>
-        <span class="chip" data-value="Wrist drop">Wrist drop</span>
-        <span class="chip" data-value="Thenar wasting">Thenar wasting</span>
-        <span class="chip" data-value="Hypothenar wasting">Hypothenar wasting</span>
-        <span class="chip" data-value="Dupuytren's">Dupuytren's</span>
-      </div>
-    </div>
-    <div class="field">
-      <label>Swelling / Oedema</label>
-      <div class="chip-group" id="swelling-chips">
-        <span class="chip" data-value="None">None</span>
-        <span class="chip" data-value="Pitting">Pitting</span>
-        <span class="chip" data-value="Non-pitting">Non-pitting</span>
-        <span class="chip" data-value="Localised">Localised</span>
-        <span class="chip" data-value="Diffuse">Diffuse</span>
-      </div>
-    </div>
-    <div class="field"><label>Wound Description</label><textarea id="wound-notes" rows="2"></textarea></div>
-    <div id="obs-btn-container"></div>
-    <div class="field"><label>Additional Observation Notes</label><textarea id="observation-notes" rows="3"></textarea></div>
+<!-- 09 PALPATION -->
+<div class="card" id="s-palp">
+  <div class="card-header">
+    <span class="sec-num">09</span>
+    <h2>Palpation</h2>
   </div>
-
-  <!-- ═══ PALPATION ═══ -->
-  <div class="section-card">
-    <div class="section-title">Palpation</div>
-    <div class="form-row">
-      <div class="field"><label>Tenderness</label><input type="text" id="tenderness" placeholder="Location and severity"></div>
-      <div class="field"><label>Temperature</label>
-        <select id="temperature">
-          <option value="">— select —</option>
-          <option>Normal</option><option>Warm</option><option>Hot</option><option>Cool</option><option>Cold</option>
-        </select>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Tenderness</label>
+        <textarea id="tenderness" placeholder="Location, grade (0–3), tissue..."></textarea>
       </div>
-      <div class="field"><label>Texture</label>
-        <select id="texture">
-          <option value="">— select —</option>
-          <option>Normal</option><option>Firm</option><option>Boggy</option><option>Fluctuant</option><option>Hard</option>
-        </select>
+      <div class="field">
+        <label>Temperature / Skin</label>
+        <input type="text" id="temperature" placeholder="Normal / Warm / Cool, skin texture...">
+      </div>
+      <div class="field">
+        <label>Muscle / Soft Tissue</label>
+        <textarea id="texture" placeholder="Spasm, tightness, trigger points, cord..."></textarea>
+      </div>
+      <div class="field">
+        <label>Joint / Bony</label>
+        <textarea id="palpation-notes" placeholder="Joint line tenderness, bony landmarks, crepitus..."></textarea>
       </div>
     </div>
-    <div id="palp-btn-container"></div>
-    <div class="field"><label>Palpation Notes</label><textarea id="palpation-notes" rows="3"></textarea></div>
   </div>
+</div>
 
-  <!-- ═══ ROM ═══ -->
-  <div class="section-card">
-    <div class="section-title">Range of Motion (degrees)</div>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:.88rem;">
+<!-- 10 RANGE OF MOTION -->
+<div class="card" id="s-rom">
+  <div class="card-header">
+    <span class="sec-num">10</span>
+    <h2>Range of Motion</h2>
+  </div>
+  <div class="card-body">
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Assessed joints only — add rows as needed</div>
+    <div class="mov-table-wrap" style="overflow-x:auto">
+      <table class="mov-table" style="width:100%;border-collapse:collapse;font-size:.88rem;">
         <thead>
-          <tr style="background:var(--surface-alt);">
-            <th style="text-align:left;padding:6px 8px;border:1px solid var(--border);">Movement</th>
-            <th style="padding:6px;border:1px solid var(--border);">Active L</th>
-            <th style="padding:6px;border:1px solid var(--border);">Active R</th>
-            <th style="padding:6px;border:1px solid var(--border);">Passive L</th>
-            <th style="padding:6px;border:1px solid var(--border);">Passive R</th>
-            <th style="padding:6px;border:1px solid var(--border);">OP L</th>
-            <th style="padding:6px;border:1px solid var(--border);">OP R</th>
+          <tr>
+            <th style="min-width:140px;text-align:left;padding:6px 8px;">Category</th>
+            <th style="min-width:160px;">Movement</th>
+            <th style="min-width:72px;">Active L</th>
+            <th style="min-width:72px;">Active R</th>
+            <th style="min-width:72px;">Passive L</th>
+            <th style="min-width:72px;">Passive R</th>
+            <th style="min-width:72px;">OP L</th>
+            <th style="min-width:72px;">OP R</th>
+            <th style="width:32px;"></th>
           </tr>
         </thead>
-        <tbody id="rom-tbody">
-          {% set rom_rows = [
-            'Wrist Flexion','Wrist Extension','Wrist Radial Deviation','Wrist Ulnar Deviation',
-            'Wrist Supination','Wrist Pronation',
-            'Thumb CMC Flexion','Thumb CMC Extension','Thumb CMC Abduction','Thumb CMC Adduction',
-            'Thumb MCP Flexion','Thumb MCP Extension',
-            'Thumb IP Flexion','Thumb IP Extension',
-            'Index MCP Flexion','Index MCP Extension',
-            'Index PIP Flexion','Index PIP Extension',
-            'Index DIP Flexion','Index DIP Extension',
-            'Middle MCP Flexion','Middle MCP Extension',
-            'Middle PIP Flexion','Middle PIP Extension',
-            'Middle DIP Flexion','Middle DIP Extension',
-            'Ring MCP Flexion','Ring MCP Extension',
-            'Ring PIP Flexion','Ring PIP Extension',
-            'Ring DIP Flexion','Ring DIP Extension',
-            'Little MCP Flexion','Little MCP Extension',
-            'Little PIP Flexion','Little PIP Extension',
-            'Little DIP Flexion','Little DIP Extension',
-            'Finger Abduction','Finger Adduction',
-            'Opposition — Thumb to Index','Opposition — Thumb to Middle',
-            'Opposition — Thumb to Ring','Opposition — Thumb to Little'
+        <tbody id="rom-tbody"></tbody>
+      </table>
+    </div>
+    <button class="mov-add-btn" id="hand-rom-add-row">+ Add Row</button>
+  </div>
+</div>
+
+<!-- 11 STRENGTH -->
+<div class="card" id="s-strength">
+  <div class="card-header">
+    <span class="sec-num">11</span>
+    <h2>Strength</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Grip &amp; Pinch Strength (kg)</div>
+      <div class="fg c2">
+        <div class="field">
+          <label>Grip — Left (kg)</label>
+          <input type="number" id="grip-l" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>Grip — Right (kg)</label>
+          <input type="number" id="grip-r" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>Pinch Lateral — Left (kg)</label>
+          <input type="number" id="pinch-l" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>Pinch Lateral — Right (kg)</label>
+          <input type="number" id="pinch-r" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>Pinch Pulp — Left (kg)</label>
+          <input type="number" id="pinch-pulp-l" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>Pinch Pulp — Right (kg)</label>
+          <input type="number" id="pinch-pulp-r" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>Pinch 3-Point — Left (kg)</label>
+          <input type="number" id="pinch-3pt-l" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>Pinch 3-Point — Right (kg)</label>
+          <input type="number" id="pinch-3pt-r" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field" style="grid-column:span 2">
+          <label>Pulp-to-Pulp Opposition</label>
+          <textarea id="pulp-opposition" placeholder="e.g. Thumb–Index: intact bilaterally, Thumb–Little: limited R..." style="min-height:52px"></textarea>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Finger-to-Proximal Palmar Crease (cm, 0 = touching)</div>
+      <div class="fg c2">
+        <div class="field">
+          <label>2nd Finger (cm)</label>
+          <input type="number" id="fpc-2nd" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>3rd Finger (cm)</label>
+          <input type="number" id="fpc-3rd" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>4th Finger (cm)</label>
+          <input type="number" id="fpc-4th" min="0" step="0.1" placeholder="0.0">
+        </div>
+        <div class="field">
+          <label>5th Finger (cm)</label>
+          <input type="number" id="fpc-5th" min="0" step="0.1" placeholder="0.0">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 CIRCUMFERENCE -->
+<div class="card" id="s-circ">
+  <div class="card-header">
+    <span class="sec-num">12</span>
+    <h2>Circumference</h2>
+  </div>
+  <div class="card-body">
+    <div style="overflow-x:auto">
+      <table class="mov-table" style="width:100%;border-collapse:collapse;font-size:.88rem;">
+        <thead>
+          <tr>
+            <th style="min-width:180px;text-align:left;padding:6px 8px;">Location</th>
+            <th style="min-width:100px;">Left (cm)</th>
+            <th style="min-width:100px;">Right (cm)</th>
+            <th style="width:32px;"></th>
+          </tr>
+        </thead>
+        <tbody id="circ-tbody"></tbody>
+      </table>
+    </div>
+    <button class="mov-add-btn" id="hand-circ-add-row">+ Add Row</button>
+  </div>
+</div>
+
+<!-- 13 SENSATION TEST -->
+<div class="card" id="s-sensation">
+  <div class="card-header">
+    <span class="sec-num">13</span>
+    <h2>Sensation Test</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Light Touch — Left</label>
+        <select id="light-touch-l">
+          <option value="">—</option>
+          <option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Light Touch — Right</label>
+        <select id="light-touch-r">
+          <option value="">—</option>
+          <option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Pin Prick — Left</label>
+        <select id="pin-prick-l">
+          <option value="">—</option>
+          <option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Pin Prick — Right</label>
+        <select id="pin-prick-r">
+          <option value="">—</option>
+          <option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>2-Point Discrimination — Left (mm)</label>
+        <input type="number" id="two-point-l" min="0" step="0.5" placeholder="mm">
+      </div>
+      <div class="field">
+        <label>2-Point Discrimination — Right (mm)</label>
+        <input type="number" id="two-point-r" min="0" step="0.5" placeholder="mm">
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Sensation Notes</label>
+        <textarea id="sensation-notes" placeholder="Distribution, dermatomal pattern, hypersensitivity site..." style="min-height:56px"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14 NEUROLOGICAL TEST -->
+<div class="card" id="s-neuro">
+  <div class="card-header">
+    <span class="sec-num">14</span>
+    <h2>Neurological Test</h2>
+  </div>
+  <div class="card-body">
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Reflexes (0 = absent, 1+ = diminished, 2+ = normal, 3+ = brisk, 4+ = clonus)</div>
+    <div class="neuro-grid" style="margin-bottom:16px">
+      <div class="nc hdr"></div>
+      <div class="nc hdr">Left</div>
+      <div class="nc hdr">Right</div>
+      <div class="nc rl">C5 (Biceps)</div>
+      <div class="nc">
+        <select id="ref-c5-l" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+      <div class="nc">
+        <select id="ref-c5-r" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+      <div class="nc rl">C6 (Brachioradialis)</div>
+      <div class="nc">
+        <select id="ref-c6-l" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+      <div class="nc">
+        <select id="ref-c6-r" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+      <div class="nc rl">C7 (Triceps)</div>
+      <div class="nc">
+        <select id="ref-c7-l" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+      <div class="nc">
+        <select id="ref-c7-r" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+      <div class="nc rl">C8/T1 (Finger flexors)</div>
+      <div class="nc">
+        <select id="ref-c8t1-l" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+      <div class="nc">
+        <select id="ref-c8t1-r" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px;">Manual Muscle Testing (0 / 1 / 2 / 2+ / 3 / 3+ / 4 / 4+ / 5)</div>
+    <div class="neuro-grid">
+      <div class="nc hdr"></div>
+      <div class="nc hdr">Left</div>
+      <div class="nc hdr">Right</div>
+      {% for muscle, idkey in [
+        ('Deltoid',             'mmt-deltoid'),
+        ('Biceps',              'mmt-biceps'),
+        ('Brachioradialis',     'mmt-brachiorad'),
+        ('Wrist Extensors',     'mmt-wristext'),
+        ('Wrist Flexors',       'mmt-wristflex'),
+        ('Finger MP Extensors', 'mmt-fingermpext'),
+        ('Triceps',             'mmt-triceps'),
+        ('Finger Flexors',      'mmt-fingerflex'),
+        ('Hand Intrinsics',     'mmt-intrinsics')
+      ] %}
+      <div class="nc rl">{{ muscle }}</div>
+      <div class="nc">
+        <select id="{{ idkey }}-l" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option>
+          <option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option>
+        </select>
+      </div>
+      <div class="nc">
+        <select id="{{ idkey }}-r" class="mov-cell-input">
+          <option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option>
+          <option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option>
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- 15 SPECIAL TESTS -->
+<div class="card" id="s-special">
+  <div class="card-header">
+    <span class="sec-num">15</span>
+    <h2>Special Tests</h2>
+  </div>
+  <div class="card-body">
+    <div style="overflow-x:auto">
+      <table class="mov-table" style="width:100%;border-collapse:collapse;font-size:.88rem;">
+        <thead>
+          <tr>
+            <th style="min-width:180px;text-align:left;padding:6px 8px;">Test</th>
+            <th style="min-width:130px;">Right</th>
+            <th style="min-width:130px;">Left</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for test, idkey in [
+            ("Tinel's Sign",        "tinels"),
+            ("Phalen's Test",       "phalens"),
+            ("Finkelstein's Test",  "finkelsteins"),
+            ("Froment's Sign",      "fromens")
           ] %}
-          {% for row in rom_rows %}
-          <tr data-movement="{{ row }}" style="{% if loop.index is odd %}background:var(--surface);{% else %}background:var(--surface-alt);{% endif %}">
-            <td style="padding:4px 8px;border:1px solid var(--border);white-space:nowrap;">{{ row }}</td>
-            <td style="border:1px solid var(--border);"><input type="text" style="width:52px;text-align:center;border:none;background:transparent;"></td>
-            <td style="border:1px solid var(--border);"><input type="text" style="width:52px;text-align:center;border:none;background:transparent;"></td>
-            <td style="border:1px solid var(--border);"><input type="text" style="width:52px;text-align:center;border:none;background:transparent;"></td>
-            <td style="border:1px solid var(--border);"><input type="text" style="width:52px;text-align:center;border:none;background:transparent;"></td>
-            <td style="border:1px solid var(--border);"><input type="text" style="width:52px;text-align:center;border:none;background:transparent;"></td>
-            <td style="border:1px solid var(--border);"><input type="text" style="width:52px;text-align:center;border:none;background:transparent;"></td>
+          <tr>
+            <td style="padding:4px 8px;">{{ test }}</td>
+            <td>
+              <select id="{{ idkey }}-r" class="mov-cell-input" style="min-width:120px">
+                <option value="">—</option><option>Negative</option><option>Positive</option><option>Not tested</option>
+              </select>
+            </td>
+            <td>
+              <select id="{{ idkey }}-l" class="mov-cell-input" style="min-width:120px">
+                <option value="">—</option><option>Negative</option><option>Positive</option><option>Not tested</option>
+              </select>
+            </td>
           </tr>
           {% endfor %}
         </tbody>
+        <tbody id="special-custom-tbody"></tbody>
       </table>
     </div>
+    <button class="mov-add-btn" id="special-add-test">+ Add Test</button>
   </div>
+</div>
 
-  <!-- ═══ STRENGTH & CIRCUMFERENCE ═══ -->
-  <div class="section-card">
-    <div class="section-title">Muscle Strength &amp; Circumference</div>
-    <div class="form-row">
-      <div class="field"><label>Grip Strength R (kg)</label><input type="number" id="grip-r" min="0" step="0.1"></div>
-      <div class="field"><label>Grip Strength L (kg)</label><input type="number" id="grip-l" min="0" step="0.1"></div>
-      <div class="field"><label>Pinch Strength R (kg)</label><input type="number" id="pinch-r" min="0" step="0.1"></div>
-      <div class="field"><label>Pinch Strength L (kg)</label><input type="number" id="pinch-l" min="0" step="0.1"></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:12px;margin:8px 0 4px;">
-      <span style="font-weight:500;font-size:.9rem;">Circumference Measurements</span>
-      <button type="button" class="btn-ghost" onclick="HandForm.addCircRow()">+ Add Row</button>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:.88rem;">
-      <thead>
-        <tr style="background:var(--surface-alt);">
-          <th style="text-align:left;padding:4px 8px;border:1px solid var(--border);">Location</th>
-          <th style="padding:4px 8px;border:1px solid var(--border);">Measurement (cm)</th>
-          <th style="width:40px;border:1px solid var(--border);"></th>
-        </tr>
-      </thead>
-      <tbody id="circ-tbody"></tbody>
-    </table>
+<!-- 16 PT IMPRESSION -->
+<div class="card" id="s-impression">
+  <div class="card-header">
+    <span class="sec-num">16</span>
+    <h2>PT Impression</h2>
   </div>
-
-  <!-- ═══ SENSATION ═══ -->
-  <div class="section-card">
-    <div class="section-title">Sensation</div>
-    <div class="form-row">
-      <div class="field"><label>Light Touch R</label>
-        <select id="light-touch-r"><option value="">—</option><option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option></select>
-      </div>
-      <div class="field"><label>Light Touch L</label>
-        <select id="light-touch-l"><option value="">—</option><option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option></select>
-      </div>
-      <div class="field"><label>Pin Prick R</label>
-        <select id="pin-prick-r"><option value="">—</option><option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option></select>
-      </div>
-      <div class="field"><label>Pin Prick L</label>
-        <select id="pin-prick-l"><option value="">—</option><option>Intact</option><option>Reduced</option><option>Absent</option><option>Hypersensitive</option></select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="field"><label>2-Point Discrimination R (mm)</label><input type="number" id="two-point-r" min="0" step="0.5"></div>
-      <div class="field"><label>2-Point Discrimination L (mm)</label><input type="number" id="two-point-l" min="0" step="0.5"></div>
-    </div>
-    <div class="field"><label>Sensation Notes</label><textarea id="sensation-notes" rows="2"></textarea></div>
-  </div>
-
-  <!-- ═══ OTHER TESTS ═══ -->
-  <div class="section-card">
-    <div class="section-title">Special Tests</div>
-    <table style="width:100%;border-collapse:collapse;font-size:.88rem;">
-      <thead>
-        <tr style="background:var(--surface-alt);">
-          <th style="text-align:left;padding:6px 8px;border:1px solid var(--border);">Test</th>
-          <th style="padding:6px;border:1px solid var(--border);">Right</th>
-          <th style="padding:6px;border:1px solid var(--border);">Left</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for test, idkey in [("Tinel's Sign","tinels"),("Phalen's Test","phalens"),("Finkelstein's Test","finkelsteins"),("Froment's Sign","fromens")] %}
-        <tr>
-          <td style="padding:4px 8px;border:1px solid var(--border);">{{ test }}</td>
-          <td style="border:1px solid var(--border);">
-            <select id="{{ idkey }}-r" style="width:120px;">
-              <option value="">—</option><option>Negative</option><option>Positive</option><option>Not tested</option>
-            </select>
-          </td>
-          <td style="border:1px solid var(--border);">
-            <select id="{{ idkey }}-l" style="width:120px;">
-              <option value="">—</option><option>Negative</option><option>Positive</option><option>Not tested</option>
-            </select>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <div style="margin-top:16px;font-weight:500;font-size:.9rem;">Neurological Screen</div>
-    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:6px;">Reflexes (0 = absent, 1+ = diminished, 2+ = normal, 3+ = brisk, 4+ = clonus)</div>
-    <table style="width:100%;border-collapse:collapse;font-size:.88rem;margin-bottom:12px;">
-      <thead>
-        <tr style="background:var(--surface-alt);">
-          <th style="text-align:left;padding:4px 8px;border:1px solid var(--border);">Reflex</th>
-          <th style="padding:4px;border:1px solid var(--border);">Left</th>
-          <th style="padding:4px;border:1px solid var(--border);">Right</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for ref, idkey in [("C5 (Biceps)","ref-c5"),("C6 (Brachioradialis)","ref-c6"),("C7 (Triceps)","ref-c7"),("C8/T1 (Finger flexors)","ref-c8t1")] %}
-        <tr>
-          <td style="padding:4px 8px;border:1px solid var(--border);">{{ ref }}</td>
-          <td style="border:1px solid var(--border);">
-            <select id="{{ idkey }}-l" style="width:80px;">
-              <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
-            </select>
-          </td>
-          <td style="border:1px solid var(--border);">
-            <select id="{{ idkey }}-r" style="width:80px;">
-              <option value="">—</option><option>0</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option>
-            </select>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:6px;">Manual Muscle Testing (0–5)</div>
-    <table style="width:100%;border-collapse:collapse;font-size:.88rem;">
-      <thead>
-        <tr style="background:var(--surface-alt);">
-          <th style="text-align:left;padding:4px 8px;border:1px solid var(--border);">Muscle Group</th>
-          <th style="padding:4px;border:1px solid var(--border);">Left</th>
-          <th style="padding:4px;border:1px solid var(--border);">Right</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for muscle, idkey in [
-          ("Deltoid","mmt-deltoid"),("Biceps","mmt-biceps"),
-          ("Wrist Extensors","mmt-wristext"),("Wrist Flexors","mmt-wristflex"),
-          ("Finger MP Extensors","mmt-fingermpext"),("Triceps","mmt-triceps"),
-          ("Finger Flexors","mmt-fingerflex"),("Hand Intrinsics","mmt-intrinsics")
-        ] %}
-        <tr>
-          <td style="padding:4px 8px;border:1px solid var(--border);">{{ muscle }}</td>
-          <td style="border:1px solid var(--border);">
-            <select id="{{ idkey }}-l" style="width:70px;">
-              <option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option>
-            </select>
-          </td>
-          <td style="border:1px solid var(--border);">
-            <select id="{{ idkey }}-r" style="width:70px;">
-              <option value="">—</option><option>0</option><option>1</option><option>2</option><option>2+</option><option>3</option><option>3+</option><option>4</option><option>4+</option><option>5</option>
-            </select>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ═══ PT IMPRESSION + GOALS + PLAN ═══ -->
-  <div class="section-card">
-    <div class="section-title">PT Impression, Goals &amp; Plan</div>
-    <div id="imp-btn-container"></div>
-    <div class="field"><label>PT Impression</label><textarea id="pt-impression" rows="4"></textarea></div>
-    <div class="form-row">
+  <div class="card-body">
+    <div class="fg">
       <div class="field">
-        <div id="stg-btn-container"></div>
-        <label>Short-Term Goals</label><textarea id="stg" rows="3"></textarea>
-      </div>
-      <div class="field">
-        <div id="ltg-btn-container"></div>
-        <label>Long-Term Goals</label><textarea id="ltg" rows="3"></textarea>
+        <label>PT Impression</label>
+        <textarea id="pt-impression" placeholder="Clinical reasoning summary, physiotherapy impression..."></textarea>
       </div>
     </div>
-    <div id="plan-btn-container"></div>
-    <div class="field"><label>Treatment Plan</label><textarea id="plan" rows="4"></textarea></div>
   </div>
+</div>
 
-</form>
+<!-- 17 SHORT-TERM GOALS -->
+<div class="card" id="s-stg">
+  <div class="card-header">
+    <span class="sec-num">17</span>
+    <h2>Short-Term Goals</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Short-Term Goals (STG)</label>
+        <textarea id="stg" placeholder="Goals within 2–4 weeks..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 18 LONG-TERM GOALS -->
+<div class="card" id="s-ltg">
+  <div class="card-header">
+    <span class="sec-num">18</span>
+    <h2>Long-Term Goals</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Long-Term Goals (LTG)</label>
+        <textarea id="ltg" placeholder="Functional rehabilitation goals..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 19 PLAN OF TREATMENT -->
+<div class="card" id="s-plan">
+  <div class="card-header">
+    <span class="sec-num">19</span>
+    <h2>Plan of Treatment</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Plan of Treatment</label>
+        <textarea id="plan" placeholder="Modalities, exercises, splinting, HEP, frequency, precautions..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/hand_rom_table.js"></script>
+<script src="/static/js/hand_circ_table.js"></script>
+<script src="/static/js/form_hand.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  HandRomTable.init('hand-rom-add-row', 'rom-tbody');
+  HandCircTable.init('hand-circ-add-row', 'circ-tbody');
+  HandForm.initSpecialTests();
+
+  var FM = 'HAND';
+  ClinicalTemplates.addButton('pt-impression', FM, 'impression');
+  ClinicalTemplates.addButton('stg',           FM, 'stg');
+  ClinicalTemplates.addButton('ltg',           FM, 'ltg');
+  ClinicalTemplates.addButton('plan',          FM, 'treatment');
+  ClinicalTemplates.addButton('observation-notes', FM, 'observation');
+  ClinicalTemplates.addButton('palpation-notes',   FM, 'palpation');
+});
+</script>
 {% endblock %}

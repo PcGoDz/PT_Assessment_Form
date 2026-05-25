@@ -349,6 +349,30 @@
     body.dark .modal       { background: var(--surface); }
     body.dark .modal-field input,
     body.dark .modal-field select { background: var(--surface2); color: var(--text); }
+    body.dark .form-card   { background: var(--surface2); }
+
+    /* ── Form picker (new episode modal) ── */
+    .form-picker {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-bottom: 18px; max-height: 380px; overflow-y: auto; padding-right: 4px;
+    }
+    .form-card {
+      border: 2px solid var(--border);
+      border-radius: var(--m3-shape-md, var(--radius-lg));
+      padding: 16px; cursor: pointer; transition: all 0.15s;
+      background: var(--bg); position: relative;
+    }
+    .form-card:hover:not(.soon) { border-color: var(--accent-mid); background: var(--accent-light); }
+    .form-card.selected { border-color: var(--accent); background: var(--accent-light); }
+    .form-card.soon { opacity: 0.45; cursor: not-allowed; }
+    .form-card-icon  { font-size: 22px; margin-bottom: 6px; }
+    .form-card-name  { font-size: 13px; font-weight: 600; color: var(--text); }
+    .form-card-sub   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .form-card-badge {
+      position: absolute; top: 8px; right: 8px; font-size: 9px;
+      background: var(--border); color: var(--text-faint);
+      padding: 1px 5px; border-radius: 4px; font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -361,6 +385,7 @@
     <div class="pt-topbar-actions">
       <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">&#9790;</button>
       <button class="tbtn" onclick="window.location.href='/'">&#8592; All Patients</button>
+      <button class="tbtn primary" onclick="openNewEpisodeModal()">+ New Episode</button>
     </div>
   </header>
 
@@ -441,6 +466,8 @@
         <span style="font-size:11px;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;">
           {{ episodes|length }} episode{{ 's' if episodes|length != 1 else '' }}
         </span>
+        <button class="btn-ghost" onclick="openNewEpisodeModal()"
+          style="margin-left:auto;font-size:12px;padding:5px 12px;">+ New Episode</button>
       </div>
       {% if episodes %}
       <div class="episodes-list">
@@ -480,10 +507,116 @@
       <div class="empty-state">
         <div class="empty-icon">&#128203;</div>
         <div class="empty-title">No episodes yet</div>
-        <div class="empty-sub">Go back to patient list to start a new episode</div>
+        <div class="empty-sub">Click &ldquo;+ New Episode&rdquo; to begin the first assessment</div>
       </div>
       {% endif %}
     </div>
+
+<!-- Modal: New Episode -->
+<div class="modal-backdrop" id="modal-new-episode">
+  <div class="modal" style="max-width:560px;">
+    <button class="modal-close" onclick="closeNewEpisodeModal()">&#x2715;</button>
+    <div class="modal-title">New Episode / Referral</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+      Select assessment form type for this referral
+    </div>
+    <div class="form-picker" id="form-picker">
+      <div class="form-card selected" data-form="MS" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#129460;</div>
+        <div class="form-card-name">Musculoskeletal</div>
+        <div class="form-card-sub">Peripheral joints, ROM, strength</div>
+      </div>
+      <div class="form-card" data-form="SPINE" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#128279;</div>
+        <div class="form-card-name">Spine</div>
+        <div class="form-card-sub">Cervical, thoracic, lumbar</div>
+      </div>
+      <div class="form-card" data-form="AMPUTATION" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#129452;</div>
+        <div class="form-card-name">Amputation</div>
+        <div class="form-card-sub">Amputee rehab, prosthetic</div>
+      </div>
+      <div class="form-card" data-form="HAND" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#9995;</div>
+        <div class="form-card-name">Hand</div>
+        <div class="form-card-sub">Hand, wrist, fine motor</div>
+      </div>
+      <div class="form-card soon" data-form="BURN">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128293;</div>
+        <div class="form-card-name">Burn</div>
+        <div class="form-card-sub">Burns rehabilitation</div>
+      </div>
+      <div class="form-card" data-form="NEURO" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#9889;</div>
+        <div class="form-card-name">Neurological</div>
+        <div class="form-card-sub">Stroke, TBI, neuro rehab</div>
+      </div>
+      <div class="form-card soon" data-form="SCI">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128248;</div>
+        <div class="form-card-name">Spinal Cord Injury</div>
+        <div class="form-card-sub">SCI, paraplegia, tetraplegia</div>
+      </div>
+      <div class="form-card soon" data-form="VESTIBULAR">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128260;</div>
+        <div class="form-card-name">Vestibular</div>
+        <div class="form-card-sub">Vertigo, balance disorders</div>
+      </div>
+      <div class="form-card soon" data-form="FACIAL">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128528;</div>
+        <div class="form-card-name">Facial</div>
+        <div class="form-card-sub">Facial palsy, TMJ</div>
+      </div>
+      <div class="form-card" data-form="CR" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#129728;</div>
+        <div class="form-card-name">Cardiorespiratory</div>
+        <div class="form-card-sub">Pulmonary, cardiac rehab</div>
+      </div>
+      <div class="form-card" data-form="GERIATRIC" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#9878;</div>
+        <div class="form-card-name">Geriatric</div>
+        <div class="form-card-sub">Balance, mobility, falls</div>
+      </div>
+      <div class="form-card soon" data-form="PAEDIATRIC">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128118;</div>
+        <div class="form-card-name">Paediatric</div>
+        <div class="form-card-sub">Paeds rehab, development</div>
+      </div>
+      <div class="form-card soon" data-form="LYMPHOEDEMA">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128167;</div>
+        <div class="form-card-name">Lymphoedema</div>
+        <div class="form-card-sub">Lymphatic drainage, CDT</div>
+      </div>
+      <div class="form-card soon" data-form="NCD">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128138;</div>
+        <div class="form-card-name">NCD</div>
+        <div class="form-card-sub">Chronic disease management</div>
+      </div>
+      <div class="form-card soon" data-form="GENERAL">
+        <div class="form-card-badge">Soon</div>
+        <div class="form-card-icon">&#128203;</div>
+        <div class="form-card-name">General</div>
+        <div class="form-card-sub">General physiotherapy</div>
+      </div>
+    </div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <label>Date of Assessment</label>
+        <input type="date" id="ep-referral-date">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeNewEpisodeModal()">Cancel</button>
+      <button class="btn-primary" onclick="submitNewEpisode()">Start Episode</button>
+    </div>
+  </div>
+</div>
 
   <!-- Modal: Discharge Episode -->
 <div class="modal-backdrop" id="modal-discharge">
@@ -779,6 +912,50 @@ async function reactivateEpisode(episodeId) {
     setTimeout(function() { window.location.reload(); }, 700);
   } catch(e) { showToast('Error: ' + e.message, 'err'); }
 }
+// ── New Episode ───────────────────────────────────────
+var selectedEpForm = 'MS';
+
+function openNewEpisodeModal() {
+  selectedEpForm = 'MS';
+  document.querySelectorAll('#form-picker .form-card').forEach(function(c) {
+    c.classList.toggle('selected', c.dataset.form === 'MS');
+  });
+  document.getElementById('ep-referral-date').value =
+    new Date().toISOString().split('T')[0];
+  document.getElementById('modal-new-episode').classList.add('open');
+}
+function closeNewEpisodeModal() {
+  document.getElementById('modal-new-episode').classList.remove('open');
+}
+document.getElementById('modal-new-episode').addEventListener('click', function(e) {
+  if (e.target === this) closeNewEpisodeModal();
+});
+function selectEpForm(el) {
+  if (el.classList.contains('soon')) return;
+  document.querySelectorAll('#form-picker .form-card').forEach(function(c) {
+    c.classList.remove('selected');
+  });
+  el.classList.add('selected');
+  selectedEpForm = el.dataset.form;
+}
+async function submitNewEpisode() {
+  var refDate = document.getElementById('ep-referral-date').value;
+  try {
+    var res = await fetch('/api/patients/' + PATIENT_ID + '/episodes', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ form_type: selectedEpForm, referral_date: refDate })
+    });
+    var j = await res.json();
+    if (!res.ok) { showToast(j.error || 'Failed', 'err'); return; }
+    closeNewEpisodeModal();
+    showToast('Episode created', 'ok');
+    window.location.href = '/episode/' + j.id;
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
 initDark();
 </script>
 </body>

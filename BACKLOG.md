@@ -12,10 +12,15 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 
 ## Open bugs / Cleanup
 
+- **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.nc` variants. All de-facto canonical from ms.html but undocumented. Surfaced by 2026-05-21 hand form plan audit.
+
+- **Hand form ROM cells — validation pass for asymmetric start/end pair entries.** Rows where only start or only end angle is filled currently render gracefully in PDF (single value with °). No UX validation or warning implemented yet. Session A scope only covered UI rebuild.
+
 - `_openPatientInline(id)` in `home.html` — dead code, not yet removed. Check `openEditPatientModal()` and `deleteCurrentPatient()` dependency on `currentPatientData` before deleting.
-- `pdf_hand.py` unused imports: `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB` — harmless but noise.
+- `pdf_hand.py` unused imports: `Table`, `TableStyle`, `colors`, `ML`, `MR`, `MT`, `MB` — `CW` is now used (Block 4 table widths). Remaining imports are dead weight, harmless, clean up after merge.
 - 6 `pdf_*.py` files have unused `KeepTogether` import after U12 refactor (`pdf_ms`, `pdf_spine`, `pdf_geriatric`, `pdf_cr`, `pdf_amputation`, `pdf_hand`) — cosmetic, zero runtime/build risk. Spawned as background task.
-- `clinical_templates.js` comment at line 4 lists only MS/SPINE/GERIATRIC/CR — stale, doesn't include HAND/AMPUTATION/NEURO.
+- **HAND PDF layout rhythm inconsistency.** Block 4 is now full-width tables while Blocks 1–3 and 5 use `two_col()` boxes. Usable, but alternating rhythm is visually mixed. Future polish when HAND form gets a broader PDF pass.
+- **Block 5 + sign block flow risk.** `sign_chop_block()` can land on a near-empty page 3 if Block 5 is short. Consider wrapping Block 5 + sign block in `KeepTogether` when Block 5 content is brief.
 - `resetPatient()` in `form_base.js` missing null guards on `derived-dob` / `derived-gender`.
 - Geriatric form has duplicate RN/IC fields — cosmetic, low priority.
 - No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place.
@@ -36,6 +41,9 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 
 ## Nice-to-haves
 
+- Hand chart SVG R/L visual disambiguation — R and L hand SVGs look identical; consider labels or colour tint.
+- Hand chart marker input — currently a dropdown selector; chip-style selector (matching ms.html bodychart pattern) would be more consistent.
+- Topbar button order axiom in CLAUDE.md — smoke test flagged a possible order mismatch; confirm with Miruya whether axiom needs updating before next form build.
 - Draft/final state for records (currently records save in single state)
 - Shared table IIFEs (movement_table.js pattern could be extended to other tables)
 - Audit log UI viewer (audit_log table is logged but not surfaced anywhere)

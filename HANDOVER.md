@@ -1,46 +1,50 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-05-19
+Last updated: 2026-05-25
 
 ---
 
 ## Where we left off
 
-Executed PLAN-U12 (pdf consolidation) via subagent-driven-development with worktree isolation (`refactor/u12-pdf-consolidation`). Three commits merged to main and pushed:
-- Added `ensure_dict()` + `generate_episode_pdf_base()` to `pdf_platypus_base.py`; `import json` placed at module level (U1 + fix)
-- Updated all 7 `pdf_*.py` — `generate_episode_pdf` replaced with one-liner delegates, 4 local `_ensure_dict` defs deleted (`pdf_geriatric`, `pdf_amputation`, `pdf_neuro`, `pdf_hand`), `__import__` hack in `pdf_neuro.py` eliminated, all `_ensure_dict(` usages renamed to `ensure_dict(` (U2)
-- Net: 8 files changed, +70 / –188 lines.
+Session C complete. Three tasks landed on branch `claude/refactor-hand-form-ui-rebuild`:
+
+**Task 1** (`clinical_templates.js`): Fixed HAND template button silent failure. Mutated 6 compound-key arrays (`TEMPLATES.HAND_OBS` etc.) into a single flat `templates['HAND']` array that slots into the existing `show()` lookup chain. Removed stale `|| templates[formType]` fallback. Updated stale comment at line 4 that listed only MS/SPINE/GERIATRIC/CR.
+
+**Task 1.5** (`clinical_templates.js`): Rewrote HAND_STG (8 entries), HAND_LTG (8 entries), HAND_PLAN (9 entries) as discrete SMART statements authored from scratch — source KKM doc had vague categories, not time-bound statements. Each entry is Specific / Measurable / Achievable / Realistic / Time-bound and audit-ready.
+
+**Task 2** (`pdf_hand.py`): Rewrote Block 4 — replaced `left4`/`right4` two-column kv-paragraph soup with 7 full-width `data_table()` tables stacked vertically: Strength, Tick if Necessary (FPC), Circumference, Sensation, Special Tests, Reflexes, MMT. MMT (`neuro.muscles`) was previously collected by `form_hand.js` but silently dropped — now rendered. Each table is empty-data-guarded via `_has_data()` — skipped entirely if no values present. Verified: import clean, full-data PDF renders 7 tables, sparse-data PDF skips Block 4 entirely.
 
 ---
 
 ## Half-done
 
-- 6 `pdf_*.py` files have now-unused `KeepTogether` imports (`pdf_ms`, `pdf_spine`, `pdf_geriatric`, `pdf_cr`, `pdf_amputation`, `pdf_hand`) — spawned as background task, cosmetic only.
-- `pdf_hand.py` unused imports: `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB` — harmless but noise.
-- Exe build untested since NEURO + M3 + discharge + HAND + U34 + U12 cleanup.
-- HAND form smoke-test never done.
-- `_openPatientInline(id)` dead code in `home.html` not cleaned up.
-- `clinical_templates.js` comment at line 4 lists only MS/SPINE/GERIATRIC/CR — stale.
+- Branch `claude/refactor-hand-form-ui-rebuild` not yet merged to main — pending Miruya smoke test of live HAND PDF from a real DB record (test fixtures pass; real record not yet verified).
+- `pdf_hand.py` unused imports still present: `Table`, `TableStyle`, `colors`, `ML`, `MR`, `MT`, `MB` — `CW` is now used (Block 4 table widths). Remaining imports are dead weight, harmless but noisy.
 
 ---
 
 ## Next session priorities
 
-1. **Git push** — already done this session. Next session: confirm remote is current.
-2. **Smoke-test HAND form** — Save Record, Export KKM PDF (verify `fisio / b.pen. 12 / Pind. 2 / 2019` in header), Copy to MPIS, all template buttons.
-3. **Full exe build test** — all 7 ready forms end-to-end (untested since multiple structural changes).
-4. **Clean up `pdf_hand.py` unused imports** — `Table`, `TableStyle`, `colors`, `CW`, `ML`, `MR`, `MT`, `MB`.
-5. **Pick next form** — BURN (Musculoskeletal) or SCI (Neurological) from FORM_REGISTRY.
+1. **Git push** — `git add -A && git commit -m "session C complete" && git push` (persistent overdue reminder)
+2. **Miruya smoke test** — generate real HAND PDF from existing DB record in running app; verify all 7 Block 4 tables render correctly
+3. **Merge branch → main** after smoke test passes
+4. **Full exe build test** — outstanding since NEURO + M3 + HAND form changes
+5. **Pick next form** — BURN (Musculoskeletal) or SCI (Neurological)
 
 ---
 
 ## Gotchas discovered this session
 
-- Old `pdf_hand.py` `_ensure_dict` used `return val or {}` (passes truthy non-dicts through). New shared `ensure_dict` uses `return val if isinstance(val, dict) else {}` (stricter). Behavioural difference only for truthy non-dict non-strings — never occurs in practice since all affected fields store JSON objects. New behaviour is safer.
-- `pdf_hand.py` has a separate `import json` at module level (line 4) used in `_build_story` for `json.loads(data)` — this is NOT the same as the `ensure_dict` import. Do not remove it.
+- **MMT silent data loss pattern.** `neuro.muscles` collected by `form_hand.js` since Session A but never rendered by `pdf_hand.py`. Undetectable without cross-referencing collect() output vs PDF blocks explicitly. Rule added to WORKFLOW.md Anti-Repeat: when adding form data collection, verify the PDF renders it.
+- **ROM was already a `data_table()` before Session C.** Original Session C prompt was wrong about ROM needing a rewrite — it was already correct. Scope corrected by Opus review before work started.
+- **HAND PDF layout rhythm is mixed.** Blocks 1–3 and 5 use `two_col()` boxes; Block 4 is now full-width tables. Usable but visually inconsistent rhythm. Filed in BACKLOG as future polish.
+- **DESIGN_SYSTEM.md now exceeds 250 lines** (PDF Layout section added this session, ~65 lines). Flagged for possible split into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md` next session.
 
 ---
 
 ## What to skip for now
 
-Age auto-calc, ARIA, audit_log CASCADE, UNIQUE constraint, draft/final, shared table IIFEs. See BACKLOG.md.
+- Unused import cleanup in `pdf_hand.py` — cosmetic, no runtime risk, do after merge
+- DESIGN_SYSTEM.md file split — flag only, not blocking
+- exe build — after smoke test + merge
+- BACKLOG items: `btn-ghost` cleanup, ROM asymmetric validation, hand chart SVG disambiguation

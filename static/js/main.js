@@ -1394,24 +1394,32 @@ const Main = (function () {
     function sec(title, val) { mpisSec(parts, title, val); }
 
     sec('DIAGNOSIS', d.diagnosis);
-    sec('MANAGEMENT', d.managementType + (d.managementType === 'Surgical' && d.surgeryDate ? ' — ' + d.surgeryDate : ''));
+    sec('MANAGEMENT', (d.managementType || '') + (d.managementType === 'Surgical' && d.surgeryDate ? ' — ' + d.surgeryDate : ''));
     sec('DOMINANT HAND', d.sqDominantHand);
-    sec('COMPLAINT', d.chiefComplaint);
-    sec('ONSET', d.onsetDate);
-    sec('MECHANISM', d.mechanism);
-    sec('PAIN (R/L)', (d.painScoreR || dash) + ' / ' + (d.painScoreL || dash));
-    if (d.painNature && d.painNature.length) sec('PAIN NATURE', d.painNature.join(', '));
-    sec('AGGRAVATING', d.painAggravate);
-    sec('RELIEVING',   d.painRelieve);
+    // chiefComplaint/onsetDate/mechanism removed in Session A — replaced by hxCurrent
+    sec('HISTORY', d.hxCurrent);
+    sec('PAST HX', d.hxPast);
+    // painScoreR/L renamed to painPre/painPost in Session A
+    sec('PAIN (Pre/Post)', (d.painPre || dash) + ' / ' + (d.painPost || dash));
+    // painNature is now a plain string (was chip array) — drop .join()
+    sec('PAIN NATURE', d.painNature);
+    sec('PAIN 24HR', d.pain24hr);
+    // painAggravate/painRelieve renamed to painAgg/painEase in Session A
+    sec('AGGRAVATING', d.painAgg);
+    sec('RELIEVING',   d.painEase);
+    sec('IRRITABILITY', d.irritability);
     sec('OBSERVATION', d.observationNotes);
-    if (d.skinCondition  && d.skinCondition.length)  sec('SKIN',     d.skinCondition.join(', '));
-    if (d.deformity      && d.deformity.length)       sec('DEFORMITY',d.deformity.join(', '));
-    if (d.swelling       && d.swelling.length)         sec('SWELLING', d.swelling.join(', '));
+    sec('WOUND', d.woundNotes);
+    // skinCondition/deformity/swelling chip arrays removed from collect() in Session A
     sec('TENDERNESS',  d.tenderness);
     sec('TEMPERATURE', d.temperature);
+    sec('TEXTURE',     d.texture);
     sec('PALPATION',   d.palpationNotes);
     sec('GRIP (R/L)',  (d.gripStrengthR || dash) + ' / ' + (d.gripStrengthL || dash) + ' kg');
-    sec('PINCH (R/L)', (d.pinchStrengthR || dash) + ' / ' + (d.pinchStrengthL || dash) + ' kg');
+    // pinchStrengthR/L replaced by split types in Session A
+    sec('PINCH LAT (R/L)',  (d.pinchLateralR || dash) + ' / ' + (d.pinchLateralL || dash) + ' kg');
+    sec('PINCH PULP (R/L)', (d.pinchPulpR    || dash) + ' / ' + (d.pinchPulpL    || dash) + ' kg');
+    sec('PINCH 3PT (R/L)',  (d.pinch3ptR     || dash) + ' / ' + (d.pinch3ptL     || dash) + ' kg');
     sec('SENSATION',   d.sensationNotes);
     sec('PT IMPRESSION', d.ptImpression);
     sec('STG', d.stg);
