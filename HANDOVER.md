@@ -1,50 +1,48 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-05-25
+Last updated: 2026-05-26
 
 ---
 
 ## Where we left off
 
-Session C complete. Three tasks landed on branch `claude/refactor-hand-form-ui-rebuild`:
+Session D complete (partial). Rewrote `_buildMpisHand()` in `static/js/main.js` (~line 1388) to SOAPIER structure with patient header block. Caught and fixed MMT silent data loss in MPIS — `d.neuro.muscles` was collected by `form_hand.js` since Session A but never rendered (same pattern as PDF Session C catch). Hand chart markers now render as `#hm1 (Pain) - Left Palmar` (verified actual marker shape `{id, hand, type, x, y}` — no `zone` field, no `view` field).
 
-**Task 1** (`clinical_templates.js`): Fixed HAND template button silent failure. Mutated 6 compound-key arrays (`TEMPLATES.HAND_OBS` etc.) into a single flat `templates['HAND']` array that slots into the existing `show()` lookup chain. Removed stale `|| templates[formType]` fallback. Updated stale comment at line 4 that listed only MS/SPINE/GERIATRIC/CR.
-
-**Task 1.5** (`clinical_templates.js`): Rewrote HAND_STG (8 entries), HAND_LTG (8 entries), HAND_PLAN (9 entries) as discrete SMART statements authored from scratch — source KKM doc had vague categories, not time-bound statements. Each entry is Specific / Measurable / Achievable / Realistic / Time-bound and audit-ready.
-
-**Task 2** (`pdf_hand.py`): Rewrote Block 4 — replaced `left4`/`right4` two-column kv-paragraph soup with 7 full-width `data_table()` tables stacked vertically: Strength, Tick if Necessary (FPC), Circumference, Sensation, Special Tests, Reflexes, MMT. MMT (`neuro.muscles`) was previously collected by `form_hand.js` but silently dropped — now rendered. Each table is empty-data-guarded via `_has_data()` — skipped entirely if no values present. Verified: import clean, full-data PDF renders 7 tables, sparse-data PDF skips Block 4 entirely.
+Scope miss discovered after implementation: Opus drafted target shape from partial mental model of HAND form, omitted 10 sub-blocks from coverage. MMT fix is correct and shipped; full block coverage parked for tomorrow on same branch. `WORKFLOW.md` Anti-Repeat rule updated to cover collect→PDF→MPIS triangle. Branch NOT merged, NOT pushed — intentional, continuation tomorrow.
 
 ---
 
 ## Half-done
 
-- Branch `claude/refactor-hand-form-ui-rebuild` not yet merged to main — pending Miruya smoke test of live HAND PDF from a real DB record (test fixtures pass; real record not yet verified).
-- `pdf_hand.py` unused imports still present: `Table`, `TableStyle`, `colors`, `ML`, `MR`, `MT`, `MB` — `CW` is now used (Block 4 table widths). Remaining imports are dead weight, harmless but noisy.
+- Branch `claude/mystifying-banach-fff0d9` open, not merged, not pushed
+- `_buildMpisHand()` covers ~60% of `collect()` fields. Missing 10 sub-blocks (see BACKLOG for full audit list)
+- HAND form `templates/forms/hand.html` NEUROLOGICAL TEST table has broken HTML structure — wrap-around grid, header cells in wrong columns. Data collects correctly, PDF/MPIS render correctly, only form UI affected
 
 ---
 
 ## Next session priorities
 
-1. **Git push** — `git add -A && git commit -m "session C complete" && git push` (persistent overdue reminder)
-2. **Miruya smoke test** — generate real HAND PDF from existing DB record in running app; verify all 7 Block 4 tables render correctly
-3. **Merge branch → main** after smoke test passes
-4. **Full exe build test** — outstanding since NEURO + M3 + HAND form changes
-5. **Pick next form** — BURN (Musculoskeletal) or SCI (Neurological)
+1. Read `form_hand.js collect()` lines 100–223 in full BEFORE drafting anything
+2. Draft revised SOAPIER target shape covering ALL collected fields (audit list in BACKLOG)
+3. Patch `_buildMpisHand()` on existing branch — append missing blocks, don't rewrite
+4. Smoke test: full record + sparse record + per-block-empty records
+5. Merge + push branch
 
 ---
 
 ## Gotchas discovered this session
 
-- **MMT silent data loss pattern.** `neuro.muscles` collected by `form_hand.js` since Session A but never rendered by `pdf_hand.py`. Undetectable without cross-referencing collect() output vs PDF blocks explicitly. Rule added to WORKFLOW.md Anti-Repeat: when adding form data collection, verify the PDF renders it.
-- **ROM was already a `data_table()` before Session C.** Original Session C prompt was wrong about ROM needing a rewrite — it was already correct. Scope corrected by Opus review before work started.
-- **HAND PDF layout rhythm is mixed.** Blocks 1–3 and 5 use `two_col()` boxes; Block 4 is now full-width tables. Usable but visually inconsistent rhythm. Filed in BACKLOG as future polish.
-- **DESIGN_SYSTEM.md now exceeds 250 lines** (PDF Layout section added this session, ~65 lines). Flagged for possible split into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md` next session.
+- **HAND marker shape has no `zone` field.** Shape is `{id, hand: 'R'|'L', type, x, y}` — not `{id, zone, type, view}` as the plan spec assumed. Grep `handchart.js getData()` before writing any MPIS builder that uses chart markers.
+- **`mpisSec()` always prepends a dash.** Use only for SOAPIER major section headers. Sub-headers within a block (OBSERVATION, PAIN SCORE, etc.) use raw `parts.push()` — no dash.
+- **HAND uses `d.neuro.muscles` and `d.neuro.reflexes`.** Top-level `d.muscles` does not exist. Drill through `neuro` or MMT/reflexes silently renders nothing.
+- **`HandRomTable.collect()` and `HandCircTable.collect()` return row arrays.** Exact row shape needs grepping their JS files before writing render blocks — don't assume flat field names.
+- **DESIGN_SYSTEM.md at 311 lines — over 250-line ceiling.** Still unfixed from Session C flag. Needs splitting into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md` before next major session.
 
 ---
 
 ## What to skip for now
 
-- Unused import cleanup in `pdf_hand.py` — cosmetic, no runtime risk, do after merge
-- DESIGN_SYSTEM.md file split — flag only, not blocking
-- exe build — after smoke test + merge
-- BACKLOG items: `btn-ghost` cleanup, ROM asymmetric validation, hand chart SVG disambiguation
+- Merging Session D branch — intentional, continues tomorrow
+- HAND form NEUROLOGICAL TEST table HTML rebuild — parked to BACKLOG
+- MS-as-MPIS-canon SOAPIER refactor for other forms — parked until HAND ships
+- BURN form scoping — still next probable build target, not tomorrow
