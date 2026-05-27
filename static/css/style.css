@@ -667,6 +667,7 @@ svg.bsvg .hit:hover { fill: rgba(74,122,200,0.1); }
   border-radius: var(--radius);
   overflow: hidden;
 }
+.neuro-grid.cols-3 { grid-template-columns: 110px 1fr 1fr; }
 .nc { background: var(--surface); padding: 7px 10px; font-size: 12px; }
 .nc.hdr { background: var(--surface2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
 .nc.rl { font-weight: 500; color: var(--text-muted); }
