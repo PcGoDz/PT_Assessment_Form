@@ -6,39 +6,37 @@ Last updated: 2026-05-27
 
 ## Where we left off
 
-Session D continuation (completion). Patched `_buildMpisHand()` in `static/js/main.js` (lines 1388–1646) to cover all 10 previously missing sub-blocks. Did full readback of `form_hand.js collect()` lines 100–223, `hand_rom_table.js`, `hand_circ_table.js`, and the existing function before any edits — all field names confirmed, no surprises during implementation.
+Session F. Fixed the HAND NEUROLOGICAL TEST table diagonal staircase — root cause was `.neuro-grid` having 4 grid tracks while HAND form produces only 3 cells per row. Added `.neuro-grid.cols-3 { grid-template-columns: 110px 1fr 1fr; }` to `static/css/style.css` and applied `cols-3` modifier to both neuro-grid divs in `templates/forms/hand.html` (Reflexes at line 658, MMT at line 709). Merged via `fix/hand-neuro-grid-cols-3` branch, pushed, branch deleted. MS form (`ms.html`) untouched — still uses base 4-column grid.
 
-Blocks added in 5 targeted str_replace edits: Referral Source / Surgery Type (Surgical-conditional) / Problem into Diagnosis group; Special Questions (10 fields, Health Notes conditional on 'Other'); ROM (Active/Passive/Overpressure per row); Strength extended with Pulp Opposition + FPC 2nd–5th; Circumference; Sensation restructured with L/R values; Special Tests (4 standard + custom array); Neurological Test wrapping Reflexes (C5/C6/C7/C8T1) + MMT. hasStr, hasObj, hasNeuro, hasSens, hasRom, hasCirc, hasST flags all updated. 18 smoke tests passed. Branch `claude/mystifying-banach-fff0d9` merged to main and pushed.
+Ran a worktree workflow post-mortem: initial misread suggested edits had landed on main directly, but the actual failure was the worktree branch (`claude/thirsty-feistel-ad9632`) being left one commit behind main after the merge. Documented as anti-repeat rule in WORKFLOW.md (`c62c011`). Retired the worktree and deleted 4 stale branches (claude/vigilant-euclid-80a247, feature/dashboard-ui-revamp, master, refactor/u34-dead-code-cleanup). `patient-page-direct` left alone — flagged in BACKLOG.
 
 ---
 
 ## Half-done
 
-- **HAND form NEUROLOGICAL TEST table HTML broken** in `templates/forms/hand.html` — wrap-around grid, header cells in wrong columns. Data collects correctly, PDF/MPIS render correctly. Cosmetic-only on form UI but unusable for clinicians.
-- **DESIGN_SYSTEM.md at 311 lines** — over 250-line ceiling (flagged Session C, still unfixed). Needs splitting into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md`.
-- **ROM Overpressure BACKLOG entry** — user to paste full entry text next session (pending from this session's task spec note).
+- **DESIGN_SYSTEM.md over 250-line ceiling** — currently ~312 lines. Needs splitting into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md`. Also needs `.neuro-grid` and `.neuro-grid.cols-3` added to component recipes when split happens (currently only listed in CSS class index at bottom, no recipe entry).
+- **Full exe build test outstanding** — since NEURO + M3 redesign + HAND form + Sessions A–F changes. Exe has not been rebuilt since HAND shipped.
 
 ---
 
 ## Next session priorities
 
-1. Paste ROM Overpressure clinical bug entry into BACKLOG.md (user has text)
-2. Fix HAND NEUROLOGICAL TEST table HTML in `templates/forms/hand.html`
-3. Split DESIGN_SYSTEM.md into form-html + pdf files before it grows further
-4. Full exe build test (outstanding since NEURO + M3 redesign + HAND form + Sessions A–D changes)
-5. BURN form scoping
+1. DESIGN_SYSTEM.md split — most overdue; ceiling breached multiple sessions running
+2. Full exe build test (`build.bat`)
+3. BURN form scoping
+4. Investigate `patient-page-direct` branch (see BACKLOG) — cherry-pick unique work or force-delete
 
 ---
 
 ## Gotchas discovered this session
 
-- **`_hasSq` must be computed before its `if` block** — SUBJECTIVE section runs before the OBJECTIVE variable declaration block in `_buildMpisHand()`. New flags only used in OBJECTIVE (hasRom, hasCirc, hasSens, hasST, hasNeuro) can go in the variable block; SUBJECTIVE-only flags must be inlined before use.
-- **Readback before any edit is mandatory for HAND.** The scope miss in Session D came from drafting without reading the full collect(). Confirmed via HANDOVER; enforced this session.
+- **Post-merge worktree stale state.** After merging a fix branch to main and switching the worktree back to its original branch, the worktree folder displays pre-fix code. This produced a false "fix didn't land" read from the worktree. Root cause: original branch wasn't fast-forwarded after merge. Smoke-test BEFORE merge, not after. Anti-repeat rule added to WORKFLOW.md.
+- **`patient-page-direct` diverged ancestry.** `git log main..patient-page-direct` returns the entire project history — branch shares no common ancestor with current main. Likely orphaned during the master → main default branch rename (late March 2026). Not deleted; needs investigation before any force-delete.
 
 ---
 
 ## What to skip for now
 
-- MS-as-MPIS-canon SOAPIER refactor — parked until HAND ships in clinical use
-- BURN form — next probable build target, scope after exe build test
-- DESIGN_SYSTEM.md split — flag only, not blocking next task
+- MS-as-MPIS-canon SOAPIER refactor — parked until HAND has clinical use time
+- ROM Overpressure data shape fix — needs clinical decision on end-feel data structure before code touches it
+- Any BACKLOG cosmetic items (unused imports, MMT label spacing, etc.)

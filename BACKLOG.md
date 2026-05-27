@@ -6,7 +6,7 @@
 
 - `patient-page-direct` branch — shows entire project history when diffed against main (`git log main..patient-page-direct` returns initial commit). Likely orphaned from master → main default branch switch. Not deleted during 2026-05-27 branch cleanup. Investigate origin and either rebase, cherry-pick any unique work into main, or force-delete after confirming no unique value.
 
-- **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.nc` variants. All de-facto canonical from ms.html but undocumented. Surfaced by 2026-05-21 hand form plan audit.
+- **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.neuro-grid.cols-3`, `.nc` variants. All de-facto canonical but undocumented. When DESIGN_SYSTEM is split, add a component recipe for both `.neuro-grid` (4-col, MS form) and `.neuro-grid.cols-3` (3-col, for forms without Notes column). Surfaced by 2026-05-21 hand form plan audit; `.cols-3` added Session F.
 
 - **Hand form ROM cells — validation pass for asymmetric start/end pair entries.** Rows where only start or only end angle is filled currently render gracefully in PDF (single value with °). No UX validation or warning implemented yet. Session A scope only covered UI rebuild.
 
@@ -15,7 +15,6 @@
 - 6 `pdf_*.py` files have unused `KeepTogether` import after U12 refactor (`pdf_ms`, `pdf_spine`, `pdf_geriatric`, `pdf_cr`, `pdf_amputation`, `pdf_hand`) — cosmetic, zero runtime/build risk. Spawned as background task.
 - **HAND PDF layout rhythm inconsistency.** Block 4 is now full-width tables while Blocks 1–3 and 5 use `two_col()` boxes. Usable, but alternating rhythm is visually mixed. Future polish when HAND form gets a broader PDF pass.
 - **Block 5 + sign block flow risk.** `sign_chop_block()` can land on a near-empty page 3 if Block 5 is short. Consider wrapping Block 5 + sign block in `KeepTogether` when Block 5 content is brief.
-- **HAND form NEUROLOGICAL TEST table HTML broken** in `templates/forms/hand.html` — wrap-around grid, header cells in wrong columns. Data collects fine, PDF/MPIS render fine. Cosmetic-only on form UI but unusable for clinicians. Likely colspan miscount or wrong cell count per row.
 - `resetPatient()` in `form_base.js` missing null guards on `derived-dob` / `derived-gender`.
 - Geriatric form has duplicate RN/IC fields — cosmetic, low priority.
 - No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place.
@@ -23,7 +22,7 @@
 
 - **HAND ROM Overpressure misimplemented as degree pairs (CLINICAL BUG).** `hand_rom_table.js` codes Overpressure as `op_l_start/end`, `op_r_start/end` numeric degree fields, matching Active and Passive column shape. Clinically incorrect — Overpressure is an end-feel quality assessment (firm / springy / rubbery / boggy / hard) + pain response + optional gain, not a degree range. Typical clinical note: "rubbery end-range-feel with pain, +5° gain". Affected files when fixed: `templates/forms/hand.html` (column needs text input or dropdown + freeform notes), `static/js/hand_rom_table.js` (row shape change: `op_l_text/op_r_text`, or structured `{end_feel, gain, pain}` — clinical input needed), `pdf_hand.py` (ROM render block), `_buildMpisHand()` in `main.js` (ROM render block), plus migration: existing records with numeric op fields need auto-conversion or graceful display fallback. Defer until clinical-side decision on data shape. Surfaced Session E — MPIS coverage shipped using current buggy shape deliberately.
 
-- **DESIGN_SYSTEM.md at 311 lines — over 250-line ceiling.** Needs splitting into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md` before next major session. Flagged Session C, carried through Session D and E unfixed.
+- **DESIGN_SYSTEM.md at ~312 lines — over 250-line ceiling.** Needs splitting into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md`. Flagged Session C, carried through Sessions D, E, and F unfixed. Priority 1 for next session.
 
 ---
 
