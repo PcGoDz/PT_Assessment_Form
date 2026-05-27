@@ -29,7 +29,6 @@
 - BURN form (next probable form to implement, also Musculoskeletal group).
 - SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
-- **HAND MPIS coverage incomplete (Session D).** Current `_buildMpisHand()` renders: patient header, Diagnosis/Management/Dominant Hand, History, Pain Score, Observation, Hand Chart, Palpation, Strength (grip + 3 pinches), MMT, Sensation notes, Analysis/Plan/Intervention. Missing 10 sub-blocks collected by `form_hand.js`: Referral Source, Problem, Surgery Type, Special Questions (10 fields), ROM, Pulp Opposition, FPC 2nd-5th, Circumference, Sensation L/R values (lightTouch/pinPrick/twoPointDisc), Special Tests (Tinel/Phalen/Finkelstein/Froment + custom), Reflexes (C5/C6/C7/C8T1). Continue on branch `claude/mystifying-banach-fff0d9`.
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
 
 ---
