@@ -2,14 +2,6 @@
 
 ---
 
-## 🔁 PERSISTENT REMINDER — Git Push
-
-`git add -A && git commit -m "session checkpoint" && git push`
-
-Has been deferred multiple sessions. Do this BEFORE opening any files in a new session.
-
----
-
 ## Open bugs / Cleanup
 
 - **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.nc` variants. All de-facto canonical from ms.html but undocumented. Surfaced by 2026-05-21 hand form plan audit.
@@ -21,6 +13,7 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 - 6 `pdf_*.py` files have unused `KeepTogether` import after U12 refactor (`pdf_ms`, `pdf_spine`, `pdf_geriatric`, `pdf_cr`, `pdf_amputation`, `pdf_hand`) — cosmetic, zero runtime/build risk. Spawned as background task.
 - **HAND PDF layout rhythm inconsistency.** Block 4 is now full-width tables while Blocks 1–3 and 5 use `two_col()` boxes. Usable, but alternating rhythm is visually mixed. Future polish when HAND form gets a broader PDF pass.
 - **Block 5 + sign block flow risk.** `sign_chop_block()` can land on a near-empty page 3 if Block 5 is short. Consider wrapping Block 5 + sign block in `KeepTogether` when Block 5 content is brief.
+- **HAND form NEUROLOGICAL TEST table HTML broken** in `templates/forms/hand.html` — wrap-around grid, header cells in wrong columns. Data collects fine, PDF/MPIS render fine. Cosmetic-only on form UI but unusable for clinicians. Likely colspan miscount or wrong cell count per row.
 - `resetPatient()` in `form_base.js` missing null guards on `derived-dob` / `derived-gender`.
 - Geriatric form has duplicate RN/IC fields — cosmetic, low priority.
 - No UNIQUE constraint on `records.episode_id` — ORDER BY workaround in place.
@@ -36,6 +29,8 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 - BURN form (next probable form to implement, also Musculoskeletal group).
 - SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
+- **HAND MPIS coverage incomplete (Session D).** Current `_buildMpisHand()` renders: patient header, Diagnosis/Management/Dominant Hand, History, Pain Score, Observation, Hand Chart, Palpation, Strength (grip + 3 pinches), MMT, Sensation notes, Analysis/Plan/Intervention. Missing 10 sub-blocks collected by `form_hand.js`: Referral Source, Problem, Surgery Type, Special Questions (10 fields), ROM, Pulp Opposition, FPC 2nd-5th, Circumference, Sensation L/R values (lightTouch/pinPrick/twoPointDisc), Special Tests (Tinel/Phalen/Finkelstein/Froment + custom), Reflexes (C5/C6/C7/C8T1). Continue on branch `claude/mystifying-banach-fff0d9`.
+- MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
 
 ---
 
@@ -48,6 +43,8 @@ Has been deferred multiple sessions. Do this BEFORE opening any files in a new s
 - Shared table IIFEs (movement_table.js pattern could be extended to other tables)
 - Audit log UI viewer (audit_log table is logged but not surfaced anywhere)
 - Patient profile page improvements (currently functional but not polished)
+- MMT label spacing in MPIS: rows with `+` suffix on L value (e.g. `L: 2+`) render with inconsistent spacing before R label. Cosmetic.
+- STRENGTH block empty-row policy: currently renders `— / — kg` for empty rows instead of skipping. Pick canonical skip-vs-em-dash behavior when MS-as-canon SOAPIER refactor happens.
 
 ---
 

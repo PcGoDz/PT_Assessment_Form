@@ -1387,44 +1387,260 @@ const Main = (function () {
 
   function _buildMpisHand() {
     var d    = window.ActiveForm ? window.ActiveForm.collect() : {};
-    var LN   = MPIS_LN;
+    var p    = d.patient || {};
     var DIV  = MPIS_DIV;
     var dash = MPIS_DASH;
     var parts = [];
-    function sec(title, val) { mpisSec(parts, title, val); }
 
-    sec('DIAGNOSIS', d.diagnosis);
-    sec('MANAGEMENT', (d.managementType || '') + (d.managementType === 'Surgical' && d.surgeryDate ? ' — ' + d.surgeryDate : ''));
-    sec('DOMINANT HAND', d.sqDominantHand);
-    // chiefComplaint/onsetDate/mechanism removed in Session A — replaced by hxCurrent
-    sec('HISTORY', d.hxCurrent);
-    sec('PAST HX', d.hxPast);
-    // painScoreR/L renamed to painPre/painPost in Session A
-    sec('PAIN (Pre/Post)', (d.painPre || dash) + ' / ' + (d.painPost || dash));
-    // painNature is now a plain string (was chip array) — drop .join()
-    sec('PAIN NATURE', d.painNature);
-    sec('PAIN 24HR', d.pain24hr);
-    // painAggravate/painRelieve renamed to painAgg/painEase in Session A
-    sec('AGGRAVATING', d.painAgg);
-    sec('RELIEVING',   d.painEase);
-    sec('IRRITABILITY', d.irritability);
-    sec('OBSERVATION', d.observationNotes);
-    sec('WOUND', d.woundNotes);
-    // skinCondition/deformity/swelling chip arrays removed from collect() in Session A
-    sec('TENDERNESS',  d.tenderness);
-    sec('TEMPERATURE', d.temperature);
-    sec('TEXTURE',     d.texture);
-    sec('PALPATION',   d.palpationNotes);
-    sec('GRIP (R/L)',  (d.gripStrengthR || dash) + ' / ' + (d.gripStrengthL || dash) + ' kg');
-    // pinchStrengthR/L replaced by split types in Session A
-    sec('PINCH LAT (R/L)',  (d.pinchLateralR || dash) + ' / ' + (d.pinchLateralL || dash) + ' kg');
-    sec('PINCH PULP (R/L)', (d.pinchPulpR    || dash) + ' / ' + (d.pinchPulpL    || dash) + ' kg');
-    sec('PINCH 3PT (R/L)',  (d.pinch3ptR     || dash) + ' / ' + (d.pinch3ptL     || dash) + ' kg');
-    sec('SENSATION',   d.sensationNotes);
-    sec('PT IMPRESSION', d.ptImpression);
-    sec('STG', d.stg);
-    sec('LTG', d.ltg);
-    sec('PLAN', d.plan);
+    // Title + patient header (mirrors _buildMpisMs pattern)
+    parts.push('HAND ASSESSMENT');
+    parts.push(DIV);
+    parts.push('Name  : ' + (p.name||'') + '   Date : ' + (p.date||''));
+    if (p.type === 'local') {
+      parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+    } else {
+      parts.push('Passport : ' + (p.passport||'') + '   Country : ' + (p.country||'') + '   Age : ' + (p.age||''));
+      parts.push('Sex   : ' + (p.sex||''));
+    }
+    parts.push('');
+
+    // ── SUBJECTIVE ──────────────────────────────────────────────────────
+    parts.push(dash);
+    parts.push('SUBJECTIVE ASSESSMENT');
+    parts.push('');
+    var mgmtLine = (d.managementType || '');
+    if (d.managementType === 'Surgical' && d.surgeryDate) mgmtLine += ' — ' + d.surgeryDate;
+    if (d.diagnosis)      parts.push('Diagnosis     : ' + d.diagnosis);
+    if (d.referralSource) parts.push('Referral      : ' + d.referralSource);
+    if (mgmtLine)         parts.push('Management    : ' + mgmtLine);
+    if (d.managementType === 'Surgical' && d.surgeryType) parts.push('Surgery Type  : ' + d.surgeryType);
+    if (d.problem)        parts.push('Problem       : ' + d.problem);
+    if (d.sqDominantHand) parts.push('Dominant Hand : ' + d.sqDominantHand);
+    parts.push('');
+    if (d.hxCurrent) parts.push('Current History : ' + d.hxCurrent);
+    if (d.hxPast)    parts.push('Past History    : ' + d.hxPast);
+    parts.push('');
+    // ── SPECIAL QUESTIONS ──
+    var _hasSq = d.sqGeneralHealth || d.sqHealthNotes || d.sqPmhx || d.sqInvest ||
+                 d.sqMedications || d.sqAllergies || d.sqSocial || d.sqOccupation ||
+                 d.sqRec || d.sqSplinting;
+    if (_hasSq) {
+      parts.push('SPECIAL QUESTIONS');
+      if (d.sqGeneralHealth) parts.push('General Health : ' + d.sqGeneralHealth);
+      if (d.sqGeneralHealth === 'Other' && d.sqHealthNotes) parts.push('Health Notes   : ' + d.sqHealthNotes);
+      if (d.sqPmhx)         parts.push('PMHx           : ' + d.sqPmhx);
+      if (d.sqInvest)       parts.push('Investigations : ' + d.sqInvest);
+      if (d.sqMedications)  parts.push('Medications    : ' + d.sqMedications);
+      if (d.sqAllergies)    parts.push('Allergies      : ' + d.sqAllergies);
+      if (d.sqSocial)       parts.push('Social         : ' + d.sqSocial);
+      if (d.sqOccupation)   parts.push('Occupation     : ' + d.sqOccupation);
+      if (d.sqRec)          parts.push('Recreation     : ' + d.sqRec);
+      if (d.sqSplinting)    parts.push('Splinting      : ' + d.sqSplinting);
+      parts.push('');
+    }
+    parts.push('PAIN SCORE');
+    parts.push('PRE: ' + (d.painPre||'0') + '/10   POST: ' + (d.painPost||'0') + '/10');
+    if (d.painNature)   parts.push('Nature       : ' + d.painNature);
+    if (d.pain24hr)     parts.push('24hrs        : ' + d.pain24hr);
+    if (d.painAgg)      parts.push('Aggravating  : ' + d.painAgg);
+    if (d.painEase)     parts.push('Easing       : ' + d.painEase);
+    if (d.irritability) parts.push('Irritability : ' + d.irritability);
+    parts.push('');
+
+    // ── OBJECTIVE ───────────────────────────────────────────────────────
+    var hc      = d.handChart || {};
+    var markers = hc.markers || [];
+    var mm      = (d.neuro || {}).muscles || {};
+    var muscleKeys   = ['deltoid','biceps','brachiorad','wristExt','wristFlex','fingerMpExt','triceps','fingerFlex','handIntrinsics'];
+    var muscleLabels = { deltoid:'Deltoid', biceps:'Biceps', brachiorad:'Brachioradialis',
+                         wristExt:'Wrist Extensors', wristFlex:'Wrist Flexors', fingerMpExt:'Finger MP Ext',
+                         triceps:'Triceps', fingerFlex:'Finger Flexors', handIntrinsics:'Hand Intrinsics' };
+    var typeLabels   = { pain:'Pain', numb:'Numbness', tingling:'Tingling', weak:'Weakness', swelling:'Swelling', scar:'Scar' };
+    var hasObs  = d.observationNotes || d.woundNotes;
+    var hasPalp = d.tenderness || d.temperature || d.texture || d.palpationNotes;
+    var hasStr  = d.gripStrengthR || d.gripStrengthL || d.pinchLateralR || d.pinchLateralL ||
+                  d.pinchPulpR || d.pinchPulpL || d.pinch3ptR || d.pinch3ptL ||
+                  d.pulpOpposition || d.fpc2nd || d.fpc3rd || d.fpc4th || d.fpc5th;
+    var refs    = (d.neuro || {}).reflexes || {};
+    var hasRef  = ['c5','c6','c7','c8t1'].some(function(k){ var r=refs[k]||{}; return r.l||r.r; });
+    var hasMMT  = muscleKeys.some(function(k) { var m = mm[k]||{}; return m.l || m.r; });
+    var hasNeuro = hasRef || hasMMT;
+    var hasRom  = Array.isArray(d.rom) && d.rom.length;
+    var hasCirc = Array.isArray(d.circumference) && d.circumference.length;
+    var hasSens = d.lightTouchR || d.lightTouchL || d.pinPrickR || d.pinPrickL ||
+                  d.twoPointDiscR || d.twoPointDiscL || d.sensationNotes;
+    var ot      = d.otherTests || {};
+    var hasST   = (ot.tinels && (ot.tinels.r || ot.tinels.l)) ||
+                  (ot.phalens && (ot.phalens.r || ot.phalens.l)) ||
+                  (ot.finkelsteins && (ot.finkelsteins.r || ot.finkelsteins.l)) ||
+                  (ot.fromens && (ot.fromens.r || ot.fromens.l)) ||
+                  (Array.isArray(d.customSpecialTests) && d.customSpecialTests.length);
+    var hasObj  = hasObs || markers.length || hasPalp || hasStr || hasNeuro ||
+                  hasRom || hasCirc || hasSens || hasST;
+
+    if (hasObj) {
+      parts.push(dash);
+      parts.push('OBJECTIVE ASSESSMENT');
+      parts.push('');
+
+      if (hasObs) {
+        parts.push('OBSERVATION');
+        if (d.observationNotes) parts.push('General : ' + d.observationNotes);
+        if (d.woundNotes)       parts.push('Wound   : ' + d.woundNotes);
+        parts.push('');
+      }
+
+      if (markers.length) {
+        parts.push('HAND CHART');
+        markers.forEach(function(m) {
+          var handLbl = m.hand === 'R' ? 'Right Palmar' : 'Left Palmar';
+          var typeLbl = typeLabels[m.type] || (m.type ? m.type.charAt(0).toUpperCase() + m.type.slice(1) : '');
+          parts.push('#' + m.id + ' (' + typeLbl + ') - ' + handLbl);
+        });
+        if (hc.notes) parts.push('Notes: ' + hc.notes);
+        parts.push('');
+      }
+
+      if (hasPalp) {
+        parts.push('PALPATION');
+        if (d.tenderness)     parts.push('Tenderness  : ' + d.tenderness);
+        if (d.temperature)    parts.push('Temperature : ' + d.temperature);
+        if (d.texture)        parts.push('Texture     : ' + d.texture);
+        if (d.palpationNotes) parts.push('Notes       : ' + d.palpationNotes);
+        parts.push('');
+      }
+
+      if (hasRom) {
+        parts.push('ROM');
+        d.rom.forEach(function(row) {
+          var hdr = (row.category || '') + (row.movement ? ' ' + row.movement : '');
+          if (hdr.trim()) parts.push(hdr);
+          var als = row.active_l_start, ale = row.active_l_end,
+              ars = row.active_r_start, are_ = row.active_r_end;
+          if (als || ale || ars || are_)
+            parts.push('Active       : L ' + (als||'') + '–' + (ale||'') + '\xb0   R ' + (ars||'') + '–' + (are_||'') + '\xb0');
+          var pls = row.passive_l_start, ple = row.passive_l_end,
+              prs = row.passive_r_start, pre_ = row.passive_r_end;
+          if (pls || ple || prs || pre_)
+            parts.push('Passive      : L ' + (pls||'') + '–' + (ple||'') + '\xb0   R ' + (prs||'') + '–' + (pre_||'') + '\xb0');
+          var ols = row.op_l_start, ole = row.op_l_end,
+              ors = row.op_r_start, ore_ = row.op_r_end;
+          if (ols || ole || ors || ore_)
+            parts.push('Overpressure : L ' + (ols||'') + '–' + (ole||'') + '\xb0   R ' + (ors||'') + '–' + (ore_||'') + '\xb0');
+        });
+        parts.push('');
+      }
+
+      if (hasStr) {
+        parts.push('STRENGTH');
+        parts.push('Grip (R/L)    : ' + (d.gripStrengthR||'—') + ' / ' + (d.gripStrengthL||'—') + ' kg');
+        parts.push('Pinch Lateral : ' + (d.pinchLateralR||'—') + ' / ' + (d.pinchLateralL||'—') + ' kg');
+        parts.push('Pinch Pulp    : ' + (d.pinchPulpR||'—')    + ' / ' + (d.pinchPulpL||'—')    + ' kg');
+        parts.push('Pinch 3-point : ' + (d.pinch3ptR||'—')     + ' / ' + (d.pinch3ptL||'—')     + ' kg');
+        if (d.pulpOpposition) parts.push('Pulp Opposition : ' + d.pulpOpposition);
+        if (d.fpc2nd)         parts.push('FPC 2nd Finger  : ' + d.fpc2nd);
+        if (d.fpc3rd)         parts.push('FPC 3rd Finger  : ' + d.fpc3rd);
+        if (d.fpc4th)         parts.push('FPC 4th Finger  : ' + d.fpc4th);
+        if (d.fpc5th)         parts.push('FPC 5th Finger  : ' + d.fpc5th);
+        parts.push('');
+      }
+
+      if (hasCirc) {
+        parts.push('CIRCUMFERENCE');
+        d.circumference.forEach(function(row) {
+          if (!row.left_cm && !row.right_cm) return;
+          var loc = row.location || '';
+          var pad = new Array(Math.max(1, 14 - loc.length) + 1).join(' ');
+          parts.push(loc + pad + ': L ' + (row.left_cm||'') + ' cm   R ' + (row.right_cm||'') + ' cm');
+        });
+        parts.push('');
+      }
+
+      if (hasSens) {
+        parts.push('SENSATION');
+        if (d.lightTouchL || d.lightTouchR)
+          parts.push('Light Touch     : L ' + (d.lightTouchL||'') + '   R ' + (d.lightTouchR||''));
+        if (d.pinPrickL || d.pinPrickR)
+          parts.push('Pin Prick       : L ' + (d.pinPrickL||'') + '   R ' + (d.pinPrickR||''));
+        if (d.twoPointDiscL || d.twoPointDiscR)
+          parts.push('Two-point Disc. : L ' + (d.twoPointDiscL||'') + '   R ' + (d.twoPointDiscR||''));
+        if (d.sensationNotes)
+          parts.push('Notes           : ' + d.sensationNotes);
+        parts.push('');
+      }
+
+      if (hasST) {
+        parts.push('SPECIAL TESTS');
+        var stLabels = { tinels: "Tinel's      ", phalens: "Phalen's     ",
+                         finkelsteins: "Finkelstein's", fromens: "Froment's    " };
+        ['tinels','phalens','finkelsteins','fromens'].forEach(function(k) {
+          var t = ot[k] || {};
+          if (!t.r && !t.l) return;
+          parts.push(stLabels[k] + ' : L ' + (t.l||'') + '   R ' + (t.r||''));
+        });
+        if (Array.isArray(d.customSpecialTests)) {
+          d.customSpecialTests.forEach(function(t) {
+            if (!t.name || (!t.r && !t.l)) return;
+            parts.push(t.name + ' : L ' + (t.l||'') + '   R ' + (t.r||''));
+          });
+        }
+        parts.push('');
+      }
+
+      if (hasNeuro) {
+        parts.push('NEUROLOGICAL TEST');
+        if (hasRef) {
+          parts.push('Reflexes:');
+          var refLabels = { c5: 'C5', c6: 'C6', c7: 'C7', c8t1: 'C8/T1' };
+          ['c5','c6','c7','c8t1'].forEach(function(k) {
+            var r = refs[k] || {};
+            if (!r.l && !r.r) return;
+            var lbl = refLabels[k];
+            var pad = new Array(Math.max(1, 6 - lbl.length) + 1).join(' ');
+            parts.push('  ' + lbl + pad + ': L ' + (r.l||'—') + '   R ' + (r.r||'—'));
+          });
+        }
+        if (hasMMT) {
+          parts.push('MMT:');
+          muscleKeys.forEach(function(k) {
+            var m = mm[k] || {};
+            if (!m.l && !m.r) return;
+            var lbl = muscleLabels[k];
+            var pad = new Array(Math.max(1, 17 - lbl.length) + 1).join(' ');
+            parts.push(lbl + pad + ': L: ' + (m.l||'—') + '  R: ' + (m.r||'—'));
+          });
+        }
+        parts.push('');
+      }
+    }
+
+    // ── ANALYSIS ────────────────────────────────────────────────────────
+    if (d.ptImpression) {
+      parts.push(dash);
+      parts.push('ANALYSIS');
+      parts.push('');
+      parts.push(d.ptImpression);
+      parts.push('');
+    }
+
+    // ── PLAN ────────────────────────────────────────────────────────────
+    if (d.stg || d.ltg) {
+      parts.push(dash);
+      parts.push('PLAN');
+      parts.push('');
+      if (d.stg) parts.push('Short-term Goals: ' + d.stg);
+      if (d.ltg) parts.push('Long-term Goals : ' + d.ltg);
+      parts.push('');
+    }
+
+    // ── INTERVENTION ────────────────────────────────────────────────────
+    if (d.plan) {
+      parts.push(dash);
+      parts.push('INTERVENTION');
+      parts.push('');
+      parts.push(d.plan);
+      parts.push('');
+    }
 
     return parts;
   }
