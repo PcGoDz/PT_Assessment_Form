@@ -6,6 +6,8 @@
 
 - `patient-page-direct` branch — shows entire project history when diffed against main (`git log main..patient-page-direct` returns initial commit). Likely orphaned from master → main default branch switch. Not deleted during 2026-05-27 branch cleanup. Investigate origin and either rebase, cherry-pick any unique work into main, or force-delete after confirming no unique value.
 
+- **BURN form — scoped + planned, Pass 1 pending execution.** Spec at `BURN_FORM_SPEC.md`. Execution plan (7 tasks, 40 steps) at `docs/superpowers/plans/2026-05-28-burn-form-pass-1.md`. No code on disk yet; `FORM_REGISTRY BURN ready=False`. PDF (pdf_burn.py) and MPIS (_buildMpisBurn) deliberately deferred to later passes — plan covers form-and-save only.
+
 - **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.neuro-grid.cols-3`, `.nc` variants. All de-facto canonical but undocumented. When DESIGN_SYSTEM is split, add a component recipe for both `.neuro-grid` (4-col, MS form) and `.neuro-grid.cols-3` (3-col, for forms without Notes column). Surfaced by 2026-05-21 hand form plan audit; `.cols-3` added Session F.
 
 - **Hand form ROM cells — validation pass for asymmetric start/end pair entries.** Rows where only start or only end angle is filled currently render gracefully in PDF (single value with °). No UX validation or warning implemented yet. Session A scope only covered UI rebuild.
@@ -30,8 +32,7 @@
 
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
-- Full exe build test outstanding since NEURO + M3 redesign + discharge changes + visual polish + HAND form + U34 + U12 cleanup.
-- BURN form (next probable form to implement, also Musculoskeletal group).
+- BURN form Pass 2 (pdf_burn.py) and Pass 3 (MPIS _buildMpisBurn) — to scope after Pass 1 ships and Miruya smoke-tests.
 - SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.

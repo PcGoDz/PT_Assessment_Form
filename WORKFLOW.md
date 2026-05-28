@@ -151,6 +151,7 @@ Things relearned the hard way. Do not let happen again:
 - Recompile via `build.bat` (PyInstaller spec is `pt_assessment.spec`).
 - Test exe end-to-end after any structural change (new form, schema migration, MPIS refactor).
 - Don't forget to add new pdf_xxx.py files to `pt_assessment.spec` under `datas`.
+- **`build.bat` uses the `py` launcher** (`py`, `py -m pip`, `py -m PyInstaller`) — NOT bare `python`. Windows 11 (build 26200+) installs a Microsoft Store stub at `%LOCALAPPDATA%\Microsoft\WindowsApps\python.exe` that intercepts bare `python` calls and opens the Store instead of running Python, even when Python is correctly installed. The `py` launcher bypasses this. Any future Python tooling added to the build pipeline should use `py`, not `python`.
 
 ---
 
