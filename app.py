@@ -73,7 +73,7 @@ FORM_REGISTRY = [
     { 'id': 'SPINE',       'label': 'Spine',              'icon': '&#128279;', 'badge': 'SP',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',  'ready': True  },
     { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',  'ready': True  },
-    { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',  'ready': False },
+    { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',  'ready': True },
     # ── Neurological ─────────────────────────────────
     { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',     'ready': True  },
     { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#128203;', 'badge': 'SC',  'group': 'Neurological',     'ready': False },
@@ -115,6 +115,7 @@ FORM_TEMPLATES = {
     'AMPUTATION':  'forms/amputation.html',
     'NEURO':       'forms/neuro.html',
     'HAND':        'forms/hand.html',
+    'BURN':        'forms/burn.html',
 }
 
 @app.route('/patient/<int:patient_id>')
