@@ -22,6 +22,12 @@ var BurnMov = (function () {
     var tbody = document.getElementById('burn-mov-tbody');
     if (!tbody) return;
 
+    // Empty state
+    if (!_rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);font-style:italic;padding:16px;font-size:12px">No movements recorded — click Add Row</td></tr>';
+      return;
+    }
+
     var html = '';
     _rows.forEach(function (r) {
       var optHtml = _JOINTS.map(function (j) {
