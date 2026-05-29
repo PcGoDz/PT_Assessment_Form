@@ -4,17 +4,17 @@ echo  PT Assessment System - Build Script
 echo ============================================
 echo.
 echo Checking Python...
-python --version >nul 2>&1
+py --version >nul 2>&1
 if errorlevel 1 (
     echo ERROR: Python not found. Install from https://python.org
     pause
     exit /b 1
 )
 echo Installing dependencies...
-pip install flask pyinstaller reportlab --quiet
+py -m pip install flask pyinstaller reportlab --quiet
 echo.
 echo Building executable...
-python -m PyInstaller pt_assessment.spec --distpath dist --workpath build --noconfirm
+py -m PyInstaller pt_assessment.spec --distpath dist --workpath build --noconfirm
 echo.
 if exist "dist\PT_Assessment.exe" (
     echo ============================================
