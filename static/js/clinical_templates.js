@@ -1,7 +1,7 @@
 // clinical_templates.js
 // Reusable clinical template picker based on KKM Best Statement documents
 // Usage: ClinicalTemplates.show(fieldId, formType, category)
-// formType: 'MS' | 'SPINE' | 'GERIATRIC' | 'CR' | 'AMPUTATION' | 'NEURO' | 'HAND'
+// formType: 'MS' | 'SPINE' | 'GERIATRIC' | 'CR' | 'AMPUTATION' | 'NEURO' | 'HAND' | 'BURN'
 // category: 'impression' | 'stg' | 'ltg' | 'treatment' | 'observation' | 'palpation'
 
 const ClinicalTemplates = (function () {
@@ -427,6 +427,29 @@ const ClinicalTemplates = (function () {
       ],
     },
 
+    BURN_SOAP: {
+      subjective: [
+        'Patient reports pain VAS [x]/10 at rest, [y]/10 on movement. Dressing change [date]. Tolerating positioning.',
+        'Patient reports reduced exercise tolerance. Breathless on minimal exertion. Cough [productive/non-productive].',
+        'Patient complains of stiffness in [joint] with reduced ability to [function].',
+      ],
+      objective: [
+        'Obs: SpO2 [x]% on RA/[O2 delivery]. RR [x]/min. Temp [x]°C. Breath sounds [clear/reduced/crep].',
+        'ROM: [joint] active [x]°, passive [x]°. TBSA [x]%. Wound [condition]. Oedema [present/absent].',
+        'Chest expansion: apical [sym/asym], middle [sym/asym], lower costal [sym/asym].',
+      ],
+      analysis: [
+        'Progressing as expected. ROM maintained. Wound healing adequately.',
+        'Reduced chest expansion persists. High risk of sputum retention. Airway clearance prioritised.',
+        'Contracture risk at [joint]. Stretching and positioning protocol reinforced.',
+      ],
+      plan: [
+        'Continue ROM exercises BD. Review in [x] days. Escalate if ROM declines.',
+        'Airway clearance techniques BD. Reassess chest expansion at next session.',
+        'Commence pressure garment fitting once wound healed. Refer occupational therapy for splinting.',
+      ],
+    },
+
   };
 
   // ── HAND form templates (registered directly for addButton compatibility) ──
@@ -485,6 +508,40 @@ const ClinicalTemplates = (function () {
     stg:         HAND_STG,
     ltg:         HAND_LTG,
     treatment:   HAND_PLAN,
+  };
+
+  // ── BURN form templates ──────────────────────────────────────────
+  TEMPLATES.BURN = {
+    impression: [
+      'Reduced chest expansion secondary to pain on inspiration, limiting thoracic mobility.',
+      'Limited shoulder ROM secondary to scar tightness restricting overhead reach.',
+      'Impaired hand function secondary to oedema and burn contracture.',
+      'Decreased exercise tolerance secondary to pain and deconditioning.',
+      'Risk of contracture across grafted areas secondary to reduced ROM.',
+    ],
+    stg: [
+      'Maintain functional ROM at [joint] and prevent contracture formation within [x] weeks.',
+      'Reduce pain to VAS <= 3/10 during dressing changes within [x] weeks.',
+      'Improve exercise tolerance — ambulate [x] metres without dyspnoea within [x] weeks.',
+      'Achieve independent airway clearance technique within [x] sessions.',
+      'Reduce periarticular oedema at [joint] within [x] weeks.',
+    ],
+    ltg: [
+      'Achieve full functional ROM at affected joints within [x] months.',
+      'Return to pre-morbid ADL level with adapted technique within [x] months.',
+      'Independent pressure garment application and scar management within [x] months.',
+      'Return to community ambulation and social participation within [x] months.',
+      'Sustain home exercise programme independently prior to discharge.',
+    ],
+    treatment: [
+      'Positioning — anti-contracture positioning [details]. Splinting [static/dynamic] at [joint].',
+      'ROM exercises — AROM/PROM [joint], [reps] x [sets], [frequency]. Scar stretching included.',
+      'Airway clearance — ACBT / breathing exercises, positioning, assisted cough if required.',
+      'Oedema management — elevation, compression bandaging, retrograde massage.',
+      'Ambulation and exercise tolerance — graded mobilisation, [distance/duration], [frequency].',
+      'Scar management — pressure therapy, silicone, massage once wound healed.',
+      'Patient and carer education — contracture prevention, HEP, skin care.',
+    ],
   };
 
   // ── State ───────────────────────────────────────────────────────
