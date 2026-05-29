@@ -383,3 +383,378 @@
     </div>
   </div>
 </div>
+
+
+  <!-- 10 RESPIRATORY ASSESSMENT -->
+  <div class="card" id="s-resp">
+    <div class="card-header"><span class="sec-num">10</span><h2>Respiratory Assessment</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="field">
+          <label>Observation (pain/distress/conscious level)</label>
+          <textarea id="resp-obs" placeholder="Level of consciousness, pain on inspiration, distress level, use of accessory muscles..." style="min-height:72px"></textarea>
+        </div>
+        <div class="fg c2">
+          <div class="field">
+            <label>Ventilated</label>
+            <select id="resp-vent-yn" onchange="BurnForm.onToggle('resp-vent-yn','resp-vent-detail',['Yes'])">
+              <option value="">— Select —</option>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+            <input type="text" id="resp-vent-detail" style="display:none;margin-top:6px" placeholder="Mode, PEEP, FiO2...">
+          </div>
+          <div class="field">
+            <label>O2 Treatment</label>
+            <select id="resp-o2-yn" onchange="BurnForm.onToggle('resp-o2-yn','resp-o2-detail',['Yes'])">
+              <option value="">— Select —</option>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+            <input type="text" id="resp-o2-detail" style="display:none;margin-top:6px" placeholder="e.g. Nasal prong 3L/min, Venturi 40%...">
+          </div>
+          <div class="field">
+            <label>Breathing Pattern</label>
+            <select id="obs-breathing-pattern">
+              <option value="">— Select —</option>
+              <option>Normal</option>
+              <option>Rapid, shallow</option>
+              <option>Slow, deep</option>
+              <option>Kussmaul (deep, laboured)</option>
+              <option>Cheyne-Stokes</option>
+              <option>Biot's (ataxic)</option>
+              <option>Paradoxical</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Hoarseness</label>
+            <select id="resp-hoarseness-yn" onchange="BurnForm.onToggle('resp-hoarseness-yn','resp-hoarseness-detail',['Yes'])">
+              <option value="">— Select —</option>
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+            <input type="text" id="resp-hoarseness-detail" style="display:none;margin-top:6px" placeholder="Onset, severity...">
+          </div>
+          <div class="field">
+            <label>Cough Type</label>
+            <select id="cough-type">
+              <option value="">— Select —</option>
+              <option>Productive</option>
+              <option>Non-Productive</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Cough Effectiveness</label>
+            <select id="cough-effect">
+              <option value="">— Select —</option>
+              <option>Effective</option>
+              <option>Ineffective</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Sputum</div>
+          <div class="fg c2" style="gap:10px">
+            <div class="field">
+              <label>Colour</label>
+              <select id="sputum-colour">
+                <option value="">— Select —</option>
+                <option>Clear / White (mucoid)</option>
+                <option>Yellow (mucopurulent)</option>
+                <option>Green (purulent)</option>
+                <option>Rust / Brown (old blood)</option>
+                <option>Pink frothy (pulmonary oedema)</option>
+                <option>Blood-stained (haemoptysis)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Amount</label>
+              <select id="sputum-amount">
+                <option value="">— Select —</option>
+                <option>Minimal (&lt;10 mL/day)</option>
+                <option>Moderate (10&ndash;30 mL/day)</option>
+                <option>Large (&gt;30 mL/day)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Consistency</label>
+              <select id="sputum-consistency">
+                <option value="">— Select —</option>
+                <option>Watery</option>
+                <option>Loose</option>
+                <option>Mucoid</option>
+                <option>Thick</option>
+                <option>Tenacious</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11 CHEST EXPANSION -->
+  <div class="card" id="s-palp">
+    <div class="card-header"><span class="sec-num">11</span><h2>Chest Expansion</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Chest Expansion</div>
+          <div class="fg c2">
+            <div class="field"><label>Apical (anterior)</label><select id="exp-apical"><option value="">— Select —</option><option>Symmetrical</option><option>Asymmetrical</option></select></div>
+            <div class="field"><label>Middle (anterior)</label><select id="exp-middle"><option value="">— Select —</option><option>Symmetrical</option><option>Asymmetrical</option></select></div>
+            <div class="field"><label>Lower Costal (posterior)</label><select id="exp-lower"><option value="">— Select —</option><option>Symmetrical</option><option>Asymmetrical</option></select></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Chest Measurement — Thumb Displacement</div>
+          <table class="mov-table" style="width:100%">
+            <thead><tr><th>Level</th><th>Measurement</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Apical</td>
+                <td><input type="text" id="meas-apical" placeholder="e.g. 2 cm" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+                <td><select id="meas-apical-status" style="font-size:12px;width:100%;border:none;background:transparent;padding:2px 4px"><option value="">—</option><option>Assessed</option><option>Not assessed</option><option>KIV next visit</option></select></td>
+              </tr>
+              <tr>
+                <td>Middle</td>
+                <td><input type="text" id="meas-middle" placeholder="e.g. 3 cm" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+                <td><select id="meas-middle-status" style="font-size:12px;width:100%;border:none;background:transparent;padding:2px 4px"><option value="">—</option><option>Assessed</option><option>Not assessed</option><option>KIV next visit</option></select></td>
+              </tr>
+              <tr>
+                <td>Lower Costal</td>
+                <td><input type="text" id="meas-lower" placeholder="e.g. 2.5 cm" style="width:100%;border:none;background:transparent;font-size:12px;padding:2px 4px"></td>
+                <td><select id="meas-lower-status" style="font-size:12px;width:100%;border:none;background:transparent;padding:2px 4px"><option value="">—</option><option>Assessed</option><option>Not assessed</option><option>KIV next visit</option></select></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12 AUSCULTATION -->
+  <div class="card" id="s-ausc">
+    <div class="card-header"><span class="sec-num">12</span><h2>Auscultation</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="fg c2">
+          <div class="field">
+            <label>Overall Lung Sounds</label>
+            <select id="ausc-lungs">
+              <option value="">— Select —</option>
+              <option>Clear</option>
+              <option>Crepitation</option>
+              <option>Wheeze</option>
+              <option>Reduced air entry</option>
+              <option>Absent breath sounds</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Crepitation Grade</label>
+            <select id="ausc-crep">
+              <option value="">— N/A —</option>
+              <option>Mild</option>
+              <option>Moderate</option>
+              <option>Coarse</option>
+              <option>Rhonchi</option>
+              <option>Mild — bilateral bases</option>
+              <option>Moderate — bilateral</option>
+              <option>Coarse — right lower zone</option>
+              <option>Coarse — left lower zone</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:span 2">
+            <label>Air Entry</label>
+            <select id="ausc-air">
+              <option value="">— Select —</option>
+              <option>Equal bilaterally</option>
+              <option>Reduced right upper zone</option>
+              <option>Reduced right middle zone</option>
+              <option>Reduced right lower zone</option>
+              <option>Reduced left upper zone</option>
+              <option>Reduced left lower zone</option>
+              <option>Reduced bilateral bases</option>
+              <option>Absent right side</option>
+              <option>Absent left side</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Auscultation Map — click a zone to mark findings</div>
+          <div class="body-chart-wrap">
+            <div class="body-figures" style="justify-content:center">
+              <div class="fig-wrap">
+                <div class="fig-label">Anterior view (click to mark)</div>
+                <svg id="lung-svg" width="220" height="200" viewBox="0 0 220 200" style="display:block;cursor:pointer;border-radius:8px;background:var(--bg)"></svg>
+              </div>
+            </div>
+            <div class="chart-controls">
+              <div class="list-header">
+                <span>Zone Findings</span>
+                <button class="btn-sm" onclick="LungChart.clearAll()">Clear all</button>
+              </div>
+              <div class="marker-list" id="lung-finding-list">
+                <div class="empty-hint" id="lung-empty-hint">No findings marked</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lung finding picker modal -->
+  <div id="lung-picker-backdrop" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,0.35);align-items:center;justify-content:center">
+    <div style="background:var(--surface);border:1px solid var(--accent-mid);border-radius:var(--radius-lg);padding:16px;width:min(340px,90vw);box-shadow:0 8px 32px rgba(0,0,0,0.22)">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+        <span id="lung-picker-title">Select Finding</span>
+        <button onclick="document.getElementById('lung-picker-backdrop').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--text-faint);font-size:18px;line-height:1">&#x2715;</button>
+      </div>
+      <div id="lung-finding-sel" style="display:flex;flex-direction:column;gap:6px">
+        <button data-finding="clear"   style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#2a8a4a;display:inline-block;flex-shrink:0"></span>Clear</button>
+        <button data-finding="crep"    style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#c0392b;display:inline-block;flex-shrink:0"></span>Crepitation</button>
+        <button data-finding="wheeze"  style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#c87a00;display:inline-block;flex-shrink:0"></span>Wheeze</button>
+        <button data-finding="reduced" style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#4a7ac8;display:inline-block;flex-shrink:0"></span>Reduced air entry</button>
+        <button data-finding="absent"  style="text-align:left;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);cursor:pointer;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:50%;background:#7b5ea7;display:inline-block;flex-shrink:0"></span>Absent</button>
+      </div>
+      <button id="lung-clear-zone" style="margin-top:10px;width:100%;padding:7px;border:1px dashed var(--border);border-radius:var(--radius);background:none;cursor:pointer;font-size:12px;color:var(--text-muted);font-family:inherit">Clear this zone</button>
+    </div>
+  </div>
+
+  <!-- 13 MOVEMENT (ROM) -->
+  <div class="card" id="s-mov">
+    <div class="card-header"><span class="sec-num">13</span><h2>Movement (ROM)</h2></div>
+    <div class="card-body">
+      <div class="fg" style="gap:20px">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px">Range of Motion</div>
+          <div class="mov-table-wrap">
+            <table class="mov-table">
+              <thead>
+                <tr>
+                  <th style="min-width:180px">Joint</th>
+                  <th style="min-width:100px">Active ROM</th>
+                  <th style="min-width:100px">Passive ROM</th>
+                  <th style="width:32px"></th>
+                </tr>
+              </thead>
+              <tbody id="burn-mov-tbody"></tbody>
+            </table>
+          </div>
+          <button class="mov-add-btn" id="burn-mov-add">+ Add row</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14 MOBILITY & AMBULATORY STATUS -->
+  <div class="card" id="s-mob">
+    <div class="card-header"><span class="sec-num">14</span><h2>Mobility &amp; Ambulatory Status</h2></div>
+    <div class="card-body">
+      <div class="fg c2">
+        <div class="field">
+          <label>Bed Mobility</label>
+          <textarea id="mob-bed" placeholder="Rolling, sit-from-lying, bridging — independence level (Ind / Min A / Mod A / Max A / Dep)..." style="min-height:80px"></textarea>
+        </div>
+        <div class="field">
+          <label>Transfer / ADL / Ambulation</label>
+          <textarea id="mob-transfer" placeholder="Bed-chair transfer, hygiene, feeding, dressing, ambulation distance/aid..." style="min-height:80px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 15 GAIT ANALYSIS -->
+  <div class="card" id="s-gait">
+    <div class="card-header"><span class="sec-num">15</span><h2>Gait Analysis</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="field">
+          <label>Gait Notes</label>
+          <textarea id="gait-notes" placeholder="Gait pattern, deviations, use of aid, distance toleranced, pain on weight-bearing..." style="min-height:72px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 16 PT IMPRESSION -->
+  <div class="card" id="s-impression">
+    <div class="card-header"><span class="sec-num">16</span><h2>Physiotherapist&#39;s Impression</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="field">
+          <label>PT Impression</label>
+          <textarea id="plan-impression" placeholder="Problems by priority — respiratory, contracture risk, functional deficit..." style="min-height:95px"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 17 SHORT-TERM GOALS -->
+  <div class="card" id="s-stg">
+    <div class="card-header"><span class="sec-num">17</span><h2>Short Term Goals</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="field">
+          <label>Short-Term Goals (STG)</label>
+          <textarea id="plan-stg" placeholder="Goals within 1–2 weeks with time frame..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 18 LONG-TERM GOALS -->
+  <div class="card" id="s-ltg">
+    <div class="card-header"><span class="sec-num">18</span><h2>Long Term Goals</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="field">
+          <label>Long-Term Goals (LTG)</label>
+          <textarea id="plan-ltg" placeholder="Functional rehabilitation goals, time frame..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 19 PLAN OF TREATMENT -->
+  <div class="card" id="s-plan">
+    <div class="card-header"><span class="sec-num">19</span><h2>Plan of Treatment</h2></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="field">
+          <label>Plan of Treatment</label>
+          <textarea id="plan-tx" placeholder="Modalities, exercises, chest PT, positioning, scar management, HEP, frequency..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endblock %}
+
+  {% block extra_js %}
+  <script src="/static/js/bodychart.js"></script>
+  <script src="/static/js/lungchart.js"></script>
+  <script src="/static/js/form_burn.js"></script>
+  <script>
+  var BurnForm = {
+    onToggle: function(selectId, detailId, showVals) {
+      var val = document.getElementById(selectId).value;
+      var det = document.getElementById(detailId);
+      if (!det) return;
+      det.style.display = (showVals.indexOf(val) !== -1) ? '' : 'none';
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    try { BodyChart.init(); } catch(e) { console.warn('BodyChart init error:', e); }
+    try { LungChart.init(); } catch(e) { console.warn('LungChart init error:', e); }
+    try { BurnMov.init(); } catch(e) { console.warn('BurnMov init error:', e); }
+
+    ClinicalTemplates.addButton('plan-impression', 'BURN', 'impression');
+    ClinicalTemplates.addButton('plan-stg',        'BURN', 'stg');
+    ClinicalTemplates.addButton('plan-ltg',        'BURN', 'ltg');
+    ClinicalTemplates.addButton('plan-tx',         'BURN', 'treatment');
+  });
+  </script>
+  {% endblock %}
