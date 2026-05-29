@@ -1062,8 +1062,7 @@
         <div class="form-card-name">Hand</div>
         <div class="form-card-sub">Hand, wrist, fine motor</div>
       </div>
-      <div class="form-card soon" data-form="BURN">
-        <div class="form-card-badge">Soon</div>
+      <div class="form-card" data-form="BURN" onclick="selectForm(this)">
         <div class="form-card-icon">&#128293;</div>
         <div class="form-card-name">Burn</div>
         <div class="form-card-sub">Burns rehabilitation</div>
@@ -1920,7 +1919,7 @@ async function loadEpisodes(patientId) {
     }
 
     wrap.innerHTML = episodes.map(function(ep) {
-      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand' }[ep.form_type] || ep.form_type;
+      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand', BURN:'Burn' }[ep.form_type] || ep.form_type;
       var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;', AMPUTATION:'&#129452;', NEURO:'&#9889;', HAND:'&#9995;' }[ep.form_type] || '&#128203;';
       var rawStatus  = ep.status || 'active';
       var statusBase = rawStatus.split('|')[0];
