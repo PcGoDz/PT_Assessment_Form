@@ -6,7 +6,15 @@
 
 - `patient-page-direct` branch — shows entire project history when diffed against main (`git log main..patient-page-direct` returns initial commit). Likely orphaned from master → main default branch switch. Not deleted during 2026-05-27 branch cleanup. Investigate origin and either rebase, cherry-pick any unique work into main, or force-delete after confirming no unique value.
 
-- **BURN form — scoped + planned, Pass 1 pending execution.** Spec at `BURN_FORM_SPEC.md`. Execution plan (7 tasks, 40 steps) at `docs/superpowers/plans/2026-05-28-burn-form-pass-1.md`. No code on disk yet; `FORM_REGISTRY BURN ready=False`. PDF (pdf_burn.py) and MPIS (_buildMpisBurn) deliberately deferred to later passes — plan covers form-and-save only.
+- **BURN form Pass 2 (PDF) pending.** `pdf_burn.py` not yet written. Export KKM PDF falls back to MS generator for BURN records until Pass 2 ships. KKM ref: `fisio / b.pen. 5 / Pind. 2 / 2019`. After Pass 2: wire into `_PDF_GENERATORS` + `_SINGLE_PDF_GENERATORS`, add to `pt_assessment.spec`. Pass 3 (MPIS `_buildMpisBurn`) follows after Pass 2 is stable.
+
+- **BURN BurnMov — no start/end angle pair.** BurnMov stores Active and Passive ROM as single degree values. No start-angle / end-angle range (unlike hand_rom_table.js which captures degree pairs). Clinical need is unclear — some PTs document ROM as end-position only, others as arc range. Defer until Miruya has clinical use time with the form and can specify what's needed.
+
+- **BURN chest expansion section — no client-side validation.** Chest expansion fields (3 measurements in cm) copied verbatim from CR form. No plausibility check (e.g. values < 0, or expansion smaller than rest). Low priority — clinic staff catch implausible values — but worth noting for a BURN polish pass.
+
+- **home.html + patient.html form picker grids are independently hardcoded.** Both pages have separate picker grids that must be manually updated when activating a new form (step 1.5 now covers both). The structural duplication means every new form needs two manual activations. Consider driving both pickers from a shared data source if the active-form list keeps growing.
+
+- **BURN_FORM_SPEC.md — verify tracked in git.** The spec file at the project root was authored during Session G planning. Confirm it's committed: `git log --oneline -- BURN_FORM_SPEC.md`. If not present, `git add BURN_FORM_SPEC.md` and commit.
 
 - **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.neuro-grid.cols-3`, `.nc` variants. All de-facto canonical but undocumented. When DESIGN_SYSTEM is split, add a component recipe for both `.neuro-grid` (4-col, MS form) and `.neuro-grid.cols-3` (3-col, for forms without Notes column). Surfaced by 2026-05-21 hand form plan audit; `.cols-3` added Session F.
 

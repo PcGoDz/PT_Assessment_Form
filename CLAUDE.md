@@ -66,7 +66,7 @@ templates/
 | SPINE       | Musculoskeletal   | YES   |
 | HAND        | Musculoskeletal   | YES   |
 | AMPUTATION  | Musculoskeletal   | YES   |
-| BURN        | Musculoskeletal   | NO    |
+| BURN        | Musculoskeletal   | YES   |
 | NEURO       | Neurological      | YES   |
 | SCI         | Neurological      | NO    |
 | VESTIBULAR  | Neurological      | NO    |
