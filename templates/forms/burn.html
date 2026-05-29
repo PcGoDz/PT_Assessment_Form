@@ -736,7 +736,6 @@
   {% endblock %}
 
   {% block extra_js %}
-  <script src="/static/js/bodychart.js"></script>
   <script src="/static/js/lungchart.js"></script>
   <script src="/static/js/form_burn.js"></script>
   <script>
@@ -750,7 +749,6 @@
   };
 
   document.addEventListener('DOMContentLoaded', function () {
-    try { BodyChart.init(); } catch(e) { console.warn('BodyChart init error:', e); }
     try { LungChart.init(); } catch(e) { console.warn('LungChart init error:', e); }
     try { BurnMov.init(); } catch(e) { console.warn('BurnMov init error:', e); }
 
