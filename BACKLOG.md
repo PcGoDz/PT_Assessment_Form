@@ -6,7 +6,15 @@
 
 - `patient-page-direct` branch — shows entire project history when diffed against main (`git log main..patient-page-direct` returns initial commit). Likely orphaned from master → main default branch switch. Not deleted during 2026-05-27 branch cleanup. Investigate origin and either rebase, cherry-pick any unique work into main, or force-delete after confirming no unique value.
 
-- **BURN form Pass 2 (PDF) pending.** `pdf_burn.py` not yet written. Export KKM PDF falls back to MS generator for BURN records until Pass 2 ships. KKM ref: `fisio / b.pen. 5 / Pind. 2 / 2019`. After Pass 2: wire into `_PDF_GENERATORS` + `_SINGLE_PDF_GENERATORS`, add to `pt_assessment.spec`. Pass 3 (MPIS `_buildMpisBurn`) follows after Pass 2 is stable.
+- **BURN body chart depth-chip wiring bug (CLINICAL ACCURACY).** `burn.html` §09 body chart
+  chips display burn-depth labels (Superficial 1° / Superficial partial 2° / Deep partial 2° /
+  Full thickness 3°–4° / Donor site / Grafted SSG), but placed markers save the old MS
+  pain-type values (sharp/refer/ache/burn/numb/tender) instead of the selected depth. The depth
+  chip is cosmetic — its value is not wired through to the `BodyChart` marker write. Result:
+  form shows "Deep partial", record + PDF show "Sharp". Affects `form_burn.js` and/or
+  `bodychart.js` (likely the shared IIFE has no marker-type set for burn depth). PDF render
+  layer is correct — confirmed `burn_dense.pdf` prints depth labels when fed depth values.
+  Surfaced Session J during Pass 2 smoke test.
 
 - **Dropdown/select elements render garbled/zigzag in dark mode.** Global `style.css` issue affecting ALL forms' `<select>` elements. Pre-existing since ~HAND form; made obvious by BurnMov v2's additional selects. Batch fix with mov-table overflow (both `style.css`).
 
@@ -18,7 +26,7 @@
 
 - **home.html + patient.html form picker grids are independently hardcoded.** Both pages have separate picker grids that must be manually updated when activating a new form (step 1.5 now covers both). The structural duplication means every new form needs two manual activations. Consider driving both pickers from a shared data source if the active-form list keeps growing.
 
-- **BURN_FORM_SPEC.md — verify tracked in git.** The spec file at the project root was authored during Session G planning. Confirm it's committed: `git log --oneline -- BURN_FORM_SPEC.md`. If not present, `git add BURN_FORM_SPEC.md` and commit.
+- **BURN_FORM_SPEC.md — verify tracked in git.** The spec file at the project root was authored during Session G planning. Confirm it's committed: `git log --oneline -- BURN_FORM_SPEC.md`. If not present, `git add BURN_FORM_SPEC.md` and commit. Session J note: CC's file read did not find BURN_FORM_SPEC.md in the fervent-shannon worktree. Confirm whether it's actually on main (`git log --oneline -- BURN_FORM_SPEC.md`) or was never committed despite the Session I claim.
 
 - **DESIGN_SYSTEM.md documentation gaps:** backfill `{% block extra_js %}`, `.mov-add-btn`, `.mov-del-btn`, `.mov-cell-input`, `.neuro-grid`, `.neuro-grid.cols-3`, `.nc` variants. All de-facto canonical but undocumented. When DESIGN_SYSTEM is split, add a component recipe for both `.neuro-grid` (4-col, MS form) and `.neuro-grid.cols-3` (3-col, for forms without Notes column). Surfaced by 2026-05-21 hand form plan audit; `.cols-3` added Session F.
 
@@ -44,7 +52,7 @@
 
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
-- BURN form Pass 2 (pdf_burn.py) and Pass 3 (MPIS _buildMpisBurn) — to scope after Pass 1 ships and Miruya smoke-tests.
+- BURN Pass 3 (MPIS `_buildMpisBurn`) — Pass 2 (pdf_burn.py) shipped Session J; Pass 3 now unblocked. `_buildMpisBurn()` in main.js + wire into `copyToMpisAuto()` switch.
 - SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.

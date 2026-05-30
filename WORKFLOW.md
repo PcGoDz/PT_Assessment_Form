@@ -137,6 +137,14 @@ Things relearned the hard way. Do not let happen again:
 - `bodychart.js` is loaded globally by `base.html` — do NOT add `<script src="...bodychart.js">` inside any form's `{% block extra_js %}`. Doing so causes a SyntaxError on page load (`const COLORS` is redeclared when the IIFE re-executes). Pattern: call `BodyChart.init()` in DOMContentLoaded only; no script tag. Mirror ms.html.
 - `patient.html` uses `selectEpForm(this)` for its form picker, NOT `selectForm(this)`. When activating a new form (step 1.5), BOTH home.html AND patient.html must be updated. They are independently hardcoded pickers; FORM_REGISTRY drives neither.
 - **Empty-state `colspan` in a dynamic table's `_render()` lives in the JS, not the HTML.** When a table's column count changes, the empty-state `<td colspan="N">` string inside `_render()` must also be updated. Wrong colspan only appears when the table is empty — easy to miss in testing if you always add at least one row. BurnMov v2: wrong value was `4`, corrected to `7` (7 columns).
+- **Relabeling a UI control is not the same as rewiring its value.** When a chip, dropdown, or
+  button is relabeled for a new form or domain, verify the selected value is actually written
+  through to storage — not just that the label renders. BURN body chart chips were relabeled
+  MS-pain-type → burn-depth in the UI, but the marker-write path still emitted pain-type values;
+  the form displayed "Deep partial" while the record stored "Sharp" and the PDF faithfully
+  printed "Sharp". A cosmetic relabel without a data-path rewire is a silent clinical-accuracy
+  bug. Check: pick the new option, save, reload/export, confirm the NEW value (not a legacy one)
+  round-trips end to end.
 - Smoke-test on the worktree BEFORE merging to main. Non-negotiable. The worktree exists precisely so the change can be verified in isolation. Sequence: edit in worktree → Miruya smoke-tests the worktree directly (run Flask from the worktree folder, not main) → only after confirmed working, merge to main. Inverting this (merge first, smoke-test after) creates two failure modes: (a) if the smoke-test fails, broken code is already on main and rollback is needed instead of just abandoning a branch, and (b) if the worktree branch is left behind main after the merge, the worktree folder displays stale pre-merge code, which produces a FALSE smoke-test failure on a fix that actually works. The second mode is especially dangerous — it leads to "chasing ghost bugs" where every subsequent edit goes into a stale branch, the user keeps reporting the bug isn't fixed, and the actual code in main is fine the whole time. To prevent both: never run `git merge` on main until the worktree smoke-test has passed. If a merge must happen urgently, fast-forward the worktree branch immediately after so the folder stays in sync.
 
 ---

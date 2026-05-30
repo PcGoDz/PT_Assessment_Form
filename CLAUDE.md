@@ -33,7 +33,7 @@ Device: Dept PC (Windows). No internet dependency required.
 app.py                  Flask routes, PDF routing dispatch, FORM_REGISTRY (15 forms)
 database.py             All SQLite logic + validation
 pdf_platypus_base.py    Shared Platypus building blocks
-pdf_<form>.py           Per-form PDF generators (ms, spine, geriatric, cr, amputation, neuro, hand)
+pdf_<form>.py           Per-form PDF generators (ms, spine, geriatric, cr, amputation, neuro, hand, burn)
 pdf_base.py             Legacy canvas primitives (kept for BodyChartFlowable)
 
 static/js/
