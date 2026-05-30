@@ -8,7 +8,11 @@
 
 - **BURN form Pass 2 (PDF) pending.** `pdf_burn.py` not yet written. Export KKM PDF falls back to MS generator for BURN records until Pass 2 ships. KKM ref: `fisio / b.pen. 5 / Pind. 2 / 2019`. After Pass 2: wire into `_PDF_GENERATORS` + `_SINGLE_PDF_GENERATORS`, add to `pt_assessment.spec`. Pass 3 (MPIS `_buildMpisBurn`) follows after Pass 2 is stable.
 
-- ~~**BURN BurnMov — no start/end angle pair.**~~ **RESOLVED (Session I).** BurnMov v2 shipped: Active and Passive are now start–end degree pairs. Side dropdown, cascading Plane dropdown (or free-text when joint = Other), and Remark dropdown (with Other free-text) added in the same pass.
+- **Dropdown/select elements render garbled/zigzag in dark mode.** Global `style.css` issue affecting ALL forms' `<select>` elements. Pre-existing since ~HAND form; made obvious by BurnMov v2's additional selects. Batch fix with mov-table overflow (both `style.css`).
+
+- **`mov-table` clips right-hand columns at narrow window widths — no horizontal scroll.** `.mov-table-wrap` needs `overflow-x: auto`. Surfaced by BurnMov v2's 7-column width. Shared class — fix benefits all forms with mov-tables. Batch fix with dark-mode select issue.
+
+- **Neck (midline joint) offers Left/Right in BurnMov Side dropdown — clinically meaningless.** Midline joints (Neck, possibly Spine) should suppress or blank the Side column. Minor; defer until CSS pass or next BurnMov polish.
 
 - **BURN chest expansion section — no client-side validation.** Chest expansion fields (3 measurements in cm) copied verbatim from CR form. No plausibility check (e.g. values < 0, or expansion smaller than rest). Low priority — clinic staff catch implausible values — but worth noting for a BURN polish pass.
 

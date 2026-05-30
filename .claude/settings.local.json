@@ -18,7 +18,22 @@
       "Bash(py -c ' *)",
       "Bash(del \"C:\\\\Users\\\\legac\\\\Downloads\\\\FOR_CLAUDE\\\\PT_Assessment\\\\test_hand.pdf\")",
       "Bash(python -c \"from reportlab.lib.colors import HexColor; c = HexColor\\('#e53935'\\); print\\(dir\\(c\\)\\)\")",
-      "Bash(python -c \"import sys; data=sys.stdin.read\\(\\); print\\([x for x in data.replace\\('[',''\\).replace\\(']',''\\).replace\\(\\\\\"'\\\\\",''\\).split\\(','\\) if 'hex' in x.lower\\(\\)]\\)\")"
+      "Bash(python -c \"import sys; data=sys.stdin.read\\(\\); print\\([x for x in data.replace\\('[',''\\).replace\\(']',''\\).replace\\(\\\\\"'\\\\\",''\\).split\\(','\\) if 'hex' in x.lower\\(\\)]\\)\")",
+      "Bash(git push *)",
+      "Bash(python \"C:/Users/legac/.claude/plugins/cache/claude-code-skills/karpathy-coder/2.3.0/scripts/complexity_checker.py\" static/js/handchart.js static/js/form_hand.js pdf_hand.py static/js/clinical_templates.js)",
+      "Bash(python3 \"C:/Users/legac/.claude/plugins/cache/claude-code-skills/karpathy-coder/2.3.0/scripts/complexity_checker.py\" static/js/handchart.js static/js/form_hand.js pdf_hand.py static/js/clinical_templates.js)",
+      "PowerShell(Get-Command python, python3, py -ErrorAction SilentlyContinue)",
+      "Bash(python -c \"from reportlab.lib.colors import HexColor; c = HexColor\\('#e53935'\\); print\\(hasattr\\(c, 'hexval'\\)\\); print\\(hasattr\\(c, 'hexstring'\\)\\); print\\(hasattr\\(c, 'hexCode'\\)\\); print\\([x for x in dir\\(c\\) if 'hex' in x.lower\\(\\)]\\)\")",
+      "Bash(py -c \"from reportlab.lib.colors import HexColor; c = HexColor\\('#e53935'\\); print\\([x for x in dir\\(c\\) if 'hex' in x.lower\\(\\)]\\); print\\(c.hexval\\(\\)\\)\")",
+      "Bash(py -c \"from reportlab.lib.colors import HexColor; c = HexColor\\('#e53935'\\); print\\(hex\\(c.hexval\\(\\)\\)\\); print\\(type\\(c.hexval\\(\\)\\)\\)\")",
+      "Bash(py -c \"from reportlab.lib.colors import HexColor; c = HexColor\\('#e53935'\\); val = c.hexval\\(\\); print\\(repr\\(val\\)\\)\")",
+      "Bash(ls -d .worktrees)",
+      "Bash(ls -d worktrees)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git worktree *)",
+      "Bash(powershell -Command \"Test-Path -Path 'static/js/form.js' -PathType Leaf; Test-Path -Path 'pdf_generator.py' -PathType Leaf; Test-Path -Path 'pdf_base.py' -PathType Leaf\")",
+      "Bash(python -m py_compile pt_assessment.spec)"
     ]
   }
 }
