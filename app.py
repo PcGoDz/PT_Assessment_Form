@@ -20,6 +20,7 @@ import pdf_cr
 import pdf_amputation
 import pdf_neuro
 import pdf_hand
+import pdf_burn
 
 _PDF_GENERATORS = {
     'MS':         pdf_ms.generate_episode_pdf,
@@ -29,6 +30,7 @@ _PDF_GENERATORS = {
     'AMPUTATION': pdf_amputation.generate_episode_pdf,
     'NEURO':      pdf_neuro.generate_episode_pdf,
     'HAND':       pdf_hand.generate_episode_pdf,
+    'BURN':       pdf_burn.generate_episode_pdf,
 }
 
 _SINGLE_PDF_GENERATORS = {
@@ -39,6 +41,7 @@ _SINGLE_PDF_GENERATORS = {
     'AMPUTATION': pdf_amputation.generate_amputation_pdf,
     'NEURO':      pdf_neuro.generate_neuro_pdf,
     'HAND':       pdf_hand.generate_hand_pdf,
+    'BURN':       pdf_burn.generate_burn_pdf,
 }
 
 
