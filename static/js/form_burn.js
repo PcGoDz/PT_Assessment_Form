@@ -3,8 +3,8 @@
 // Registers BurnMov (IIFE) and FormBurn (window.ActiveForm / window.Form).
 
 // ══════════════════════════════════════════════════════════════════════════════
-// BurnMov — private 3-column ROM mini-table (Joint / Active ROM / Passive ROM)
-// Custom module because shared MovementTable is 9-column only.
+// BurnMov — ROM mini-table v2
+// Columns: Joint | Side | Plane (cascades off Joint) | Active | Passive | Remark
 // ══════════════════════════════════════════════════════════════════════════════
 var BurnMov = (function () {
 
@@ -12,56 +12,144 @@ var BurnMov = (function () {
   var _counter = 0;
 
   var _JOINTS = [
-    'Neck', 'Shoulder', 'Elbow', 'Wrist', 'Fingers (MCP)',
+    'Neck', 'Shoulder', 'Elbow', 'Forearm', 'Wrist', 'Fingers (MCP)',
     'Fingers (PIP)', 'Hip', 'Knee', 'Ankle', 'Toes (MTP)',
     'Other (specify)'
   ];
+
+  var _BURN_ROM_PLANES = {
+    'Neck':          ['Flexion', 'Extension', 'Lateral flexion (L)', 'Lateral flexion (R)', 'Rotation (L)', 'Rotation (R)'],
+    'Shoulder':      ['Flexion', 'Extension', 'Abduction', 'Adduction', 'Internal rotation', 'External rotation'],
+    'Elbow':         ['Flexion', 'Extension'],
+    'Forearm':       ['Pronation', 'Supination'],
+    'Wrist':         ['Flexion', 'Extension', 'Radial deviation', 'Ulnar deviation'],
+    'Fingers (MCP)': ['Flexion', 'Extension', 'Abduction', 'Adduction'],
+    'Fingers (PIP)': ['Flexion', 'Extension'],
+    'Hip':           ['Flexion', 'Extension', 'Abduction', 'Adduction', 'Internal rotation', 'External rotation'],
+    'Knee':          ['Flexion', 'Extension'],
+    'Ankle':         ['Dorsiflexion', 'Plantarflexion', 'Inversion', 'Eversion'],
+    'Toes (MTP)':    ['Flexion', 'Extension']
+  };
+
+  var _SIDES = ['Left', 'Right', 'Bilateral'];
+
+  var _REMARKS = [
+    'Limited d/t pain',
+    'Reduced ROM d/t dressing',
+    'Limited d/t oedema',
+    'Limited d/t graft/skin tightness',
+    'Unable to assess',
+    'Other (specify)'
+  ];
+
+  // ── Pair number inputs (start–end) ───────────────────────────────────────────
+  function _pairInputs(field_start, field_end, rid, val_start, val_end) {
+    function inp(field, val) {
+      return '<input type="number" class="mov-cell-input" data-field="' + field + '" data-rid="' + rid +
+        '" value="' + (val || '') + '" min="0" max="360" placeholder="\xb0" style="width:44px;text-align:center">';
+    }
+    return '<span style="display:inline-flex;align-items:center;gap:2px">' +
+      inp(field_start, val_start) +
+      '<span style="font-size:10px;color:var(--text-faint)">–</span>' +
+      inp(field_end, val_end) +
+      '</span>';
+  }
+
+  // ── Escape helper for attribute values ──────────────────────────────────────
+  function _esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   function _render() {
     var tbody = document.getElementById('burn-mov-tbody');
     if (!tbody) return;
 
-    // Empty state
     if (!_rows.length) {
-      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-faint);font-style:italic;padding:16px;font-size:12px">No movements recorded — click Add Row</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-faint);font-style:italic;padding:16px;font-size:12px">No movements recorded — click Add Row</td></tr>';
       return;
     }
 
     var html = '';
     _rows.forEach(function (r) {
-      var optHtml = _JOINTS.map(function (j) {
+      // Joint select + other text
+      var jointOpts = _JOINTS.map(function (j) {
         return '<option value="' + j + '"' + (r.joint === j ? ' selected' : '') + '>' + j + '</option>';
       }).join('');
-
       var otherDisplay = (r.joint === 'Other (specify)') ? '' : 'none';
+
+      // Side select
+      var sideOpts = '<option value="">—</option>' + _SIDES.map(function (s) {
+        return '<option value="' + s + '"' + (r.side === s ? ' selected' : '') + '>' + s + '</option>';
+      }).join('');
+
+      // Plane: cascade select for known joints, free-text for Other
+      var planeCell;
+      if (r.joint === 'Other (specify)') {
+        planeCell = '<input type="text" class="mov-cell-input" data-field="plane" data-rid="' + r.id + '"' +
+          ' value="' + _esc(r.plane) + '" placeholder="Specify movement" style="width:100%">';
+      } else {
+        var planes = _BURN_ROM_PLANES[r.joint] || [];
+        var planeOpts = '<option value="">— Select —</option>' + planes.map(function (p) {
+          return '<option value="' + p + '"' + (r.plane === p ? ' selected' : '') + '>' + p + '</option>';
+        }).join('');
+        planeCell = '<select class="mov-cell-input" data-field="plane" data-rid="' + r.id + '">' + planeOpts + '</select>';
+      }
+
+      // Remark select + other text
+      var remarkOpts = '<option value="">—</option>' + _REMARKS.map(function (k) {
+        return '<option value="' + k + '"' + (r.remark === k ? ' selected' : '') + '>' + k + '</option>';
+      }).join('');
+      var remarkOtherDisplay = (r.remark === 'Other (specify)') ? '' : 'none';
 
       html += '<tr>' +
         '<td>' +
           '<select class="mov-cell-input" data-field="joint" data-rid="' + r.id + '">' +
-            '<option value="">— Select —</option>' +
-            optHtml +
+            '<option value="">— Select —</option>' + jointOpts +
           '</select>' +
           '<input type="text" class="mov-cell-input" data-field="joint_other" data-rid="' + r.id + '"' +
             ' placeholder="Specify joint" value="' + _esc(r.joint_other) + '"' +
             ' style="display:' + otherDisplay + ';margin-top:4px;width:100%">' +
         '</td>' +
-        '<td><input type="text" class="mov-cell-input" data-field="active" data-rid="' + r.id + '"' +
-          ' value="' + _esc(r.active) + '" placeholder="e.g. 0–120°" style="width:100%"></td>' +
-        '<td><input type="text" class="mov-cell-input" data-field="passive" data-rid="' + r.id + '"' +
-          ' value="' + _esc(r.passive) + '" placeholder="e.g. 0–130°" style="width:100%"></td>' +
+        '<td><select class="mov-cell-input" data-field="side" data-rid="' + r.id + '">' + sideOpts + '</select></td>' +
+        '<td>' + planeCell + '</td>' +
+        '<td>' + _pairInputs('active_start',  'active_end',  r.id, r.active_start,  r.active_end)  + '</td>' +
+        '<td>' + _pairInputs('passive_start', 'passive_end', r.id, r.passive_start, r.passive_end) + '</td>' +
+        '<td>' +
+          '<select class="mov-cell-input" data-field="remark" data-rid="' + r.id + '">' + remarkOpts + '</select>' +
+          '<input type="text" class="mov-cell-input" data-field="remark_other" data-rid="' + r.id + '"' +
+            ' placeholder="Specify remark" value="' + _esc(r.remark_other) + '"' +
+            ' style="display:' + remarkOtherDisplay + ';margin-top:4px;width:100%">' +
+        '</td>' +
         '<td><button class="mov-del-btn" data-delid="' + r.id + '" title="Delete row">&times;</button></td>' +
         '</tr>';
     });
     tbody.innerHTML = html;
 
-    // Wire events
-    tbody.querySelectorAll('[data-field]').forEach(function (el) {
-      if (el.tagName === 'SELECT' && el.dataset.field === 'joint') {
-        el.addEventListener('change', function () { _syncFromDOM(); _render(); });
-      } else {
-        el.addEventListener('input', _syncFromDOM);
-      }
+    // Wire joint select: sync → clear plane → re-render
+    tbody.querySelectorAll('[data-field="joint"]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        _syncFromDOM();
+        var rid = parseInt(sel.dataset.rid);
+        var row = _rows.find(function (r) { return r.id === rid; });
+        if (row) row.plane = '';
+        _render();
+      });
+    });
+
+    // Wire remark select: sync → re-render (toggles remark_other visibility)
+    tbody.querySelectorAll('[data-field="remark"]').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        _syncFromDOM();
+        _render();
+      });
+    });
+
+    // Wire all other inputs/selects
+    tbody.querySelectorAll('[data-field]:not([data-field="joint"]):not([data-field="remark"])').forEach(function (el) {
+      el.addEventListener('input',  _syncFromDOM);
+      el.addEventListener('change', _syncFromDOM);
     });
 
     // Wire delete buttons
@@ -70,12 +158,6 @@ var BurnMov = (function () {
         deleteRow(parseInt(btn.dataset.delid));
       });
     });
-  }
-
-  // ── Escape helper for attribute values ──────────────────────────────────────
-  function _esc(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
   }
 
   // ── Sync DOM → _rows ────────────────────────────────────────────────────────
@@ -104,11 +186,17 @@ var BurnMov = (function () {
   function addRow(prefill) {
     var id = _counter++;
     _rows.push({
-      id:          id,
-      joint:       (prefill && prefill.joint)       || '',
-      joint_other: (prefill && prefill.joint_other) || '',
-      active:      (prefill && prefill.active)      || '',
-      passive:     (prefill && prefill.passive)      || ''
+      id:            id,
+      joint:         (prefill && prefill.joint)         || '',
+      joint_other:   (prefill && prefill.joint_other)   || '',
+      side:          (prefill && prefill.side)          || '',
+      plane:         (prefill && prefill.plane)         || '',
+      active_start:  (prefill && prefill.active_start)  || '',
+      active_end:    (prefill && prefill.active_end)    || '',
+      passive_start: (prefill && prefill.passive_start) || '',
+      passive_end:   (prefill && prefill.passive_end)   || '',
+      remark:        (prefill && prefill.remark)        || '',
+      remark_other:  (prefill && prefill.remark_other)  || ''
     });
     _render();
   }
@@ -119,29 +207,46 @@ var BurnMov = (function () {
     _render();
   }
 
-  // ── Public: getData — emit bare joint name ───────────────────────────────────
+  // ── Public: getData ──────────────────────────────────────────────────────────
   function getData() {
     _syncFromDOM();
     return _rows.map(function (r) {
-      var jointName = (r.joint === 'Other (specify)') ? r.joint_other : r.joint;
-      return { joint: jointName, active: r.active, passive: r.passive };
+      var jointName  = (r.joint === 'Other (specify)') ? r.joint_other : r.joint;
+      var remarkName = (r.remark === 'Other (specify)') ? r.remark_other : r.remark;
+      return {
+        joint:         jointName,
+        side:          r.side,
+        plane:         r.plane,
+        active_start:  r.active_start,
+        active_end:    r.active_end,
+        passive_start: r.passive_start,
+        passive_end:   r.passive_end,
+        remark:        remarkName
+      };
     });
   }
 
-  // ── Public: loadData — round-trip detect ────────────────────────────────────
+  // ── Public: loadData ─────────────────────────────────────────────────────────
   function loadData(data) {
     _rows    = [];
     _counter = 0;
     if (!data || !data.length) { _render(); return; }
     data.forEach(function (d) {
-      var id     = _counter++;
-      var inList = _JOINTS.indexOf(d.joint) !== -1;
+      var id        = _counter++;
+      var inJoints  = _JOINTS.indexOf(d.joint)  !== -1;
+      var inRemarks = _REMARKS.indexOf(d.remark) !== -1;
       _rows.push({
-        id:          id,
-        joint:       inList ? d.joint : 'Other (specify)',
-        joint_other: inList ? '' : (d.joint || ''),
-        active:      d.active  || '',
-        passive:     d.passive || ''
+        id:            id,
+        joint:         inJoints  ? d.joint  : 'Other (specify)',
+        joint_other:   inJoints  ? ''       : (d.joint  || ''),
+        side:          d.side          || '',
+        plane:         d.plane         || '',
+        active_start:  d.active_start  || '',
+        active_end:    d.active_end    || '',
+        passive_start: d.passive_start || '',
+        passive_end:   d.passive_end   || '',
+        remark:        inRemarks ? d.remark : (d.remark ? 'Other (specify)' : ''),
+        remark_other:  inRemarks ? ''       : (d.remark || '')
       });
     });
     _render();

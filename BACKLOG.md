@@ -8,7 +8,7 @@
 
 - **BURN form Pass 2 (PDF) pending.** `pdf_burn.py` not yet written. Export KKM PDF falls back to MS generator for BURN records until Pass 2 ships. KKM ref: `fisio / b.pen. 5 / Pind. 2 / 2019`. After Pass 2: wire into `_PDF_GENERATORS` + `_SINGLE_PDF_GENERATORS`, add to `pt_assessment.spec`. Pass 3 (MPIS `_buildMpisBurn`) follows after Pass 2 is stable.
 
-- **BURN BurnMov — no start/end angle pair.** BurnMov stores Active and Passive ROM as single degree values. No start-angle / end-angle range (unlike hand_rom_table.js which captures degree pairs). Clinical need is unclear — some PTs document ROM as end-position only, others as arc range. Defer until Miruya has clinical use time with the form and can specify what's needed.
+- ~~**BURN BurnMov — no start/end angle pair.**~~ **RESOLVED (Session I).** BurnMov v2 shipped: Active and Passive are now start–end degree pairs. Side dropdown, cascading Plane dropdown (or free-text when joint = Other), and Remark dropdown (with Other free-text) added in the same pass.
 
 - **BURN chest expansion section — no client-side validation.** Chest expansion fields (3 measurements in cm) copied verbatim from CR form. No plausibility check (e.g. values < 0, or expansion smaller than rest). Low priority — clinic staff catch implausible values — but worth noting for a BURN polish pass.
 
