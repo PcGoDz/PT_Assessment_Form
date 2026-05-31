@@ -6,11 +6,9 @@
 
 - `patient-page-direct` branch — shows entire project history when diffed against main (`git log main..patient-page-direct` returns initial commit). Likely orphaned from master → main default branch switch. Not deleted during 2026-05-27 branch cleanup. Investigate origin and either rebase, cherry-pick any unique work into main, or force-delete after confirming no unique value.
 
-- **BURN body chart PDF — marker dots all render BLUE regardless of depth.** The PDF
-  marker-colour lookup (server-side, ReportLab) still keys on the old pain vocab; depth-string
-  keys miss and fall back to default blue. COSMETIC — depth label prints correctly in the PDF
-  text list (e.g. "#3 ... (Deep partial (2°))"). Fix by teaching the PDF marker-colour function
-  the depth→colour map. Low priority. Surfaced Session K.
+- ~~**BURN body chart PDF — marker dots all render BLUE regardless of depth.**~~ Fixed Session L: six depth keys appended to `MARKER_COLORS` in `pdf_base.py`.
+
+- **Twin `MARKER_COLORS` dicts are a maintenance trap.** `pdf_base.MARKER_COLORS` = dot-colour source of truth (used by `draw_markers()` for rendered dots). `pdf_platypus_base.MARKER_COLORS` = pain-vocab-only copy that serves as legend-fallback colour reference — depth keys NOT present. The Session L fix only updated `pdf_base`. If the platypus-side copy is ever wired into a new render path, it will silently emit wrong colours for all burn depth markers. Consolidate (make platypus import from pdf_base) or document the split formally before the dicts drift further.
 
 - **Cross-form body chart marker bleed (DATA INTEGRITY, pre-existing).** Swapping form type via
   the topbar dropdown does not clear the body chart — markers placed on one form persist onto
@@ -74,6 +72,7 @@
 - Patient profile page improvements (currently functional but not polished)
 - MMT label spacing in MPIS: rows with `+` suffix on L value (e.g. `L: 2+`) render with inconsistent spacing before R label. Cosmetic.
 - STRENGTH block empty-row policy: currently renders `— / — kg` for empty rows instead of skipping. Pick canonical skip-vs-em-dash behavior when MS-as-canon SOAPIER refactor happens.
+- BURN depth palette is the recycled pain palette, not severity-ordered — colour doesn't encode depth severity (full-thickness currently reads calmer than deep-partial). Good-to-have: ramp the four depths cool/light→hot/dark by severity (e.g. yellow→orange→red→dark-brown for full thickness; dark-brown also resembles eschar). Donor site + Grafted are surgical-status, NOT burn depths — keep them off the depth ramp as distinct hues. Both-sides change: browser configure() + PDF MARKER_COLORS must move in lockstep. Low priority.
 
 ---
 

@@ -30,6 +30,13 @@ MARKER_COLORS = {
     'burn':   colors.HexColor('#c87a00'),
     'refer':  colors.HexColor('#2a8a4a'),
     'tender': colors.HexColor('#b84a8a'),
+    # Burn depth vocabulary — mirrors form_burn.js BodyChart.configure(); keep in lockstep
+    'Superficial (1°)':         colors.HexColor('#4a7ac8'),
+    'Superficial partial (2°)': colors.HexColor('#c87a00'),
+    'Deep partial (2°)':        colors.HexColor('#c0392b'),
+    'Full thickness (3°/4°)':   colors.HexColor('#7b5ea7'),
+    'Donor site':               colors.HexColor('#2a8a4a'),
+    'Grafted (SSG)':            colors.HexColor('#b84a8a'),
 }
 
 # ── Fonts ──────────────────────────────────────────────────
