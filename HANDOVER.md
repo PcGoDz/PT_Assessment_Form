@@ -1,68 +1,55 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-05-30
+Last updated: 2026-05-31
 
 ---
 
 ## Where we left off
 
-Session J. BURN Pass 2 shipped — `pdf_burn.py` created and merged to main. Mirrors
-`pdf_hand.py`: `page_header` + `patient_bar`, `two_col` text blocks, full-width tables each
-behind a `_has_data()` guard, `plan_section()` quadrant, `sign_chop_block()` footer. Chest
-measurement renders all six fields (apical/middle/lower_costal + their `_status` counterparts)
-— the CR-palpation silent-drop was avoided. `LungDiagramFlowable` imported from `pdf_cr`, not
-reimplemented. Wired into `_PDF_GENERATORS` + `_SINGLE_PDF_GENERATORS` in app.py; added
-`('pdf_burn.py', '.')` to `pt_assessment.spec` datas.
+Session K. Shipped the burn body chart depth-chip fix (commit 99f4e5d, on main, origin synced).
+Root cause: §09 depth chips in burn.html were relabeled to burn-depth in the UI but their
+data-ptype still carried MS pain codes (ache/sharp/etc.), so markers saved pain values, not
+depth. Fix made bodychart.js vocabulary-configurable: COLORS/LABELS const→let; new
+configure({colors,labels}) merge method exposed in the API; renderList() falls back to raw type
+string when no LABELS entry; init() reads activeType from the .pt-chip.active chip's data-ptype
+(null-guarded, defaults to 'ache'). burn.html §09 data-ptype values changed to literal depth
+strings; form_burn.js calls BodyChart.configure() with six depth→hex colours at IIFE load. MS
+untouched — never calls configure(), keeps default pain vocab. Files: bodychart.js, burn.html,
+form_burn.js. Verified by smoke test — depth labels correct in live list AND PDF text.
 
-Verified three ways: Miruya's manual full-form fill (23/23 smoke checklist; single-record
-export AND episode export with a SOAP note both render clean), plus the generator script's
-dense (12.4 KB) vs sparse (7.4 KB) round-trip — the 5 KB gap confirms `_has_data` guards fire
-(sparse strips every table, keeps labelled text boxes and "No markers recorded").
+Two follow-on bugs surfaced during smoke test — logged in BACKLOG, not started.
 
 ---
 
 ## Half-done
 
-- BURN Pass 3 (MPIS `_buildMpisBurn`) — not started. Pass 2 is stable, so this is now unblocked.
-- DESIGN_SYSTEM.md still ~312 lines — over the 250 ceiling. Split deferred since Session C.
+None — depth-chip fix is complete and shipped.
 
 ---
 
 ## Next session priorities
 
-1. **Burn body chart depth-chip wiring bug (NEW, clinical accuracy).** `burn.html` §09 chips
-   display burn-depth labels but placed markers save MS pain-type values (sharp/refer/ache)
-   instead of the selected depth. Depth chip is cosmetic — value not wired through to the
-   `BodyChart` marker write. Affects `form_burn.js` / `bodychart.js`. PDF render is correct
-   (`burn_dense.pdf` prints depth labels when fed depth values) — bug is upstream in the form.
-2. **BURN Pass 3** — `_buildMpisBurn()` in main.js + wire into `copyToMpisAuto()` switch
-   (BURN branch). No per-form wrapper.
-3. **CSS pass (batch)** — dark-mode `<select>` garbled/zigzag + `overflow-x:auto` on
-   `.mov-table-wrap`. Both style.css; batch together.
-4. **DESIGN_SYSTEM.md split** — over ceiling since Session C.
-5. **patient-page-direct branch** — investigate and resolve (cherry-pick or force-delete).
+1. **Cross-form body chart marker bleed (BACKLOG)** — data-integrity, ranks above Pass 3.
+   Markers persist across form-type swap, can save into wrong record.
+2. **BURN Pass 3** — `_buildMpisBurn()` in main.js + wire into `copyToMpisAuto()` switch.
+3. **BURN PDF marker dots all blue (BACKLOG)** — cosmetic, PDF colour map keys on old pain vocab.
+4. **CSS batch (style.css)** — dark-mode `<select>` garbled + `.mov-table-wrap` overflow-x:auto.
+5. **DESIGN_SYSTEM.md split** — still ~312 lines, over 250 ceiling, deferred since Session C.
 
 ---
 
 ## Gotchas discovered this session
 
-- **Relabeling a UI control ≠ rewiring its value.** Burn body chart chips were relabeled
-  MS-pain-type → burn-depth in the UI, but the marker-write path still emitted pain-type
-  values. Form displays "Deep partial", record stores "Sharp", PDF faithfully prints "Sharp".
-  A cosmetic relabel without a data-path rewire is a silent clinical-accuracy bug. Migrated to
-  WORKFLOW.md Anti-Repeat Rules.
-- **When output labels look wrong, check what the data layer emits before blaming the render.**
-  `body_chart_section()` renders raw `type` strings correctly — it was never the bug; the form
-  fed it pain types. Cost a detour before a grep settled it.
-- **Windows bare `py script.py` / double-click closes the terminal on completion.**
-  `smoke_burn_gen.py` looked like it failed (window flashed and closed) but had succeeded. Run
-  from an IDE or a self-opened cmd to see stdout.
+- **Browser marker colours and PDF marker colours are SEPARATE lookups.** configure() fixed the
+  browser side; ReportLab's server-side colour map still keys on pain vocab, so depth markers
+  fall back to default blue. Fixing one doesn't fix the other.
+- **A smoke-test "regression" can be a newly-exposed pre-existing bug.** Cross-form marker bleed
+  looked like a new fail but was pre-existing — the depth fix just made always-leaking markers
+  legible. Check new-breakage vs newly-visible before calling something a regression.
 
 ---
 
 ## What to skip for now
 
-- BURN Pass 3 MPIS — priority 2, its own pass.
-- Body chart legend depth-label map — NOT needed; base renders raw depth strings correctly.
-  Do not add a map.
-- CSS batch, DESIGN_SYSTEM split, patient-page-direct — see BACKLOG.
+- Pass 3, CSS batch, DESIGN_SYSTEM split, patient-page-direct — see BACKLOG.
+- Do NOT fix PDF blue dots by touching browser bodychart.js — separate PDF-side map.

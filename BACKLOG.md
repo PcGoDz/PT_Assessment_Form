@@ -6,15 +6,19 @@
 
 - `patient-page-direct` branch — shows entire project history when diffed against main (`git log main..patient-page-direct` returns initial commit). Likely orphaned from master → main default branch switch. Not deleted during 2026-05-27 branch cleanup. Investigate origin and either rebase, cherry-pick any unique work into main, or force-delete after confirming no unique value.
 
-- **BURN body chart depth-chip wiring bug (CLINICAL ACCURACY).** `burn.html` §09 body chart
-  chips display burn-depth labels (Superficial 1° / Superficial partial 2° / Deep partial 2° /
-  Full thickness 3°–4° / Donor site / Grafted SSG), but placed markers save the old MS
-  pain-type values (sharp/refer/ache/burn/numb/tender) instead of the selected depth. The depth
-  chip is cosmetic — its value is not wired through to the `BodyChart` marker write. Result:
-  form shows "Deep partial", record + PDF show "Sharp". Affects `form_burn.js` and/or
-  `bodychart.js` (likely the shared IIFE has no marker-type set for burn depth). PDF render
-  layer is correct — confirmed `burn_dense.pdf` prints depth labels when fed depth values.
-  Surfaced Session J during Pass 2 smoke test.
+- **BURN body chart PDF — marker dots all render BLUE regardless of depth.** The PDF
+  marker-colour lookup (server-side, ReportLab) still keys on the old pain vocab; depth-string
+  keys miss and fall back to default blue. COSMETIC — depth label prints correctly in the PDF
+  text list (e.g. "#3 ... (Deep partial (2°))"). Fix by teaching the PDF marker-colour function
+  the depth→colour map. Low priority. Surfaced Session K.
+
+- **Cross-form body chart marker bleed (DATA INTEGRITY, pre-existing).** Swapping form type via
+  the topbar dropdown does not clear the body chart — markers placed on one form persist onto
+  the next and can be saved into the wrong record. Confirmed Session K: burn depth markers
+  carried onto an MS form (visible now because the depth fix made them legible; previously they
+  wore pain labels and blended in). BodyChart is a page-lifetime singleton (module-level
+  markers[]); the form-swap path doesn't call BodyChart.clearAll(). Investigate the swap path.
+  Higher priority than cosmetic — can contaminate a saved record.
 
 - **Dropdown/select elements render garbled/zigzag in dark mode.** Global `style.css` issue affecting ALL forms' `<select>` elements. Pre-existing since ~HAND form; made obvious by BurnMov v2's additional selects. Batch fix with mov-table overflow (both `style.css`).
 
