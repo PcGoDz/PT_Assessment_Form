@@ -6,50 +6,44 @@ Last updated: 2026-05-31
 
 ## Where we left off
 
-Session K. Shipped the burn body chart depth-chip fix (commit 99f4e5d, on main, origin synced).
-Root cause: §09 depth chips in burn.html were relabeled to burn-depth in the UI but their
-data-ptype still carried MS pain codes (ache/sharp/etc.), so markers saved pain values, not
-depth. Fix made bodychart.js vocabulary-configurable: COLORS/LABELS const→let; new
-configure({colors,labels}) merge method exposed in the API; renderList() falls back to raw type
-string when no LABELS entry; init() reads activeType from the .pt-chip.active chip's data-ptype
-(null-guarded, defaults to 'ache'). burn.html §09 data-ptype values changed to literal depth
-strings; form_burn.js calls BodyChart.configure() with six depth→hex colours at IIFE load. MS
-untouched — never calls configure(), keeps default pain vocab. Files: bodychart.js, burn.html,
-form_burn.js. Verified by smoke test — depth labels correct in live list AND PDF text.
-
-Two follow-on bugs surfaced during smoke test — logged in BACKLOG, not started.
+Session L. Fixed BURN PDF body-chart marker dots rendering all blue. Added 6 burn-depth keys to
+MARKER_COLORS in pdf_base.py (now 12 keys, zero collisions), mirroring form_burn.js
+BodyChart.configure(). Verified by rasterized PNG: 6 distinct colours on the anterior figure,
+zero blue fallthrough; test PDF +1,007 bytes over sparse baseline. Code commit 8086492
+(pdf_base.py + BACKLOG.md).
 
 ---
 
 ## Half-done
 
-None — depth-chip fix is complete and shipped.
+None — fix complete and committed; docs commit + worktree merge are the only remaining steps.
 
 ---
 
 ## Next session priorities
 
-1. **Cross-form body chart marker bleed (BACKLOG)** — data-integrity, ranks above Pass 3.
-   Markers persist across form-type swap, can save into wrong record.
+1. **Cross-form body chart marker bleed (BACKLOG, data integrity)** — markers persist across
+   form-type swap, can save into wrong record. Ranks above Pass 3.
 2. **BURN Pass 3** — `_buildMpisBurn()` in main.js + wire into `copyToMpisAuto()` switch.
-3. **BURN PDF marker dots all blue (BACKLOG)** — cosmetic, PDF colour map keys on old pain vocab.
-4. **CSS batch (style.css)** — dark-mode `<select>` garbled + `.mov-table-wrap` overflow-x:auto.
-5. **DESIGN_SYSTEM.md split** — still ~312 lines, over 250 ceiling, deferred since Session C.
+3. **CSS batch (style.css)** — dark-mode `<select>` garbled + `.mov-table-wrap` overflow-x:auto.
+4. **DESIGN_SYSTEM.md split** — still ~312 lines, over 250 ceiling, deferred since Session C.
 
 ---
 
 ## Gotchas discovered this session
 
-- **Browser marker colours and PDF marker colours are SEPARATE lookups.** configure() fixed the
-  browser side; ReportLab's server-side colour map still keys on pain vocab, so depth markers
-  fall back to default blue. Fixing one doesn't fix the other.
-- **A smoke-test "regression" can be a newly-exposed pre-existing bug.** Cross-form marker bleed
-  looked like a new fail but was pre-existing — the depth fix just made always-leaking markers
-  legible. Check new-breakage vs newly-visible before calling something a regression.
+- **Body chart marker data key is `bodyChart` (camelCase), NOT `body_chart`.** A snake_case test
+  payload renders "No markers recorded" silently — no error. → logged in WORKFLOW.md anti-repeat rules.
+- **A render test that doesn't verify pixels is a hollow pass.** First burn-PDF "render OK" drew
+  an empty chart twice (off-canvas float coords, then wrong data key) and reported success.
+  Rasterize page to PNG and LOOK before trusting any visual-output test. → logged in WORKFLOW.md.
+- **Two MARKER_COLORS dicts exist:** `pdf_base` (dot-colour truth, used via lazy import in
+  BodyChartFlowable) and `pdf_platypus_base` (pain-only, drives legend, falls back to raw type
+  string on miss). NOT a dead twin — both live. Logged in BACKLOG.
 
 ---
 
 ## What to skip for now
 
-- Pass 3, CSS batch, DESIGN_SYSTEM split, patient-page-direct — see BACKLOG.
-- Do NOT fix PDF blue dots by touching browser bodychart.js — separate PDF-side map.
+Pass 3, CSS batch, DESIGN_SYSTEM split — see BACKLOG. Do NOT fix anything by touching
+bodychart.js (browser side already correct; browser and PDF colours are separate lookups).
