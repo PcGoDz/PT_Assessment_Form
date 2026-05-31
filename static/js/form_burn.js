@@ -551,6 +551,20 @@ const FormBurn = (function () {
     BurnMov.clear();
   }
 
+  // ── Wire burn-depth vocabulary into BodyChart ────────────────────────────────
+  if (typeof BodyChart !== 'undefined') {
+    BodyChart.configure({
+      colors: {
+        'Superficial (1°)':         '#4a7ac8',
+        'Superficial partial (2°)': '#c87a00',
+        'Deep partial (2°)':        '#c0392b',
+        'Full thickness (3°/4°)':   '#7b5ea7',
+        'Donor site':               '#2a8a4a',
+        'Grafted (SSG)':            '#b84a8a'
+      }
+    });
+  }
+
   // ── Progress fields ───────────────────────────────────────────────────────────
   FormBase.setProgressFields([
     'pt-name', 'pt-date', 'pt-nric|pt-passport',

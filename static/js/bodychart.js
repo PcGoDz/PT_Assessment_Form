@@ -2,7 +2,7 @@
 
 const BodyChart = (function () {
 
-  const COLORS = {
+  let COLORS = {
     ache:   '#4a7ac8',
     sharp:  '#c0392b',
     numb:   '#7b5ea7',
@@ -11,7 +11,7 @@ const BodyChart = (function () {
     tender: '#b84a8a'
   };
 
-  const LABELS = {
+  let LABELS = {
     ache:   'Ache',
     sharp:  'Sharp',
     numb:   'Numbness',
@@ -24,8 +24,17 @@ const BodyChart = (function () {
   let markers    = [];
   let counter    = 1;
 
+  // ── Configure vocabulary ──────────────────────
+  function configure(opts) {
+    if (opts.colors) Object.assign(COLORS, opts.colors);
+    if (opts.labels) Object.assign(LABELS, opts.labels);
+  }
+
   // ── Init ──────────────────────────────────────
   function init() {
+    var activeChip = document.querySelector('#ptype-sel .pt-chip.active');
+    if (activeChip) activeType = activeChip.dataset.ptype;
+
     // Pain type chip selection
     document.getElementById('ptype-sel').addEventListener('click', function (e) {
       var btn = e.target.closest('[data-ptype]');
@@ -139,7 +148,7 @@ const BodyChart = (function () {
         '<div class="mdot" style="background:' + COLORS[m.type] + '"></div>' +
         '<span class="mnum">#' + m.id + '</span>' +
         '<span class="mzone">' + m.zone + '</span>' +
-        '<span class="mtype">' + LABELS[m.type] + '</span>' +
+        '<span class="mtype">' + (LABELS[m.type] || m.type) + '</span>' +
         '<button class="mdel" onclick="BodyChart.remove(' + m.id + ')">&#x2715;</button>';
       list.appendChild(div);
     });
@@ -198,6 +207,6 @@ const BodyChart = (function () {
     renderList();
   }
 
-  return { init: init, remove: remove, clearAll: clearAll, getData: getData, loadData: loadData };
+  return { init: init, configure: configure, remove: remove, clearAll: clearAll, getData: getData, loadData: loadData };
 
 })();
