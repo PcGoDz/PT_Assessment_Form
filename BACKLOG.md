@@ -64,16 +64,19 @@
 
 - **DESIGN_SYSTEM.md at ~312 lines — over 250-line ceiling.** Needs splitting into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md`. Flagged Session C, carried through Sessions D–M unfixed. Priority 1 for next session.
 
+- **Icon maps missing BURN (and HAND in patient.html) — parallel to the formLabel-map gap fixed 2026-06-01.** `home.html` inline icon map (~1923) and `patient.html` Jinja `form_icons` (~476) have no BURN key (patient.html also missing HAND), so burn/hand episode cards fall to the default clipboard glyph (&#128203;). Cosmetic. Burn-glyph choice is a UI-taste call — deferred to the UI polish pass. When fixed, update ALL icon-map sites in lockstep with the label maps.
+- **pdf_burn.py auscultation prints a dangling "Crepitation:" label unconditionally.** When `ausc.crepitation` is blank the PDF still renders an empty "Crepitation:" line (the MPIS builder correctly skips it). One-line guard in `_burn_auscultation_section`. Low priority cosmetic.
+
 ---
 
 ## Deferred work
 
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
-- BURN Pass 3 (MPIS `_buildMpisBurn`) — Pass 2 (pdf_burn.py) shipped Session J; Pass 3 now unblocked. `_buildMpisBurn()` in main.js + wire into `copyToMpisAuto()` switch.
 - SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
+- Dummy patient + burn seed record for smoke-testing — extend `seed_db.py` so a realistic test record loads with one click instead of hand-filling `test` into every field each smoke test. Requested 2026-06-01.
 
 ---
 
