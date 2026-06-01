@@ -8,13 +8,33 @@
 
 - **Twin `MARKER_COLORS` dicts are a maintenance trap.** `pdf_base.MARKER_COLORS` = dot-colour source of truth (used by `draw_markers()` for rendered dots). `pdf_platypus_base.MARKER_COLORS` = pain-only / legend-fallback — depth keys NOT present. The Session L fix only updated `pdf_base`. If the platypus-side copy is ever wired into a new render path, it will silently emit wrong colours for all burn depth markers. Consolidate (make platypus import from pdf_base) or document the split formally before the dicts drift further. (Corrected from earlier "dead" wording — both are live.)
 
-- **Cross-form body chart marker bleed (DATA INTEGRITY, pre-existing).** Swapping form type via
-  the topbar dropdown does not clear the body chart — markers placed on one form persist onto
-  the next and can be saved into the wrong record. Confirmed Session K: burn depth markers
-  carried onto an MS form (visible now because the depth fix made them legible; previously they
-  wore pain labels and blended in). BodyChart is a page-lifetime singleton (module-level
-  markers[]); the form-swap path doesn't call BodyChart.clearAll(). Investigate the swap path.
-  Higher priority than cosmetic — can contaminate a saved record.
+- **Cross-form body chart marker bleed (DATA INTEGRITY, pre-existing).** Root cause confirmed
+  Session M: `get_episode_record` returns `ORDER BY updated_at DESC LIMIT 1` regardless of
+  form type, so landing on Form A in an episode whose newest record is Form B fetches B's data
+  and adopts B's record id. Session M fix: form-type guard in `initFormContext()` returns early
+  (no populate, no id adoption) when `pageForm !== recForm`. Known accepted limitation: in an
+  episode with both Form A and Form B records, opening the form that is NOT the most-recently-
+  updated one shows blank instead of auto-loading its own record. Proper fix: see BACKLOG item
+  "Make `get_episode_record` form-aware" below.
+
+- **Make `get_episode_record` form-aware (proper fix for marker bleed).** Currently
+  `ORDER BY updated_at DESC LIMIT 1` returns the episode's newest record of any form type. The
+  Session-M guard in `initFormContext` blocks cross-form populate but, as a side effect, won't
+  auto-load a same-form record when a different form is newer in the same episode. Proper fix:
+  `get_episode_record(db_path, episode_id, form_type)` →
+  `WHERE episode_id=? AND form_type=? ORDER BY updated_at DESC LIMIT 1`; add `?form_type=` to
+  the route + the fetch URL in `initFormContext`. Retires the guard's limitation.
+
+- **Global draft key is a second cross-form bleed vector.** `DRAFT_KEY = 'pt_assessment_draft'`
+  is a single localStorage key not scoped by form type. A burn draft will offer "Restore" onto
+  an MS form (user-initiated, so less silent than auto-load, but same contamination + id
+  adoption). Apply the same form-type check in `restoreDraft()` before populate, or scope the
+  draft key by form type.
+
+- **`save_record` UPDATE branch never updates the `form_type` column.** On UPDATE it rewrites
+  `data_json` but leaves the original `form_type`. A clobbered row can end up with
+  `form_type='burn'` but MS `data_json`. Harmless once the Session-M guard lands (the clobber
+  path is closed), but worth a one-line note. Low priority.
 
 - **Dropdown/select elements render garbled/zigzag in dark mode.** Global `style.css` issue affecting ALL forms' `<select>` elements. Pre-existing since ~HAND form; made obvious by BurnMov v2's additional selects. Batch fix with mov-table overflow (both `style.css`).
 

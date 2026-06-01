@@ -352,6 +352,16 @@ const Main = (function () {
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data && data.id) {
+            // Guard: get_episode_record returns the episode's most-recent record of ANY
+            // form type. If it belongs to a different form, loading it bleeds markers
+            // AND adopts a foreign record id (Save would overwrite that record).
+            var pageForm = getCurrentFormType();
+            var recForm  = (data._form_type || (data.meta && data.meta.form) || '').toUpperCase();
+            if (pageForm && recForm && pageForm !== recForm) {
+              console.info('[auto-load] episode record is ' + recForm +
+                           ' but page is ' + pageForm + ' — skipping cross-form populate');
+              return;
+            }
             window.ActiveForm.populate(data);
             setCurrentId(data.id);
             updateProgress();
