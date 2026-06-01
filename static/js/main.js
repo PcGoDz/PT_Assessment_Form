@@ -1035,6 +1035,7 @@ const Main = (function () {
     else if (formType === 'AMPUTATION') parts = _buildMpisAmputation();
     else if (formType === 'NEURO')      parts = _buildMpisNeuro();
     else if (formType === 'HAND')       parts = _buildMpisHand();
+    else if (formType === 'BURN')       parts = _buildMpisBurn();
     else                                parts = _buildMpisMs();
     await _doCopyMpis(parts, header);
   }
@@ -1652,6 +1653,224 @@ const Main = (function () {
       parts.push('');
     }
 
+    return parts;
+  }
+
+  function _buildMpisBurn() {
+    var d    = window.ActiveForm ? window.ActiveForm.collect() : {};
+    var p    = d.patient || {};
+    var DIV  = MPIS_DIV;
+    var dash = MPIS_DASH;
+    var parts = [];
+
+    function romPair(s, e) {
+      s = (s || '').toString().trim();
+      e = (e || '').toString().trim();
+      if (s && e) return s + '\xb0-' + e + '\xb0';
+      if (s)      return s + '\xb0';
+      if (e)      return e + '\xb0';
+      return '';
+    }
+
+    // Title + patient header (mirrors _buildMpisHand pattern)
+    parts.push('BURN ASSESSMENT');
+    parts.push(DIV);
+    parts.push('Name  : ' + (p.name || '') + '   Date : ' + (p.date || ''));
+    if (p.type === 'local') {
+      parts.push('IC    : ' + (p.nric || '') + '   Age  : ' + (p.age || ''));
+    } else {
+      parts.push('Passport : ' + (p.passport || '') + '   Country : ' + (p.country || '') + '   Age : ' + (p.age || ''));
+      parts.push('Sex   : ' + (p.sex || ''));
+    }
+    parts.push('');
+
+    // ── SUBJECTIVE ──────────────────────────────────────────────────────
+    parts.push(dash);
+    parts.push('SUBJECTIVE ASSESSMENT');
+    parts.push('');
+    if (d.diagnosis)  parts.push('Diagnosis         : ' + d.diagnosis);
+    if (d.management) parts.push('Doctor Management : ' + d.management);
+    if (d.problem)    parts.push('Problem           : ' + d.problem);
+    parts.push('');
+
+    var hx = d.history || {};
+    if (hx.current)         parts.push('Current History   : ' + hx.current);
+    if (d.associatedInjury) parts.push('Associated Injury : ' + d.associatedInjury);
+    if (d.tbsa)             parts.push('TBSA (%)          : ' + d.tbsa);
+    parts.push('');
+
+    var sq = d.specialQuestions || {};
+    if (sq.health || sq.pmhx || sq.medication || sq.occupation) {
+      parts.push('SPECIAL QUESTIONS');
+      if (sq.health)     parts.push('General Health : ' + sq.health);
+      if (sq.pmhx)       parts.push('PMHx           : ' + sq.pmhx);
+      if (sq.medication) parts.push('Medication     : ' + sq.medication);
+      if (sq.occupation) parts.push('Occupation     : ' + sq.occupation);
+      parts.push('');
+    }
+
+    var pain = d.pain || {};
+    parts.push('PAIN SCORE');
+    parts.push('PRE: ' + (pain.pre || '0') + '/10   POST: ' + (pain.post || '0') + '/10');
+    parts.push('');
+
+    // ── OBJECTIVE ───────────────────────────────────────────────────────
+    var ix      = d.investigation || {};
+    var bc      = d.bodyChart || {};
+    var markers = bc.markers || [];
+    var resp    = d.respiratory || {};
+    var sput    = resp.sputum || {};
+    var palp    = d.palpation || {};
+    var exp     = palp.expansion || {};
+    var meas    = palp.measurement || {};
+    var ausc    = d.auscultation || {};
+    var lmap    = ausc.lung_map || {};
+    var movement = Array.isArray(d.movement) ? d.movement : [];
+    var mob     = d.mobility || {};
+
+    var hasIx   = ix.wound_cs || ix.cxr || ix.abg;
+    var hasResp = resp.observation || resp.ventilated || resp.o2 || resp.breathing_pattern ||
+                  resp.cough_type || resp.cough_effect || resp.hoarseness ||
+                  sput.colour || sput.amount || sput.consistency;
+    var hasExp  = exp.apical || exp.middle || exp.lower_costal;
+    var hasMeas = meas.apical || meas.apical_status || meas.middle || meas.middle_status ||
+                  meas.lower_costal || meas.lower_costal_status;
+    var hasPalp = hasExp || hasMeas;
+    var lmapKeys = Object.keys(lmap).filter(function (k) { return lmap[k]; });
+    var hasAusc = ausc.lungs || ausc.crepitation || ausc.air_entry || lmapKeys.length;
+    var hasMob  = mob.bed || mob.transfer || d.gait;
+    var hasObj  = hasIx || markers.length || hasResp || hasPalp || hasAusc ||
+                  movement.length || hasMob;
+
+    if (hasObj) {
+      parts.push(dash);
+      parts.push('OBJECTIVE ASSESSMENT');
+      parts.push('');
+
+      if (hasIx) {
+        parts.push('INVESTIGATION');
+        if (ix.wound_cs) parts.push('Wound C&S : ' + ix.wound_cs);
+        if (ix.cxr)      parts.push('CXR       : ' + ix.cxr);
+        if (ix.abg)      parts.push('ABG       : ' + ix.abg);
+        parts.push('');
+      }
+
+      if (markers.length) {
+        parts.push('BODY CHART (burn depth)');
+        markers.forEach(function (m) {
+          parts.push('#' + m.id + ' ' + (m.zone || '') + ' (' + (m.type || '') + ') - ' +
+                     (m.view === 'ant' ? 'Anterior' : 'Posterior'));
+        });
+        if (bc.notes) parts.push('Notes: ' + bc.notes);
+        parts.push('');
+      }
+
+      if (hasResp) {
+        parts.push('RESPIRATORY');
+        if (resp.observation)       parts.push('Observation       : ' + resp.observation);
+        if (resp.ventilated)        parts.push('Ventilated        : ' + resp.ventilated);
+        if (resp.o2)                parts.push('O2 Supplement     : ' + resp.o2);
+        if (resp.breathing_pattern) parts.push('Breathing Pattern : ' + resp.breathing_pattern);
+        if (resp.cough_type || resp.cough_effect)
+          parts.push('Cough             : ' + [resp.cough_type, resp.cough_effect].filter(Boolean).join(', '));
+        if (resp.hoarseness)        parts.push('Hoarseness        : ' + resp.hoarseness);
+        if (sput.colour || sput.amount || sput.consistency)
+          parts.push('Sputum            : Colour: ' + (sput.colour || '—') +
+                     '  Amount: ' + (sput.amount || '—') + '  Consistency: ' + (sput.consistency || '—'));
+        parts.push('');
+      }
+
+      if (hasPalp) {
+        parts.push('PALPATION');
+        if (hasExp) {
+          parts.push('Chest Expansion (Symmetrical / Asymmetrical):');
+          if (exp.apical)       parts.push('  Apical (ant)       : ' + exp.apical);
+          if (exp.middle)       parts.push('  Middle (ant)       : ' + exp.middle);
+          if (exp.lower_costal) parts.push('  Lower Costal (post): ' + exp.lower_costal);
+        }
+        if (hasMeas) {
+          parts.push('Chest Measurement (cm):');
+          if (meas.apical || meas.apical_status)
+            parts.push('  Apical       : ' + (meas.apical || '—') + (meas.apical_status ? '  [' + meas.apical_status + ']' : ''));
+          if (meas.middle || meas.middle_status)
+            parts.push('  Middle       : ' + (meas.middle || '—') + (meas.middle_status ? '  [' + meas.middle_status + ']' : ''));
+          if (meas.lower_costal || meas.lower_costal_status)
+            parts.push('  Lower Costal : ' + (meas.lower_costal || '—') + (meas.lower_costal_status ? '  [' + meas.lower_costal_status + ']' : ''));
+        }
+        parts.push('');
+      }
+
+      if (hasAusc) {
+        parts.push('AUSCULTATION');
+        if (ausc.lungs)       parts.push('Lungs       : ' + ausc.lungs);
+        if (ausc.crepitation) parts.push('Crepitation : ' + ausc.crepitation);
+        if (ausc.air_entry)   parts.push('Air Entry   : ' + ausc.air_entry);
+        var zoneLabels    = { RU: 'Right Upper', RM: 'Right Middle', RL: 'Right Lower', LU: 'Left Upper', LL: 'Left Lower', BASE: 'Bilateral Bases' };
+        var findingLabels = { clear: 'Clear', crep: 'Crepitation', wheeze: 'Wheeze', reduced: 'Reduced air entry', absent: 'Absent' };
+        if (lmapKeys.length) {
+          parts.push('Zone Findings:');
+          lmapKeys.forEach(function (k) {
+            parts.push('  ' + (zoneLabels[k] || k) + ' : ' + (findingLabels[lmap[k]] || lmap[k]));
+          });
+        }
+        parts.push('');
+      }
+
+      if (movement.length) {
+        parts.push('MOVEMENT / RANGE OF MOTION');
+        movement.forEach(function (r) {
+          if (!r.joint) return;
+          var act  = romPair(r.active_start, r.active_end);
+          var pas  = romPair(r.passive_start, r.passive_end);
+          var line = (r.joint || '');
+          if (r.side)  line += ' (' + r.side + ')';
+          if (r.plane) line += ' ' + r.plane;
+          line += ' | Active: ' + (act || '—') + ' | Passive: ' + (pas || '—');
+          if (r.remark) line += ' | ' + r.remark;
+          parts.push(line);
+        });
+        parts.push('');
+      }
+
+      if (hasMob) {
+        parts.push('MOBILITY & GAIT');
+        if (mob.bed)      parts.push('Bed Mobility : ' + mob.bed);
+        if (mob.transfer) parts.push('Transfer     : ' + mob.transfer);
+        if (d.gait)       parts.push('Gait         : ' + d.gait);
+        parts.push('');
+      }
+    }
+
+    // ── ANALYSIS ────────────────────────────────────────────────────────
+    var plan = d.plan || {};
+    if (plan.impression) {
+      parts.push(dash);
+      parts.push('ANALYSIS');
+      parts.push('');
+      parts.push(plan.impression);
+      parts.push('');
+    }
+
+    // ── PLAN ────────────────────────────────────────────────────────────
+    if (plan.stg || plan.ltg) {
+      parts.push(dash);
+      parts.push('PLAN');
+      parts.push('');
+      if (plan.stg) parts.push('Short-term Goals : ' + plan.stg);
+      if (plan.ltg) parts.push('Long-term Goals  : ' + plan.ltg);
+      parts.push('');
+    }
+
+    // ── INTERVENTION ────────────────────────────────────────────────────
+    if (plan.treatment) {
+      parts.push(dash);
+      parts.push('INTERVENTION');
+      parts.push('');
+      parts.push(plan.treatment);
+      parts.push('');
+    }
+
+    parts.push(DIV);
     return parts;
   }
 
