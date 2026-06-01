@@ -472,7 +472,7 @@
       {% if episodes %}
       <div class="episodes-list">
         {% for ep in episodes %}
-        {% set form_labels = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric','CR':'Cardiorespiratory','AMPUTATION':'Amputation','NEURO':'Neurological'} %}
+        {% set form_labels = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric','CR':'Cardiorespiratory','AMPUTATION':'Amputation','NEURO':'Neurological','HAND':'Hand','BURN':'Burn'} %}
         {% set form_icons  = {'MS':'&#129460;','SPINE':'&#128279;','GERIATRIC':'&#9878;','CR':'&#129728;','AMPUTATION':'&#129452;','NEURO':'&#9889;'} %}
         {% set label = form_labels.get(ep.form_type, ep.form_type) %}
         {% set icon  = form_icons.get(ep.form_type, '&#128203;') %}
