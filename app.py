@@ -70,11 +70,6 @@ FORM_REGISTRY = [
 ]
 _PDF_GENERATORS        = {f['id']: f['pdf_episode'] for f in FORM_REGISTRY if f.get('pdf_episode')}
 _SINGLE_PDF_GENERATORS = {f['id']: f['pdf_single']  for f in FORM_REGISTRY if f.get('pdf_single')}
-# TEMP ASSERTION — remove before merge
-assert len(_PDF_GENERATORS) == 8 and len(_SINGLE_PDF_GENERATORS) == 8, \
-    f"PDF dict mismatch: episode={list(_PDF_GENERATORS)} single={list(_SINGLE_PDF_GENERATORS)}"
-print(f"[startup] _PDF_GENERATORS keys: {list(_PDF_GENERATORS.keys())}")
-print(f"[startup] _SINGLE_PDF_GENERATORS keys: {list(_SINGLE_PDF_GENERATORS.keys())}")
 FORM_GROUPS = ['Musculoskeletal', 'Neurological', 'Cardiorespiratory', 'Rehabilitation']
 
 @app.context_processor
