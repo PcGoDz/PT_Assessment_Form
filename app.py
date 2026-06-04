@@ -22,29 +22,6 @@ import pdf_neuro
 import pdf_hand
 import pdf_burn
 
-_PDF_GENERATORS = {
-    'MS':         pdf_ms.generate_episode_pdf,
-    'SPINE':      pdf_spine.generate_episode_pdf,
-    'GERIATRIC':  pdf_geriatric.generate_episode_pdf,
-    'CR':         pdf_cr.generate_episode_pdf,
-    'AMPUTATION': pdf_amputation.generate_episode_pdf,
-    'NEURO':      pdf_neuro.generate_episode_pdf,
-    'HAND':       pdf_hand.generate_episode_pdf,
-    'BURN':       pdf_burn.generate_episode_pdf,
-}
-
-_SINGLE_PDF_GENERATORS = {
-    'MS':         pdf_ms.generate_ms_pdf,
-    'SPINE':      pdf_spine.generate_spine_pdf,
-    'GERIATRIC':  pdf_geriatric.generate_geriatric_pdf,
-    'CR':         pdf_cr.generate_cr_pdf,
-    'AMPUTATION': pdf_amputation.generate_amputation_pdf,
-    'NEURO':      pdf_neuro.generate_neuro_pdf,
-    'HAND':       pdf_hand.generate_hand_pdf,
-    'BURN':       pdf_burn.generate_burn_pdf,
-}
-
-
 def resource_path(relative):
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative)
@@ -72,25 +49,32 @@ app.secret_key = 'pt_assessment_local_key'
 # ── Form registry — single source of truth ───────────────────────
 FORM_REGISTRY = [
     # ── Musculoskeletal ──────────────────────────────
-    { 'id': 'MS',          'label': 'Musculoskeletal',    'icon': '&#129460;', 'badge': 'MS',  'group': 'Musculoskeletal',  'ready': True  },
-    { 'id': 'SPINE',       'label': 'Spine',              'icon': '&#128279;', 'badge': 'SP',  'group': 'Musculoskeletal',  'ready': True  },
-    { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',  'ready': True  },
-    { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',  'ready': True  },
-    { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',  'ready': True },
+    { 'id': 'MS',          'label': 'Musculoskeletal',    'icon': '&#129460;', 'badge': 'MS',  'group': 'Musculoskeletal',   'ready': True,  'pdf_episode': pdf_ms.generate_episode_pdf,         'pdf_single': pdf_ms.generate_ms_pdf               },
+    { 'id': 'SPINE',       'label': 'Spine',              'icon': '&#128279;', 'badge': 'SP',  'group': 'Musculoskeletal',   'ready': True,  'pdf_episode': pdf_spine.generate_episode_pdf,      'pdf_single': pdf_spine.generate_spine_pdf         },
+    { 'id': 'HAND',        'label': 'Hand',               'icon': '&#9995;',   'badge': 'HN',  'group': 'Musculoskeletal',   'ready': True,  'pdf_episode': pdf_hand.generate_episode_pdf,       'pdf_single': pdf_hand.generate_hand_pdf           },
+    { 'id': 'AMPUTATION',  'label': 'Amputation',         'icon': '&#129452;', 'badge': 'AM',  'group': 'Musculoskeletal',   'ready': True,  'pdf_episode': pdf_amputation.generate_episode_pdf, 'pdf_single': pdf_amputation.generate_amputation_pdf },
+    { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',   'ready': True,  'pdf_episode': pdf_burn.generate_episode_pdf,       'pdf_single': pdf_burn.generate_burn_pdf           },
     # ── Neurological ─────────────────────────────────
-    { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',     'ready': True  },
-    { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#128203;', 'badge': 'SC',  'group': 'Neurological',     'ready': False },
-    { 'id': 'VESTIBULAR',  'label': 'Vestibular',         'icon': '&#128261;', 'badge': 'VB',  'group': 'Neurological',     'ready': False },
-    { 'id': 'FACIAL',      'label': 'Facial',             'icon': '&#128580;', 'badge': 'FC',  'group': 'Neurological',     'ready': False },
+    { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',      'ready': True,  'pdf_episode': pdf_neuro.generate_episode_pdf,      'pdf_single': pdf_neuro.generate_neuro_pdf         },
+    { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#128203;', 'badge': 'SC',  'group': 'Neurological',      'ready': False },
+    { 'id': 'VESTIBULAR',  'label': 'Vestibular',         'icon': '&#128261;', 'badge': 'VB',  'group': 'Neurological',      'ready': False },
+    { 'id': 'FACIAL',      'label': 'Facial',             'icon': '&#128580;', 'badge': 'FC',  'group': 'Neurological',      'ready': False },
     # ── Cardiorespiratory ─────────────────────────────
-    { 'id': 'CR',          'label': 'Cardiorespiratory',  'icon': '&#129728;', 'badge': 'CR',  'group': 'Cardiorespiratory', 'ready': True  },
+    { 'id': 'CR',          'label': 'Cardiorespiratory',  'icon': '&#129728;', 'badge': 'CR',  'group': 'Cardiorespiratory',  'ready': True,  'pdf_episode': pdf_cr.generate_episode_pdf,         'pdf_single': pdf_cr.generate_cr_pdf               },
     # ── Rehabilitation ────────────────────────────────
-    { 'id': 'GERIATRIC',   'label': 'Geriatric',          'icon': '&#9878;',   'badge': 'GR',  'group': 'Rehabilitation',   'ready': True  },
-    { 'id': 'PAEDIATRIC',  'label': 'Paediatric',         'icon': '&#128118;', 'badge': 'PD',  'group': 'Rehabilitation',   'ready': False },
-    { 'id': 'LYMPHOEDEMA', 'label': 'Lymphoedema',        'icon': '&#128167;', 'badge': 'LY',  'group': 'Rehabilitation',   'ready': False },
-    { 'id': 'NCD',         'label': 'NCD / Obesity',      'icon': '&#129483;', 'badge': 'NC',  'group': 'Rehabilitation',   'ready': False },
-    { 'id': 'GENERAL',     'label': 'General',            'icon': '&#128203;', 'badge': 'GN',  'group': 'Rehabilitation',   'ready': False },
+    { 'id': 'GERIATRIC',   'label': 'Geriatric',          'icon': '&#9878;',   'badge': 'GR',  'group': 'Rehabilitation',    'ready': True,  'pdf_episode': pdf_geriatric.generate_episode_pdf,  'pdf_single': pdf_geriatric.generate_geriatric_pdf },
+    { 'id': 'PAEDIATRIC',  'label': 'Paediatric',         'icon': '&#128118;', 'badge': 'PD',  'group': 'Rehabilitation',    'ready': False },
+    { 'id': 'LYMPHOEDEMA', 'label': 'Lymphoedema',        'icon': '&#128167;', 'badge': 'LY',  'group': 'Rehabilitation',    'ready': False },
+    { 'id': 'NCD',         'label': 'NCD / Obesity',      'icon': '&#129483;', 'badge': 'NC',  'group': 'Rehabilitation',    'ready': False },
+    { 'id': 'GENERAL',     'label': 'General',            'icon': '&#128203;', 'badge': 'GN',  'group': 'Rehabilitation',    'ready': False },
 ]
+_PDF_GENERATORS        = {f['id']: f['pdf_episode'] for f in FORM_REGISTRY if f.get('pdf_episode')}
+_SINGLE_PDF_GENERATORS = {f['id']: f['pdf_single']  for f in FORM_REGISTRY if f.get('pdf_single')}
+# TEMP ASSERTION — remove before merge
+assert len(_PDF_GENERATORS) == 8 and len(_SINGLE_PDF_GENERATORS) == 8, \
+    f"PDF dict mismatch: episode={list(_PDF_GENERATORS)} single={list(_SINGLE_PDF_GENERATORS)}"
+print(f"[startup] _PDF_GENERATORS keys: {list(_PDF_GENERATORS.keys())}")
+print(f"[startup] _SINGLE_PDF_GENERATORS keys: {list(_SINGLE_PDF_GENERATORS.keys())}")
 FORM_GROUPS = ['Musculoskeletal', 'Neurological', 'Cardiorespiratory', 'Rehabilitation']
 
 @app.context_processor
