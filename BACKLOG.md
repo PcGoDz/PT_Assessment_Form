@@ -4,7 +4,21 @@
 
 ## Open bugs / Cleanup
 
+- **Episode form-type drift on mid-form swap.** Repro: create episode (e.g. BURN) → on the
+  form page swap to another form (SPINE) → Save & Return → episode list still labels it BURN.
+  Likely same root as the deferred `get_episode_record form-aware` item: episode `form_type`
+  set at creation, record `form_type` set at save, never reconciled. TRIAGE QUESTION before
+  fixing: does the swapped-form record save with its OWN `form_type` (cosmetic — only episode
+  label stale) or inherit the episode's creation type (data-integrity — wrong stored
+  `form_type` + wrong downstream PDF, cf. BURN-chip-relabel bug)? Severity depends on answer.
+
+- **Stray worktree `claude/vibrant-borg-78bd2d` at main, empty.** Archive/remove the
+  `PT_Assessment-worktrees/vibrant-borg-78bd2d` folder and prune the branch. Do deliberately
+  during a wind-down pass, not mid-task.
+
 - **Twin `MARKER_COLORS` dicts are a maintenance trap.** `pdf_base.MARKER_COLORS` = dot-colour source of truth (used by `draw_markers()` for rendered dots). `pdf_platypus_base.MARKER_COLORS` = pain-only / legend-fallback — depth keys NOT present. The Session L fix only updated `pdf_base`. If the platypus-side copy is ever wired into a new render path, it will silently emit wrong colours for all burn depth markers. Consolidate (make platypus import from pdf_base) or document the split formally before the dicts drift further. (Corrected from earlier "dead" wording — both are live.)
+
+- **No DB schema version tracking — `try: ALTER / except: pass` migrations (`database.py` lines 80-101).** Schema evolves by attempting `ALTER TABLE ADD COLUMN` and swallowing `OperationalError` when the column exists. Works, but no version stamp means a deployed `records.db`'s schema state is unknowable, and there's no clean place to hang the next migration. Fix: `PRAGMA user_version` gates per migration batch. CRITICAL footgun — existing deployed DBs already have the soap_notes/episodes columns but still report `user_version=0`, so a naive version gate would re-ALTER and crash; keep `try/except` INSIDE the v0→v1 gate as belt-and-suspenders, trust version numbers for v2 onward. Test against a COPY of the real DB. Priority: High (clinical data), Effort: Small-Medium. Surfaced by GPT architecture review 2026-06-02.
 
 - **Cross-form body chart marker bleed (DATA INTEGRITY, pre-existing).** Root cause confirmed
   Session M: `get_episode_record` returns `ORDER BY updated_at DESC LIMIT 1` regardless of
@@ -36,13 +50,15 @@
 
 - **Dropdown/select elements render garbled/zigzag in dark mode.** Global `style.css` issue affecting ALL forms' `<select>` elements. Pre-existing since ~HAND form; made obvious by BurnMov v2's additional selects. Batch fix with mov-table overflow (both `style.css`).
 
-- **`mov-table` clips right-hand columns at narrow window widths — no horizontal scroll.** `.mov-table-wrap` needs `overflow-x: auto`. Surfaced by BurnMov v2's 7-column width. Shared class — fix benefits all forms with mov-tables. Batch fix with dark-mode select issue.
+- **`mov-table` clips right-hand columns at narrow window widths — no horizontal scroll.** `.mov-table-wrap` needs `overflow-x: auto`. Surfaced by BurnMov v2's 7-column width. Shared class — fix benefits all forms with mov-tables. **No longer a standalone CSS item — rides into the SCI form build** (SCI's 6-col MMT grid is the primary driver). Batch with dark-mode select fix at that point.
 
 - **Neck (midline joint) offers Left/Right in BurnMov Side dropdown — clinically meaningless.** Midline joints (Neck, possibly Spine) should suppress or blank the Side column. Minor; defer until CSS pass or next BurnMov polish.
 
 - **BURN chest expansion section — no client-side validation.** Chest expansion fields (3 measurements in cm) copied verbatim from CR form. No plausibility check (e.g. values < 0, or expansion smaller than rest). Low priority — clinic staff catch implausible values — but worth noting for a BURN polish pass.
 
 - **home.html + patient.html form picker grids are independently hardcoded.** Both pages have separate picker grids that must be manually updated when activating a new form (step 1.5 now covers both). The structural duplication means every new form needs two manual activations. Consider driving both pickers from a shared data source if the active-form list keeps growing.
+
+- **REGISTRY-DRIFT PATTERN (meta-note, not a separate bug).** Three places require manual edits per new form that should all derive from `FORM_REGISTRY`: (a) the PDF generator dicts in `app.py`, (b) `formLabel`/`form_icons` display maps × 5 sites (episode.html ×2, home.html const + inline, patient.html Jinja), (c) the home.html + patient.html picker grids above. Same disease — "add a form → touch N hardcoded sites." Fixing (a) is smallest and proves the derive-from-registry approach; (b)/(c) are larger JS/Jinja follow-ups. Named here so the three items above are understood as one theme, not three paper-cuts.
 
 - **BURN_FORM_SPEC.md — verify tracked in git.** The spec file at the project root was authored during Session G planning. Confirm it's committed: `git log --oneline -- BURN_FORM_SPEC.md`. If not present, `git add BURN_FORM_SPEC.md` and commit. Session J note: CC's file read did not find BURN_FORM_SPEC.md in the fervent-shannon worktree. Confirm whether it's actually on main (`git log --oneline -- BURN_FORM_SPEC.md`) or was never committed despite the Session I claim.
 

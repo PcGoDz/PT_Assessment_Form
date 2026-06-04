@@ -89,7 +89,7 @@ Two export routes in app.py:
 - `/api/export/<record_id>/pdf` — single record. Uses `_SINGLE_PDF_GENERATORS`.
   Priority: `?form_type=` query param > `_form_type` in data > `meta.form` > MS fallback.
 
-Both dicts must be updated when adding a new form. Forms must set `_form_type` in `collect()` or PDF routing breaks.
+PDF generators are declared as `pdf_episode`/`pdf_single` keys on each ready `FORM_REGISTRY` row; `_PDF_GENERATORS` and `_SINGLE_PDF_GENERATORS` are derived from the registry via dict-comp — do not hand-edit them. Forms must set `_form_type` in `collect()` or PDF routing breaks.
 
 ---
 
