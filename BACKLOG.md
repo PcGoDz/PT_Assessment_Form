@@ -12,10 +12,6 @@
   label stale) or inherit the episode's creation type (data-integrity — wrong stored
   `form_type` + wrong downstream PDF, cf. BURN-chip-relabel bug)? Severity depends on answer.
 
-- **Stray worktree `claude/vibrant-borg-78bd2d` at main, empty.** Archive/remove the
-  `PT_Assessment-worktrees/vibrant-borg-78bd2d` folder and prune the branch. Do deliberately
-  during a wind-down pass, not mid-task.
-
 - **Twin `MARKER_COLORS` dicts are a maintenance trap.** `pdf_base.MARKER_COLORS` = dot-colour source of truth (used by `draw_markers()` for rendered dots). `pdf_platypus_base.MARKER_COLORS` = pain-only / legend-fallback — depth keys NOT present. The Session L fix only updated `pdf_base`. If the platypus-side copy is ever wired into a new render path, it will silently emit wrong colours for all burn depth markers. Consolidate (make platypus import from pdf_base) or document the split formally before the dicts drift further. (Corrected from earlier "dead" wording — both are live.)
 
 - **No DB schema version tracking — `try: ALTER / except: pass` migrations (`database.py` lines 80-101).** Schema evolves by attempting `ALTER TABLE ADD COLUMN` and swallowing `OperationalError` when the column exists. Works, but no version stamp means a deployed `records.db`'s schema state is unknowable, and there's no clean place to hang the next migration. Fix: `PRAGMA user_version` gates per migration batch. CRITICAL footgun — existing deployed DBs already have the soap_notes/episodes columns but still report `user_version=0`, so a naive version gate would re-ALTER and crash; keep `try/except` INSIDE the v0→v1 gate as belt-and-suspenders, trust version numbers for v2 onward. Test against a COPY of the real DB. Priority: High (clinical data), Effort: Small-Medium. Surfaced by GPT architecture review 2026-06-02.
@@ -49,8 +45,6 @@
   path is closed), but worth a one-line note. Low priority.
 
 - **Dropdown/select elements render garbled/zigzag in dark mode.** Global `style.css` issue affecting ALL forms' `<select>` elements. Pre-existing since ~HAND form; made obvious by BurnMov v2's additional selects. Batch fix with mov-table overflow (both `style.css`).
-
-- **`mov-table` clips right-hand columns at narrow window widths — no horizontal scroll.** `.mov-table-wrap` needs `overflow-x: auto`. Surfaced by BurnMov v2's 7-column width. Shared class — fix benefits all forms with mov-tables. **No longer a standalone CSS item — rides into the SCI form build** (SCI's 6-col MMT grid is the primary driver). Batch with dark-mode select fix at that point.
 
 - **Neck (midline joint) offers Left/Right in BurnMov Side dropdown — clinically meaningless.** Midline joints (Neck, possibly Spine) should suppress or blank the Side column. Minor; defer until CSS pass or next BurnMov polish.
 
@@ -89,7 +83,9 @@
 
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
-- SCI / VESTIBULAR / FACIAL forms (Neurological group, all NO ready).
+- SCI Milestone 2 (dropdown label clarity + Miruya clinical smoke), Milestone 3 (pdf_sci.py + pt_assessment.spec).
+- VESTIBULAR / FACIAL forms (Neurological group, NO ready).
+- SCI clinical templates (`clinical_templates.js` SCI arrays + `TEMPLATES.SCI` + SOAP tplMap key) — milestone 5+.
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
 - Dummy patient + burn seed record for smoke-testing — extend `seed_db.py` so a realistic test record loads with one click instead of hand-filling `test` into every field each smoke test. Requested 2026-06-01.

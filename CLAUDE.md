@@ -43,6 +43,7 @@ static/js/
   lungchart.js          Lung auscultation diagram, 6 zones, radiological view
   form_base.js          Shared patient fields, NRIC derive, age calc (window.FormBase)
   form_<form>.js        Per-form collect/populate/reset → window.ActiveForm + window.Form
+  assessment_grid.js    Fixed-row grid FACTORY (multi-instance; config-driven; greyed-cell-aware)
   movement_table.js     Dynamic ROM table (IIFE)
   clinical_templates.js Best Statement templates (per form + SOAP variants)
   main.js               Init, autosave, MPIS copy, dark mode, initFormContext()
@@ -68,7 +69,7 @@ templates/
 | AMPUTATION  | Musculoskeletal   | YES   |
 | BURN        | Musculoskeletal   | YES   |
 | NEURO       | Neurological      | YES   |
-| SCI         | Neurological      | NO    |
+| SCI         | Neurological      | YES   |
 | VESTIBULAR  | Neurological      | NO    |
 | FACIAL      | Neurological      | NO    |
 | CR          | Cardiorespiratory | YES   |
