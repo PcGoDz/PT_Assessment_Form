@@ -297,7 +297,8 @@ var AmputationForm = (function () {
   }
 
   // ── Reset ────────────────────────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     var ids = [
       'diagnosis','doctors-management','surgery-date','problems',
       'pain-nature','pain-agg','pain-ease',
@@ -340,6 +341,7 @@ var AmputationForm = (function () {
 
     if (window.BodyChart) BodyChart.clearAll();
     FormBase.resetPatient();
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   var api = {

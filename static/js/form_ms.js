@@ -190,7 +190,8 @@ const FormMS = (function () {
   }
 
   // ── Reset full MS form ────────────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
     setPain('pre',  0); document.getElementById('pain-pre').value  = 0;
     setPain('post', 0); document.getElementById('pain-post').value = 0;
@@ -203,6 +204,7 @@ const FormMS = (function () {
     });
     BodyChart.clearAll();
     MovementTable.clear();
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   // ── Progress fields for this form ────────────

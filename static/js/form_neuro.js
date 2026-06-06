@@ -423,7 +423,8 @@ var NeuroForm = (function () {
   }
 
   // ── RESET ─────────────────────────────────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
     var ids = [
       'diagnosis','complaint-text','patient-goal','onset-value','pmhx-details','past-pt-outcome',
@@ -494,6 +495,7 @@ var NeuroForm = (function () {
       var el = document.getElementById(id);
       if (el) el.textContent = '';
     });
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   // ── PUBLIC API ────────────────────────────────────────

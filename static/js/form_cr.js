@@ -257,12 +257,14 @@ const FormCR = (function () {
   }
 
   // ── Reset full CR form ────────────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
     setPain('pre',  0); document.getElementById('pain-pre').value  = 0;
     setPain('post', 0); document.getElementById('pain-post').value = 0;
     var tog = document.getElementById('vent-toggle');
     if (tog) { tog.checked = false; onVentChange(); }
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   // ── Progress fields ───────────────────────────

@@ -447,7 +447,8 @@ var GeriatricForm = (function () {
   }
 
   // ── Reset ─────────────────────────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     document.querySelectorAll('input[type=text],input[type=date],input[type=number],textarea').forEach(function(el) {
       if (!el.readOnly) el.value = '';
     });
@@ -463,6 +464,7 @@ var GeriatricForm = (function () {
     document.getElementById('fall-detail-block').style.display = 'none';
     onPainPresent('Yes');
     Object.keys(NA_INPUTS).forEach(function(k) { toggleNa(k, false); });
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   var progressFields = ['pt-name','pt-date','dx-diagnosis','hx-complaint','hx-current','obj-posture','plan-impression','plan-stg','plan-tx'];

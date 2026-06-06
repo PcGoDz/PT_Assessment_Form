@@ -327,7 +327,8 @@ const FormSpine = (function () {
   }
 
   // ── Reset ─────────────────────────────────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
     setPainVal('pre',  0); var pe = document.getElementById('pain-pre');  if(pe) pe.value = 0;
     setPainVal('post', 0); var po = document.getElementById('pain-post'); if(po) po.value = 0;
@@ -337,6 +338,7 @@ const FormSpine = (function () {
     // Reset all selects in spine-specific sections
     document.querySelectorAll('.spine-cell-sel').forEach(function(el) { el.value = ''; });
     BodyChart.clearAll();
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   // ── Progress fields ───────────────────────────────────

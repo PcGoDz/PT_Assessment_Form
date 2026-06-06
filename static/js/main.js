@@ -283,7 +283,7 @@ const Main = (function () {
   // ── Clear — wipe only, confirm first ──────────
   function clearForm(silent) {
     if (!silent && !confirm('Clear all fields without saving?')) return;
-    window.ActiveForm.reset();
+    window.ActiveForm.reset(true);
     currentId = null;
     markClean();
     updateProgress();

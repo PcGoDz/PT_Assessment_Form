@@ -499,7 +499,8 @@ const FormBurn = (function () {
   }
 
   // ── reset ─────────────────────────────────────────────────────────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
 
     // Sliders
@@ -549,6 +550,7 @@ const FormBurn = (function () {
 
     // ROM table
     BurnMov.clear();
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   // ── Wire burn-depth vocabulary into BodyChart ────────────────────────────────

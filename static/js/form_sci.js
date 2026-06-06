@@ -269,7 +269,8 @@ var SciForm = (function () {
   }
 
   // ── reset() — clear all fields + grids, collapse notes ───────────────────
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
     var ids = ['diagnosis','dr-management','problem','date-surgery','occupation','investigation',
       'current-history','past-history',
@@ -296,6 +297,7 @@ var SciForm = (function () {
 
     [gSensory,gMmt,gUpright,gProp,gFuncBody,gFuncBalance,gFuncTransfer,gFuncWc,gFuncWalk]
       .forEach(function (g) { if (g) g.clear(); });
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   // ── Public API ────────────────────────────────────────────────────────────

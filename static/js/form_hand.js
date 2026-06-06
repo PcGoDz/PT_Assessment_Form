@@ -334,7 +334,8 @@ var HandForm = (function () {
   }
 
   /* ── reset ── */
-  function reset() {
+  function reset(keepPatient) {
+    var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
     [
       'diagnosis','referral-source','management-type','surgery-date','surgery-type','pt-problem',
@@ -378,6 +379,7 @@ var HandForm = (function () {
 
     onManagementChange();
     onHealthChange();
+    if (savedPt) FormBase.populatePatient(savedPt);
   }
 
   /* ── reveal helpers ── */

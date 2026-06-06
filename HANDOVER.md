@@ -6,63 +6,72 @@ Last updated: 2026-06-06
 
 ## Where we left off
 
-SCI Milestone-2 polish (Part 1 of 2) complete — section reorder done, on worktree branch
-`claude/optimistic-banzai-766e26`. Part 2 (Clear button fix) stopped pending direction from
-Miruya — see below.
+SCI Milestone-2 polish complete (both parts). On worktree branch
+`claude/optimistic-banzai-766e26`. Both commits ready; **NOT yet merged to main** —
+Miruya must smoke-test the worktree first.
 
-**Part 1 — Section reorder:** `templates/forms/sci.html` reordered to SOAPIER clinical flow.
-17 cards moved, nav entries reordered to match, sec-nums renumbered 01→17 sequentially.
-No data-contract change — `form_sci.js` untouched. Committed to worktree branch.
+**Part 1 — Section reorder (`038c1ce`):** `sci.html` reordered to SOAPIER clinical flow.
+17 cards, nav entries, and sec-nums all consistent. form_sci.js untouched.
 
-**Part 2 — Clear button — STOPPED, app-wide bug:**
-Diagnosis: `clearForm()` in `main.js` calls `window.ActiveForm.reset()`. Every form's `reset()`
-(ms, spine, hand, burn, cr, neuro, amputation, sci) calls `FormBase.resetPatient()` as its first
-line. `resetPatient()` nukes ALL `<input>` and `<textarea>` elements — including patient name,
-NRIC, and assessment date. This is NOT SCI-local; it affects all 7 ready forms identically.
-Per the blueprint: stopped. Direction needed before editing shared code.
-
-**Options to discuss with Miruya:**
-1. Fix SCI only (remove `resetPatient()` from `SciForm.reset()` — SCI then behaves differently from all other forms; cosmetically inconsistent but lowest risk)
-2. Fix all 7 ready forms in one coordinated pass (remove `resetPatient()` from each form's `reset()` — their individual field-clearing code below it already handles clinical fields)
-3. Fix the behavior in `main.js` by routing Clear through a different call that doesn't touch patient fields
-
-Option 2 is cleanest — every form's `reset()` already clears clinical fields individually after the `resetPatient()` call; removing the `resetPatient()` line from each is a mechanical one-liner per form with zero data-contract impact.
+**Part 2 — Clear button fix (current commit):** All 9 ready forms fixed. Mechanism:
+`reset(keepPatient)` — when `clearForm()` passes `true`, patient fields are saved via
+`FormBase.collectPatient()` before the existing reset runs, then re-injected via
+`FormBase.populatePatient()` at the end. `newForm()` / `restoreDraft()` / `loadRecord()`
+pass no arg → full reset unchanged. Files touched: `main.js` (one word: `reset(true)`
+in `clearForm()`), `form_ms.js`, `form_spine.js`, `form_hand.js`, `form_burn.js`,
+`form_cr.js`, `form_neuro.js`, `form_amputation.js`, `form_sci.js`, `form_geriatric.js`.
+All `node --check` clean.
 
 ---
 
 ## Half-done
 
-- **Smoke test not yet run** — reorder is committed to worktree but Miruya hasn't run Flask
-  from the worktree folder to verify fill-save-reload round-trip and nav jumps. Must do before
-  merging to main.
-- **Part 2 (Clear button fix)** — stopped awaiting direction.
+**Smoke test not yet run.** Miruya must run Flask from the worktree folder
+(`C:\Users\legac\Downloads\FOR_CLAUDE\PT_Assessment-worktrees\optimistic-banzai-766e26`)
+and verify:
+
+**Reorder (Part 1):**
+- SCI form: 17 nav entries in the new order (Patient → Dx → Problem → Pain → History →
+  Special → Home → Respiratory → Skin → Sensory → Proprioception → MMT → Upright →
+  Functional → Outcome Measures → Assistive Aids → PT Impression & Plan)
+- Each nav entry jumps to the correct card
+- Fill several fields across different sections → Save → reload → data all comes back
+
+**Clear fix (Part 2) — test on SCI, MS, and at least one more (NEURO or CR):**
+- Load a patient → fill clinical fields → hit Clear → patient name/NRIC/assessment date
+  still visible, clinical fields blank, grids blank
+- `+ New` still wipes everything (no regression)
+- No console errors on Clear or New
+
+After smoke passes: fast-forward merge both commits to main.
 
 ---
 
 ## Next session priorities
 
-1. **Miruya smoke-test the worktree** — run Flask from
-   `C:\Users\legac\Downloads\FOR_CLAUDE\PT_Assessment-worktrees\optimistic-banzai-766e26`,
-   open SCI form, verify: 17 nav entries in new order, nav jumps land on correct cards,
-   fill several sections → Save → reload → data intact.
-2. **Direction on Clear button fix** — Miruya decides scope (SCI-only vs all forms). Then fix.
-3. After both pass: fast-forward merge to main, update HANDOVER.
-4. **SCI Milestone-3** — `pdf_sci.py` export (currently MS-fallbacks on SCI).
-5. **Fix B** — DB migration versioning (`PRAGMA user_version` in `database.py`).
+1. Miruya smoke-tests the worktree (see above)
+2. After pass: fast-forward merge to main, update HANDOVER
+3. **SCI Milestone-3** — `pdf_sci.py` + `pt_assessment.spec` entry. Currently MS-fallbacks.
+4. **Fix B** — DB migration versioning (`PRAGMA user_version` in `database.py`).
 
 ---
 
 ## Gotchas discovered this session
 
-- **Clear button bug is app-wide** — all 7 ready forms (`ms`, `spine`, `hand`, `burn`, `cr`,
-  `neuro`, `amputation`, `sci`) call `FormBase.resetPatient()` in their `reset()`, which clears
-  all inputs on the page including patient identity. Not SCI-specific. See BACKLOG.
-- **Section reorder is data-contract-safe** — `collect()`/`populate()` read fields by ID, not
-  DOM order. Reordering cards has zero effect on what gets saved or loaded.
+- **CR reset() was almost empty** — only pain sliders + vent toggle; everything else relied
+  on `resetPatient()`'s blanket sweep. The save/restore pattern handled this cleanly —
+  no per-form field audit needed because existing reset logic runs fully, then patient is
+  re-injected.
+- **GERIATRIC reset() doesn't call `resetPatient()`** — uses its own blanket
+  `querySelectorAll` sweep. Same effective behavior; same save/restore fix applies.
+- **AMPUTATION has `resetPatient()` at the END** (after BodyChart.clearAll, after all
+  explicit clears) — uncommon order but irrelevant to the fix; `populatePatient` added
+  after it.
+- **Section reorder is data-contract-safe** — `collect()`/`populate()` read by field ID.
 
 ---
 
 ## What to skip for now
 
-PDF + MPIS for SCI (milestone 3 + 5). Stamp-button restyling (ghost-placeholder look — BACKLOG).
-Dropdown-label widening (deferred per blueprint). Fix B (DB migration versioning).
+PDF + MPIS for SCI. Stamp-button restyling. Dropdown-label widening.
+Fix B (DB migration versioning) — defer to standalone session.
