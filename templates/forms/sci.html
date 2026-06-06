@@ -5,19 +5,19 @@
 <div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
 <div class="nav-item" onclick="Main.go('s-dx')"><span class="nav-icon">&#128203;</span> Diagnosis &amp; Mgmt</div>
 <div class="nav-item" onclick="Main.go('s-problem')"><span class="nav-icon">&#10067;</span> Problem</div>
-<div class="nav-item" onclick="Main.go('s-special')"><span class="nav-icon">&#128221;</span> Special Questions</div>
+<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128293;</span> Pain Score</div>
 <div class="nav-item" onclick="Main.go('s-history')"><span class="nav-icon">&#128214;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-special')"><span class="nav-icon">&#128221;</span> Special Questions</div>
+<div class="nav-item" onclick="Main.go('s-home')"><span class="nav-icon">&#127968;</span> Home Environment</div>
+<div class="nav-item" onclick="Main.go('s-resp')"><span class="nav-icon">&#129729;</span> Respiratory</div>
+<div class="nav-item" onclick="Main.go('s-skin')"><span class="nav-icon">&#129461;</span> Skin Integrity</div>
 <div class="nav-item" onclick="Main.go('s-sensory')"><span class="nav-icon">&#9995;</span> Sensory</div>
+<div class="nav-item" onclick="Main.go('s-prop')"><span class="nav-icon">&#129517;</span> Proprioception</div>
 <div class="nav-item" onclick="Main.go('s-mmt')"><span class="nav-icon">&#128170;</span> MMT</div>
 <div class="nav-item" onclick="Main.go('s-upright')"><span class="nav-icon">&#9855;</span> Upright Control</div>
-<div class="nav-item" onclick="Main.go('s-prop')"><span class="nav-icon">&#129517;</span> Proprioception</div>
 <div class="nav-item" onclick="Main.go('s-functional')"><span class="nav-icon">&#9851;</span> Functional</div>
-<div class="nav-item" onclick="Main.go('s-resp')"><span class="nav-icon">&#129729;</span> Respiratory</div>
-<div class="nav-item" onclick="Main.go('s-pain')"><span class="nav-icon">&#128293;</span> Pain Score</div>
-<div class="nav-item" onclick="Main.go('s-aids')"><span class="nav-icon">&#9855;</span> Assistive Aids</div>
 <div class="nav-item" onclick="Main.go('s-outcome')"><span class="nav-icon">&#128200;</span> Outcome Measures</div>
-<div class="nav-item" onclick="Main.go('s-skin')"><span class="nav-icon">&#129461;</span> Skin Integrity</div>
-<div class="nav-item" onclick="Main.go('s-home')"><span class="nav-icon">&#127968;</span> Home Environment</div>
+<div class="nav-item" onclick="Main.go('s-aids')"><span class="nav-icon">&#9855;</span> Assistive Aids</div>
 <div class="nav-item" onclick="Main.go('s-plan')"><span class="nav-icon">&#127919;</span> PT Impression &amp; Plan</div>
 {% endblock %}
 
@@ -189,25 +189,33 @@
   </div>
 </div>
 
-<!-- 04 SPECIAL QUESTIONS -->
-<div class="card" id="s-special">
+<!-- 04 PAIN SCORE -->
+<div class="card" id="s-pain">
   <div class="card-header">
     <span class="sec-num">04</span>
-    <h2>Special Questions</h2>
+    <h2>Pain Score</h2>
   </div>
   <div class="card-body">
-    <div class="fg c2">
-      <div class="field">
-        <label>Date of Surgery / Injury</label>
-        <input type="date" id="date-surgery">
-      </div>
-      <div class="field">
-        <label>Occupation</label>
-        <input type="text" id="occupation" placeholder="e.g. Teacher, Construction worker">
-      </div>
-      <div class="field" style="grid-column:span 2">
-        <label>Investigation</label>
-        <input type="text" id="investigation" placeholder="e.g. MRI spine, X-ray, CT scan findings">
+    <div class="fg">
+      <div class="fg c2">
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="SciForm.onPainChange('pre')">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pain-pre-display">0</div>
+          </div>
+        </div>
+        <div class="pain-score-box">
+          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&ndash;10)</label>
+          <div class="pain-scale-row">
+            <span style="font-size:11px;color:var(--text-faint)">0</span>
+            <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="SciForm.onPainChange('post')">
+            <span style="font-size:11px;color:var(--text-faint)">10</span>
+            <div class="pain-val pv-low" id="pain-post-display">0</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -233,10 +241,104 @@
   </div>
 </div>
 
-<!-- 06 SENSORY EVALUATION -->
-<div class="card" id="s-sensory">
+<!-- 06 SPECIAL QUESTIONS -->
+<div class="card" id="s-special">
   <div class="card-header">
     <span class="sec-num">06</span>
+    <h2>Special Questions</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Date of Surgery / Injury</label>
+        <input type="date" id="date-surgery">
+      </div>
+      <div class="field">
+        <label>Occupation</label>
+        <input type="text" id="occupation" placeholder="e.g. Teacher, Construction worker">
+      </div>
+      <div class="field" style="grid-column:span 2">
+        <label>Investigation</label>
+        <input type="text" id="investigation" placeholder="e.g. MRI spine, X-ray, CT scan findings">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 HOME ENVIRONMENT -->
+<div class="card" id="s-home">
+  <div class="card-header">
+    <span class="sec-num">07</span>
+    <h2>Home Environment</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Home Environment</label>
+        <textarea id="home-environment" rows="4" placeholder="e.g. Single-storey, double-storey, wheelchair accessible, modifications required..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 RESPIRATORY EVALUATION -->
+<div class="card" id="s-resp">
+  <div class="card-header">
+    <span class="sec-num">08</span>
+    <h2>Respiratory Evaluation</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field" style="grid-column:span 2">
+        <label>Breathing Pattern (tick all that apply)</label>
+        <div class="check-group" id="breathing-pattern-group">
+          <label><input type="checkbox" value="Usage of neck accessory muscle"> Usage of neck accessory muscle</label>
+          <label><input type="checkbox" value="Apical"> Apical</label>
+          <label><input type="checkbox" value="Abdominal"> Abdominal</label>
+          <label><input type="checkbox" value="Diaphragm"> Diaphragm</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Cough</label>
+        <div class="radio-group">
+          <label><input type="radio" name="cough" value="Functional"> Functional</label>
+          <label><input type="radio" name="cough" value="Weak"> Weak</label>
+          <label><input type="radio" name="cough" value="Non-functional"> Non-functional</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Diaphragm Function</label>
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+          <input type="number" id="vc" placeholder="VC" style="width:90px">
+          <span style="font-size:12px;color:var(--text-muted)">VC</span>
+          <input type="number" id="pefr" placeholder="PEFR" style="width:90px">
+          <span style="font-size:12px;color:var(--text-muted)">PEFR</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 SKIN INTEGRITY -->
+<div class="card" id="s-skin">
+  <div class="card-header">
+    <span class="sec-num">09</span>
+    <h2>Skin Integrity</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Skin Integrity</label>
+        <textarea id="skin-integrity" rows="4" placeholder="Pressure injury risk, skin condition, existing wounds..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 SENSORY EVALUATION -->
+<div class="card" id="s-sensory">
+  <div class="card-header">
+    <span class="sec-num">10</span>
     <h2>Sensory Evaluation</h2>
   </div>
   <div class="card-body">
@@ -245,10 +347,21 @@
   </div>
 </div>
 
-<!-- 07 MUSCULOSKELETAL EVALUATION (MMT) -->
+<!-- 11 PROPRIOCEPTION -->
+<div class="card" id="s-prop">
+  <div class="card-header">
+    <span class="sec-num">11</span>
+    <h2>Proprioception</h2>
+  </div>
+  <div class="card-body">
+    <div id="grid-prop"></div>
+  </div>
+</div>
+
+<!-- 12 MUSCULOSKELETAL EVALUATION (MMT) -->
 <div class="card" id="s-mmt">
   <div class="card-header">
-    <span class="sec-num">07</span>
+    <span class="sec-num">12</span>
     <h2>Musculoskeletal Evaluation (MMT)</h2>
   </div>
   <div class="card-body">
@@ -257,10 +370,10 @@
   </div>
 </div>
 
-<!-- 08 UPRIGHT CONTROL -->
+<!-- 13 UPRIGHT CONTROL -->
 <div class="card" id="s-upright">
   <div class="card-header">
-    <span class="sec-num">08</span>
+    <span class="sec-num">13</span>
     <h2>Upright Control <span style="font-weight:400;color:var(--text-muted)">(Incomplete)</span></h2>
   </div>
   <div class="card-body">
@@ -269,21 +382,10 @@
   </div>
 </div>
 
-<!-- 09 PROPRIOCEPTION -->
-<div class="card" id="s-prop">
-  <div class="card-header">
-    <span class="sec-num">09</span>
-    <h2>Proprioception</h2>
-  </div>
-  <div class="card-body">
-    <div id="grid-prop"></div>
-  </div>
-</div>
-
-<!-- 10 FUNCTIONAL EVALUATION -->
+<!-- 14 FUNCTIONAL EVALUATION -->
 <div class="card" id="s-functional">
   <div class="card-header">
-    <span class="sec-num">10</span>
+    <span class="sec-num">14</span>
     <h2>Functional Evaluation</h2>
   </div>
   <div class="card-body">
@@ -326,80 +428,34 @@
   </div>
 </div>
 
-<!-- 11 RESPIRATORY EVALUATION -->
-<div class="card" id="s-resp">
+<!-- 15 OUTCOME MEASURES -->
+<div class="card" id="s-outcome">
   <div class="card-header">
-    <span class="sec-num">11</span>
-    <h2>Respiratory Evaluation</h2>
+    <span class="sec-num">15</span>
+    <h2>Outcome Measures</h2>
   </div>
   <div class="card-body">
     <div class="fg c2">
-      <div class="field" style="grid-column:span 2">
-        <label>Breathing Pattern (tick all that apply)</label>
-        <div class="check-group" id="breathing-pattern-group">
-          <label><input type="checkbox" value="Usage of neck accessory muscle"> Usage of neck accessory muscle</label>
-          <label><input type="checkbox" value="Apical"> Apical</label>
-          <label><input type="checkbox" value="Abdominal"> Abdominal</label>
-          <label><input type="checkbox" value="Diaphragm"> Diaphragm</label>
-        </div>
+      <div class="field">
+        <label>10 Meter Walk Test (time, seconds)</label>
+        <input type="number" id="tenmwt" placeholder="e.g. 25.4" step="0.1" min="0">
       </div>
       <div class="field">
-        <label>Cough</label>
-        <div class="radio-group">
-          <label><input type="radio" name="cough" value="Functional"> Functional</label>
-          <label><input type="radio" name="cough" value="Weak"> Weak</label>
-          <label><input type="radio" name="cough" value="Non-functional"> Non-functional</label>
-        </div>
+        <label>SCIM (score)</label>
+        <input type="number" id="scim" placeholder="0–100" min="0" max="100">
       </div>
       <div class="field">
-        <label>Diaphragm Function</label>
-        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
-          <input type="number" id="vc" placeholder="VC" style="width:90px">
-          <span style="font-size:12px;color:var(--text-muted)">VC</span>
-          <input type="number" id="pefr" placeholder="PEFR" style="width:90px">
-          <span style="font-size:12px;color:var(--text-muted)">PEFR</span>
-        </div>
+        <label>WISCI (score)</label>
+        <input type="number" id="wisci" placeholder="0–20" min="0" max="20">
       </div>
     </div>
   </div>
 </div>
 
-<!-- 12 PAIN SCORE -->
-<div class="card" id="s-pain">
-  <div class="card-header">
-    <span class="sec-num">12</span>
-    <h2>Pain Score</h2>
-  </div>
-  <div class="card-body">
-    <div class="fg">
-      <div class="fg c2">
-        <div class="pain-score-box">
-          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&ndash;10)</label>
-          <div class="pain-scale-row">
-            <span style="font-size:11px;color:var(--text-faint)">0</span>
-            <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="SciForm.onPainChange('pre')">
-            <span style="font-size:11px;color:var(--text-faint)">10</span>
-            <div class="pain-val pv-low" id="pain-pre-display">0</div>
-          </div>
-        </div>
-        <div class="pain-score-box">
-          <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&ndash;10)</label>
-          <div class="pain-scale-row">
-            <span style="font-size:11px;color:var(--text-faint)">0</span>
-            <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="SciForm.onPainChange('post')">
-            <span style="font-size:11px;color:var(--text-faint)">10</span>
-            <div class="pain-val pv-low" id="pain-post-display">0</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 13 ASSISTIVE AIDS -->
+<!-- 16 ASSISTIVE AIDS -->
 <div class="card" id="s-aids">
   <div class="card-header">
-    <span class="sec-num">13</span>
+    <span class="sec-num">16</span>
     <h2>Assistive Aids</h2>
   </div>
   <div class="card-body">
@@ -423,62 +479,6 @@
       <div class="field" style="grid-column:span 2">
         <label>Orthosis (please state)</label>
         <input type="text" id="orthosis" placeholder="Please state...">
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 14 OUTCOME MEASURES -->
-<div class="card" id="s-outcome">
-  <div class="card-header">
-    <span class="sec-num">14</span>
-    <h2>Outcome Measures</h2>
-  </div>
-  <div class="card-body">
-    <div class="fg c2">
-      <div class="field">
-        <label>10 Meter Walk Test (time, seconds)</label>
-        <input type="number" id="tenmwt" placeholder="e.g. 25.4" step="0.1" min="0">
-      </div>
-      <div class="field">
-        <label>SCIM (score)</label>
-        <input type="number" id="scim" placeholder="0–100" min="0" max="100">
-      </div>
-      <div class="field">
-        <label>WISCI (score)</label>
-        <input type="number" id="wisci" placeholder="0–20" min="0" max="20">
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 15 SKIN INTEGRITY -->
-<div class="card" id="s-skin">
-  <div class="card-header">
-    <span class="sec-num">15</span>
-    <h2>Skin Integrity</h2>
-  </div>
-  <div class="card-body">
-    <div class="fg">
-      <div class="field">
-        <label>Skin Integrity</label>
-        <textarea id="skin-integrity" rows="4" placeholder="Pressure injury risk, skin condition, existing wounds..."></textarea>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 16 HOME ENVIRONMENT -->
-<div class="card" id="s-home">
-  <div class="card-header">
-    <span class="sec-num">16</span>
-    <h2>Home Environment</h2>
-  </div>
-  <div class="card-body">
-    <div class="fg">
-      <div class="field">
-        <label>Home Environment</label>
-        <textarea id="home-environment" rows="4" placeholder="e.g. Single-storey, double-storey, wheelchair accessible, modifications required..."></textarea>
       </div>
     </div>
   </div>

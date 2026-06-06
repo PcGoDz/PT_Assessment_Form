@@ -4,6 +4,17 @@
 
 ## Open bugs / Cleanup
 
+- **Clear button wipes patient identity on ALL ready forms (app-wide).** `clearForm()` in
+  `main.js` calls `window.ActiveForm.reset()`. Every ready form's `reset()` (`ms`, `spine`,
+  `hand`, `burn`, `cr`, `neuro`, `amputation`, `sci`) calls `FormBase.resetPatient()` as its
+  first line. `resetPatient()` uses `querySelectorAll('input,textarea')` which nukes ALL inputs
+  on the page — patient name, NRIC, and assessment date are wiped along with clinical fields.
+  Correct behaviour: Clear should blank clinical fields only, preserve patient identity.
+  Fix: remove `FormBase.resetPatient()` call from each form's `reset()` (the form-specific
+  field-clearing code below it already handles all clinical fields individually). One-liner per
+  form × 7 forms. Coordinated pass recommended to keep all forms consistent.
+  Diagnosed 2026-06-06 during SCI Milestone-2 polish.
+
 - **Episode form-type drift on mid-form swap.** Repro: create episode (e.g. BURN) → on the
   form page swap to another form (SPINE) → Save & Return → episode list still labels it BURN.
   Likely same root as the deferred `get_episode_record form-aware` item: episode `form_type`
