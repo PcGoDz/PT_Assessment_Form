@@ -88,7 +88,6 @@
 - **SCI stamp button cosmetic** — NT stamp + "Mark block N/A" ghost placeholder styling. Deferred from Milestone-2.
 - **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26` folder may persist on disk after git worktree remove. Safe to delete manually.
 - VESTIBULAR / FACIAL forms (Neurological group, NO ready).
-- SCI clinical templates (`clinical_templates.js` SCI arrays + `TEMPLATES.SCI` + SOAP tplMap key) — milestone 5+.
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
 - Dummy patient + burn seed record for smoke-testing — extend `seed_db.py` so a realistic test record loads with one click instead of hand-filling `test` into every field each smoke test. Requested 2026-06-01.
