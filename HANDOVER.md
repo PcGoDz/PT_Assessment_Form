@@ -6,80 +6,54 @@ Last updated: 2026-06-07
 
 ## Where we left off
 
-Two threads this session: git housekeeping (Thread A) and SCI clinical templates shipped (Thread B).
-Main is at `d32472d`. NOT pushed — Miruya pushes the whole SCI milestone in one go when PDF + MPIS are done.
+Plan-writing session (second of the day). Wrote the SCI Milestone-3 PDF implementation plan at
+`docs/superpowers/plans/2026-06-07-sci-pdf-milestone3.md` using the superpowers writing-plans skill.
+NO code written — `pdf_sci.py`, `app.py`, `pt_assessment.spec` all untouched. The plan is the
+deliverable; execution is next session.
 
-**Thread A — Git housekeeping:**
-Repo had 71 phantom-modified files when viewed from the Cowork Linux sandbox — pure CRLF↔LF churn,
-`git diff --ignore-all-space` showed 0 real changes; Windows-side git only saw 3 truly-modified docs.
-A stale `.git/index.lock` (0 bytes, no git process running) was blocking commits — removed after
-confirming nothing held it (`tasklist | findstr git` empty).
-Committed last session's uncommitted wind-down docs (BACKLOG, HANDOVER, WORKFLOW + 2 ARCHIVE files) → `f3c07a4`.
-Added `.gitattributes` to permanently normalize line endings (text=auto; .py/.js/.html/.css/.md/.txt/.json/.spec
-as text; .bat pinned `eol=crlf`; .db/.png/.jpg/.pdf/.ico as binary) → `2f3f58f`. Prevents phantom recurrence.
-
-**Thread B — SCI clinical templates (`9f181ed`, `d32472d`):**
-KKM Best Statement SCI doc (`13. SCI Final (1)_compressed.pdf`, pp.13-25) surfaced by Miruya —
-unblocked the templates task. Content transcribed from the worked T6 ASIA-A example. Design decision:
-scaffold-with-blanks style (KKM wording + grammar quirks preserved verbatim, T6-specific numbers blanked
-to `__` for reuse across SCI levels). Plan-of-Treatment lines expanded from KKM's short headings into
-fuller sentences (Miruya's call, burden-reduction). Extra clinically-suitable lines added and approved.
-
-`TEMPLATES.SCI` added to `static/js/clinical_templates.js` (categories impression/stg/ltg/treatment,
-6/6/6/7 entries). 4 `addButton` calls wired in `templates/forms/sci.html` existing DOMContentLoaded
-(`pt-impression`/`stg`/`ltg`/`plan` → impression/stg/ltg/treatment; note plan→treatment matches
-HAND/BURN/CR/GERIATRIC pattern). Field IDs identical to HAND. KKM grammar quirks preserved verbatim
-per axiom — canary lines "Reduce sitting balance due lacks lower trunk stability" / "due to lacks lower
-trunk stability and lower limb control" confirmed intact in committed bytes.
-CLAUDE.md design-intent block added (burden-reduction guiding-value paragraph, subordinate to ship-crude).
-Arrow char fixed `->` → `→` → `d32472d`.
-
-Smoke-tested by Miruya — all 7 rows PASS (clinical wording + overall flow confirmed). Ship signal given.
-FF-merged worktree branch `claude/elastic-mayer-cb8c07` → main. Worktree removed + pruned.
-Prompt files (`CC-PROMPT-sci-templates.md`, `CC-PROMPT-sci-closeout.md`) deleted from working tree.
+Plan grounded in live source before writing (read `pdf_neuro.py` for house style, `assessment_grid.js`
++ `form_sci.js` for real data shapes, both PDF route call sites in `app.py`, the SCI registry row, the
+spec datas list). 6 tasks: skeleton → four-state `grid_table()` helper → full `_build_story` in spec
+section order → wire `app.py` → wire `pt_assessment.spec` → full verification. Then VETTED by Opus +
+Miruya against source. One real hole found: the `REF` constant was a placeholder. Miruya read the real
+value off the paper borang; fixed to `fisio / b.pen. 4 / Pind. 2 / 2019` (HAND-style spacing, Miruya's
+readability call) in all 4 spots in the plan. Vet results baked into the plan as a "Vet results"
+subsection so tomorrow's cold-start trusts the file, not chat. The KKM SCI borang (`SCI.pdf`, 2-page
+scanned A4) was surfaced as the visual baseline — confirmed no body chart (sensory is a table), body
+figure deliberately omitted.
 
 ---
 
 ## Half-done
 
-Nothing critical.
-
-- **Worktree folder on Miruya's desk** — `PT_Assessment-worktrees\elastic-mayer-cb8c07` folder may
-  still physically exist on disk (Windows file lock after session). Git no longer tracks it.
-  Safe to delete manually.
+Nothing mid-flight. Clean landing. The amended plan is on disk and execution-ready.
 
 ---
 
 ## Next session priorities
 
-1. **SCI Milestone-3** — `pdf_sci.py` + `pt_assessment.spec` entry. **HARD PRECONDITION:** Miruya
-   must surface the KKM SCI FORM (the borang layout, not the Best Statement doc) as the visual
-   baseline before PDF work starts. Four cell states must render distinctly in PDF (blank / NT /
-   N-A / real value; greyed cells absent from getData()). Add `pdf_episode` + `pdf_single` to SCI
-   FORM_REGISTRY row.
-2. **SCI stamp button restyle** — NT stamp + "Mark block N/A" ghost placeholder cosmetic polish.
-   Deferred from Milestone-2.
-3. **Fix B** — DB migration versioning (`PRAGMA user_version` in `database.py`). Test against a
-   COPY of the real DB — existing deployed DBs report user_version=0 despite having
-   soap_notes/episodes columns. Keep try/except INSIDE v0→v1 gate.
-4. **Git push** — Miruya pushes the whole SCI milestone (form + polish + templates + PDF + MPIS)
-   in one go when all rungs are done.
+1. EXECUTE `docs/superpowers/plans/2026-06-07-sci-pdf-milestone3.md` — Tasks 1-6: build `pdf_sci.py`,
+   wire registry + spec, smoke-test both routes, rasterize/open the PDF and hand to Miruya for the
+   visual eyeball (flat-layout look is his call), commit per task, NO push.
+2. SCI stamp-button restyle (cosmetic — NT stamp + "Mark block N/A" ghost placeholder).
+3. Fix B — DB migration versioning (`PRAGMA user_version` in `database.py`; test against a COPY of the
+   real DB; keep try/except INSIDE the v0→v1 gate).
+4. SCI MPIS (Milestone-4, separate).
+5. Git push the WHOLE SCI milestone (form + polish + templates + PDF + MPIS) in one go once PDF + MPIS done.
 
 ---
 
 ## Gotchas discovered this session
 
-- **Cowork Linux sandbox shows phantom CRLF/LF dirtiness on a Windows checkout.** 71 files looked
-  "modified" but `git diff --ignore-all-space` showed 0 real changes. `.gitattributes` added
-  `2f3f58f` now normalizes. If 71-file ghost reappears, verify with `--ignore-all-space` before
-  acting. Never `git add --renormalize` from Linux sandbox.
-- **Stale `.git/index.lock` blocks all git ops.** Before deleting: confirm no real git running
-  (`tasklist | findstr git` returns empty), then `del .git\index.lock`. 0-byte lock + no running
-  process = stale, safe to remove.
+- None new technical. The plan-vet caught the `REF` placeholder hole BEFORE any code was written —
+  this is the payoff of separating plan-writing from execution. Not a rule, just a confirmed-good habit.
+- **DESIGN_SYSTEM.md is 311 lines — over the 250 ceiling** (pre-existing, untouched this session).
+  Already Priority-1 in BACKLOG: split into `DESIGN_SYSTEM-form-html.md` + `DESIGN_SYSTEM-pdf.md`.
+  Flagging here per wind-down rule; not blocking this session.
 
 ---
 
 ## What to skip for now
 
-PDF + MPIS for SCI (precondition: KKM borang not yet surfaced). Stamp-button restyling. Fix B.
-VESTIBULAR / FACIAL / remaining NO forms.
+SCI stamp restyle, Fix B, MPIS (all next-session). VESTIBULAR / FACIAL / remaining NO forms. See
+BACKLOG.md for the full deferred list.
