@@ -544,6 +544,43 @@ const ClinicalTemplates = (function () {
     ],
   };
 
+  // SCI form templates
+  TEMPLATES.SCI = {
+    impression: [
+      'Reduce sitting balance due lacks lower trunk stability.',
+      'Reduce functional ability due to lacks lower trunk stability and lower limb control.',
+      'Reduced cough effectiveness due to loss of abdominal muscle control.',
+      'Reduced [sitting/standing] balance secondary to [level] lesion with impaired trunk control.',
+      'Impaired functional mobility secondary to [complete/incomplete] [level] SCI (ASIA [A/B/C/D]).',
+      'High risk for pressure ulcers secondary to impaired sensation and immobility.',
+    ],
+    stg: [
+      'Maintain skin integrity and prevent pressure sores via education and positioning.',
+      'Improve static sitting balance for __ minutes without hand support (using trunk control strategies).',
+      'Educate on proper pressure relief techniques every __ minutes.',
+      'Initiate breathing exercises and assisted cough techniques to improve secretion clearance.',
+      'Improve __ AROM to __° within __ weeks.',
+      'Achieve independent bed mobility (rolling, supine-to-sit) within __ weeks.',
+    ],
+    ltg: [
+      'Perform independent transfers using a sliding board or assistive device.',
+      'Maintain unsupported sitting balance for at least __ minutes during daily activities.',
+      'Propel and navigate wheelchair safely over different surfaces.',
+      'Prevent joint contractures through daily ROM exercises and correct positioning.',
+      'Achieve independent [wheelchair-level / ambulatory] mobility within __ weeks.',
+      'Return to modified ADLs and home/community participation within __ weeks.',
+    ],
+    treatment: [
+      'Positioning & ROM — anti-pressure positioning, daily passive/active-assisted ROM to prevent contractures.',
+      'Therapeutic exercise — progressive strengthening of preserved muscle groups, __ reps x __ sets, __ daily.',
+      'Balance and trunk control — graded sitting balance retraining, reaching tasks, trunk stabilisation.',
+      'Functional training — bed mobility, transfers, wheelchair skills relevant to patient\'s level.',
+      'Respiratory therapy — breathing exercises, assisted cough / airway clearance, chest expansion.',
+      'Spasticity management — sustained stretching, positioning, [tone-reduction technique] as indicated.',
+      'Education — pressure care, skin checks, HEP, carer training, contracture prevention.',
+    ],
+  };
+
   // ── State ───────────────────────────────────────────────────────
   var activeField = null;
   var pickerEl    = null;

@@ -520,6 +520,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   SciForm.initGrids();
+
+  var FM = 'SCI';
+  ClinicalTemplates.addButton('pt-impression', FM, 'impression');
+  ClinicalTemplates.addButton('stg',           FM, 'stg');
+  ClinicalTemplates.addButton('ltg',           FM, 'ltg');
+  ClinicalTemplates.addButton('plan',          FM, 'treatment');
 });
 </script>
 {% endblock %}
