@@ -84,7 +84,9 @@
 
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
-- SCI Milestone 2 (dropdown label clarity + Miruya clinical smoke), Milestone 3 (pdf_sci.py + pt_assessment.spec).
+- SCI Milestone 3 (pdf_sci.py + pt_assessment.spec). Four cell states must render distinctly: blank / NT / N-A / real value; greyed cells absent from getData(). Add pdf_episode + pdf_single to SCI FORM_REGISTRY row.
+- **SCI stamp button cosmetic** — NT stamp + "Mark block N/A" ghost placeholder styling. Deferred from Milestone-2.
+- **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26` folder may persist on disk after git worktree remove. Safe to delete manually.
 - VESTIBULAR / FACIAL forms (Neurological group, NO ready).
 - SCI clinical templates (`clinical_templates.js` SCI arrays + `TEMPLATES.SCI` + SOAP tplMap key) — milestone 5+.
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).

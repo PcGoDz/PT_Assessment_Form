@@ -6,72 +6,75 @@ Last updated: 2026-06-06
 
 ## Where we left off
 
-SCI Milestone-2 polish complete (both parts). On worktree branch
-`claude/optimistic-banzai-766e26`. Both commits ready; **NOT yet merged to main** —
-Miruya must smoke-test the worktree first.
+SCI Milestone-2 polish complete. Both commits merged to main. Main is at `dec8d65` (Clear fix).
+Worktree `claude/optimistic-banzai-766e26` removed and pruned. `git worktree list` confirmed clean.
 
 **Part 1 — Section reorder (`038c1ce`):** `sci.html` reordered to SOAPIER clinical flow.
-17 cards, nav entries, and sec-nums all consistent. form_sci.js untouched.
+17 cards, nav entries, and sec-nums all consistent. `form_sci.js` untouched (collect/populate
+read by field ID, not DOM order — data contract unchanged).
 
-**Part 2 — Clear button fix (current commit):** All 9 ready forms fixed. Mechanism:
-`reset(keepPatient)` — when `clearForm()` passes `true`, patient fields are saved via
-`FormBase.collectPatient()` before the existing reset runs, then re-injected via
-`FormBase.populatePatient()` at the end. `newForm()` / `restoreDraft()` / `loadRecord()`
-pass no arg → full reset unchanged. Files touched: `main.js` (one word: `reset(true)`
-in `clearForm()`), `form_ms.js`, `form_spine.js`, `form_hand.js`, `form_burn.js`,
-`form_cr.js`, `form_neuro.js`, `form_amputation.js`, `form_sci.js`, `form_geriatric.js`.
-All `node --check` clean.
+New section order: 01 Patient Info → 02 Dx & Mgmt → 03 Problem → 04 Pain Score →
+05 History → 06 Special Questions → 07 Home Environment → 08 Respiratory →
+09 Skin Integrity → 10 Sensory → 11 Proprioception → 12 MMT → 13 Upright Control →
+14 Functional → 15 Outcome Measures → 16 Assistive Aids → 17 PT Impression & Plan
+
+**Part 2 — Clear button fix (`dec8d65`):** All 9 ready forms fixed. Mechanism:
+`reset(keepPatient)` — `clearForm()` in `main.js` now passes `true`; existing reset runs in
+full (wipes all clinical data), then patient fields are re-injected via
+`FormBase.populatePatient()`. `newForm()` / `restoreDraft()` / `loadRecord()` pass no arg →
+full wipe unchanged.
+
+Files touched: `main.js` (one word: `reset(true)` in `clearForm()`), `form_ms.js`,
+`form_spine.js`, `form_hand.js`, `form_burn.js`, `form_cr.js`, `form_neuro.js`,
+`form_amputation.js`, `form_sci.js`, `form_geriatric.js`. All `node --check` clean.
+
+Smoke test: passed by Miruya before merge.
 
 ---
 
 ## Half-done
 
-**Smoke test not yet run.** Miruya must run Flask from the worktree folder
-(`C:\Users\legac\Downloads\FOR_CLAUDE\PT_Assessment-worktrees\optimistic-banzai-766e26`)
-and verify:
+Nothing critical. The following are deferred-by-design:
 
-**Reorder (Part 1):**
-- SCI form: 17 nav entries in the new order (Patient → Dx → Problem → Pain → History →
-  Special → Home → Respiratory → Skin → Sensory → Proprioception → MMT → Upright →
-  Functional → Outcome Measures → Assistive Aids → PT Impression & Plan)
-- Each nav entry jumps to the correct card
-- Fill several fields across different sections → Save → reload → data all comes back
-
-**Clear fix (Part 2) — test on SCI, MS, and at least one more (NEURO or CR):**
-- Load a patient → fill clinical fields → hit Clear → patient name/NRIC/assessment date
-  still visible, clinical fields blank, grids blank
-- `+ New` still wipes everything (no regression)
-- No console errors on Clear or New
-
-After smoke passes: fast-forward merge both commits to main.
+- **SCI stamp button cosmetic** — NT stamp + "Mark block N/A" ghost placeholder styling.
+  Deferred to standalone polish pass.
+- **Worktree folder on Miruya's desk** — `PT_Assessment-worktrees\optimistic-banzai-766e26`
+  folder may still exist on disk after `git worktree remove`. Safe to delete manually if present.
 
 ---
 
 ## Next session priorities
 
-1. Miruya smoke-tests the worktree (see above)
-2. After pass: fast-forward merge to main, update HANDOVER
-3. **SCI Milestone-3** — `pdf_sci.py` + `pt_assessment.spec` entry. Currently MS-fallbacks.
-4. **Fix B** — DB migration versioning (`PRAGMA user_version` in `database.py`).
+1. **SCI Milestone-3** — `pdf_sci.py` + `pt_assessment.spec` entry. Four cell states must
+   render distinctly in PDF (blank / NT / N-A / real value; greyed cells absent from getData()).
+   Add `pdf_episode` + `pdf_single` to SCI FORM_REGISTRY row.
+2. **Stamp button restyle** — NT stamp + "Mark block N/A" ghost placeholder cosmetic polish.
+3. **Fix B** — DB migration versioning (`PRAGMA user_version` in `database.py`). Test against
+   a COPY of the real DB — existing deployed DBs report user_version=0 despite having
+   soap_notes/episodes columns. Keep try/except INSIDE v0→v1 gate.
+4. **SCI clinical templates** — blocked on KKM Best Statement SCI doc from Miruya.
 
 ---
 
 ## Gotchas discovered this session
 
 - **CR reset() was almost empty** — only pain sliders + vent toggle; everything else relied
-  on `resetPatient()`'s blanket sweep. The save/restore pattern handled this cleanly —
-  no per-form field audit needed because existing reset logic runs fully, then patient is
-  re-injected.
-- **GERIATRIC reset() doesn't call `resetPatient()`** — uses its own blanket
-  `querySelectorAll` sweep. Same effective behavior; same save/restore fix applies.
-- **AMPUTATION has `resetPatient()` at the END** (after BodyChart.clearAll, after all
-  explicit clears) — uncommon order but irrelevant to the fix; `populatePatient` added
-  after it.
-- **Section reorder is data-contract-safe** — `collect()`/`populate()` read by field ID.
+  on `resetPatient()`'s blanket sweep. Naive `if (!keepPatient) { resetPatient() }` guard would
+  have silently left diagnosis, hx-current, plan fields, and all observation/auscultation fields
+  populated after Clear. Snapshot-restore pattern handles this: run existing reset in full, then
+  re-inject saved patient. Logged in Anti-Repeat Rules (WORKFLOW.md).
+- **GERIATRIC reset() doesn't call `resetPatient()`** — uses its own blanket `querySelectorAll`
+  sweep. Same effective behavior; same snapshot-restore fix applies uniformly.
+- **AMPUTATION has `resetPatient()` at the END** (after BodyChart.clearAll, after all explicit
+  clears). Uncommon order but irrelevant to the fix; `populatePatient` added after it.
+- **Section reorder is data-contract-safe** — `collect()`/`populate()` read by field ID,
+  not DOM order.
+- **Derive the ready-form set from FORM_REGISTRY (app.py), not memory.** Initial count was 8;
+  GERIATRIC was missed. Re-deriving from source caught it.
 
 ---
 
 ## What to skip for now
 
-PDF + MPIS for SCI. Stamp-button restyling. Dropdown-label widening.
-Fix B (DB migration versioning) — defer to standalone session.
+PDF + MPIS for SCI. Stamp-button restyling. Fix B (DB migration versioning).
+SCI clinical templates. VESTIBULAR / FACIAL / remaining NO forms.
