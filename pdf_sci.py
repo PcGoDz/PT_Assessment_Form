@@ -140,9 +140,146 @@ def grid_table(grid_rows, columns, width):
 def _build_story(d):
     story   = []
     patient = ensure_dict(d.get('patient'))
+
     story += page_header(TITLE, REF)
     story.append(patient_bar(patient, REF))
     story.append(gap(2))
+
+    # 1 — Diagnosis & Management
+    story.append(rs([
+        ('', Paragraph('<b>DIAGNOSIS &amp; MANAGEMENT</b>', S_LABEL)),
+        ('Diagnosis',            d.get('diagnosis', '')),
+        ("Doctor's Management",  d.get('dr_management', '')),
+    ], CW))
+    story.append(gap(2))
+
+    # 2 — Problem
+    story.append(rs([
+        ('', Paragraph('<b>PROBLEM</b>', S_LABEL)),
+        (None, Paragraph(d.get('problem', ''), S_NORMAL)),
+    ], CW))
+    story.append(gap(2))
+
+    # 3 — Pain Score (VAS)
+    pain = d.get('pain') or {}
+    story.append(rs([
+        ('', Paragraph('<b>PAIN SCORE (VAS)</b>', S_LABEL)),
+        ('Pre',  str(pain.get('pre', '')) + '/10'),
+        ('Post', str(pain.get('post', '')) + '/10'),
+    ], CW))
+    story.append(gap(2))
+
+    # 4 — History
+    story.append(rs([
+        ('', Paragraph('<b>HISTORY</b>', S_LABEL)),
+        ('Current History', d.get('current_history', '')),
+        ('Past History',    d.get('past_history', '')),
+    ], CW))
+    story.append(gap(2))
+
+    # 5 — Special Questions
+    sq = d.get('special_questions') or {}
+    story.append(rs([
+        ('', Paragraph('<b>SPECIAL QUESTIONS</b>', S_LABEL)),
+        ('Date of Surgery', sq.get('date_surgery', '')),
+        ('Occupation',      sq.get('occupation', '')),
+        ('Investigation',   sq.get('investigation', '')),
+    ], CW))
+    story.append(gap(2))
+
+    # 6 — Home Environment
+    story.append(rs([
+        ('', Paragraph('<b>HOME ENVIRONMENT</b>', S_LABEL)),
+        (None, Paragraph(d.get('home_environment', ''), S_NORMAL)),
+    ], CW))
+    story.append(gap(2))
+
+    # 7 — Respiratory
+    resp = d.get('respiratory') or {}
+    story.append(rs([
+        ('', Paragraph('<b>RESPIRATORY</b>', S_LABEL)),
+        ('Breathing Pattern', _ls(resp.get('breathing_pattern'))),
+        ('Cough',             resp.get('cough', '')),
+        ('Vital Capacity',    resp.get('vc', '')),
+        ('PEFR',              resp.get('pefr', '')),
+    ], CW))
+    story.append(gap(2))
+
+    # 8 — Skin Integrity
+    story.append(rs([
+        ('', Paragraph('<b>SKIN INTEGRITY</b>', S_LABEL)),
+        (None, Paragraph(d.get('skin_integrity', ''), S_NORMAL)),
+    ], CW))
+    story.append(gap(2))
+
+    # 9 — Sensory (dermatomes) grid
+    story += [Paragraph('<b>SENSORY (DERMATOMES)</b>', S_BOLD), gap(1),
+              grid_table(d.get('sensory', []), GRID_COLUMNS['sensory'], CW), gap(2)]
+
+    # 10 — Proprioception grid
+    story += [Paragraph('<b>PROPRIOCEPTION</b>', S_BOLD), gap(1),
+              grid_table(d.get('proprioception', []), GRID_COLUMNS['proprioception'], CW), gap(2)]
+
+    # 11 — MMT grid
+    story += [Paragraph('<b>MUSCLE STRENGTH (MMT) / PROM / MAS</b>', S_BOLD), gap(1),
+              grid_table(d.get('mmt', []), GRID_COLUMNS['mmt'], CW), gap(2)]
+
+    # 12 — Upright Control grid
+    story += [Paragraph('<b>UPRIGHT CONTROL</b>', S_BOLD), gap(1),
+              grid_table(d.get('upright_control', []), GRID_COLUMNS['upright_control'], CW), gap(2)]
+
+    # 13 — Functional (5 grids, each followed by its notes line if present)
+    func  = d.get('functional') or {}
+    notes = func.get('notes') or {}
+    for key, title in [
+        ('body_handling', 'BODY HANDLING'),
+        ('balance',       'BALANCE'),
+        ('transfer',      'TRANSFER'),
+        ('wheelchair',    'WHEELCHAIR SKILLS'),
+        ('walking',       'WALKING'),
+    ]:
+        story += [Paragraph(f'<b>FUNCTIONAL — {title}</b>', S_BOLD), gap(1),
+                  grid_table(func.get(key, []), GRID_COLUMNS['functional'], CW)]
+        note = notes.get(key, '')
+        if note:
+            story.append(rs([('Notes', note)], CW))
+        story.append(gap(2))
+
+    # 14 — Outcome Measures
+    om = d.get('outcome_measures') or {}
+    story.append(rs([
+        ('', Paragraph('<b>OUTCOME MEASURES</b>', S_LABEL)),
+        ('10MWT', om.get('tenmwt', '')),
+        ('SCIM',  om.get('scim', '')),
+        ('WISCI', om.get('wisci', '')),
+    ], CW))
+    story.append(gap(2))
+
+    # 15 — Assistive Aids
+    aa = d.get('assistive_aids') or {}
+    story.append(rs([
+        ('', Paragraph('<b>ASSISTIVE AIDS</b>', S_LABEL)),
+        ('Wheelchair', _ls(aa.get('wheelchair'))),
+        ('Cushion',    _ls(aa.get('cushion'))),
+        ('Orthosis',   aa.get('orthosis', '')),
+    ], CW))
+    story.append(gap(2))
+
+    # 16 — Narrative tail: PT Impression / STG / LTG / Plan
+    story.append(rs([
+        ('', Paragraph('<b>PT IMPRESSION</b>', S_LABEL)),
+        (None, Paragraph(d.get('pt_impression', ''), S_NORMAL)),
+        ('', Paragraph('<b>SHORT TERM GOALS</b>', S_LABEL)),
+        (None, Paragraph(d.get('stg', ''), S_NORMAL)),
+        ('', Paragraph('<b>LONG TERM GOALS</b>', S_LABEL)),
+        (None, Paragraph(d.get('ltg', ''), S_NORMAL)),
+        ('', Paragraph('<b>PLAN OF TREATMENT</b>', S_LABEL)),
+        (None, Paragraph(d.get('plan', ''), S_NORMAL)),
+    ], CW))
+
+    # 17 — Sign & chop footer
+    story += sign_chop_block()
+
     return story
 
 
