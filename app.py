@@ -21,6 +21,7 @@ import pdf_amputation
 import pdf_neuro
 import pdf_hand
 import pdf_burn
+import pdf_sci
 
 def resource_path(relative):
     if hasattr(sys, '_MEIPASS'):
@@ -56,7 +57,7 @@ FORM_REGISTRY = [
     { 'id': 'BURN',        'label': 'Burn',               'icon': '&#128293;', 'badge': 'BN',  'group': 'Musculoskeletal',   'ready': True,  'pdf_episode': pdf_burn.generate_episode_pdf,       'pdf_single': pdf_burn.generate_burn_pdf           },
     # ── Neurological ─────────────────────────────────
     { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',      'ready': True,  'pdf_episode': pdf_neuro.generate_episode_pdf,      'pdf_single': pdf_neuro.generate_neuro_pdf         },
-    { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#9855;',   'badge': 'SC',  'group': 'Neurological',      'ready': True  },
+    { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#9855;',   'badge': 'SC',  'group': 'Neurological',      'ready': True,  'pdf_episode': pdf_sci.generate_episode_pdf,        'pdf_single': pdf_sci.generate_sci_pdf             },
     { 'id': 'VESTIBULAR',  'label': 'Vestibular',         'icon': '&#128261;', 'badge': 'VB',  'group': 'Neurological',      'ready': False },
     { 'id': 'FACIAL',      'label': 'Facial',             'icon': '&#128580;', 'badge': 'FC',  'group': 'Neurological',      'ready': False },
     # ── Cardiorespiratory ─────────────────────────────
