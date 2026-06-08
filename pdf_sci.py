@@ -137,6 +137,48 @@ def grid_table(grid_rows, columns, width):
     return t
 
 
+def _pair_half(title, rows, half_w, lab_ratio=0.40):
+    """One side of a pair_box: bold title row + label/value rows, BORDERLESS
+    (the outer pair_box owns the box + divider). title rows span both cols."""
+    inner, spans = [], []
+    if title:
+        inner.append([Paragraph(f'<b>{title}</b>', S_LABEL), '']); spans.append(0)
+    for lab, val in rows:
+        if lab is None or lab == '':
+            vp = val if not isinstance(val, str) else Paragraph(val, S_NORMAL)
+            inner.append([vp, '']); spans.append(len(inner) - 1)
+        else:
+            inner.append([Paragraph(f'<b>{lab}</b>', S_NORMAL),
+                          val if not isinstance(val, str) else Paragraph(str(val), S_NORMAL)])
+    t = Table(inner, colWidths=[half_w * lab_ratio, half_w * (1 - lab_ratio)])
+    st = [('TOPPADDING',(0,0),(-1,-1),2),('BOTTOMPADDING',(0,0),(-1,-1),2),
+          ('LEFTPADDING',(0,0),(-1,-1),4),('RIGHTPADDING',(0,0),(-1,-1),4),
+          ('VALIGN',(0,0),(-1,-1),'TOP'),('FONTSIZE',(0,0),(-1,-1),7),
+          ('LINEBELOW',(0,0),(-1,-2),0.3,LGREY)]
+    for i in spans: st.append(('SPAN',(0,i),(1,i)))
+    t.setStyle(TableStyle(st))
+    return t
+
+
+def pair_box(left, right, width=CW):
+    """Equal-height side-by-side pair. left/right = (title, [(label,value),...]).
+    ONE outer rectangle + center divider; both halves draw flush regardless of
+    content height (kills the staircase)."""
+    half = width / 2.0
+    outer = Table([[_pair_half(*left, half), _pair_half(*right, half)]],
+                  colWidths=[half, half])
+    outer.setStyle(TableStyle([
+        ('BOX',          (0,0), (-1,-1), 0.5, BLACK),
+        ('LINEAFTER',    (0,0), (0,-1),  0.5, BLACK),
+        ('VALIGN',       (0,0), (-1,-1), 'TOP'),
+        ('LEFTPADDING',  (0,0), (-1,-1), 0),
+        ('RIGHTPADDING', (0,0), (-1,-1), 0),
+        ('TOPPADDING',   (0,0), (-1,-1), 0),
+        ('BOTTOMPADDING',(0,0), (-1,-1), 0),
+    ]))
+    return outer
+
+
 def _build_story(d):
     story   = []
     patient = ensure_dict(d.get('patient'))
@@ -145,90 +187,47 @@ def _build_story(d):
     story.append(patient_bar(patient, REF))
     story.append(gap(2))
 
-    # 1 — Diagnosis & Management
-    story.append(rs([
-        ('', Paragraph('<b>DIAGNOSIS &amp; MANAGEMENT</b>', S_LABEL)),
-        ('Diagnosis',            d.get('diagnosis', '')),
-        ("Doctor's Management",  d.get('dr_management', '')),
-    ], CW))
+    # Pair 1 — Diagnosis & Management | Problem
+    story.append(pair_box(
+        ('DIAGNOSIS & MANAGEMENT', [
+            ('Diagnosis',           d.get('diagnosis', '')),
+            ("Doctor's Management", d.get('dr_management', '')),
+        ]),
+        ('PROBLEM', [
+            (None, Paragraph(d.get('problem', ''), S_NORMAL)),
+        ]),
+    ))
     story.append(gap(2))
 
-    # 2 — Problem
-    story.append(rs([
-        ('', Paragraph('<b>PROBLEM</b>', S_LABEL)),
-        (None, Paragraph(d.get('problem', ''), S_NORMAL)),
-    ], CW))
-    story.append(gap(2))
-
-    # 3 — Pain Score (VAS)
-    pain = d.get('pain') or {}
-    story.append(rs([
-        ('', Paragraph('<b>PAIN SCORE (VAS)</b>', S_LABEL)),
-        ('Pre',  str(pain.get('pre', '')) + '/10'),
-        ('Post', str(pain.get('post', '')) + '/10'),
-    ], CW))
-    story.append(gap(2))
-
-    # 4 — History
-    story.append(rs([
-        ('', Paragraph('<b>HISTORY</b>', S_LABEL)),
-        ('Current History', d.get('current_history', '')),
-        ('Past History',    d.get('past_history', '')),
-    ], CW))
-    story.append(gap(2))
-
-    # 5 — Special Questions
+    # Pair 2 — History | Special Questions
     sq = d.get('special_questions') or {}
-    story.append(rs([
-        ('', Paragraph('<b>SPECIAL QUESTIONS</b>', S_LABEL)),
-        ('Date of Surgery', sq.get('date_surgery', '')),
-        ('Occupation',      sq.get('occupation', '')),
-        ('Investigation',   sq.get('investigation', '')),
-    ], CW))
+    story.append(pair_box(
+        ('HISTORY', [
+            ('Current History', d.get('current_history', '')),
+            ('Past History',    d.get('past_history', '')),
+        ]),
+        ('SPECIAL QUESTIONS', [
+            ('Date of Surgery', sq.get('date_surgery', '')),
+            ('Occupation',      sq.get('occupation', '')),
+            ('Investigation',   sq.get('investigation', '')),
+        ]),
+    ))
     story.append(gap(2))
 
-    # 6 — Home Environment
-    story.append(rs([
-        ('', Paragraph('<b>HOME ENVIRONMENT</b>', S_LABEL)),
-        (None, Paragraph(d.get('home_environment', ''), S_NORMAL)),
-    ], CW))
-    story.append(gap(2))
-
-    # 7 — Respiratory
-    resp = d.get('respiratory') or {}
-    story.append(rs([
-        ('', Paragraph('<b>RESPIRATORY</b>', S_LABEL)),
-        ('Breathing Pattern', _ls(resp.get('breathing_pattern'))),
-        ('Cough',             resp.get('cough', '')),
-        ('Vital Capacity',    resp.get('vc', '')),
-        ('PEFR',              resp.get('pefr', '')),
-    ], CW))
-    story.append(gap(2))
-
-    # 8 — Skin Integrity
-    story.append(rs([
-        ('', Paragraph('<b>SKIN INTEGRITY</b>', S_LABEL)),
-        (None, Paragraph(d.get('skin_integrity', ''), S_NORMAL)),
-    ], CW))
-    story.append(gap(2))
-
-    # 9 — Sensory (dermatomes) grid
+    # Full-width grids: Sensory → Proprioception → MMT → Upright Control
     story += [Paragraph('<b>SENSORY (DERMATOMES)</b>', S_BOLD), gap(1),
               grid_table(d.get('sensory', []), GRID_COLUMNS['sensory'], CW), gap(2)]
 
-    # 10 — Proprioception grid
     story += [Paragraph('<b>PROPRIOCEPTION</b>', S_BOLD), gap(1),
               grid_table(d.get('proprioception', []), GRID_COLUMNS['proprioception'], CW), gap(2)]
 
-    # 11 — MMT grid
     story += [Paragraph('<b>MUSCLE STRENGTH (MMT) / PROM / MAS</b>', S_BOLD), gap(1),
               grid_table(d.get('mmt', []), GRID_COLUMNS['mmt'], CW), gap(2)]
 
-    # 12 — Upright Control grid
     story += [Paragraph('<b>UPRIGHT CONTROL</b>', S_BOLD), gap(1),
               grid_table(d.get('upright_control', []), GRID_COLUMNS['upright_control'], CW), gap(2)]
 
-    # 13 — Functional (5 grids, each followed by its notes line if present)
+    # Full-width: 5 Functional grids + conditional Notes lines
     func  = d.get('functional') or {}
     notes = func.get('notes') or {}
     for key, title in [
@@ -245,7 +244,35 @@ def _build_story(d):
             story.append(rs([('Notes', note)], CW))
         story.append(gap(2))
 
-    # 14 — Outcome Measures
+    # Pair 3 — Respiratory | Skin Integrity
+    resp = d.get('respiratory') or {}
+    story.append(pair_box(
+        ('RESPIRATORY', [
+            ('Breathing Pattern', _ls(resp.get('breathing_pattern'))),
+            ('Cough',             resp.get('cough', '')),
+            ('Vital Capacity',    resp.get('vc', '')),
+            ('PEFR',              resp.get('pefr', '')),
+        ]),
+        ('SKIN INTEGRITY', [
+            (None, Paragraph(d.get('skin_integrity', ''), S_NORMAL)),
+        ]),
+    ))
+    story.append(gap(2))
+
+    # Pair 4 — Pain Score (VAS) | Home Environment
+    pain = d.get('pain') or {}
+    story.append(pair_box(
+        ('PAIN SCORE (VAS)', [
+            ('Pre',  str(pain.get('pre', '')) + '/10'),
+            ('Post', str(pain.get('post', '')) + '/10'),
+        ]),
+        ('HOME ENVIRONMENT', [
+            (None, Paragraph(d.get('home_environment', ''), S_NORMAL)),
+        ]),
+    ))
+    story.append(gap(2))
+
+    # Full-width: Outcome Measures + Assistive Aids
     om = d.get('outcome_measures') or {}
     story.append(rs([
         ('', Paragraph('<b>OUTCOME MEASURES</b>', S_LABEL)),
@@ -255,7 +282,6 @@ def _build_story(d):
     ], CW))
     story.append(gap(2))
 
-    # 15 — Assistive Aids
     aa = d.get('assistive_aids') or {}
     story.append(rs([
         ('', Paragraph('<b>ASSISTIVE AIDS</b>', S_LABEL)),
