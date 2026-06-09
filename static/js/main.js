@@ -1036,6 +1036,7 @@ const Main = (function () {
     else if (formType === 'NEURO')      parts = _buildMpisNeuro();
     else if (formType === 'HAND')       parts = _buildMpisHand();
     else if (formType === 'BURN')       parts = _buildMpisBurn();
+    else if (formType === 'SCI')        parts = _buildMpisSci();
     else                                parts = _buildMpisMs();
     await _doCopyMpis(parts, header);
   }
@@ -1873,6 +1874,156 @@ const Main = (function () {
     parts.push(DIV);
     return parts;
   }
+
+  function _buildMpisSci() {
+  var d = window.ActiveForm ? window.ActiveForm.collect() : {};
+  var p = d.patient || {};
+  var DIV = MPIS_DIV, dash = MPIS_DASH;
+  var parts = [];
+  function line(label, val) { if (val && String(val).trim()) parts.push(label + String(val).trim()); }
+  function chips(label, arr){ if (arr && arr.length) parts.push(label + arr.join(', ')); }
+  // four-state grid serializer. cols: [[colId,'Label'], ...]
+  function grid(title, rows, cols) {
+    if (!rows || !rows.length) return;
+    var body = [];
+    rows.forEach(function (r) {
+      var vals = cols.map(function (c) {
+        if (!(c[0] in r)) return null;             // greyed cell -> skip (key absent)
+        var v = r[c[0]];
+        return c[1] + ':' + (v === '' ? '—' : v); // blank -> em-dash
+      }).filter(Boolean);
+      if (vals.length) body.push('  ' + (r.label || '') + '  ' + vals.join('  '));
+    });
+    if (!body.length) return;                        // empty grid -> omit heading
+    parts.push(title);
+    body.forEach(function (l) { parts.push(l); });
+    parts.push('');
+  }
+
+  // ── Header ──
+  parts.push('SPINAL CORD INJURY ASSESSMENT');
+  parts.push(DIV);
+  parts.push('Name  : ' + (p.name||'') + '   Date : ' + (p.date||''));
+  if (p.type === 'local') {                          // FormBase emits `type`, not `pt_type`
+    parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+  } else {
+    parts.push('Passport : ' + (p.passport||'') + '   Country : ' + (p.country||'') + '   Age : ' + (p.age||''));
+  }
+  parts.push('Sex   : ' + (p.sex||''));
+  parts.push('');
+
+  // ── 1. SUBJECTIVE ──
+  parts.push(dash); parts.push('SUBJECTIVE ASSESSMENT'); parts.push('');
+  line('Diagnosis        : ', d.diagnosis);
+  line("Doctor's Mgmt    : ", d.dr_management);
+  line('Problem          : ', d.problem);
+  var sq = d.special_questions || {};
+  if (sq.date_surgery || sq.occupation || sq.investigation) {
+    parts.push('');
+    parts.push('SPECIAL QUESTIONS');
+    line('Date of Surgery  : ', sq.date_surgery);
+    line('Occupation       : ', sq.occupation);
+    line('Investigation    : ', sq.investigation);
+  }
+  parts.push('');
+  line('Current History  : ', d.current_history);
+  line('Past History     : ', d.past_history);
+  var pain = d.pain || {};
+  if (pain.pre || pain.post) {
+    parts.push('');
+    parts.push('PAIN SCORE (VAS)');
+    parts.push('PRE: ' + (pain.pre||'0') + '/10   POST: ' + (pain.post||'0') + '/10');
+  }
+  parts.push('');
+
+  // ── 2. OBJECTIVE ──
+  var f  = d.functional || {};
+  var fn = f.notes || {};
+  var rsp = d.respiratory || {};
+  var aa  = d.assistive_aids || {};
+  var om  = d.outcome_measures || {};
+  var anyGrid = [d.sensory, d.proprioception, d.mmt, d.upright_control,
+                 f.body_handling, f.balance, f.transfer, f.wheelchair, f.walking]
+                 .some(function(g){ return g && g.length; });
+  var hasResp = (rsp.breathing_pattern && rsp.breathing_pattern.length) || rsp.cough || rsp.vc || rsp.pefr;
+  var hasAids = (aa.wheelchair && aa.wheelchair.length) || (aa.cushion && aa.cushion.length) || aa.orthosis;
+  var hasOm   = om.tenmwt || om.scim || om.wisci;
+  var hasObj  = anyGrid || hasResp || hasAids || hasOm || d.skin_integrity || d.home_environment;
+
+  if (hasObj) {
+    parts.push(dash); parts.push('OBJECTIVE ASSESSMENT'); parts.push('');
+
+    grid('SENSORY (Pin Prick / Light Touch)', d.sensory,
+         [['pp_l','PP L'],['pp_r','PP R'],['lt_l','LT L'],['lt_r','LT R']]);
+    grid('PROPRIOCEPTION', d.proprioception, [['r','R'],['l','L']]);
+    grid('MMT / PROM / MAS', d.mmt,
+         [['mmt_l','MMT L'],['mmt_r','MMT R'],['prom_l','PROM L'],['prom_r','PROM R'],['mas_l','MAS L'],['mas_r','MAS R']]);
+    grid('UPRIGHT CONTROL', d.upright_control,
+         [['flex_l','Flex L'],['flex_r','Flex R'],['ext_l','Ext L'],['ext_r','Ext R']]);
+
+    // FUNCTIONAL — 5 grids, then notes grouped
+    var FCOL = [['val','Grade']];
+    grid('FUNCTIONAL — Body Handling', f.body_handling, FCOL);
+    grid('FUNCTIONAL — Balance',       f.balance,       FCOL);
+    grid('FUNCTIONAL — Transfers',     f.transfer,      FCOL);
+    grid('FUNCTIONAL — Wheelchair',    f.wheelchair,    FCOL);
+    grid('FUNCTIONAL — Walking',       f.walking,       FCOL);
+    if (fn.body_handling || fn.balance || fn.transfer || fn.wheelchair || fn.walking) {
+      line('Body Handling Notes : ', fn.body_handling);
+      line('Balance Notes       : ', fn.balance);
+      line('Transfer Notes      : ', fn.transfer);
+      line('Wheelchair Notes    : ', fn.wheelchair);
+      line('Walking Notes       : ', fn.walking);
+      parts.push('');
+    }
+
+    if (hasResp) {
+      parts.push('RESPIRATORY');
+      chips('Breathing Pattern : ', rsp.breathing_pattern);
+      line('Cough             : ', rsp.cough);
+      line('VC                : ', rsp.vc);
+      line('PEFR              : ', rsp.pefr);
+      parts.push('');
+    }
+    if (hasAids) {
+      parts.push('ASSISTIVE AIDS');
+      chips('Wheelchair : ', aa.wheelchair);
+      chips('Cushion    : ', aa.cushion);
+      line('Orthosis   : ', aa.orthosis);
+      parts.push('');
+    }
+    if (hasOm) {
+      parts.push('OUTCOME MEASURES');
+      line('10MWT : ', om.tenmwt);
+      line('SCIM  : ', om.scim);
+      line('WISCI : ', om.wisci);
+      parts.push('');
+    }
+    line('SKIN INTEGRITY   : ', d.skin_integrity);
+    line('HOME ENVIRONMENT : ', d.home_environment);
+    parts.push('');
+  }
+
+  // ── 3. ANALYSIS ──
+  if (d.pt_impression) {
+    parts.push(dash); parts.push('ANALYSIS'); parts.push('');
+    parts.push(d.pt_impression); parts.push('');
+  }
+  // ── 4. PLAN ──
+  if (d.stg || d.ltg) {
+    parts.push(dash); parts.push('PLAN'); parts.push('');
+    line('Short-term Goals : ', d.stg);
+    line('Long-term Goals  : ', d.ltg);
+    parts.push('');
+  }
+  // ── 5. INTERVENTION ──
+  if (d.plan) {
+    parts.push(dash); parts.push('INTERVENTION'); parts.push('');
+    parts.push(d.plan); parts.push('');
+  }
+
+  return parts;
+}
 
   // ── MPIS session header modal ──────────────────
   function showMpisHeaderModal() {
