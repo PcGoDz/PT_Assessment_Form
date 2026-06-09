@@ -1,72 +1,67 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 
 ---
 
 ## Where we left off
 
-Execution session. Built and shipped `pdf_sci.py` (SCI PDF Milestone-3) in full, then did a
-layout-refinement pass. All 6 plan tasks + the refactor are committed on this worktree branch.
-No push — by design; the whole SCI milestone ships together.
+SCI MPIS Milestone-4 built, verified, and merged. **SCI is now fully shipped** — form + polish +
+templates + PDF + MPIS, the whole ladder. Main tip: `0b7a608`.
 
-**Milestone-3 commits (6):**
-- `feat(sci): pdf_sci.py skeleton (header + entry points)`
-- `feat(sci): four-state grid_table + rs/_ls helpers`
-- `feat(sci): full _build_story in spec section order`
-- `feat(sci): wire pdf_sci into FORM_REGISTRY + import`
-- `build(sci): add pdf_sci.py to PyInstaller datas`
-- `refactor(sci): side-by-side equal-height pairs for short sections`
+**What was built this session:**
+- `static/js/main.js`: added `_buildMpisSci()` (~line 1878, SOAPIER structure: SUBJECTIVE /
+  OBJECTIVE / ANALYSIS / PLAN / INTERVENTION) + dispatch wire in `copyToMpisAuto()` (~line 1039,
+  before MS fallback). Commit `06f6e51`.
+  - Grid serializer handles four cell states: greyed (key absent → skip), blank → em-dash, NT/N-A
+    pass through, real value plain.
+  - OBJECTIVE block guarded by `hasObj` — skips entirely if all grids + resp + aids + OM are empty.
+  - Foreign patient header: shows Passport/Country instead of IC.
+- Grand merge: `--no-ff` of branch `claude/pensive-poitras-c94773` (10 commits) → main.
+  Merge commit `0b7a608`, pushed to origin. Branch history preserved (not squashed).
 
-**What was built:**
-- `pdf_sci.py` — new file. Self-contained SCI PDF generator (house style matches `pdf_neuro.py`).
-  Local helpers: `rs()`, `_ls()`, `grid_table()` (four cell states: real / blank→em-dash / NT / N-A /
-  greyed→grey bg), `_pair_half()` + `pair_box()` (equal-height side-by-side, kills staircase).
-  `_build_story` sections: 4 `pair_box` pairs for short text sections
-  (Diagnosis+Management|Problem, History|Special Questions, Respiratory|Skin, Pain|Home Env),
-  full-width grids (sensory / proprioception / MMT / upright / 5×functional), full-width rs() for
-  Outcome Measures + Assistive Aids, narrative tail (Impression/STG/LTG/Plan) + sign/chop.
-  KKM Ref: `fisio / b.pen. 4 / Pind. 2 / 2019`.
-- `app.py` — `import pdf_sci` added (after `import pdf_burn`); SCI `FORM_REGISTRY` row updated
-  with `pdf_episode` + `pdf_single` keys. `_PDF_GENERATORS` / `_SINGLE_PDF_GENERATORS` derive
-  automatically from registry — not hand-edited.
-- `pt_assessment.spec` — `('pdf_sci.py', '.')` added to `datas` list (after `pdf_burn.py` line).
-
-**Verified:** app-level QA 9/9 pass (boot, form open, save, both PDF routes give SCI not MS-fallback,
-four cell states, flush pairs, MPIS no-crash, long-entry wrap). Real-app export eyeballed clean
-by Miruya. Page count: 2 (down from 3 with the flat layout).
+**Verified:** Opus Node harness 8/8 pass (SCI heading, 5 SOAPIER sections, greyed cells absent,
+blank→em-dash, NT passthrough, empty grids omitted). Miruya smoke-tested worktree + post-merge
+main: form + PDF + MPIS all confirmed. PDF↔MPIS tally green.
 
 ---
 
 ## Half-done
 
-Nothing mid-flight. Clean working tree (scratch files deleted before wind-down).
+Nothing mid-flight. Clean tree on main. Worktrees removed (pensive-poitras gone; eloquent-williamson
+folder still on disk — see Gotchas).
 
 ---
 
 ## Next session priorities
 
-1. **SCI MPIS — Milestone-4.** Build the MPIS copy builder for SCI form. No plan written yet.
-2. **SCI stamp-button cosmetic restyle** — NT stamp + "Mark block N/A" ghost placeholder styling.
-   Deferred from Milestone-2.
+1. **SCI stamp-button cosmetic restyle** — NT stamp + "Mark block N/A" ghost placeholder styling.
+   Deferred from Milestone-2. First visible next SCI task.
+2. **SCI abbreviation legend/key** — SCI grids use shorthands (N/I/A/NT, MMT grades, MAS, G/F/P,
+   U/A/S/I/NT) with no on-screen or PDF key. Scope TBD; clinical wording to confirm with Miruya
+   before building. See BACKLOG for full abbreviation list.
 3. **Fix B — DB migration versioning.** `PRAGMA user_version` gates in `database.py` (lines 80-101).
-   Test against a COPY of the real DB; keep `try/except` INSIDE the v0→v1 gate as belt-and-suspenders.
-4. **Git push the whole SCI milestone** (form + polish + templates + PDF + MPIS) in one deliberate
-   pass once MPIS is done. NOT before.
+   Test against a COPY of the real DB; keep `try/except` INSIDE the v0→v1 gate.
+4. **WORKFLOW.md split** — now 264 lines (over 250 ceiling). Candidate split: move Cowork section
+   or Anti-Repeat list into a companion file. Do before next substantial edit to WORKFLOW.md.
 
 ---
 
 ## Gotchas discovered this session
 
-- **Stale-mount phantom (Cowork sandbox).** Sandbox-side file reads can return frozen/stale contents
-  after a Windows-side write (frozen mtime, mount cache). Symptom: sandbox says file is N bytes but
-  Windows confirms different content. Tiebreak: render an artifact (generate the PDF); if generation
-  succeeds with the correct output, trust the Windows-side source, not the sandbox read. Never repair
-  off mount-only bytes. Full incident write-up at
-  `ARCHIVE/incident-2026-06-08-sci-pdf-stale-mount-phantom.md` (written by Opus; check main branch
-  if not in this worktree).
-- **`pair_box()` promotion candidate** — local to `pdf_sci.py` for now. See BACKLOG deferred.
-  Don't add to `DESIGN_SYSTEM.md` or `pdf_platypus_base.py` until a second form needs it.
+- **Pre-merge dirty-tree check is mandatory.** Main had 1 real modified file (BACKLOG.md, 14-line
+  pair_box write-up) + untracked incident notes that the branch commit adds as new files. Discarding
+  without reading would have lost the pair_box detail; untracked notes matching incoming branch files
+  would have caused "untracked files would be overwritten" abort. Correct sequence: `git diff` first,
+  identify real vs phantom changes, discard stale, delete untracked files the merge will add, then
+  merge. Flagging and waiting for Miruya's call on the BACKLOG divergence was the right move.
+- **Stale `.git/index.lock`** — 0-byte, dated 2026-06-08, blocked all git ops. No live git process
+  (`tasklist | findstr git` empty) → safe to `del .git\index.lock`. Already in WORKFLOW Anti-Repeat.
+- **`eloquent-williamson-fb5d6d` folder still on disk.** Windows blocked `git worktree remove`
+  because CC's session CWD was inside it. Manual `rmdir /s /q` from Explorer/cmd once that session
+  is closed. Same situation as the optimistic-banzai note in BACKLOG.
+- **Stray branch `claude/elastic-mayer-cb8c07`** — unrelated, not part of SCI, left alone. Worth
+  investigating/culling a future session.
 
 ---
 

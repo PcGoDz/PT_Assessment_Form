@@ -169,6 +169,15 @@ XSS: user-supplied strings injected into innerHTML must go through `escapeHtml()
 
 ---
 
+## End-of-session hygiene (run before wind-down)
+
+- **Commit real work; discard/delete junk.** Litter files (`cd`, `git`, `_write_test.txt` etc.) get left by mistyped redirects — delete before commit. Loose docs (plans, incident notes) belong on the branch, not floating in main.
+- **Clear stale `.git/index.lock`** — a dead process leaves a 0-byte lock that blocks all git ops. Check: `tasklist | findstr git` → empty = stale, safe to `del .git\index.lock`. See Anti-Repeat for the full rule.
+- **No orphan worktrees after merge.** After `--no-ff` merge: remove both branch worktree and any empty CC-session stray (`git worktree remove --force`), then `git worktree prune`, then `git branch -d`. Folder may persist if Windows blocks deletion (CWD in use) — note it for manual `rmdir /s /q` cleanup.
+- **Verify tree clean before merge.** `git status` + `git diff --ignore-all-space --stat` on main. Real modifications (not CRLF phantoms) must be resolved — either committed or deliberately discarded — before a merge that touches the same files.
+
+---
+
 ## Anti-Repeat Rules
 
 Things relearned the hard way. Do not let happen again:

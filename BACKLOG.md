@@ -85,8 +85,22 @@
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
 - **pair_box() equal-height helper — promotion candidate.** `pdf_sci.py` has a LOCAL `_pair_half()` + `pair_box()` that renders side-by-side sections as one outer box + centre divider (kills staircase on lopsided pairs). Pattern is reusable for other form PDFs but currently lives only in `pdf_sci.py`. When a second form needs the same layout, promote to `pdf_platypus_base.py`. Do NOT move it speculatively — one confirmed consumer is not enough.
-- **SCI stamp button cosmetic** — NT stamp + "Mark block N/A" ghost placeholder styling. Deferred from Milestone-2.
-- **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26` folder may persist on disk after git worktree remove. Safe to delete manually.
+- **SCI stamp button cosmetic** — NT stamp + "Mark block N/A" ghost placeholder styling. Deferred from Milestone-2. Next visible SCI task.
+- **SCI abbreviation legend/key (NEW).** SCI grids use shorthands with no on-screen or PDF key.
+  Abbreviation sets to document (best-guess expansions — Miruya to confirm clinical wording before building):
+  - Sensory (Pin Prick / Light Touch): N=Normal / I=Impaired / A=Absent / NT=Not Tested
+  - MMT grades: 0,1,2-,2,2+,3-,3,3+,4-,4,4+,5 (Oxford scale) + NT=Not Tested
+  - MAS (Modified Ashworth): 0,1,1+,2,3,4 + NT=Not Tested
+  - Upright Control: G=Good / F=Fair / P=Poor / N/A=Not Applicable
+  - Functional: U=Unable / A=Assisted / S=Supervised / I=Independent / NT=Not Tested (confirm with Miruya)
+  - Balance: G=Good / F=Fair / P=Poor / NT=Not Tested
+  Scope TBD: screen-only tooltip? PDF footnote? MPIS key? Clinical input needed before building.
+- **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26` and
+  `PT_Assessment-worktrees\eloquent-williamson-fb5d6d` folders may persist on disk after git worktree
+  remove (Windows blocks deletion when a session's CWD is inside). Safe to `rmdir /s /q` manually
+  from Explorer/cmd once those sessions are closed.
+- **Stray branch `claude/elastic-mayer-cb8c07`** — unrelated to SCI, left untouched 2026-06-09.
+  Investigate and cull when convenient.
 - VESTIBULAR / FACIAL forms (Neurological group, NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
