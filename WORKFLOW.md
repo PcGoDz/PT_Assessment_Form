@@ -1,5 +1,52 @@
 # WORKFLOW.md — Procedures
 
+## Cowork two-window workflow (READ ONLY IF you are in Cowork mode)
+
+> **Self-gate:** If you are a normal Claude Code session (single window, executing directly), SKIP
+> this section — it does not apply. It applies ONLY when running as the Cowork "brain" window with a
+> separate CC "muscle" window. If you don't know which you are: Cowork mode has the Linux sandbox
+> mount + card UI; plain CC works the repo natively. When in doubt, you're probably CC — skip.
+
+**The split.** Cowork = brain (plan, vet, audit, verify). CC (separate window) = muscle (writes code,
+runs git, builds). Git is the source of truth that passes work between them. Miruya is NOT a code
+reviewer (see RULES.md) — Cowork does the fidelity checks CC's output needs.
+
+**THE RULE THAT MAKES THIS SAFE — verify via git, never via raw mount read.**
+The Cowork Linux sandbox mounts the Windows working tree over virtiofs/FUSE. A raw read (`cat`/`Read`/
+`ls`) of a file CC just wrote can return a STALE pre-write snapshot — the "time-dilation bubble."
+Git object reads (`git show <branch>:<file>`, `git cat-file`, `git diff <commit>`) read `.git`
+directly and are ALWAYS current. So:
+- To verify CC's work, read COMMITTED BYTES via git, NOT a raw read of the file CC just touched.
+- A raw read disagreeing with git is almost always mount lag, not real breakage — tiebreak by
+  rendering the artifact (generate the PDF / run the build). If it produces correct output, trust git.
+- BUT mount lag is not the only failure: a genuinely broken working file (e.g. an interrupted CC write
+  that truncates) is real. Distinguish: stable byte count across re-reads + parse/build failure = real
+  breakage; frozen/old content that git contradicts = lag. (Both happened — 2026-06-08 lag false-alarm;
+  2026-06-09 a real truncated `pdf_sci.py`, restored from the committed blob.)
+
+**MOUNT THE WORKTREE.** When work lives on a branch in a worktree folder, mount THAT folder in Cowork,
+not just main. If only main is mounted, the worktree isn't visible and git lists it `prunable`
+(it is NOT gone — just unmounted). Faceplant logged 2026-06-09. The worktree's `.git` file points to a
+Windows path that won't resolve inside the sandbox, so git commands won't run FROM the worktree dir —
+read its committed bytes via MAIN's git store (`git show <branch>:<file>`), and write working files via
+bash (the Cowork Write tool only maps the originally-mounted folder).
+
+**STANDING RULE — do not tear down branch-only work.** A worktree's checked-out files are "cash on
+hand." Until the branch merges to main, keep the worktree MATERIALIZED. Do NOT `git worktree prune`
+or archive the CC session (archiving wipes the worktree folder; commits survive but the visible files
+don't). Miruya verifies with his own eyes — respect it. Cull the worktree only AFTER a deliberate
+merge to main.
+
+**Loose files are the recurring bite.** Plans, incident notes, anything written to the worktree is an
+uncommitted working file until CC commits it — exactly what got truncated 2026-06-09. Have CC commit
+docs/notes FIRST, then build.
+
+**`.gitattributes` handles CRLF.** A Windows checkout read in the Linux sandbox shows phantom CRLF/LF
+"everything modified." `git diff --ignore-all-space` → 0 real lines = phantom. Never
+`git add --renormalize` from the sandbox. All git write ops happen CC-side (Windows).
+
+---
+
 ## Adding a new form — Full Checklist
 
 1. Add entry to `FORM_REGISTRY` in `app.py`, set `ready=True`
