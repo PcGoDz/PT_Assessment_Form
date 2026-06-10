@@ -118,3 +118,69 @@ Total content preserved: 100%. Total content always loaded: reduced from 2385 li
 This was a dry-run via Claude chat (not a Claude Code session). The skill itself (`claude-md-refactor`) was drafted but not yet installed. To install it, package the skill folder as a `.skill` file and add to your Claude Code skills directory.
 
 If anything in the refactored files looks wrong (categorization, missing content, formatting), the original CLAUDE.md remains intact at `/mnt/user-data/uploads/CLAUDE.md` — nothing was destroyed.
+
+---
+---
+
+# REFACTOR_NOTES — Companion-file split + FORM_PIPELINE fold-in
+
+Date: 2026-06-10
+Performed by: Cowork session (principles of `project-bible-refactor` skill, edited in place)
+
+This is the second refactor pass. The first (above, 2026-05-16) split the monolithic CLAUDE.md into
+the hierarchy. This pass fixed two COMPANION files that had since outgrown the 250-line ceiling, AND
+folded in new canon (the SCI front-half design pipeline). Exactly the "split WORKFLOW by domain"
+scenario the 2026-05-16 notes predicted in suggestion #4.
+
+One dry-dock trip, two payloads. Nothing deleted — content moved verbatim, plus net-new pipeline
+material added. Edited in place (live git repo), NOT delivered as a ZIP — the skill's *principles*
+were applied (≤250 ceiling, categorize-by-concern, no duplication, no content deleted), not its
+package-and-overwrite delivery, since the bible was already in the skill's target structure.
+
+## Before / after line counts
+
+| File                   | Before | After | Note |
+|------------------------|--------|-------|------|
+| CLAUDE.md              | 135    | 131   | index updated (2 new pointers, WORKFLOW desc trimmed) |
+| RULES.md               | 87     | 87    | untouched |
+| WORKFLOW.md            | 273 ⚠  | 230   | checklist + initFormContext moved out |
+| FORM_PIPELINE.md       | —      | 89    | NEW |
+| DESIGN_SYSTEM.md       | 311 ⚠  | 245   | PDF Layout section moved out |
+| DESIGN_SYSTEM-pdf.md   | —      | 73    | NEW |
+| HANDOVER.md            | 70     | 70    | untouched (overwritten at wind-down) |
+| BACKLOG.md             | 169    | 166   | split item closed |
+
+Both over-ceiling files now under 250. No file over ceiling.
+
+## What moved where (verbatim, not rewritten)
+
+- **DESIGN_SYSTEM.md → DESIGN_SYSTEM-pdf.md (NEW):** the entire "PDF Layout" section — PDF
+  Primitives, Component Recipes, Anti-patterns, Pre-ship Checklist. DESIGN_SYSTEM.md keeps the
+  form-HTML layout primitives + CSS-classes section, with a one-line pointer where PDF used to be.
+- **WORKFLOW.md → FORM_PIPELINE.md (NEW):** "Adding a new form — Full Checklist" (13 steps) +
+  "initFormContext() — central boilerplate engine". WORKFLOW.md keeps all cross-cutting procedures
+  (Cowork two-window, MPIS pattern, PDF/JS rules, editing discipline, hygiene, anti-repeat,
+  debugging, build/deploy, seed_db, clinical reference), with a one-line pointer to FORM_PIPELINE.
+
+## What's NET-NEW (the fold-in)
+
+FORM_PIPELINE.md leads with the **front-half design pipeline** that previously lived only in Miruya's
+head, proven on SCI: (1) TRANSCRIBE borang to flat verbatim list, (2) CLASSIFY chip/dropdown/textbox,
+(3) SEQUENCE by SOAPIER not paper order, (4) ASSESS THE BACKBONE (heavy structural pieces),
+(5) BRAINSTORM LIGHTEST IMPL (borrow/configure before net-new; SCI's from-scratch `assessment_grid.js`
+noted as the exception). Then the existing milestone ladder, then the lifted checklist + initFormContext.
+
+## Placement decision (the passover's open call)
+
+"Classify field chip/dropdown/textbox" — WORKFLOW (process) or DESIGN_SYSTEM (component decision)?
+Resolved with both files open: the *pipeline step* lives in FORM_PIPELINE (process); the
+*chip-vs-dropdown criteria* already existed in DESIGN_SYSTEM.md ("Chip-style selectors") and stays
+there. Step 2 REFERENCES it. No content duplicated across files.
+
+## Headroom flag for the NEXT session
+
+DESIGN_SYSTEM.md landed at **245** — under ceiling but tight. The BACKLOG "DESIGN_SYSTEM documentation
+gaps" item (backfill `.neuro-grid`, `.mov-*`, `{% block extra_js %}`, etc.) would add to
+DESIGN_SYSTEM.md and could push it back over 250. If that backfill happens, split the Component
+Recipes section into its own file at the same time, or move the CSS-classes index out. Don't let it
+silently breach.

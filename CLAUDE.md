@@ -117,8 +117,10 @@ SOAP notes carry session header fields: `queue_no`, `kpi_30min`, `seen_by`, `nex
 ## Where to find what
 
 - **RULES.md** — How to work with Miruya (skill level, partnership rules, communication preferences, behavioral DOs and DON'Ts).
-- **WORKFLOW.md** — Procedures: adding new forms, MPIS builder pattern, build/deploy, debugging steps.
-- **DESIGN_SYSTEM.md** — UI patterns for form templates AND PDF output. Layout primitives (non-negotiable), component recipes, anti-patterns. Read before writing any form HTML or PDF generator. Now includes a PDF Layout section (added Session C).
+- **WORKFLOW.md** — Procedures: MPIS builder pattern, PDF/JS rules, Cowork two-window, build/deploy, debugging, anti-repeat, clinical reference.
+- **FORM_PIPELINE.md** — How to build a new form start to finish: front-half design pipeline (transcribe → classify → sequence → assess backbone → brainstorm lightest), milestone ladder, 13-step checklist, initFormContext engine. Read when activating a new form.
+- **DESIGN_SYSTEM.md** — UI patterns for form templates (HTML). Layout primitives (non-negotiable), component recipes, anti-patterns. Read before writing any form HTML.
+- **DESIGN_SYSTEM-pdf.md** — PDF output patterns (ReportLab/Platypus). Primitives, component recipes, anti-patterns, pre-ship checklist. Read before writing any `pdf_<form>.py`.
 - **HANDOVER.md** — Current session state, what's half-done, next session priorities. Overwrite each session.
 - **BACKLOG.md** — Known issues, deferred work, persistent reminders (git push), TODO list.
 - **ARCHIVE/** — Historical handover notes and old lessons-learned sections. Don't load unless investigating history.
