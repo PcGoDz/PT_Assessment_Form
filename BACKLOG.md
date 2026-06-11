@@ -85,8 +85,8 @@
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
 - **pair_box() equal-height helper — promotion candidate.** `pdf_sci.py` has a LOCAL `_pair_half()` + `pair_box()` that renders side-by-side sections as one outer box + centre divider (kills staircase on lopsided pairs). Pattern is reusable for other form PDFs but currently lives only in `pdf_sci.py`. When a second form needs the same layout, promote to `pdf_platypus_base.py`. Do NOT move it speculatively — one confirmed consumer is not enough.
-- **SCI stamp button cosmetic** — NT stamp + "Mark block N/A" ghost placeholder styling. Deferred from Milestone-2. Next visible SCI task.
-- **SCI abbreviation legend/key (NEW).** SCI grids use shorthands with no on-screen or PDF key.
+- ~~**SCI stamp button cosmetic**~~ DONE 2026-06-11. Filled-tonal M3 restyle of `.grid-stamp-btn` (accent-light fill, accent text, pill radius, hover→accent-mid, active scale, `margin:-10px 0 16px` optical). CSS-only, merged `33887fe`.
+- **SCI abbreviation legend/key.** SCI grids use shorthands with no on-screen or PDF key. Two approaches surfaced 2026-06-11: (a) separate legend/key, or (b) expand single-letter cell values inline to full words (NT → Not Tested). CLINICAL INPUT NEEDED FIRST — same letter differs per grid (`A`=Absent in sensory vs Assisted in functional), so wrong expansion = silent clinical-accuracy bug. Confirm per-grid wording + scope (screen/PDF/MPIS) + column-width impact before build.
   Abbreviation sets to document (best-guess expansions — Miruya to confirm clinical wording before building):
   - Sensory (Pin Prick / Light Touch): N=Normal / I=Impaired / A=Absent / NT=Not Tested
   - MMT grades: 0,1,2-,2,2+,3-,3,3+,4-,4,4+,5 (Oxford scale) + NT=Not Tested
@@ -95,10 +95,11 @@
   - Functional: U=Unable / A=Assisted / S=Supervised / I=Independent / NT=Not Tested (confirm with Miruya)
   - Balance: G=Good / F=Fair / P=Poor / NT=Not Tested
   Scope TBD: screen-only tooltip? PDF footnote? MPIS key? Clinical input needed before building.
-- **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26` and
-  `PT_Assessment-worktrees\eloquent-williamson-fb5d6d` folders may persist on disk after git worktree
-  remove (Windows blocks deletion when a session's CWD is inside). Safe to `rmdir /s /q` manually
-  from Explorer/cmd once those sessions are closed.
+- **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26`,
+  `PT_Assessment-worktrees\eloquent-williamson-fb5d6d`, and `PT_Assessment-worktrees\vigorous-lehmann-32404d`
+  (added 2026-06-11) folders may persist on disk after git worktree remove (Windows blocks deletion
+  when a session's CWD is inside). Branches deleted + pruned fine; only the folders linger. Safe to
+  `rmdir /s /q` manually from Explorer/cmd once those sessions are closed.
 - **Stray branch `claude/elastic-mayer-cb8c07`** — unrelated to SCI, left untouched 2026-06-09.
   Investigate and cull when convenient.
 - VESTIBULAR / FACIAL forms (Neurological group, NO ready).

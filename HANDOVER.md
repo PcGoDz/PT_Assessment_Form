@@ -1,70 +1,71 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-06-09
+Last updated: 2026-06-11
 
 ---
 
 ## Where we left off
 
-SCI MPIS Milestone-4 built, verified, and merged. **SCI is now fully shipped** — form + polish +
-templates + PDF + MPIS, the whole ladder. Main tip: `0b7a608`.
+SCI stamp-button cosmetic restyle — **shipped**. The three grid stamp buttons (`stampSensoryNT`,
+`stampMmtNT`, `stampUprightNA`, all sharing `.grid-stamp-btn`) went from flat dashed-ghost to a
+**filled-tonal M3** treatment: `background:var(--accent-light); color:var(--accent)`, no border,
+`border-radius:20px` pill, `font-weight:500`, hover deepens to `--accent-mid` + white, `:active
+scale(0.98)`. Matches the existing `.chip.active` / `.nav-item.active` recipe in `style.css` (same
+token pair), so it's consistent with canon, not a new invention. Dark mode handled free by the token
+flip. CSS-only, scoped `<style>` block in `templates/forms/sci.html`. No HTML/JS/logic/DB/PDF touched.
 
-**What was built this session:**
-- `static/js/main.js`: added `_buildMpisSci()` (~line 1878, SOAPIER structure: SUBJECTIVE /
-  OBJECTIVE / ANALYSIS / PLAN / INTERVENTION) + dispatch wire in `copyToMpisAuto()` (~line 1039,
-  before MS fallback). Commit `06f6e51`.
-  - Grid serializer handles four cell states: greyed (key absent → skip), blank → em-dash, NT/N-A
-    pass through, real value plain.
-  - OBJECTIVE block guarded by `hasObj` — skips entirely if all grids + resp + aids + OM are empty.
-  - Foreign patient header: shows Passport/Country instead of IC.
-- Grand merge: `--no-ff` of branch `claude/pensive-poitras-c94773` (10 commits) → main.
-  Merge commit `0b7a608`, pushed to origin. Branch history preserved (not squashed).
-
-**Verified:** Opus Node harness 8/8 pass (SCI heading, 5 SOAPIER sections, greyed cells absent,
-blank→em-dash, NT passthrough, empty grids omitted). Miruya smoke-tested worktree + post-merge
-main: form + PDF + MPIS all confirmed. PDF↔MPIS tally green.
+Final vertical spacing after a long tuning chase: `margin:-10px 0 16px` (~10px above / 16px below).
+The extra bottom room is a deliberate optical correction for the card-header's visual weight pressing
+down — Miruya tuned it live in DevTools. Six commits on branch `claude/vigorous-lehmann-32404d`,
+merged `--no-ff` to main as `33887fe`, pushed to origin. Verified on origin/main: final margin in
+pushed bytes, branch deleted.
 
 ---
 
 ## Half-done
 
-Nothing mid-flight. Clean tree on main. Worktrees removed (pensive-poitras gone; eloquent-williamson
-folder still on disk — see Gotchas).
+Nothing mid-flight. Clean tree on main (`33887fe`).
 
 ---
 
 ## Next session priorities
 
-1. **SCI stamp-button cosmetic restyle** — NT stamp + "Mark block N/A" ghost placeholder styling.
-   Deferred from Milestone-2. First visible next SCI task.
-2. **SCI abbreviation legend/key** — SCI grids use shorthands (N/I/A/NT, MMT grades, MAS, G/F/P,
-   U/A/S/I/NT) with no on-screen or PDF key. Scope TBD; clinical wording to confirm with Miruya
-   before building. See BACKLOG for full abbreviation list.
-3. **Fix B — DB migration versioning.** `PRAGMA user_version` gates in `database.py` (lines 80-101).
-   Test against a COPY of the real DB; keep `try/except` INSIDE the v0→v1 gate.
-4. **WORKFLOW.md split** — now 264 lines (over 250 ceiling). Candidate split: move Cowork section
-   or Anti-Repeat list into a companion file. Do before next substantial edit to WORKFLOW.md.
+1. **Fix B — DB migration versioning.** `PRAGMA user_version` gates in `database.py` (lines 80-101).
+   GREENLIT. Test against a COPY of the real DB; keep `try/except` INSIDE the v0→v1 gate. Miruya does
+   NOT review backend — his job after is clinical testing only (open forms → save → reload → confirm
+   data survived). Needs full brain + test-on-a-copy ritual — not an end-of-day hour.
+2. **SCI abbreviation legend / inline letter-expansion.** Parked tonight. Two competing approaches
+   surfaced: (a) a separate legend/key, or (b) expand the single-letter cell values inline to full
+   words (NT → Not Tested etc.). CLINICAL INPUT NEEDED FIRST — same letter means different things per
+   grid (e.g. `A` = Absent in sensory vs Assisted in functional), so wrong expansion = silent
+   clinical-accuracy bug. Miruya confirms per-grid wording + decides screen/PDF/MPIS scope + column
+   width impact BEFORE build. Full abbreviation list in BACKLOG.
+3. **Next form scoping** — the creative one. Front-half pipeline (transcribe → classify → sequence →
+   assess backbone → lightest impl) per FORM_PIPELINE.md. Form not yet picked — chat-window decision.
 
 ---
 
 ## Gotchas discovered this session
 
-- **Pre-merge dirty-tree check is mandatory.** Main had 1 real modified file (BACKLOG.md, 14-line
-  pair_box write-up) + untracked incident notes that the branch commit adds as new files. Discarding
-  without reading would have lost the pair_box detail; untracked notes matching incoming branch files
-  would have caused "untracked files would be overwritten" abort. Correct sequence: `git diff` first,
-  identify real vs phantom changes, discard stale, delete untracked files the merge will add, then
-  merge. Flagging and waiting for Miruya's call on the BACKLOG divergence was the right move.
-- **Stale `.git/index.lock`** — 0-byte, dated 2026-06-08, blocked all git ops. No live git process
-  (`tasklist | findstr git` empty) → safe to `del .git\index.lock`. Already in WORKFLOW Anti-Repeat.
-- **`eloquent-williamson-fb5d6d` folder still on disk.** Windows blocked `git worktree remove`
-  because CC's session CWD was inside it. Manual `rmdir /s /q` from Explorer/cmd once that session
-  is closed. Same situation as the optimistic-banzai note in BACKLOG.
-- **Stray branch `claude/elastic-mayer-cb8c07`** — unrelated, not part of SCI, left alone. Worth
-  investigating/culling a future session.
+- **Specificity decides which CSS rule wins — tune against the COMPUTED style, not the source file.**
+  Spent three spacing passes tuning against `.card-body { padding:18px }` (style.css:453) when the
+  form runs inside `<main class="m3-main">`, so the MORE-SPECIFIC `.m3-main .card-body { padding:
+  var(--sp-5) var(--sp-6) }` (style.css:1809, = 20px) actually applied. The "number's right but it
+  still looks off" symptom = you're computing against a rule the cascade overrode. Fix: read the
+  element's Computed tab / box-model in DevTools for the REAL applied value before doing margin math.
+  Candidate for WORKFLOW Anti-Repeat (added).
+- **Cowork sandbox mounts MAIN, not the worktree — read committed bytes via the BRANCH, not HEAD.**
+  `git show HEAD:...` returned stale main code; `git show claude/<branch>:...` returned the real work.
+  The worktree folder shows `prunable` in `git worktree list` because it isn't mounted in the sandbox.
+  Already a WORKFLOW two-window rule; re-confirmed live tonight.
+- **`vigorous-lehmann-32404d` worktree folder still on disk.** Windows blocked `git worktree remove`
+  (CC session CWD inside it). Branch deleted + pruned fine; folder needs manual `rmdir /s /q` once the
+  CC window closes. Same as optimistic-banzai / eloquent-williamson strays — added to BACKLOG.
 
 ---
 
 ## What to skip for now
 
-VESTIBULAR / FACIAL / remaining NO forms. See BACKLOG.md for the full deferred list.
+The full SCI/app UI redesign (look-feel + page wiring — the "real dress" Miruya itches for) — its own
+session with a fresh brain + clean runway, not a tired hour. VESTIBULAR / FACIAL / remaining NO forms.
+See BACKLOG.md for the full deferred list.
