@@ -1882,8 +1882,8 @@ const Main = (function () {
   var parts = [];
   function line(label, val) { if (val && String(val).trim()) parts.push(label + String(val).trim()); }
   function chips(label, arr){ if (arr && arr.length) parts.push(label + arr.join(', ')); }
-  // four-state grid serializer. cols: [[colId,'Label'], ...]
-  function grid(title, rows, cols) {
+  // four-state grid serializer. cols: [[colId,'Label'], ...], legend: optional key caption string
+  function grid(title, rows, cols, legend) {
     if (!rows || !rows.length) return;
     var body = [];
     rows.forEach(function (r) {
@@ -1897,6 +1897,7 @@ const Main = (function () {
     if (!body.length) return;                        // empty grid -> omit heading
     parts.push(title);
     body.forEach(function (l) { parts.push(l); });
+    if (legend) parts.push('  [Key] ' + legend);
     parts.push('');
   }
 
@@ -1953,21 +1954,23 @@ const Main = (function () {
   if (hasObj) {
     parts.push(dash); parts.push('OBJECTIVE ASSESSMENT'); parts.push('');
 
+    // Legend strings from SciForm.LEGENDS — keep in sync with static/js/form_sci.js LEGENDS const.
+    var L = SciForm.LEGENDS;
     grid('SENSORY (Pin Prick / Light Touch)', d.sensory,
-         [['pp_l','PP L'],['pp_r','PP R'],['lt_l','LT L'],['lt_r','LT R']]);
-    grid('PROPRIOCEPTION', d.proprioception, [['r','R'],['l','L']]);
+         [['pp_l','PP L'],['pp_r','PP R'],['lt_l','LT L'],['lt_r','LT R']], L.sensory);
+    grid('PROPRIOCEPTION', d.proprioception, [['r','R'],['l','L']], L.sensory);
     grid('MMT / PROM / MAS', d.mmt,
-         [['mmt_l','MMT L'],['mmt_r','MMT R'],['prom_l','PROM L'],['prom_r','PROM R'],['mas_l','MAS L'],['mas_r','MAS R']]);
+         [['mmt_l','MMT L'],['mmt_r','MMT R'],['prom_l','PROM L'],['prom_r','PROM R'],['mas_l','MAS L'],['mas_r','MAS R']], L.mmt);
     grid('UPRIGHT CONTROL', d.upright_control,
-         [['flex_l','Flex L'],['flex_r','Flex R'],['ext_l','Ext L'],['ext_r','Ext R']]);
+         [['flex_l','Flex L'],['flex_r','Flex R'],['ext_l','Ext L'],['ext_r','Ext R']], L.upright);
 
     // FUNCTIONAL — 5 grids, then notes grouped
     var FCOL = [['val','Grade']];
-    grid('FUNCTIONAL — Body Handling', f.body_handling, FCOL);
-    grid('FUNCTIONAL — Balance',       f.balance,       FCOL);
-    grid('FUNCTIONAL — Transfers',     f.transfer,      FCOL);
-    grid('FUNCTIONAL — Wheelchair',    f.wheelchair,    FCOL);
-    grid('FUNCTIONAL — Walking',       f.walking,       FCOL);
+    grid('FUNCTIONAL — Body Handling', f.body_handling, FCOL, L.functional);
+    grid('FUNCTIONAL — Balance',       f.balance,       FCOL, L.balance);
+    grid('FUNCTIONAL — Transfers',     f.transfer,      FCOL, L.functional);
+    grid('FUNCTIONAL — Wheelchair',    f.wheelchair,    FCOL, L.functional);
+    grid('FUNCTIONAL — Walking',       f.walking,       FCOL, L.functional);
     if (fn.body_handling || fn.balance || fn.transfer || fn.wheelchair || fn.walking) {
       line('Body Handling Notes : ', fn.body_handling);
       line('Balance Notes       : ', fn.balance);

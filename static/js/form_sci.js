@@ -16,6 +16,15 @@ var SciForm = (function () {
   var OPT_FUNC    = ['U','A','S','I','NT'];
   var OPT_BALANCE = ['G','F','P','NT'];
 
+  // Legend captions — single source for screen + MPIS. PDF mirrors these in pdf_sci.py (keep in sync).
+  var LEGENDS = {
+    sensory:    'N=Normal · I=Impaired · A=Absent · NT=Not Tested',
+    functional: 'U=Unable · A=Assisted · S=Supervised · I=Independent · NT=Not Tested',
+    balance:    'G=Good · F=Fair · P=Poor · NT=Not Tested',
+    upright:    'G=Good · F=Fair · P=Poor · N/A=Not Applicable',
+    mmt:        'MMT: Oxford 0–5 · MAS: Modified Ashworth 0–4 · NT=Not Tested'
+  };
+
   // ── Grid configs ────────────────────────────────────────────────────────
 
   var SENSORY_ROWS = ['C2','C3','C4','C5','C6','C7','C8',
@@ -92,16 +101,33 @@ var SciForm = (function () {
   // ── Grid instances (multi-instance — each closed over its container) ────
   var gSensory, gMmt, gUpright, gProp, gFuncBody, gFuncBalance, gFuncTransfer, gFuncWc, gFuncWalk;
 
+  function _addLegend(containerId, legendKey) {
+    var el = document.createElement('div');
+    el.className = 'grid-legend';
+    el.textContent = LEGENDS[legendKey];
+    var container = document.getElementById(containerId);
+    if (container) container.after(el);
+  }
+
   function initGrids() {
     gSensory      = AssessmentGrid.create({ containerId:'grid-sensory',       rows:SENSORY_ROWS,       columns:SENSORY_COLS });
+    _addLegend('grid-sensory', 'sensory');
     gMmt          = AssessmentGrid.create({ containerId:'grid-mmt',           rows:MMT_ROWS,           columns:MMT_COLS, greyout:MMT_GREYOUT });
+    _addLegend('grid-mmt', 'mmt');
     gUpright      = AssessmentGrid.create({ containerId:'grid-upright',       rows:UPRIGHT_ROWS,       columns:UPRIGHT_COLS });
+    _addLegend('grid-upright', 'upright');
     gProp         = AssessmentGrid.create({ containerId:'grid-prop',          rows:PROP_ROWS,          columns:PROP_COLS });
+    _addLegend('grid-prop', 'sensory');
     gFuncBody     = AssessmentGrid.create({ containerId:'grid-func-body',     rows:FUNC_BODY_ROWS,     columns:FUNC_COL });
+    _addLegend('grid-func-body', 'functional');
     gFuncBalance  = AssessmentGrid.create({ containerId:'grid-func-balance',  rows:FUNC_BALANCE_ROWS,  columns:FUNC_COL_B });
+    _addLegend('grid-func-balance', 'balance');
     gFuncTransfer = AssessmentGrid.create({ containerId:'grid-func-transfer', rows:FUNC_TRANSFER_ROWS, columns:FUNC_COL });
+    _addLegend('grid-func-transfer', 'functional');
     gFuncWc       = AssessmentGrid.create({ containerId:'grid-func-wc',       rows:FUNC_WC_ROWS,       columns:FUNC_COL });
+    _addLegend('grid-func-wc', 'functional');
     gFuncWalk     = AssessmentGrid.create({ containerId:'grid-func-walk',     rows:FUNC_WALK_ROWS,     columns:FUNC_COL });
+    _addLegend('grid-func-walk', 'functional');
   }
 
   // ── Stamp buttons ────────────────────────────────────────────────────────
@@ -302,6 +328,7 @@ var SciForm = (function () {
 
   // ── Public API ────────────────────────────────────────────────────────────
   return {
+    LEGENDS:        LEGENDS,
     initGrids:      initGrids,
     stampSensoryNT: stampSensoryNT,
     stampMmtNT:     stampMmtNT,

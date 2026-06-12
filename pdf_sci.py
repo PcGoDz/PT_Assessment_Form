@@ -20,6 +20,21 @@ TITLE = ['KEMENTERIAN KESIHATAN MALAYSIA',
          'PHYSIOTHERAPY DEPARTMENT',
          'SPINAL CORD INJURY ASSESSMENT FORM']
 
+# Legend captions (verbatim from KKM borang) — keep in sync with static/js/form_sci.js LEGENDS const.
+# NT / N/A are app additions (stamp buttons), appended as a clearly app-side tail.
+PDF_LEGENDS = {
+    'sensory':    'N- Normal/ I- Impaired/ A- Absent · NT=Not Tested',
+    'functional': 'U – Unable, A – Assisted, S- Supervised, I – Independent · NT=Not Tested',
+    'balance':    'G- Good, F – Fair, P- Poor · NT=Not Tested',
+    'upright':    'Good/ Fair/Poor · N/A=Not Applicable',
+    'mmt':        'MMT: Oxford scale 0–5 · MAS: Modified Ashworth 0–4 · NT=Not Tested',
+}
+
+
+def _legend(txt):
+    return Paragraph(f'<i>{txt}</i>', S_SMALL)
+
+
 # ── Grid column maps — mirror static/js/form_sci.js column configs ──
 # Each entry: list of (col_id, header_label) in display order.
 GRID_COLUMNS = {
@@ -216,16 +231,20 @@ def _build_story(d):
 
     # Full-width grids: Sensory → Proprioception → MMT → Upright Control
     story += [Paragraph('<b>SENSORY (DERMATOMES)</b>', S_BOLD), gap(1),
-              grid_table(d.get('sensory', []), GRID_COLUMNS['sensory'], CW), gap(2)]
+              grid_table(d.get('sensory', []), GRID_COLUMNS['sensory'], CW),
+              _legend(PDF_LEGENDS['sensory']), gap(2)]
 
     story += [Paragraph('<b>PROPRIOCEPTION</b>', S_BOLD), gap(1),
-              grid_table(d.get('proprioception', []), GRID_COLUMNS['proprioception'], CW), gap(2)]
+              grid_table(d.get('proprioception', []), GRID_COLUMNS['proprioception'], CW),
+              _legend(PDF_LEGENDS['sensory']), gap(2)]
 
     story += [Paragraph('<b>MUSCLE STRENGTH (MMT) / PROM / MAS</b>', S_BOLD), gap(1),
-              grid_table(d.get('mmt', []), GRID_COLUMNS['mmt'], CW), gap(2)]
+              grid_table(d.get('mmt', []), GRID_COLUMNS['mmt'], CW),
+              _legend(PDF_LEGENDS['mmt']), gap(2)]
 
     story += [Paragraph('<b>UPRIGHT CONTROL</b>', S_BOLD), gap(1),
-              grid_table(d.get('upright_control', []), GRID_COLUMNS['upright_control'], CW), gap(2)]
+              grid_table(d.get('upright_control', []), GRID_COLUMNS['upright_control'], CW),
+              _legend(PDF_LEGENDS['upright']), gap(2)]
 
     # Full-width: 5 Functional grids + conditional Notes lines
     func  = d.get('functional') or {}
@@ -237,8 +256,10 @@ def _build_story(d):
         ('wheelchair',    'WHEELCHAIR SKILLS'),
         ('walking',       'WALKING'),
     ]:
+        leg_key = 'balance' if key == 'balance' else 'functional'
         story += [Paragraph(f'<b>FUNCTIONAL — {title}</b>', S_BOLD), gap(1),
-                  grid_table(func.get(key, []), GRID_COLUMNS['functional'], CW)]
+                  grid_table(func.get(key, []), GRID_COLUMNS['functional'], CW),
+                  _legend(PDF_LEGENDS[leg_key])]
         note = notes.get(key, '')
         if note:
             story.append(rs([('Notes', note)], CW))
