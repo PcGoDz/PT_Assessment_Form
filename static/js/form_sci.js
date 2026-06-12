@@ -16,16 +16,32 @@ var SciForm = (function () {
   var OPT_FUNC    = ['U','A','S','I','NT'];
   var OPT_BALANCE = ['G','F','P','NT'];
 
+  // Full-word display maps for screen dropdowns — stored VALUES stay as letters; only displayed text changes.
+  // MMT/MAS grades are numeric scales — NO label map (keep grades as-is).
+  var LBL_SENSORY = { N:'Normal', I:'Impaired', A:'Absent', NT:'Not Tested' };
+  var LBL_FUNC    = { U:'Unable', A:'Assisted', S:'Supervised', I:'Independent', NT:'Not Tested' };
+  var LBL_UPRIGHT = { G:'Good', F:'Fair', P:'Poor', 'N/A':'Not Applicable' };
+  var LBL_BALANCE = { G:'Good', F:'Fair', P:'Poor', NT:'Not Tested' };
+
+  // Legend captions — single source for MPIS. PDF mirrors these in pdf_sci.py (keep in sync).
+  var LEGENDS = {
+    sensory:    'N=Normal · I=Impaired · A=Absent · NT=Not Tested',
+    functional: 'U=Unable · A=Assisted · S=Supervised · I=Independent · NT=Not Tested',
+    balance:    'G=Good · F=Fair · P=Poor · NT=Not Tested',
+    upright:    'G=Good · F=Fair · P=Poor · N/A=Not Applicable',
+    mmt:        'MMT: Oxford 0–5 · MAS: Modified Ashworth 0–4 · NT=Not Tested'
+  };
+
   // ── Grid configs ────────────────────────────────────────────────────────
 
   var SENSORY_ROWS = ['C2','C3','C4','C5','C6','C7','C8',
     'T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12',
     'L1','L2','L3','L4','L5','S1','S2','S3','S4'];
   var SENSORY_COLS = [
-    { id:'pp_l', label:'Pin Prick L',   type:'dropdown', options:OPT_SENSORY },
-    { id:'pp_r', label:'Pin Prick R',   type:'dropdown', options:OPT_SENSORY },
-    { id:'lt_l', label:'Light Touch L', type:'dropdown', options:OPT_SENSORY },
-    { id:'lt_r', label:'Light Touch R', type:'dropdown', options:OPT_SENSORY }
+    { id:'pp_l', label:'Pin Prick L',   type:'dropdown', options:OPT_SENSORY, optionLabels:LBL_SENSORY },
+    { id:'pp_r', label:'Pin Prick R',   type:'dropdown', options:OPT_SENSORY, optionLabels:LBL_SENSORY },
+    { id:'lt_l', label:'Light Touch L', type:'dropdown', options:OPT_SENSORY, optionLabels:LBL_SENSORY },
+    { id:'lt_r', label:'Light Touch R', type:'dropdown', options:OPT_SENSORY, optionLabels:LBL_SENSORY }
   ];
 
   // Row label = "JOINT Movement" exactly (stable data key)
@@ -69,16 +85,16 @@ var SciForm = (function () {
 
   var UPRIGHT_ROWS = ['Hip','Knee','Ankle'];
   var UPRIGHT_COLS = [
-    { id:'flex_l', label:'Flex L', type:'dropdown', options:OPT_UPRIGHT },
-    { id:'flex_r', label:'Flex R', type:'dropdown', options:OPT_UPRIGHT },
-    { id:'ext_l',  label:'Ext L',  type:'dropdown', options:OPT_UPRIGHT },
-    { id:'ext_r',  label:'Ext R',  type:'dropdown', options:OPT_UPRIGHT }
+    { id:'flex_l', label:'Flex L', type:'dropdown', options:OPT_UPRIGHT, optionLabels:LBL_UPRIGHT },
+    { id:'flex_r', label:'Flex R', type:'dropdown', options:OPT_UPRIGHT, optionLabels:LBL_UPRIGHT },
+    { id:'ext_l',  label:'Ext L',  type:'dropdown', options:OPT_UPRIGHT, optionLabels:LBL_UPRIGHT },
+    { id:'ext_r',  label:'Ext R',  type:'dropdown', options:OPT_UPRIGHT, optionLabels:LBL_UPRIGHT }
   ];
 
   var PROP_ROWS = ['Shoulder','Elbow','Wrist','Thumb','Hip','Knee','Ankle','Big Toe'];
   var PROP_COLS = [
-    { id:'r', label:'R', type:'dropdown', options:OPT_SENSORY },
-    { id:'l', label:'L', type:'dropdown', options:OPT_SENSORY }
+    { id:'r', label:'R', type:'dropdown', options:OPT_SENSORY, optionLabels:LBL_SENSORY },
+    { id:'l', label:'L', type:'dropdown', options:OPT_SENSORY, optionLabels:LBL_SENSORY }
   ];
 
   var FUNC_BODY_ROWS    = ['Roll side to side','Come to sit','Shift','Raise (off pressure)'];
@@ -86,8 +102,8 @@ var SciForm = (function () {
   var FUNC_TRANSFER_ROWS= ['Bed','Chair','Floor','Car','Toilet/Commode Chair'];
   var FUNC_WC_ROWS      = ['Level Propulsion','Ramp','Curbs','Rough Terrain','Wheelie'];
   var FUNC_WALK_ROWS    = ['Sit to stand','Level','Rough Surface','Stairs'];
-  var FUNC_COL   = [{ id:'val', label:'Grade', type:'dropdown', options:OPT_FUNC }];
-  var FUNC_COL_B = [{ id:'val', label:'Grade', type:'dropdown', options:OPT_BALANCE }];
+  var FUNC_COL   = [{ id:'val', label:'Grade', type:'dropdown', options:OPT_FUNC,    optionLabels:LBL_FUNC }];
+  var FUNC_COL_B = [{ id:'val', label:'Grade', type:'dropdown', options:OPT_BALANCE, optionLabels:LBL_BALANCE }];
 
   // ── Grid instances (multi-instance — each closed over its container) ────
   var gSensory, gMmt, gUpright, gProp, gFuncBody, gFuncBalance, gFuncTransfer, gFuncWc, gFuncWalk;
@@ -302,6 +318,7 @@ var SciForm = (function () {
 
   // ── Public API ────────────────────────────────────────────────────────────
   return {
+    LEGENDS:        LEGENDS,
     initGrids:      initGrids,
     stampSensoryNT: stampSensoryNT,
     stampMmtNT:     stampMmtNT,

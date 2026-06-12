@@ -86,15 +86,24 @@
 - No ARIA attributes anywhere — low clinical priority.
 - **pair_box() equal-height helper — promotion candidate.** `pdf_sci.py` has a LOCAL `_pair_half()` + `pair_box()` that renders side-by-side sections as one outer box + centre divider (kills staircase on lopsided pairs). Pattern is reusable for other form PDFs but currently lives only in `pdf_sci.py`. When a second form needs the same layout, promote to `pdf_platypus_base.py`. Do NOT move it speculatively — one confirmed consumer is not enough.
 - ~~**SCI stamp button cosmetic**~~ DONE 2026-06-11. Filled-tonal M3 restyle of `.grid-stamp-btn` (accent-light fill, accent text, pill radius, hover→accent-mid, active scale, `margin:-10px 0 16px` optical). CSS-only, merged `33887fe`.
-- **SCI abbreviation legend/key.** SCI grids use shorthands with no on-screen or PDF key. Two approaches surfaced 2026-06-11: (a) separate legend/key, or (b) expand single-letter cell values inline to full words (NT → Not Tested). CLINICAL INPUT NEEDED FIRST — same letter differs per grid (`A`=Absent in sensory vs Assisted in functional), so wrong expansion = silent clinical-accuracy bug. Confirm per-grid wording + scope (screen/PDF/MPIS) + column-width impact before build.
-  Abbreviation sets to document (best-guess expansions — Miruya to confirm clinical wording before building):
-  - Sensory (Pin Prick / Light Touch): N=Normal / I=Impaired / A=Absent / NT=Not Tested
-  - MMT grades: 0,1,2-,2,2+,3-,3,3+,4-,4,4+,5 (Oxford scale) + NT=Not Tested
-  - MAS (Modified Ashworth): 0,1,1+,2,3,4 + NT=Not Tested
-  - Upright Control: G=Good / F=Fair / P=Poor / N/A=Not Applicable
-  - Functional: U=Unable / A=Assisted / S=Supervised / I=Independent / NT=Not Tested (confirm with Miruya)
-  - Balance: G=Good / F=Fair / P=Poor / NT=Not Tested
-  Scope TBD: screen-only tooltip? PDF footnote? MPIS key? Clinical input needed before building.
+- ~~**SCI abbreviation legend/key.**~~ DONE 2026-06-12. Per-grid caption legends added to
+  screen (form_sci.js LEGENDS const → captions under each grid), PDF (pdf_sci.py, verbatim-
+  borang punctuation), and MPIS (_buildMpisSci legend line per section). Wording transcribed
+  VERBATIM from KKM borang (SCI.pdf), not guessed. NT/N-A confirmed as app additions (not on
+  borang). A=Absent (sensory/prop) vs A=Assisted (functional) collision handled by per-grid
+  placement. Branch: claude/exciting-lewin-bf53d0.
+
+- **Functional scale: 'Supervised' is clinically low-value for quick PT notes.** Miruya
+  (clinical) flags that the borang's 4-tier assistance scale (U/A/S/I) over-resolves for
+  day-to-day functional notes — in practice it's mostly "can / can't", and where there's
+  nuance he writes "With guidance", not "Supervised". The S (Supervised = hands-off but
+  presence-required, a discharge-risk tier) distinction matters for formal outcome scoring
+  (SCIM/FIM) and medico-legal discharge justification, but is noise for routine notes.
+  OPTION when revisited: add "With guidance" (G) as a 6th OPT_FUNC value, OR replace the
+  scale with Miruya's real-world set (Independent / With guidance / Assisted / Unable).
+  DEFERRED — replacing scale values deviates from the KKM borang letters (preserve-KKM
+  axiom tension) and touches OPT_FUNC + saved data + PDF + MPIS. Bigger than a legend task;
+  needs its own deliberate decision. Surfaced 2026-06-12 during legend build.
 - **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26`,
   `PT_Assessment-worktrees\eloquent-williamson-fb5d6d`, and `PT_Assessment-worktrees\vigorous-lehmann-32404d`
   (added 2026-06-11) folders may persist on disk after git worktree remove (Windows blocks deletion
