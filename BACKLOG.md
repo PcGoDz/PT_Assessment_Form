@@ -78,6 +78,8 @@
 - **Icon maps missing BURN (and HAND in patient.html) — parallel to the formLabel-map gap fixed 2026-06-01.** `home.html` inline icon map (~1923) and `patient.html` Jinja `form_icons` (~476) have no BURN key (patient.html also missing HAND), so burn/hand episode cards fall to the default clipboard glyph (&#128203;). Cosmetic. Burn-glyph choice is a UI-taste call — deferred to the UI polish pass. When fixed, update ALL icon-map sites in lockstep with the label maps.
 - **pdf_burn.py auscultation prints a dangling "Crepitation:" label unconditionally.** When `ausc.crepitation` is blank the PDF still renders an empty "Crepitation:" line (the MPIS builder correctly skips it). One-line guard in `_burn_auscultation_section`. Low priority cosmetic.
 
+- **Worktree churn can corrupt `.git/config` (panic-preventer).** Seen 2026-06-12: heavy worktree add/remove/prune/force-delete left (a) Windows-CWD-locked worktree folders that won't `rmdir` until the CC session closes, AND (b) torn `.git/config` write — trailing whitespace then null-byte (`\x00`) padding — causing `fatal: bad config line N`. Commits safe in `.git/objects`; config is only settings. Fix Windows-side: rewrite the whole file fresh via `open('.git/config','wb').write(content.encode('utf-8'))` (15 lines, single trailing newline); verify: `python -c "print(b'\x00' in open('.git/config','rb').read())"` → `False`. Cowork sandbox config reads lag behind CC's fix — tiebreak via CC's authoritative `git status`.
+
 ---
 
 ## Deferred work
@@ -105,8 +107,9 @@
   axiom tension) and touches OPT_FUNC + saved data + PDF + MPIS. Bigger than a legend task;
   needs its own deliberate decision. Surfaced 2026-06-12 during legend build.
 - **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26`,
-  `PT_Assessment-worktrees\eloquent-williamson-fb5d6d`, and `PT_Assessment-worktrees\vigorous-lehmann-32404d`
-  (added 2026-06-11) folders may persist on disk after git worktree remove (Windows blocks deletion
+  `PT_Assessment-worktrees\eloquent-williamson-fb5d6d`, `PT_Assessment-worktrees\vigorous-lehmann-32404d`,
+  `PT_Assessment-worktrees\exciting-lewin-bf53d0`, and `PT_Assessment-worktrees\nice-mahavira-6a9cb1`
+  (added 2026-06-11/12) folders may persist on disk after git worktree remove (Windows blocks deletion
   when a session's CWD is inside). Branches deleted + pruned fine; only the folders linger. Safe to
   `rmdir /s /q` manually from Explorer/cmd once those sessions are closed.
 - **Stray branch `claude/elastic-mayer-cb8c07`** — unrelated to SCI, left untouched 2026-06-09.

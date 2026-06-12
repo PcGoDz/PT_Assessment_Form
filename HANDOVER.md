@@ -6,58 +6,36 @@ Last updated: 2026-06-12
 
 ## Where we left off
 
-SCI per-grid abbreviation legends — **shipped**. Merged `3908e94` (--no-ff) to main.
+SCI per-grid abbreviation legend SHIPPED and merged to main (`3908e94`). Two-commit feature: v1 `440f547` — per-grid caption legends on screen (`form_sci.js` LEGENDS const + `_addLegend()`), PDF (`pdf_sci.py` `PDF_LEGENDS` dict + `_legend()`, verbatim KKM borang punctuation), MPIS (`_buildMpisSci` `[Key]` lines). v2 `5d82e4b` — screen upgraded to full-word dropdowns via additive `optionLabels` map on `AssessmentGrid` factory column configs; screen captions removed; PDF + MPIS unchanged. Clinical wording transcribed VERBATIM from KKM SCI.pdf, not guessed. Round-trip proven: screen shows "Not Tested", stored value stays `NT`; survived F5 reload; PDF/MPIS still print compact letters.
 
-Two-commit feature on `claude/exciting-lewin-bf53d0`:
-
-**v1 (`440f547`) — legends on all three output layers:**
-- Screen: `.grid-legend` captions via `_addLegend()` injected after each grid
-- PDF: `PDF_LEGENDS` dict + `_legend()` helper in `pdf_sci.py`, verbatim KKM borang punctuation
-- MPIS: `[Key]` lines per grid in `_buildMpisSci()`, reads `SciForm.LEGENDS`
-
-**v2 (`5d82e4b`) — screen upgraded to full-word dropdowns, captions dropped:**
-- `assessment_grid.js`: additive-only `optionLabels` map on column config (no other form affected)
-- `form_sci.js`: LBL_SENSORY/FUNC/UPRIGHT/BALANCE maps + wired to column configs. MMT/MAS grades intentionally left numeric. `_addLegend` removed. `LEGENDS` const + export kept (MPIS reads it).
-- `sci.html`: `.grid-legend` CSS removed
-- `pdf_sci.py` + `main.js` (`_buildMpisSci`): **unchanged** — letters + verbatim legends in PDF, `[Key]` lines in MPIS
-
-Smoke-tested by Miruya: full words on screen, letters stored (verified via MPIS), PDF + MPIS compact letters + legends, console clean.
+Fix B (DB migration versioning) BUILT on `claude/nice-mahavira-6a9cb1` — `database.py` lines 79–108 now use `PRAGMA user_version` gates: v1 gate adds soap_notes session-header cols, v2 gate adds episodes next-appt/discharge cols, each with inner `try/except` as one-time transition safety net (existing DBs have the columns but report `user_version=0`). NOT yet verified by Cowork and NOT merged — blocked mid-session by a `.git/config` torn-write snag (see Gotchas). Deferred to next session.
 
 ---
 
 ## Half-done
 
-Nothing mid-flight. Clean tree on main (`3908e94`). Not pushed to origin yet (normal).
-
----
-
-## Worktree folder needing manual cleanup
-
-`PT_Assessment-worktrees\exciting-lewin-bf53d0` — Windows blocked `git worktree remove --force` (CC session CWD was inside it). Branch deleted + worktree registration pruned fine. Folder needs manual `rmdir /s /q` from Explorer/cmd once that CC session is closed.
-
-Same pattern as `optimistic-banzai`, `eloquent-williamson`, `vigorous-lehmann` strays in BACKLOG.
+- Fix B awaiting verification + merge. Branch `claude/nice-mahavira-6a9cb1`, `database.py` lines 79–108. Needs: (1) Cowork `git show claude/nice-mahavira-6a9cb1:database.py | grep -A 30 "PRAGMA user_version"` to verify gate structure + inner `try/except`; (2) Miruya clinical-test on a COPY of `records.db` (Flask from worktree folder → open forms → save → reload → confirm data survived version bump); (3) merge to main.
+- main is 4 commits ahead of origin — NOT pushed. Push deferred until Fix B lands.
 
 ---
 
 ## Next session priorities
 
-1. **Fix B — DB migration versioning.** `PRAGMA user_version` gates in `database.py` (lines 80-101).
-   GREENLIT. Test against a COPY of the real DB; keep `try/except` INSIDE the v0→v1 gate. Miruya does
-   NOT review backend — his job after is clinical testing only (open forms → save → reload → confirm
-   data survived). Needs full brain + test-on-a-copy ritual — not an end-of-day hour.
-2. **Next form scoping** — the creative one. Front-half pipeline (transcribe → classify → sequence →
-   assess backbone → lightest impl) per FORM_PIPELINE.md. Form not yet picked — chat-window decision.
-3. **git push** — main is 3 commits ahead of origin (`fbc7770` stamp-button session + `440f547` + `5d82e4b` + merge `3908e94`). Push when ready.
+1. Confirm `.git/config` healthy on both windows: `python -c "print(b'\x00' in open('.git/config','rb').read())"` → `False`; CC `git status` is the tiebreak.
+2. Verify Fix B: Cowork `git show claude/nice-mahavira-6a9cb1:database.py | grep -A 30 "PRAGMA user_version"` — confirm v1/v2 gate structure + inner `try/except` present.
+3. Miruya: clinical-test on DB copy → then real DB.
+4. Merge `claude/nice-mahavira-6a9cb1` to main (after verification + clinical test pass).
+5. Push all to origin in one go (5 commits ahead after Fix B merge).
 
 ---
 
 ## Gotchas discovered this session
 
-- **`optionLabels` trap: relabeling is NOT rewiring.** `<option value="NT">Not Tested</option>` — the VALUE attr is what `el.value` reads and what gets stored. Only the displayed text changes. Verified: `getData()` always returns letters. The BURN relabel bug applies here — if you ever change the stored value to the word, PDF/MPIS (which expect letters) silently break.
-- **WORKFLOW anti-repeat (carried forward):** Specificity decides CSS rule wins — tune against Computed tab, not source file. Already in WORKFLOW.md.
+- **`.git/config` torn-write from worktree churn — two forms seen 2026-06-12:** (a) trailing whitespace-only line → `fatal: bad config line N`, (b) null-byte (`\x00`) padding after rewrite → same error. Commits SAFE (live in `.git/objects`); config is only settings. Fix Windows-side: rewrite WHOLE file fresh via `open('.git/config','wb').write(content.encode('utf-8'))` (not append/trim — avoids torn tails); verify `python -c "print(b'\x00' in open('.git/config','rb').read())"` → `False`. Cowork sandbox config reads can lag behind CC's fix — tiebreak via CC `git status`. Anti-Repeat rule added to WORKFLOW.md.
+- **`optionLabels` on `AssessmentGrid` is cross-form reusable** (dropdown shows full word, stores short letter — e.g. "Not Tested" on screen, `NT` stored; verified round-trip). DESIGN_SYSTEM.md is at 246 lines — adding the Component Recipe would breach 250-line ceiling. Split DESIGN_SYSTEM.md before next recipe addition; then backfill `optionLabels` recipe in Component Recipes.
 
 ---
 
 ## What to skip for now
 
-The full SCI/app UI redesign (look-feel + page wiring). VESTIBULAR / FACIAL / remaining NO forms. See BACKLOG.md for full deferred list.
+UI revamp. VESTIBULAR / FACIAL / PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL forms. Functional-scale "With guidance" change. See BACKLOG.md for full deferred list.
