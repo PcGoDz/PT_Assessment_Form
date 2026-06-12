@@ -54,10 +54,12 @@ var AssessmentGrid = (function () {
               + 'data-row="' + esc(rowLabel) + '" data-col="' + c.id + '" '
               + 'value="' + esc(val) + '"></td>';
           }
-          // dropdown
+          // dropdown — optionLabels map is optional; if absent, displayed text = value (unchanged behaviour)
+          var labels = c.optionLabels || {};
           var opts = '<option value="">&mdash;</option>'
             + (c.options || []).map(function (o) {
-                return '<option value="' + esc(o) + '"' + (val === o ? ' selected' : '') + '>' + o + '</option>';
+                var txt = Object.prototype.hasOwnProperty.call(labels, o) ? labels[o] : o;
+                return '<option value="' + esc(o) + '"' + (val === o ? ' selected' : '') + '>' + esc(txt) + '</option>';
               }).join('');
           return '<td><select class="mov-cell-input" '
             + 'data-row="' + esc(rowLabel) + '" data-col="' + c.id + '">' + opts + '</select></td>';
