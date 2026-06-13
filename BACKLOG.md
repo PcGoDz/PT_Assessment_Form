@@ -15,8 +15,6 @@
 
 - **Twin `MARKER_COLORS` dicts are a maintenance trap.** `pdf_base.MARKER_COLORS` = dot-colour source of truth (used by `draw_markers()` for rendered dots). `pdf_platypus_base.MARKER_COLORS` = pain-only / legend-fallback — depth keys NOT present. The Session L fix only updated `pdf_base`. If the platypus-side copy is ever wired into a new render path, it will silently emit wrong colours for all burn depth markers. Consolidate (make platypus import from pdf_base) or document the split formally before the dicts drift further. (Corrected from earlier "dead" wording — both are live.)
 
-- **No DB schema version tracking — `try: ALTER / except: pass` migrations (`database.py` lines 80-101).** Schema evolves by attempting `ALTER TABLE ADD COLUMN` and swallowing `OperationalError` when the column exists. Works, but no version stamp means a deployed `records.db`'s schema state is unknowable, and there's no clean place to hang the next migration. Fix: `PRAGMA user_version` gates per migration batch. CRITICAL footgun — existing deployed DBs already have the soap_notes/episodes columns but still report `user_version=0`, so a naive version gate would re-ALTER and crash; keep `try/except` INSIDE the v0→v1 gate as belt-and-suspenders, trust version numbers for v2 onward. Test against a COPY of the real DB. Priority: High (clinical data), Effort: Small-Medium. Surfaced by GPT architecture review 2026-06-02.
-
 - **Cross-form body chart marker bleed (DATA INTEGRITY, pre-existing).** Root cause confirmed
   Session M: `get_episode_record` returns `ORDER BY updated_at DESC LIMIT 1` regardless of
   form type, so landing on Form A in an episode whose newest record is Form B fetches B's data
@@ -88,6 +86,8 @@
 - No ARIA attributes anywhere — low clinical priority.
 - **pair_box() equal-height helper — promotion candidate.** `pdf_sci.py` has a LOCAL `_pair_half()` + `pair_box()` that renders side-by-side sections as one outer box + centre divider (kills staircase on lopsided pairs). Pattern is reusable for other form PDFs but currently lives only in `pdf_sci.py`. When a second form needs the same layout, promote to `pdf_platypus_base.py`. Do NOT move it speculatively — one confirmed consumer is not enough.
 - ~~**SCI stamp button cosmetic**~~ DONE 2026-06-11. Filled-tonal M3 restyle of `.grid-stamp-btn` (accent-light fill, accent text, pill radius, hover→accent-mid, active scale, `margin:-10px 0 16px` optical). CSS-only, merged `33887fe`.
+- ~~**No DB schema version tracking — `try: ALTER / except: pass` migrations.**~~ DONE 2026-06-13. Replaced with `PRAGMA user_version` gates in `database.py` lines 79–108. v0→v1 adds soap_notes session-header cols; v1→v2 adds episodes next-appt/discharge cols. Inner `try/except` retained inside each gate as one-time transition net for mid-air DBs. Stamps to `user_version=2`. Verified live: 0→2 and 2→2 (idempotent). Branch: `claude/jolly-hodgkin-245daf`, merge `943cde7`.
+
 - ~~**SCI abbreviation legend/key.**~~ DONE 2026-06-12. Per-grid caption legends added to
   screen (form_sci.js LEGENDS const → captions under each grid), PDF (pdf_sci.py, verbatim-
   borang punctuation), and MPIS (_buildMpisSci legend line per section). Wording transcribed
@@ -108,12 +108,11 @@
   needs its own deliberate decision. Surfaced 2026-06-12 during legend build.
 - **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26`,
   `PT_Assessment-worktrees\eloquent-williamson-fb5d6d`, `PT_Assessment-worktrees\vigorous-lehmann-32404d`,
-  `PT_Assessment-worktrees\exciting-lewin-bf53d0`, and `PT_Assessment-worktrees\nice-mahavira-6a9cb1`
-  (added 2026-06-11/12) folders may persist on disk after git worktree remove (Windows blocks deletion
-  when a session's CWD is inside). Branches deleted + pruned fine; only the folders linger. Safe to
-  `rmdir /s /q` manually from Explorer/cmd once those sessions are closed.
-- **Stray branch `claude/elastic-mayer-cb8c07`** — unrelated to SCI, left untouched 2026-06-09.
-  Investigate and cull when convenient.
+  `PT_Assessment-worktrees\exciting-lewin-bf53d0`, `PT_Assessment-worktrees\nice-mahavira-6a9cb1`,
+  and `PT_Assessment-worktrees\jolly-hodgkin-245daf` (added 2026-06-13) folders may persist on disk
+  after git worktree remove (Windows blocks deletion when a session's CWD is inside). Branches deleted
+  + pruned fine; only the folders linger. Safe to `rmdir /s /q` manually from Explorer/cmd once those
+  sessions are closed.
 - VESTIBULAR / FACIAL forms (Neurological group, NO ready).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
