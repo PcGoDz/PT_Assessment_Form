@@ -21,6 +21,21 @@ The project uses a hierarchical structure (refactored 2026-05-16, DESIGN_SYSTEM.
 
 ---
 
+## Step 0: Branch & Worktree Cull (DO THIS FIRST — it is the step we keep forgetting)
+
+Stale `claude/*` branches and worktree folders pile up because no prior step asked for the cull. Run it FIRST, every session, before touching docs.
+
+1. List what exists: `git branch -a` and `git worktree list`.
+2. For each `claude/*` branch: confirm it is MERGED to main before deleting — `git branch --merged main` lists safe-to-delete branches. A branch NOT in that list has unmerged commits — do NOT delete it; note it in HANDOVER instead.
+3. Delete merged branches: `git branch -d <branch>` (lowercase -d refuses unmerged; never use -D unless the user explicitly confirms the branch is disposable).
+4. Remove merged worktrees: `git worktree remove --force <path>` then `git worktree prune`.
+5. **Windows CWD lock:** a worktree folder whose path is (or was) a live session's CWD will refuse `rmdir` until that session closes. The branch/worktree git-side removal still succeeds; only the folder lingers. List any such lingering folders in HANDOVER under "Half-done" for manual `rmdir /s /q` later — do NOT thrash trying to force it.
+6. **Config gremlin:** heavy worktree add/remove can churn `.git/config` → `fatal: bad config line N`. Commits are safe in `.git/objects`. Flatten Windows-side per BACKLOG ("Worktree churn can corrupt .git/config"); verify `python -c "print(b'\x00' in open('.git/config','rb').read())"` → `False`.
+
+Report: which branches deleted, which kept (and why), which worktree folders linger pending manual delete.
+
+---
+
 ## Step 1: Archive Previous HANDOVER.md
 
 BEFORE overwriting HANDOVER.md, copy its current content to:
@@ -227,6 +242,7 @@ RULES.md captures behavioral preferences for working with the user. It changes o
 
 Before declaring done, verify:
 
+- [ ] Step 0 branch/worktree cull run: merged branches deleted, unmerged ones kept + noted, lingering folders listed in HANDOVER
 - [ ] Previous HANDOVER.md content moved to ARCHIVE/handover-YYYY-MM-DD-topic.md
 - [ ] New HANDOVER.md written with all 5 sections complete (Where we left off, Half-done, Next session priorities, Gotchas, What to skip)
 - [ ] BACKLOG.md reflects current bug/deferred state (no duplicates, no fixed items still listed)
