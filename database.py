@@ -76,29 +76,36 @@ def init_db(db_path):
         )
     ''')
 
-    # ── Migration: add session header fields to soap_notes ──
-    for col, typedef in [
-        ('queue_no',    'TEXT DEFAULT ""'),
-        ('kpi_30min',   'TEXT DEFAULT ""'),
-        ('seen_by',     'TEXT DEFAULT ""'),
-        ('next_appt',   'TEXT DEFAULT ""'),
-        ('next_appt_time', 'TEXT DEFAULT ""'),
-    ]:
-        try:
-            conn.execute(f'ALTER TABLE soap_notes ADD COLUMN {col} {typedef}')
-        except sqlite3.OperationalError:
-            pass  # column already exists
+    # ── Schema migrations (PRAGMA user_version gated) ────────
+    _version = conn.execute('PRAGMA user_version').fetchone()[0]
 
-    # ── Migration: add next appointment fields to episodes ──
-    for col, typedef in [
-        ("next_appt",        "TEXT DEFAULT ''"),
-        ("next_appt_time",   "TEXT DEFAULT ''"),
-        ("discharge_reason", "TEXT DEFAULT ''"),
-    ]:
-        try:
-            conn.execute(f"ALTER TABLE episodes ADD COLUMN {col} {typedef}")
-        except sqlite3.OperationalError:
-            pass  # column already exists
+    if _version < 1:
+        # v1: session header fields on soap_notes
+        for col, typedef in [
+            ('queue_no',       'TEXT DEFAULT ""'),
+            ('kpi_30min',      'TEXT DEFAULT ""'),
+            ('seen_by',        'TEXT DEFAULT ""'),
+            ('next_appt',      'TEXT DEFAULT ""'),
+            ('next_appt_time', 'TEXT DEFAULT ""'),
+        ]:
+            try:
+                conn.execute(f'ALTER TABLE soap_notes ADD COLUMN {col} {typedef}')
+            except sqlite3.OperationalError:
+                pass  # column already exists (mid-air DB transition)
+
+    if _version < 2:
+        # v2: next-appt + discharge fields on episodes
+        for col, typedef in [
+            ('next_appt',        "TEXT DEFAULT ''"),
+            ('next_appt_time',   "TEXT DEFAULT ''"),
+            ('discharge_reason', "TEXT DEFAULT ''"),
+        ]:
+            try:
+                conn.execute(f'ALTER TABLE episodes ADD COLUMN {col} {typedef}')
+            except sqlite3.OperationalError:
+                pass  # column already exists (mid-air DB transition)
+
+    conn.execute('PRAGMA user_version = 2')
 
     # ── Audit log ─────────────────────────────────
     conn.execute('''
