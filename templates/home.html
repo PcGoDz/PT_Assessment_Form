@@ -1084,11 +1084,10 @@
         <div class="form-card-name">Vestibular</div>
         <div class="form-card-sub">Vertigo, balance disorders</div>
       </div>
-      <div class="form-card soon" data-form="FACIAL">
-        <div class="form-card-badge">Soon</div>
-        <div class="form-card-icon">&#128528;</div>
+      <div class="form-card" data-form="FACIAL" onclick="selectForm(this)">
+        <div class="form-card-icon">&#128580;</div>
         <div class="form-card-name">Facial</div>
-        <div class="form-card-sub">Facial palsy, TMJ</div>
+        <div class="form-card-sub">Bell's palsy, facial nerve</div>
       </div>
       <!-- Cardiorespiratory group -->
       <div class="form-card" data-form="CR" onclick="selectForm(this)">
@@ -1207,7 +1206,7 @@ var fabSearchTimer   = null;
 var FORM_LABELS = {
   MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric',
   CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand', BURN:'Burn',
-  SCI:'Spinal Cord Injury'
+  SCI:'Spinal Cord Injury', FACIAL:'Facial'
 };
 
 // ── Settings menu ────────────────────────────────
@@ -1919,8 +1918,8 @@ async function loadEpisodes(patientId) {
     }
 
     wrap.innerHTML = episodes.map(function(ep) {
-      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand', BURN:'Burn', SCI:'Spinal Cord Injury' }[ep.form_type] || ep.form_type;
-      var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;', AMPUTATION:'&#129452;', NEURO:'&#9889;', HAND:'&#9995;', SCI:'&#9855;' }[ep.form_type] || '&#128203;';
+      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand', BURN:'Burn', SCI:'Spinal Cord Injury', FACIAL:'Facial' }[ep.form_type] || ep.form_type;
+      var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;', AMPUTATION:'&#129452;', NEURO:'&#9889;', HAND:'&#9995;', SCI:'&#9855;', FACIAL:'&#128580;' }[ep.form_type] || '&#128203;';
       var rawStatus  = ep.status || 'active';
       var statusBase = rawStatus.split('|')[0];
       var statusReason = ep.discharge_reason || (rawStatus.includes('|') ? rawStatus.split('|')[1] : '');

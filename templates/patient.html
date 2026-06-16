@@ -472,8 +472,8 @@
       {% if episodes %}
       <div class="episodes-list">
         {% for ep in episodes %}
-        {% set form_labels = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric','CR':'Cardiorespiratory','AMPUTATION':'Amputation','NEURO':'Neurological','HAND':'Hand','BURN':'Burn','SCI':'Spinal Cord Injury'} %}
-        {% set form_icons  = {'MS':'&#129460;','SPINE':'&#128279;','GERIATRIC':'&#9878;','CR':'&#129728;','AMPUTATION':'&#129452;','NEURO':'&#9889;','SCI':'&#9855;'} %}
+        {% set form_labels = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric','CR':'Cardiorespiratory','AMPUTATION':'Amputation','NEURO':'Neurological','HAND':'Hand','BURN':'Burn','SCI':'Spinal Cord Injury','FACIAL':'Facial'} %}
+        {% set form_icons  = {'MS':'&#129460;','SPINE':'&#128279;','GERIATRIC':'&#9878;','CR':'&#129728;','AMPUTATION':'&#129452;','NEURO':'&#9889;','SCI':'&#9855;','FACIAL':'&#128580;'} %}
         {% set label = form_labels.get(ep.form_type, ep.form_type) %}
         {% set icon  = form_icons.get(ep.form_type, '&#128203;') %}
         {% set is_active = ep.status == 'active' %}
@@ -562,11 +562,10 @@
         <div class="form-card-name">Vestibular</div>
         <div class="form-card-sub">Vertigo, balance disorders</div>
       </div>
-      <div class="form-card soon" data-form="FACIAL">
-        <div class="form-card-badge">Soon</div>
-        <div class="form-card-icon">&#128528;</div>
+      <div class="form-card" data-form="FACIAL" onclick="selectEpForm(this)">
+        <div class="form-card-icon">&#128580;</div>
         <div class="form-card-name">Facial</div>
-        <div class="form-card-sub">Facial palsy, TMJ</div>
+        <div class="form-card-sub">Bell's palsy, facial nerve</div>
       </div>
       <div class="form-card" data-form="CR" onclick="selectEpForm(this)">
         <div class="form-card-icon">&#129728;</div>
