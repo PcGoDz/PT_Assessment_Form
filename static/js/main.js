@@ -1019,6 +1019,111 @@ const Main = (function () {
   }
 
 
+  function _buildMpisFacial() {
+    var d = window.ActiveForm ? window.ActiveForm.collect() : {};
+    var p = d.patient || {};
+    var DIV = MPIS_DIV, dash = MPIS_DASH;
+    var parts = [];
+    function line(label, val)  { if (val && String(val).trim()) parts.push(label + String(val).trim()); }
+    function chips(label, arr) { if (arr && arr.length) parts.push(label + arr.join(', ')); }
+    function grades(title, rows) {
+      if (!rows || !rows.length) return;
+      var body = [];
+      rows.forEach(function (r) {
+        if (r.grade && String(r.grade).trim()) body.push('  ' + r.label + '  :  ' + r.grade);
+      });
+      if (!body.length) return;
+      parts.push(title);
+      body.forEach(function (l) { parts.push(l); });
+      parts.push('');
+    }
+
+    // ── Header ──
+    parts.push('FACIAL ASSESSMENT');
+    parts.push(DIV);
+    parts.push('Name  : ' + (p.name||'') + '   Date : ' + (p.date||''));
+    if (p.type === 'local') {
+      parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+    } else {
+      parts.push('Passport : ' + (p.passport||'') + '   Country : ' + (p.country||'') + '   Age : ' + (p.age||''));
+    }
+    parts.push('Sex   : ' + (p.sex||''));
+    parts.push('');
+
+    // ── SUBJECTIVE ──
+    parts.push(dash); parts.push('SUBJECTIVE ASSESSMENT'); parts.push('');
+    line('Diagnosis        : ', d.diagnosis);
+    line("Doctor's Mgmt    : ", d.doctorMgmt);
+    line('Problem          : ', d.problem);
+    var pain = d.pain || {};
+    if (pain.pre || pain.post) {
+      parts.push('');
+      parts.push('PAIN SCORE (VAS)');
+      parts.push('PRE: ' + (pain.pre||'0') + '/10   POST: ' + (pain.post||'0') + '/10');
+    }
+    line('Area             : ', d.area);
+    chips('Nature           : ', d.nature);    line('  Nature notes   : ', d.natureNotes);
+    chips('Aggravating      : ', d.agg);        line('  Agg notes      : ', d.aggNotes);
+    chips('Easing           : ', d.ease);       line('  Ease notes     : ', d.easeNotes);
+    chips('24 hrs           : ', d.hrs24);      line('  24hr notes     : ', d.hrs24Notes);
+    line('Irritability     : ', d.irritability);
+    parts.push('');
+    line('Current History  : ', d.currentHistory);
+    line('Past History     : ', d.pastHistory);
+    if (d.generalHealth || d.pmhx || d.investigations || d.medication || d.occupation || d.socialHistory || d.hearingAidPacemaker) {
+      parts.push('');
+      parts.push('SPECIAL QUESTIONS');
+      line('General Health   : ', d.generalHealth);
+      line('PMHX / Surgery   : ', d.pmhx);
+      line('Investigations   : ', d.investigations);
+      line('Medication       : ', d.medication);
+      line('Occupation       : ', d.occupation);
+      line('Social History   : ', d.socialHistory);
+      line('Hearing Aid/PM   : ', d.hearingAidPacemaker);
+    }
+    parts.push('');
+
+    // ── OBJECTIVE ──
+    var sens = d.sensation || {};
+    var hasSens = sens.hot || sens.cold || sens.pinPrick || sens.notes;
+    var hasMov  = (d.facialMov && d.facialMov.some(function(r){return r.grade;})) ||
+                  (d.tongueMov && d.tongueMov.some(function(r){return r.grade;}));
+    if (d.observation || d.palpation || hasSens || hasMov) {
+      parts.push(dash); parts.push('OBJECTIVE ASSESSMENT'); parts.push('');
+      line('Observation      : ', d.observation);
+      line('Palpation        : ', d.palpation);
+      if (hasSens) {
+        parts.push('');
+        parts.push('SENSATION TEST');
+        line('Hot       : ', sens.hot);
+        line('Cold      : ', sens.cold);
+        line('Pin-prick : ', sens.pinPrick);
+        line('Notes     : ', sens.notes);
+      }
+      if (hasMov) {
+        parts.push('');
+        parts.push('MOVEMENT  (Affected Side: ' + (d.affectedSide || '—') + ')');
+        grades('FACIAL', d.facialMov);
+        grades('TONGUE', d.tongueMov);
+      }
+      parts.push('');
+    }
+
+    // ── ANALYSIS ──
+    if (d.impression) { parts.push(dash); parts.push('ANALYSIS'); parts.push(''); line('Impression : ', d.impression); parts.push(''); }
+
+    // ── PLAN ──
+    if (d.stg || d.ltg || d.planOfTreatment) {
+      parts.push(dash); parts.push('PLAN'); parts.push('');
+      line('STG  : ', d.stg);
+      line('LTG  : ', d.ltg);
+      line('Plan : ', d.planOfTreatment);
+      parts.push('');
+    }
+
+    return parts;
+  }
+
   // ── MPIS dispatcher — shows modal once, then dispatches ──
   async function copyToMpisAuto() {
     var header = await showMpisHeaderModal();
@@ -1037,6 +1142,7 @@ const Main = (function () {
     else if (formType === 'HAND')       parts = _buildMpisHand();
     else if (formType === 'BURN')       parts = _buildMpisBurn();
     else if (formType === 'SCI')        parts = _buildMpisSci();
+    else if (formType === 'FACIAL')     parts = _buildMpisFacial();
     else                                parts = _buildMpisMs();
     await _doCopyMpis(parts, header);
   }
