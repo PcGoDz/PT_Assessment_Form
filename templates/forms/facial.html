@@ -152,6 +152,131 @@
     </div>
   </div>
 </div>
+
+<div class="card" id="s-pain">
+  <div class="card-header"><span class="sec-num">03</span><h2>Pain Assessment</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="pain-score-box">
+        <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">PRE-treatment Pain (VAS 0&ndash;10)</label>
+        <div class="pain-scale-row">
+          <span style="font-size:11px;color:var(--text-faint)">0</span>
+          <input type="range" id="pain-pre" min="0" max="10" value="0" step="1" oninput="FacialForm.onPainChange('pre')">
+          <span style="font-size:11px;color:var(--text-faint)">10</span>
+          <div class="pain-val pv-low" id="pain-pre-display">0</div>
+        </div>
+      </div>
+      <div class="pain-score-box">
+        <label style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em">POST-treatment Pain (VAS 0&ndash;10)</label>
+        <div class="pain-scale-row">
+          <span style="font-size:11px;color:var(--text-faint)">0</span>
+          <input type="range" id="pain-post" min="0" max="10" value="0" step="1" oninput="FacialForm.onPainChange('post')">
+          <span style="font-size:11px;color:var(--text-faint)">10</span>
+          <div class="pain-val pv-low" id="pain-post-display">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fg"><div class="field"><label>Area</label><input type="text" id="area" placeholder="Pain location"></div></div>
+
+    <div class="field">
+      <label>Nature <span style="font-weight:400;color:var(--text-faint)">(select all that apply)</span></label>
+      <div class="chip-group" id="nature-chips">
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Sharp</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Dull</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Pricking</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Throbbing</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Burning</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Numbness</span>
+      </div>
+      <input type="text" id="nature-notes" placeholder="Notes" style="margin-top:6px">
+    </div>
+
+    <div class="field">
+      <label>Aggravating <span style="font-weight:400;color:var(--text-faint)">(select all that apply)</span></label>
+      <div class="chip-group" id="agg-chips">
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Chewing</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Swallowing</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Drinking</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Speaking</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Facial expressions</span>
+      </div>
+      <input type="text" id="agg-notes" placeholder="Notes" style="margin-top:6px">
+    </div>
+
+    <div class="field">
+      <label>Easing <span style="font-weight:400;color:var(--text-faint)">(select all that apply)</span></label>
+      <div class="chip-group" id="ease-chips">
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Moist heat</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Ice packs</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Medication</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Rest</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Self-relief</span>
+      </div>
+      <input type="text" id="ease-notes" placeholder="Notes" style="margin-top:6px">
+    </div>
+
+    <div class="field">
+      <label>24 hrs <span style="font-weight:400;color:var(--text-faint)">(select all that apply)</span></label>
+      <div class="chip-group" id="hrs24-chips">
+        <span class="chip" onclick="FacialForm.toggleChip(this)">AM</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">PM</span>
+        <span class="chip" onclick="FacialForm.toggleChip(this)">Night</span>
+      </div>
+      <input type="text" id="hrs24-notes" placeholder="Notes" style="margin-top:6px">
+    </div>
+
+    <div class="field">
+      <label>Irritability</label>
+      <div class="irr-chips">
+        <button type="button" class="irr-chip" id="irr-High"   onclick="FacialForm.pickIrr('High')">High</button>
+        <button type="button" class="irr-chip" id="irr-Medium" onclick="FacialForm.pickIrr('Medium')">Medium</button>
+        <button type="button" class="irr-chip" id="irr-Low"    onclick="FacialForm.pickIrr('Low')">Low</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-hx">
+  <div class="card-header"><span class="sec-num">04</span><h2>History</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Current History</label><textarea id="current-history" rows="3"></textarea></div>
+      <div class="field"><label>Past History</label><textarea id="past-history" rows="3"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-sq">
+  <div class="card-header"><span class="sec-num">05</span><h2>Special Questions</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>General Health</label><input type="text" id="general-health" placeholder="HPT, DM, cancer, ear-related"></div>
+      <div class="field"><label>PMHX / Surgery</label><input type="text" id="pmhx" placeholder="Prior brain/ear surgery"></div>
+      <div class="field"><label>Investigations</label><input type="text" id="investigations" placeholder="MRI, X-ray"></div>
+      <div class="field"><label>Medication</label><input type="text" id="medication" placeholder="Steroids, Neurobion"></div>
+      <div class="field"><label>Occupation / Recreation</label><input type="text" id="occupation"></div>
+      <div class="field"><label>Social History</label><input type="text" id="social-history"></div>
+    </div>
+    <div class="field" style="margin-top:10px">
+      <label>Hearing Aid / Pacemaker</label>
+      <div class="irr-chips">
+        <label class="irr-chip" style="cursor:pointer"><input type="radio" name="pacemaker" value="Y" style="margin-right:5px">Y</label>
+        <label class="irr-chip" style="cursor:pointer"><input type="radio" name="pacemaker" value="N" style="margin-right:5px">N</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-obs">
+  <div class="card-header"><span class="sec-num">06</span><h2>Observation</h2></div>
+  <div class="card-body"><div class="fg"><div class="field"><label>Observation</label><textarea id="observation" rows="3" placeholder="Facial asymmetry, swelling, reduced expression"></textarea></div></div></div>
+</div>
+
+<div class="card" id="s-palp">
+  <div class="card-header"><span class="sec-num">07</span><h2>Palpation</h2></div>
+  <div class="card-body"><div class="fg"><div class="field"><label>Palpation</label><textarea id="palpation" rows="3" placeholder="Warmth, swelling, spasm, tenderness"></textarea></div></div></div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
