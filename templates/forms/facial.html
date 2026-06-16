@@ -277,6 +277,77 @@
   <div class="card-header"><span class="sec-num">07</span><h2>Palpation</h2></div>
   <div class="card-body"><div class="fg"><div class="field"><label>Palpation</label><textarea id="palpation" rows="3" placeholder="Warmth, swelling, spasm, tenderness"></textarea></div></div></div>
 </div>
+
+<div class="card" id="s-sens">
+  <div class="card-header"><span class="sec-num">08</span><h2>Sensation Test</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>Hot <span style="font-weight:400;color:var(--text-faint)">(select one)</span></label>
+      <div class="chip-group" id="sens-hot-chips">
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-hot-chips')">Normal</span>
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-hot-chips')">Reduced</span>
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-hot-chips')">Absent</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Cold <span style="font-weight:400;color:var(--text-faint)">(select one)</span></label>
+      <div class="chip-group" id="sens-cold-chips">
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-cold-chips')">Normal</span>
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-cold-chips')">Reduced</span>
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-cold-chips')">Absent</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Pin-prick <span style="font-weight:400;color:var(--text-faint)">(select one)</span></label>
+      <div class="chip-group" id="sens-pin-chips">
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-pin-chips')">Normal</span>
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-pin-chips')">Reduced</span>
+        <span class="chip" onclick="FacialForm.pickSingle(this,'sens-pin-chips')">Absent</span>
+      </div>
+    </div>
+    <div class="fg"><div class="field"><label>Notes</label><input type="text" id="sensation-notes"></div></div>
+  </div>
+</div>
+
+<div class="card" id="s-mov">
+  <div class="card-header"><span class="sec-num">09</span><h2>Movement Assessment</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>Affected Side</label>
+      <div class="irr-chips">
+        <button type="button" class="irr-chip" id="side-R" onclick="FacialForm.pickSide('R')">R</button>
+        <button type="button" class="irr-chip" id="side-L" onclick="FacialForm.pickSide('L')">L</button>
+      </div>
+    </div>
+    <p style="font-size:11px;color:var(--text-faint);margin:6px 0 14px">
+      <strong>Poor:</strong> No contraction &nbsp;·&nbsp; <strong>Fair:</strong> Partial / difficult movement &nbsp;·&nbsp; <strong>Good:</strong> Full movement with control
+    </p>
+
+    <h3 style="font-size:13px;margin:0 0 6px">Facial</h3>
+    <button type="button" onclick="FacialForm.stampFacialPoor()">Stamp blanks &rarr; Poor</button>
+    <div id="facial-mov-grid"></div>
+
+    <h3 style="font-size:13px;margin:18px 0 6px">Tongue</h3>
+    <button type="button" onclick="FacialForm.stampTonguePoor()">Stamp blanks &rarr; Poor</button>
+    <div id="tongue-mov-grid"></div>
+  </div>
+</div>
+
+<div class="card" id="s-plan">
+  <div class="card-header"><span class="sec-num">10</span><h2>PT Impression &amp; Treatment Plan</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field"><label>Physiotherapist's Impression <span class="req">*</span></label><textarea id="pt-impression" rows="3"></textarea></div>
+    </div>
+    <div class="fg c2">
+      <div class="field"><label>Short Term Goals</label><textarea id="stg" rows="3"></textarea></div>
+      <div class="field"><label>Long Term Goals</label><textarea id="ltg" rows="3"></textarea></div>
+    </div>
+    <div class="fg">
+      <div class="field"><label>Plan of Treatment</label><textarea id="plan" rows="3"></textarea></div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
