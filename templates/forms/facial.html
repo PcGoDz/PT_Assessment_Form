@@ -16,6 +16,14 @@
 {% endblock %}
 
 {% block content %}
+<style>
+  /* FACIAL grid-only classes — scoped, additive, does not touch shared style.css */
+  .grid-stamp-btn { font-size:12px; font-weight:500; padding:7px 16px; border:none;
+    border-radius:20px; background:var(--accent-light); cursor:pointer; color:var(--accent);
+    margin:-10px 0 16px; transition:all .12s; }
+  .grid-stamp-btn:hover { background:var(--accent-mid); color:#fff; }
+  .grid-stamp-btn:active { transform:scale(0.98); }
+</style>
 <div class="card" id="s-patient">
   <div class="card-header">
     <span class="sec-num">01</span>
@@ -324,11 +332,11 @@
     </p>
 
     <h3 style="font-size:13px;margin:0 0 6px">Facial</h3>
-    <button type="button" onclick="FacialForm.stampFacialPoor()">Stamp blanks &rarr; Poor</button>
+    <button type="button" class="grid-stamp-btn" onclick="FacialForm.stampFacialPoor()">Stamp blanks &rarr; Poor</button>
     <div id="facial-mov-grid"></div>
 
     <h3 style="font-size:13px;margin:18px 0 6px">Tongue</h3>
-    <button type="button" onclick="FacialForm.stampTonguePoor()">Stamp blanks &rarr; Poor</button>
+    <button type="button" class="grid-stamp-btn" onclick="FacialForm.stampTonguePoor()">Stamp blanks &rarr; Poor</button>
     <div id="tongue-mov-grid"></div>
   </div>
 </div>
