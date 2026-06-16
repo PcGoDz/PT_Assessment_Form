@@ -20,6 +20,7 @@ a = Analysis(
         ('pdf_hand.py', '.'),
         ('pdf_burn.py', '.'),
         ('pdf_sci.py', '.'),
+        ('pdf_facial.py', '.'),
         ('templates/pdf', 'templates/pdf'),
     ],
     hiddenimports=[
