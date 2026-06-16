@@ -581,6 +581,52 @@ const ClinicalTemplates = (function () {
     ],
   };
 
+  // Facial palsy templates
+  TEMPLATES.FACIAL = {
+    impression: [
+      'Weakness of right facial muscles secondary to facial nerve compression/injury (Bell\'s palsy).',
+      'Reduced facial expression and oral competence affecting eating, speech and cosmesis.',
+      'Pain and swelling in the peri-auricular region, possibly associated with ear pathology.'
+    ],
+    stg: [
+      'Provide patient assurance and education within 1 session.',
+      'Reduce facial pain to VAS ≤ 3/10 within 1 week.',
+      'Reduce facial swelling within 1 week.',
+      'Maintain facial muscle length and extensibility within 1 month.',
+      'Initiate facial muscle re-education exercises within 1 month.'
+    ],
+    ltg: [
+      'Improve facial symmetry and cosmetic appearance within 3 months.',
+      'Regain functional control of right facial muscles within 3 months.',
+      'Enable return to daily, work and social activities within 3 months.'
+    ],
+    treatment: [
+      'Explanation and reassurance regarding Bell\'s palsy and expected recovery.',
+      'Home programme: facial exercises 10 reps × 3/day, eye protection, avoid sleeping on affected side.',
+      'PNF facial patterns and neuromuscular re-education.',
+      'Ice stroking and brushing for facilitation.',
+      'Soft tissue manipulation (STM) to affected muscles.'
+    ]
+  };
+
+  TEMPLATES.FACIAL_SOAP = {
+    subjective: [
+      'Sudden onset of right facial weakness with pain behind the ear.',
+      'Reports difficulty closing the right eye and drooling on the affected side.'
+    ],
+    objective: [
+      'Right facial asymmetry with reduced movement on muscle testing (graded Poor/Fair).',
+      'Reduced sensation to hot/cold/pin-prick over the affected facial area.'
+    ],
+    analysis: [
+      'Right Bell\'s palsy with moderate irritability; functional and cosmetic impact.'
+    ],
+    plan: [
+      'Reassurance and education; facial exercises, eye protection, use of straw.',
+      'PNF, ice stroking, brushing, STM; facial exercises 10 reps × 3/day; handouts provided.'
+    ]
+  };
+
   // ── State ───────────────────────────────────────────────────────
   var activeField = null;
   var pickerEl    = null;
