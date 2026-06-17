@@ -109,13 +109,16 @@
 - **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26`,
   `PT_Assessment-worktrees\eloquent-williamson-fb5d6d`, `PT_Assessment-worktrees\vigorous-lehmann-32404d`,
   `PT_Assessment-worktrees\exciting-lewin-bf53d0`, `PT_Assessment-worktrees\nice-mahavira-6a9cb1`,
-  and `PT_Assessment-worktrees\jolly-hodgkin-245daf` (added 2026-06-13) folders may persist on disk
+  `PT_Assessment-worktrees\jolly-hodgkin-245daf` (added 2026-06-13), and `PT_Assessment-worktrees\magical-swartz-16db1c` (added 2026-06-17) folders may persist on disk
   after git worktree remove (Windows blocks deletion when a session's CWD is inside). Branches deleted
   + pruned fine; only the folders linger. Safe to `rmdir /s /q` manually from Explorer/cmd once those
   sessions are closed.
 - **Multi-select chip helper promotion** — `toggleChip/getChips/setChips` now has 2 local copies (NEURO, FACIAL). On a 3rd consumer, promote to FormBase (cf. `pair_box` promotion rule from `pdf_sci.py`). Do NOT promote speculatively.
 
 - **FACIAL full-clickfest pilot (deferred)** — Per FACIAL_SPEC.md Build Note #5: once FACIAL is stable in clinical use, use it as the pilot form to flip full intake to clickfest (Observation/Palpation/General Health/Problem chip sets). If good, roll across all forms as its own spec→plan→build cycle. Defer until post-pilot.
+
+- **`claude/facial-plan` branch superseded but unmerged** — FACIAL_SPEC.md + PLAN-FACIAL.md were `git checkout`'d into main (no merge commit), so branch is NOT in `git branch --merged main`. Delete when no longer needed: `git branch -D claude/facial-plan`. Content is on main.
+- **pdf_facial.py page-1 empty intake labels (low priority)** — blank fields (Doctor's Mgmt, Problem, histories, Hot/Cold/Pin-prick, Irritability, Hearing Aid/Pacemaker) render with empty string beside their label. Same behavior as `pdf_ms.py` clone; likely consistent-by-design. Confirm against `pdf_ms.py` during Phase 1.2 PDF polish pass; guard if undesired.
 
 - VESTIBULAR form (Neurological group, NO ready). FACIAL now shipped (ready=True).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).

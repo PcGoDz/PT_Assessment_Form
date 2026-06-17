@@ -204,6 +204,7 @@ The hand form failure mode (May 2026):
 - ❌ Marker type selector + Clear All buttons disconnected from canvas → spatial relationship broken
 - ❌ Legend floated at the bottom, far from canvas → clinician forgets colour mapping by the time they read it
 - ❌ Hand SVGs tiny relative to canvas whitespace → clinical precision impossible
+- ❌ Reusing `.irr-chip` for a non-irritability single-select without adding matching `.sel-<Value>` CSS form-locally → selected state is invisible (`style.css` only defines `.sel-High/.sel-Medium/.sel-Low`; JS applies the class, nothing paints). Add rules in the form's own `<style>` block inside `{% block content %}`. Full pattern in WORKFLOW.md Anti-Repeat.
 
 If any of these slip in again, the form is not shippable.
 
