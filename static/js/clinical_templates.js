@@ -584,47 +584,65 @@ const ClinicalTemplates = (function () {
   // Facial palsy templates
   TEMPLATES.FACIAL = {
     impression: [
-      'Weakness of right facial muscles secondary to facial nerve compression/injury (Bell\'s palsy).',
-      'Reduced facial expression and oral competence affecting eating, speech and cosmesis.',
-      'Pain and swelling in the peri-auricular region, possibly associated with ear pathology.'
+      'Weakness of [R/L] facial muscles secondary to facial nerve (CN VII) compression/injury — [Bell\'s palsy / post-parotidectomy / post-surgical].',
+      'Reduced facial expression and oral competence affecting eating, drinking, speech and cosmesis.',
+      'Pain and swelling in the peri-auricular region, [possibly associated with ear pathology / post-surgical].',
+      'Incomplete [R/L] eye closure (lagophthalmos) with corneal exposure risk.',
+      'Saliva control impairment — drooling/dribbling on the affected side during eating and drinking.',
+      'Facial asymmetry at rest and on movement, with [mouth angle deviation to unaffected side / brow ptosis / loss of nasolabial fold].',
     ],
     stg: [
-      'Provide patient assurance and education within 1 session.',
-      'Reduce facial pain to VAS ≤ 3/10 within 1 week.',
-      'Reduce facial swelling within 1 week.',
-      'Maintain facial muscle length and extensibility within 1 month.',
-      'Initiate facial muscle re-education exercises within 1 month.'
+      'Provide reassurance and education on facial palsy and expected recovery within [1] session.',
+      'Reduce facial/peri-auricular pain from [_]/10 to <= [3]/10 on VAS within [1] week.',
+      'Reduce facial swelling within [1] week.',
+      'Maintain facial muscle length and extensibility (prevent disuse atrophy/contracture) within [2] weeks.',
+      'Achieve adequate [R/L] eye closure / establish eye-protection routine within [1] week.',
+      'Initiate facial neuromuscular re-education exercises within [2] weeks.',
+      'Improve [muscle/movement] grade from Poor to [Fair/Good] within [2] weeks.',
     ],
     ltg: [
-      'Improve facial symmetry and cosmetic appearance within 3 months.',
-      'Regain functional control of right facial muscles within 3 months.',
-      'Enable return to daily, work and social activities within 3 months.'
+      'Improve facial symmetry and cosmetic appearance within [3] months.',
+      'Regain functional control of [R/L] facial muscles ([Fair->Good] across tested movements) within [3] months.',
+      'Restore independent oral competence — eating, drinking and clear speech without drooling — within [3] months.',
+      'Enable return to work/occupational duties ([occupation]) within [3] months.',
+      'Enable return to daily and social activities with restored confidence within [3] months.',
     ],
     treatment: [
-      'Explanation and reassurance regarding Bell\'s palsy and expected recovery.',
-      'Home programme: facial exercises 10 reps × 3/day, eye protection, avoid sleeping on affected side.',
-      'PNF facial patterns and neuromuscular re-education.',
-      'Ice stroking and brushing for facilitation.',
-      'Soft tissue manipulation (STM) to affected muscles.'
-    ]
+      'Explanation and reassurance regarding [diagnosis] and expected recovery course.',
+      'Home programme: facial exercises [10] reps x [3]/day, eye protection (lubricant/taping at night), avoid sleeping on affected side, use a straw, chew on unaffected side.',
+      'PNF facial patterns and neuromuscular re-education, progressed as control returns.',
+      'Ice stroking and brushing for facilitation of [weak/Poor-grade] muscles.',
+      'Soft tissue manipulation (STM) and facial massage to affected muscles.',
+      'Sensory retraining over the affected facial area ([hot/cold/pin-prick]).',
+      'Neuromuscular electrical stimulation if indicated — [confirm no pacemaker/hearing-aid contraindication first].',
+      'Patient education and handout issued; progression reviewed at [_] weeks.',
+    ],
   };
 
   TEMPLATES.FACIAL_SOAP = {
     subjective: [
-      'Sudden onset of right facial weakness with pain behind the ear.',
-      'Reports difficulty closing the right eye and drooling on the affected side.'
+      'Sudden onset of [R/L] facial weakness, [with/without] pain behind the [R/L] ear.',
+      'Reports difficulty closing the [R/L] eye, drooling, and food pooling on the affected side.',
+      'Reports facial heaviness/tightness and reduced facial expression affecting [eating/speaking/confidence].',
+      'History of [Bell\'s palsy / parotidectomy / ENT surgery]; symptom onset [duration] ago.',
     ],
     objective: [
-      'Right facial asymmetry with reduced movement on muscle testing (graded Poor/Fair).',
-      'Reduced sensation to hot/cold/pin-prick over the affected facial area.'
+      '[R/L] facial asymmetry at rest; reduced movement on muscle testing (graded Poor/Fair on affected muscles).',
+      'Reduced sensation to hot/cold/pin-prick over the affected facial area.',
+      'Incomplete [R/L] eye closure; [Bell\'s phenomenon present/absent]; peri-auricular tenderness on palpation.',
+      'Movement grades: [frontalis/orbicularis oculi/zygomaticus/orbicularis oris] = [Poor/Fair/Good]; tongue [normal/deviated].',
     ],
     analysis: [
-      'Right Bell\'s palsy with moderate irritability; functional and cosmetic impact.'
+      '[R/L] facial palsy with [mild/moderate/high] irritability; functional and cosmetic impact.',
+      'Improving — facial muscle grades progressing from Poor toward [Fair/Good]; on track for goals.',
+      'Plateau in motor recovery — reviewing exercise approach; consider [referral / nerve conduction study if >3 months].',
     ],
     plan: [
-      'Reassurance and education; facial exercises, eye protection, use of straw.',
-      'PNF, ice stroking, brushing, STM; facial exercises 10 reps × 3/day; handouts provided.'
-    ]
+      'Reassurance and education; facial exercises, eye protection, avoid sleeping on affected side, use straw.',
+      'PNF, ice stroking, brushing, STM; facial exercises [10] reps x [3]/day; handout provided.',
+      'Progress neuromuscular re-education as control returns; reassess movement grades at [_] weeks.',
+      'Continue current plan; sensory retraining; review in [timeframe].',
+    ],
   };
 
   // ── State ───────────────────────────────────────────────────────
