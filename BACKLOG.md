@@ -4,6 +4,7 @@
 
 ## Open bugs / Cleanup
 
+- **FACIAL shipped without template-button wiring (addButton calls in facial.html) — caught 2026-06-18 by click-test, NOT by the build smoke-test.** The DESIGN_SYSTEM pre-ship checklist and the 24/24 FACIAL smoke-test both passed without catching it because neither verifies that template picker buttons actually render and fire. WORKFLOW/checklist change candidate: add 'click every + template button, confirm picker opens and inserts' as a mandatory pre-ship step for any form with clinical templates. Root cause: addButton wiring lives in the HTML, separate from the template data in clinical_templates.js — the seam between the two files is unchecked.
 
 - **Episode form-type drift on mid-form swap.** Repro: create episode (e.g. BURN) → on the
   form page swap to another form (SPINE) → Save & Return → episode list still labels it BURN.
