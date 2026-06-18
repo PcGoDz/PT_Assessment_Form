@@ -365,6 +365,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   if (window.FacialForm) FacialForm.initGrids();
+  var FM = 'FACIAL';
+  ClinicalTemplates.addButton('pt-impression', FM, 'impression');
+  ClinicalTemplates.addButton('stg',           FM, 'stg');
+  ClinicalTemplates.addButton('ltg',           FM, 'ltg');
+  ClinicalTemplates.addButton('plan',          FM, 'treatment');
 });
 </script>
 {% endblock %}
