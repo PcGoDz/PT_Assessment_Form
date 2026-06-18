@@ -113,7 +113,8 @@
   `PT_Assessment-worktrees\jolly-hodgkin-245daf` (added 2026-06-13), and `PT_Assessment-worktrees\magical-swartz-16db1c` (added 2026-06-17) folders may persist on disk
   after git worktree remove (Windows blocks deletion when a session's CWD is inside). Branches deleted
   + pruned fine; only the folders linger. Safe to `rmdir /s /q` manually from Explorer/cmd once those
-  sessions are closed.
+  sessions are closed. `PT_Assessment-worktrees\frosty-hodgkin-8090cd` pruned this session (2026-06-18,
+  merged to main — safe); if its folder Windows-CWD-locks, add to the manual-`rmdir` list above.
 - **Multi-select chip helper promotion** — `toggleChip/getChips/setChips` now has 2 local copies (NEURO, FACIAL). On a 3rd consumer, promote to FormBase (cf. `pair_box` promotion rule from `pdf_sci.py`). Do NOT promote speculatively.
 
 - **FACIAL full-clickfest pilot (deferred)** — Per FACIAL_SPEC.md Build Note #5: once FACIAL is stable in clinical use, use it as the pilot form to flip full intake to clickfest (Observation/Palpation/General Health/Problem chip sets). If good, roll across all forms as its own spec→plan→build cycle. Defer until post-pilot.
