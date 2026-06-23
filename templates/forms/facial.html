@@ -201,7 +201,10 @@
         <span class="chip" onclick="FacialForm.toggleChip(this)">Burning</span>
         <span class="chip" onclick="FacialForm.toggleChip(this)">Numbness</span>
       </div>
-      <input type="text" id="nature-notes" placeholder="Notes" style="margin-top:6px">
+      <button type="button" class="func-note-toggle" onclick="FacialForm.toggleNote('nature-notes')">+ Note</button>
+      <div class="func-note collapsed" id="nature-notes-wrap">
+        <input type="text" id="nature-notes" placeholder="Notes" style="margin-top:6px">
+      </div>
     </div>
 
     <div class="field">
@@ -213,7 +216,10 @@
         <span class="chip" onclick="FacialForm.toggleChip(this)">Speaking</span>
         <span class="chip" onclick="FacialForm.toggleChip(this)">Facial expressions</span>
       </div>
-      <input type="text" id="agg-notes" placeholder="Notes" style="margin-top:6px">
+      <button type="button" class="func-note-toggle" onclick="FacialForm.toggleNote('agg-notes')">+ Note</button>
+      <div class="func-note collapsed" id="agg-notes-wrap">
+        <input type="text" id="agg-notes" placeholder="Notes" style="margin-top:6px">
+      </div>
     </div>
 
     <div class="field">
@@ -225,7 +231,10 @@
         <span class="chip" onclick="FacialForm.toggleChip(this)">Rest</span>
         <span class="chip" onclick="FacialForm.toggleChip(this)">Self-relief</span>
       </div>
-      <input type="text" id="ease-notes" placeholder="Notes" style="margin-top:6px">
+      <button type="button" class="func-note-toggle" onclick="FacialForm.toggleNote('ease-notes')">+ Note</button>
+      <div class="func-note collapsed" id="ease-notes-wrap">
+        <input type="text" id="ease-notes" placeholder="Notes" style="margin-top:6px">
+      </div>
     </div>
 
     <div class="field">
@@ -235,7 +244,10 @@
         <span class="chip" onclick="FacialForm.toggleChip(this)">PM</span>
         <span class="chip" onclick="FacialForm.toggleChip(this)">Night</span>
       </div>
-      <input type="text" id="hrs24-notes" placeholder="Notes" style="margin-top:6px">
+      <button type="button" class="func-note-toggle" onclick="FacialForm.toggleNote('hrs24-notes')">+ Note</button>
+      <div class="func-note collapsed" id="hrs24-notes-wrap">
+        <input type="text" id="hrs24-notes" placeholder="Notes" style="margin-top:6px">
+      </div>
     </div>
 
     <div class="field">
@@ -317,7 +329,10 @@
         <span class="chip" onclick="FacialForm.pickSingle(this,'sens-pin-chips')">Absent</span>
       </div>
     </div>
-    <div class="fg"><div class="field"><label>Notes</label><input type="text" id="sensation-notes"></div></div>
+    <button type="button" class="func-note-toggle" onclick="FacialForm.toggleNote('sensation-notes')">+ Note</button>
+    <div class="func-note collapsed" id="sensation-notes-wrap">
+      <input type="text" id="sensation-notes" placeholder="Notes" style="margin-top:6px">
+    </div>
   </div>
 </div>
 
