@@ -113,13 +113,13 @@
   `PT_Assessment-worktrees\jolly-hodgkin-245daf` (added 2026-06-13), and `PT_Assessment-worktrees\magical-swartz-16db1c` (added 2026-06-17) folders may persist on disk
   after git worktree remove (Windows blocks deletion when a session's CWD is inside). Branches deleted
   + pruned fine; only the folders linger. Safe to `rmdir /s /q` manually from Explorer/cmd once those
-  sessions are closed. `PT_Assessment-worktrees\frosty-hodgkin-8090cd` pruned this session (2026-06-18,
-  merged to main — safe); if its folder Windows-CWD-locks, add to the manual-`rmdir` list above.
+  sessions are closed. `PT_Assessment-worktrees\frosty-hodgkin-8090cd` (2026-06-18, merged to main);
+  `PT_Assessment-worktrees\upbeat-einstein-e05cd8` (2026-06-23, merged to main) — both safe to
+  `rmdir /s /q` once those sessions close.
 - **Multi-select chip helper promotion** — `toggleChip/getChips/setChips` now has 2 local copies (NEURO, FACIAL). On a 3rd consumer, promote to FormBase (cf. `pair_box` promotion rule from `pdf_sci.py`). Do NOT promote speculatively.
 
 - **FACIAL full-clickfest pilot (deferred)** — Per FACIAL_SPEC.md Build Note #5: once FACIAL is stable in clinical use, use it as the pilot form to flip full intake to clickfest (Observation/Palpation/General Health/Problem chip sets). If good, roll across all forms as its own spec→plan→build cycle. Defer until post-pilot.
 
-- **`claude/facial-plan` branch superseded but unmerged** — FACIAL_SPEC.md + PLAN-FACIAL.md were `git checkout`'d into main (no merge commit), so branch is NOT in `git branch --merged main`. Delete when no longer needed: `git branch -D claude/facial-plan`. Content is on main.
 - **pdf_facial.py page-1 empty intake labels (low priority)** — blank fields (Doctor's Mgmt, Problem, histories, Hot/Cold/Pin-prick, Irritability, Hearing Aid/Pacemaker) render with empty string beside their label. Same behavior as `pdf_ms.py` clone; likely consistent-by-design. Confirm against `pdf_ms.py` during Phase 1.2 PDF polish pass; guard if undesired.
 
 - VESTIBULAR form (Neurological group, NO ready). FACIAL now shipped (ready=True).

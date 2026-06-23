@@ -1,42 +1,29 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-06-18
-
----
+Last updated: 2026-06-23
 
 ## Where we left off
 
-FACIAL Phase 1.2 progressed. Templates rung SHIPPED + merged to main (`--no-ff` `a05354c`): real SMART templates authored (`fc098ff`, generic-fill `[blanks]` style) + the missing `addButton` template-button wiring fixed (`b061b42`). Both click-tested live: all 4 `+template` buttons fire, statements insert, survive reload, render in PDF + MPIS, SOAP entries present.
-
-FACIAL UIX rung PLANNED, NOT BUILT. Approved design: `FACIAL_UIX_SPEC.md` (collapsible `+Note` ghost, ported from SCI — NOT BURN). Vetted implementation plan: `PLAN-FACIAL-UIX.md` (committed `f278617`), reviewed + blessed by brain window + Miruya. One senior-CC design improvement accepted: blur auto-collapse listeners attach at tail of `initGrids()` (keeps `autoCollapseIfEmpty` private, only `toggleNote` exposed) instead of inline `onblur` attributes. Clinical decision locked: Sensation Test "NOTES" caption STRIPPED for full 5-note consistency.
-
----
+FACIAL +Note ghost (collapsible optional notes) BUILT, double-audited, smoke-gated, and MERGED to main (--no-ff `a2a4553`) + pushed to GitHub. Executed PLAN-FACIAL-UIX.md Tasks 1-4 on worktree upbeat-einstein-e05cd8: CSS (`e60829d`), 5-note markup wraps (`495a053`), JS toggleNote + empty-blur auto-collapse + populate-reopen + reset-recollapse (`0b97fac`). One layout fix during smoke-test: +Note buttons floated center in `.field`'s flex-column → pinned `align-self:flex-start` form-local (`a674b46`). All 5 note input ids unchanged (nature-notes/agg-notes/ease-notes/hrs24-notes/sensation-notes) so collect()/populate() data path intact; sensation-notes lost its `.fg>.field>label` chrome to match the other 4 (plan risk #4, intentional). FACIAL Phase 1.2 DONE.
+Also this session: pushed 20 backlogged commits to GitHub (origin/main was stuck at 636bf03, all FACIAL work was local-only) + housekeeping (`dc2f348`: gitignored outputs/ Cowork scratchpad, deleted stale FACIAL_TEMPLATES_PROMPT.md + PASSOVER-next-session.md, force-deleted dead claude/facial-plan branch — content was strict subset of main).
 
 ## Half-done
 
-- `PT_Assessment-worktrees/frosty-hodgkin-8090cd` folder lingers on disk (Windows CWD lock — this session's CWD is inside it). Branch `claude/frosty-hodgkin-8090cd` deleted (`-d`, merged), worktree registration deregistered (`git worktree list` shows only main). Safe to `rmdir /s /q PT_Assessment-worktrees\frosty-hodgkin-8090cd` once this session closes.
-- `PT_Assessment-worktrees/magical-swartz-16db1c` folder lingers on disk (Windows CWD lock — session still inside). Branch deleted (`-D`), worktree registration pruned. Safe to `rmdir /s /q PT_Assessment-worktrees\magical-swartz-16db1c` once this session closes.
-- `claude/facial-plan` branch still exists — NOT in `git branch --merged main` (files were `git checkout`'d in, no merge commit). Content (FACIAL_SPEC.md + PLAN-FACIAL.md) is already on main. Delete when no longer needed: `git branch -D claude/facial-plan`.
-- FACIAL Phase 1.2 (UI/UX polish + SMART template authoring) not started. Exe build deliberately deferred until after polish.
-
----
+- Worktree folder PT_Assessment-worktrees/upbeat-einstein-e05cd8 lingers on disk (Windows CWD-lock, this CC session inside it). Branch deleted + pruned git-side. Safe `rmdir /s /q PT_Assessment-worktrees\upbeat-einstein-e05cd8` once this session closes.
+- Older lingering worktree folders from prior sessions may still be on disk (see BACKLOG worktree-cleanup list) — all git-side clean, folders await manual rmdir.
 
 ## Next session priorities
 
-1. `git push` — main has unpushed work (templates merge + plan). Confirm pushed.
-2. Execute `PLAN-FACIAL-UIX.md` rung by rung: NEW worktree off main → Tasks 1-4 (CSS/markup/JS/static verify) → STOP at Task 5 (Miruya smoke-test gate, incl. the ⚠ auto-collapse feel-poke) → merge only after gate passes.
-3. Delete `claude/facial-plan` (superseded, content on main).
-
----
+1. Nothing blocking. FACIAL is fully shipped + merged + pushed. Fresh pick.
+2. Candidate next forms (all ready=False): VESTIBULAR (Neuro), PAEDIATRIC/LYMPHOEDEMA/NCD/GENERAL (Rehab). Per memory: peds is lowest priority, GENERAL dead last.
+3. Optional: exe build (deferred whole FACIAL phase) — rebuild via build.bat now that FACIAL's done, smoke the packaged exe.
+4. Optional housekeeping: clear the lingering worktree folders once their sessions close.
 
 ## Gotchas discovered this session
 
-- **SILENT CSS GAP — `.irr-chip.sel-<Value>` is value-specific:** Borrowing `.irr-chip` for a non-irritability control (Affected Side R/L) silently breaks unless matching `.sel-<Value>` CSS exists for the new values. `style.css` only defines `.sel-High/.sel-Medium/.sel-Low`. JS applied `.sel-R`/`.sel-L` correctly — classes appeared in DOM — but no CSS rule matched → button looked greyed/dead, no console error, nothing in DevTools inspect. Fixed in `facial.html`'s own `<style>` block at `412ae7d`, NOT in `style.css`. Rule: for every `.irr-chip` variant in a new form, grep `style.css` for each `.sel-<Value>` the JS applies — if absent, add form-locally. Migrated to WORKFLOW.md Anti-Repeat Rules this session.
-- **`.grid-stamp-btn` is form-local, not global:** BACKLOG "DONE 2026-06-11" implied a global CSS change but the SCI stamp restyle lives in `sci.html`'s own `<style>` block (lines 29–33). `{% block extra_head %}` does NOT exist in `base.html` — `<style>` goes inside `{% block content %}`, mirroring `sci.html`.
-- **PDF page-1 empty labels:** `pdf_facial.py` clones `pdf_ms.py` page-1 pattern — blank fields render as empty string beside their label. Likely consistent-by-design. Confirm + guard during Phase 1.2 PDF polish pass if undesired.
-
----
+- **+Note in a flex-column `.field` floats center, not left** — `.field` is `display:flex;flex-direction:column`; a bare `<button>` child centers in the leftover width. SCI's donor avoids this only because its +Note sits under a full-width grid, not a partial-width chip row. Fix: `align-self:flex-start` on `.func-note-toggle`, form-local. Cosmetic, see-it-live per plan risk #3.
+- **Two-window audit method held clean** — verified all 4 commits from git object store (`git show <hash>:<file>`), never raw mount read. The "4 files in git diff --stat main" scare was housekeeping-commit noise (main advanced past branch point d0af376); diffing against the true merge-base showed exactly 2 files. Always diff against merge-base, not main tip, when the branch is behind main.
 
 ## What to skip for now
 
-Exe build until Phase 1.2 done. Other forms (VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL). Full-clickfest cross-form pilot. UI revamp. See BACKLOG.md.
+Exe build unless explicitly wanted. Other forms (VESTIBULAR/PAEDIATRIC/LYMPHOEDEMA/NCD/GENERAL). See BACKLOG.md for the full deferred list.

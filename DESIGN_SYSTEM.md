@@ -205,6 +205,7 @@ The hand form failure mode (May 2026):
 - ❌ Legend floated at the bottom, far from canvas → clinician forgets colour mapping by the time they read it
 - ❌ Hand SVGs tiny relative to canvas whitespace → clinical precision impossible
 - ❌ Reusing `.irr-chip` for a non-irritability single-select without adding matching `.sel-<Value>` CSS form-locally → selected state is invisible (`style.css` only defines `.sel-High/.sel-Medium/.sel-Low`; JS applies the class, nothing paints). Add rules in the form's own `<style>` block inside `{% block content %}`. Full pattern in WORKFLOW.md Anti-Repeat.
+- ❌ Placing a `+Note` toggle button (or any bare child) directly in a `.field` (which is `flex-direction:column`) without `align-self:flex-start` → the button centers in the leftover width instead of sitting left under its content. SCI's donor doesn't show this because its +Note sits under a full-width grid; under a partial-width chip row the float is visible. Fix form-locally: `.func-note-toggle { align-self:flex-start; }`. Caught FACIAL +Note smoke-test 2026-06-23.
 
 If any of these slip in again, the form is not shippable.
 
