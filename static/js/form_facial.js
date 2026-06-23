@@ -70,6 +70,22 @@ var FacialForm = (function () {
   }
   function getSide() { return _side; }
 
+  // ── Collapsible note toggle + empty-blur auto-collapse (copied from form_sci.js:129) ──
+  var NOTE_IDS = ['nature-notes','agg-notes','ease-notes','hrs24-notes','sensation-notes'];
+
+  function toggleNote(noteId) {
+    var w = document.getElementById(noteId + '-wrap');
+    if (w) w.classList.toggle('collapsed');
+  }
+
+  // NET-NEW (spec, approved): re-collapse a note opened but left empty on blur.
+  // Only fires when trimmed value is empty (a stray space does not count as filled).
+  function autoCollapseIfEmpty(noteId) {
+    var input = document.getElementById(noteId);
+    var w     = document.getElementById(noteId + '-wrap');
+    if (input && w && input.value.trim() === '') w.classList.add('collapsed');
+  }
+
   // ── Pain VAS display (mirror form_sci.js onPainChange) ──
   function onPainChange(which) {
     var n  = parseInt(gv('pain-' + which));
@@ -112,6 +128,10 @@ var FacialForm = (function () {
   function initGrids() {
     gFacial = AssessmentGrid.create({ containerId: 'facial-mov-grid', rows: FACIAL_ROWS, columns: GRADE_COL });
     gTongue = AssessmentGrid.create({ containerId: 'tongue-mov-grid', rows: TONGUE_ROWS, columns: GRADE_COL });
+    NOTE_IDS.forEach(function (id) {
+      var input = document.getElementById(id);
+      if (input) input.addEventListener('blur', function () { autoCollapseIfEmpty(id); });
+    });
   }
   function stampFacialPoor() { if (gFacial) gFacial.stampBlanks('Poor'); }
   function stampTonguePoor() { if (gTongue) gTongue.stampBlanks('Poor'); }
@@ -209,6 +229,13 @@ var FacialForm = (function () {
     setSingle('sens-pin-chips',  s.pinPrick);
     sv('sensation-notes', s.notes);
 
+    // Re-open any note that has content so a written note is never hidden behind a click.
+    NOTE_IDS.forEach(function (id) {
+      var input = document.getElementById(id);
+      var w     = document.getElementById(id + '-wrap');
+      if (input && w && input.value.trim() !== '') w.classList.remove('collapsed');
+    });
+
     if (d.affectedSide) pickSide(d.affectedSide);
     if (gFacial) gFacial.loadData(d.facialMov);
     if (gTongue) gTongue.loadData(d.tongueMov);
@@ -235,6 +262,11 @@ var FacialForm = (function () {
 
     ['nature-chips','agg-chips','ease-chips','hrs24-chips',
      'sens-hot-chips','sens-cold-chips','sens-pin-chips'].forEach(clearChips);
+    // Re-collapse all notes back to the tidy +Note default.
+    NOTE_IDS.forEach(function (id) {
+      var w = document.getElementById(id + '-wrap');
+      if (w) w.classList.add('collapsed');
+    });
     _irr = ''; pickIrr('');
     _side = ''; pickSide('');
 
@@ -260,7 +292,8 @@ var FacialForm = (function () {
     stampTonguePoor: stampTonguePoor,
     collect: collect,
     populate: populate,
-    reset: reset
+    reset: reset,
+    toggleNote: toggleNote
   };
 })();
 
