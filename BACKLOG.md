@@ -107,15 +107,11 @@
   DEFERRED — replacing scale values deviates from the KKM borang letters (preserve-KKM
   axiom tension) and touches OPT_FUNC + saved data + PDF + MPIS. Bigger than a legend task;
   needs its own deliberate decision. Surfaced 2026-06-12 during legend build.
-- **Worktree folder cleanup** — `PT_Assessment-worktrees\optimistic-banzai-766e26`,
-  `PT_Assessment-worktrees\eloquent-williamson-fb5d6d`, `PT_Assessment-worktrees\vigorous-lehmann-32404d`,
-  `PT_Assessment-worktrees\exciting-lewin-bf53d0`, `PT_Assessment-worktrees\nice-mahavira-6a9cb1`,
-  `PT_Assessment-worktrees\jolly-hodgkin-245daf` (added 2026-06-13), and `PT_Assessment-worktrees\magical-swartz-16db1c` (added 2026-06-17) folders may persist on disk
-  after git worktree remove (Windows blocks deletion when a session's CWD is inside). Branches deleted
-  + pruned fine; only the folders linger. Safe to `rmdir /s /q` manually from Explorer/cmd once those
-  sessions are closed. `PT_Assessment-worktrees\frosty-hodgkin-8090cd` (2026-06-18, merged to main);
-  `PT_Assessment-worktrees\upbeat-einstein-e05cd8` (2026-06-23, merged to main) — both safe to
-  `rmdir /s /q` once those sessions close.
+- ~~**Worktree folder cleanup**~~ DONE 2026-06-24. All lingering `PT_Assessment-worktrees\*` folders
+  (optimistic-banzai, eloquent-williamson, vigorous-lehmann, exciting-lewin, nice-mahavira,
+  jolly-hodgkin, magical-swartz, frosty-hodgkin, upbeat-einstein) are now removed from disk —
+  `PT_Assessment-worktrees/` is empty. Git side was already clean. Keep the Step-0 cull habit so this
+  list never regrows.
 - **Multi-select chip helper promotion** — `toggleChip/getChips/setChips` now has 2 local copies (NEURO, FACIAL). On a 3rd consumer, promote to FormBase (cf. `pair_box` promotion rule from `pdf_sci.py`). Do NOT promote speculatively.
 
 - **FACIAL full-clickfest pilot (deferred)** — Per FACIAL_SPEC.md Build Note #5: once FACIAL is stable in clinical use, use it as the pilot form to flip full intake to clickfest (Observation/Palpation/General Health/Problem chip sets). If good, roll across all forms as its own spec→plan→build cycle. Defer until post-pilot.
@@ -124,6 +120,7 @@
 
 - VESTIBULAR form (Neurological group, NO ready). FACIAL now shipped (ready=True).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
+- **NCD spec written 2026-06-24** (`docs/superpowers/specs/2026-06-24-ncd-form-design.md`); awaiting implementation plan. New `ncd_measurements` table (v3 migration) + trend page + SOAP-modal injection are the net-new build surface.
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
 - Dummy patient + burn seed record for smoke-testing — extend `seed_db.py` so a realistic test record loads with one click instead of hand-filling `test` into every field each smoke test. Requested 2026-06-01.
 

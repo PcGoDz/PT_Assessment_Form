@@ -1,29 +1,27 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 ## Where we left off
 
-FACIAL +Note ghost (collapsible optional notes) BUILT, double-audited, smoke-gated, and MERGED to main (--no-ff `a2a4553`) + pushed to GitHub. Executed PLAN-FACIAL-UIX.md Tasks 1-4 on worktree upbeat-einstein-e05cd8: CSS (`e60829d`), 5-note markup wraps (`495a053`), JS toggleNote + empty-blur auto-collapse + populate-reopen + reset-recollapse (`0b97fac`). One layout fix during smoke-test: +Note buttons floated center in `.field`'s flex-column → pinned `align-self:flex-start` form-local (`a674b46`). All 5 note input ids unchanged (nature-notes/agg-notes/ease-notes/hrs24-notes/sensation-notes) so collect()/populate() data path intact; sensation-notes lost its `.fg>.field>label` chrome to match the other 4 (plan risk #4, intentional). FACIAL Phase 1.2 DONE.
-Also this session: pushed 20 backlogged commits to GitHub (origin/main was stuck at 636bf03, all FACIAL work was local-only) + housekeeping (`dc2f348`: gitignored outputs/ Cowork scratchpad, deleted stale FACIAL_TEMPLATES_PROMPT.md + PASSOVER-next-session.md, force-deleted dead claude/facial-plan branch — content was strict subset of main).
+NCD form design spec written + committed (`docs/superpowers/specs/2026-06-24-ncd-form-design.md`). Full brainstorm via superpowers skill in Cowork. Locked 10 decisions (D1-D10 in spec §1). Core architecture: NCD is the first form to break "one record per episode" — per-visit numeric battery (vitals/bodycomp/fitness) saved to a NEW `ncd_measurements` table (mirrors soap_notes pattern), entered via an NCD-only panel injected into the SOAP modal, read by a new screen-only trend page (infographic style, sparklines, NEVER touches PDF/MPIS). Body shape = 7-figure picker (traced PNGs already extracted to `static/img/ncd_shapes/`, WYSIWYG screen+PDF). Body chart = borrow bodychart.js. Templates = all 5 narrative fields from the Best Statement doc.
 
 ## Half-done
 
-- Worktree folder PT_Assessment-worktrees/upbeat-einstein-e05cd8 lingers on disk (Windows CWD-lock, this CC session inside it). Branch deleted + pruned git-side. Safe `rmdir /s /q PT_Assessment-worktrees\upbeat-einstein-e05cd8` once this session closes.
-- Older lingering worktree folders from prior sessions may still be on disk (see BACKLOG worktree-cleanup list) — all git-side clean, folders await manual rmdir.
+- NCD spec is design-only — NO implementation plan yet (next session's job: CC-Opus writes durable plan FROM the spec via writing-plans skill).
+- Figure assets need a ~2min top-crop cleanup (figs 1+4 have faint leg-bleed smudge at top edge, noted spec §7).
 
 ## Next session priorities
 
-1. Nothing blocking. FACIAL is fully shipped + merged + pushed. Fresh pick.
-2. Candidate next forms (all ready=False): VESTIBULAR (Neuro), PAEDIATRIC/LYMPHOEDEMA/NCD/GENERAL (Rehab). Per memory: peds is lowest priority, GENERAL dead last.
-3. Optional: exe build (deferred whole FACIAL phase) — rebuild via build.bat now that FACIAL's done, smoke the packaged exe.
-4. Optional housekeeping: clear the lingering worktree folders once their sessions close.
+1. CC-Opus (fresh session, Opus): writing-plans skill → durable NCD implementation plan from `docs/superpowers/specs/2026-06-24-ncd-form-design.md`. Spec §11 has 5 open items for the plan author (all have a recommendation).
+2. Decide at spec §9 cut line: NCD as one plan, or split initial-form (rungs 1-7) from measurements/trend (rungs 8-10) into two cycles.
+3. Commit untracked: the spec + `static/img/ncd_shapes/`. Delete `_ncd_render/` scratch. (DONE this session — see commit below.)
 
 ## Gotchas discovered this session
 
-- **+Note in a flex-column `.field` floats center, not left** — `.field` is `display:flex;flex-direction:column`; a bare `<button>` child centers in the leftover width. SCI's donor avoids this only because its +Note sits under a full-width grid, not a partial-width chip row. Fix: `align-self:flex-start` on `.func-note-toggle`, form-local. Cosmetic, see-it-live per plan risk #3.
-- **Two-window audit method held clean** — verified all 4 commits from git object store (`git show <hash>:<file>`), never raw mount read. The "4 files in git diff --stat main" scare was housekeeping-commit noise (main advanced past branch point d0af376); diffing against the true merge-base showed exactly 2 files. Always diff against merge-base, not main tip, when the branch is behind main.
+- None code-level (spec-only session). Process note: the body-shape archetype count was 7 (not the 4-5 the prior passover guessed) — the leash (PDF) corrected the memory, as the don't-pre-scope-from-memory flag intended.
+- All lingering worktree folders from prior sessions are now GONE — `PT_Assessment-worktrees/` is empty. The BACKLOG worktree-cleanup list is stale and was trimmed this session.
 
 ## What to skip for now
 
-Exe build unless explicitly wanted. Other forms (VESTIBULAR/PAEDIATRIC/LYMPHOEDEMA/NCD/GENERAL). See BACKLOG.md for the full deferred list.
+VESTIBULAR/PAEDIATRIC/LYMPHOEDEMA/GENERAL. exe build. See BACKLOG.md for the full deferred list.
