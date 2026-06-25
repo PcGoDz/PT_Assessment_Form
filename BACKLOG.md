@@ -120,7 +120,7 @@
 
 - VESTIBULAR form (Neurological group, NO ready). FACIAL now shipped (ready=True).
 - PAEDIATRIC / LYMPHOEDEMA / NCD / GENERAL (Rehabilitation group, all NO ready).
-- **NCD spec written 2026-06-24** (`docs/superpowers/specs/2026-06-24-ncd-form-design.md`); awaiting implementation plan. New `ncd_measurements` table (v3 migration) + trend page + SOAP-modal injection are the net-new build surface.
+- **NCD plans WRITTEN + vetted + committed 2026-06-25** (spec: `docs/superpowers/specs/2026-06-24-ncd-form-design.md`; plans: `docs/superpowers/plans/2026-06-25-ncd-form-plan-A.md` + `-plan-B.md`). Build-ready, NOT yet built. Build order: Plan A (initial snapshot form, zero schema change) → smoke-test → merge → Plan B (per-visit `ncd_measurements` v3 table + trend page + additive SOAP-modal injection). The **session_no→soap_id-FK alignment fix is baked into Plan B Task 1–2** (nullable `soap_id` FK, upsert on `(episode_id, soap_id)`, trend orders by `note_date`) so the off-by-one (visit 1 = assessment with no SOAP note → two parallel `MAX+1` counters desync on first follow-up) can't be re-derived wrong at build time. Rollout: ship `ready=True` when Plan A merges (single-user, Miruya's call).
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
 - Dummy patient + burn seed record for smoke-testing — extend `seed_db.py` so a realistic test record loads with one click instead of hand-filling `test` into every field each smoke test. Requested 2026-06-01.
 
