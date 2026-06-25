@@ -433,9 +433,35 @@ Add `recompute` to `window.Form`. Call `recompute()` at the end of `populate()` 
 - Balance: `stork` (sec), `balance-comment`
 Sidebar nav `s-fitness`.
 
-- [ ] **Step 5: collect/populate/reset for 04–06**
+- [ ] **Step 5: collect/populate/reset for 04–06 — the battery goes under a `measurements` key**
 
-In `collect()` add a flat block of all the above ids (`hr: gv('hr')`, … `stork: gv('stork')`, plus all comments). Keep flat keys (NCD has no nesting need beyond lifestyle/bodyChart/sensation). In `populate(d)` mirror each `sv(id, d.key)`. In `reset()` add every id to the blanket `sv(id,'')` list, then call `recompute()` (clears the badges since inputs are now empty).
+**Design decision (folds in cold-vet A-rider-1):** the per-visit numeric battery (vitals + bloods + body comp + fitness) is emitted as a NESTED `measurements` sub-dict, NOT flat top-level keys. This is the contract Plan B imports verbatim (`collect().measurements` → posted to `ncd_measurements`, read by the trend). Nesting it makes the Plan A↔B handoff a literal object copy with zero key-remapping — killing the "guess the key, plot null forever" silent-failure vector the vet flagged.
+
+In `collect()` add ONE nested block (use the exact camelCase keys below — they are FROZEN, see Task 5 Step 3):
+```javascript
+      measurements: {
+        // vitals
+        hr: gv('hr'), rr: gv('rr'), bp: gv('bp'), spo2: gv('spo2'),
+        // bloods
+        fbs: gv('fbs'), hba1c: gv('hba1c'), cholesterol: gv('cholesterol'),
+        ldl: gv('ldl'), hdl: gv('hdl'), triglycerides: gv('triglycerides'),
+        // body composition (bmi + whr are COMPUTED numerics, not just badge text, so the trend can plot them)
+        height: gv('height'), weight: gv('weight'), bmi: _bmi(), waist: gv('waist'), hip: gv('hip'), whr: _whr(),
+        subfatWhole: gv('subfat-whole'), subfatTrunk: gv('subfat-trunk'), subfatArm: gv('subfat-arm'), subfatLeg: gv('subfat-leg'),
+        muscleWhole: gv('muscle-whole'), muscleTrunk: gv('muscle-trunk'), muscleArm: gv('muscle-arm'), muscleLeg: gv('muscle-leg'),
+        visceralFat: gv('visceral-fat'), rmr: gv('rmr'),
+        // fitness
+        walk6Rpe: gv('walk6-rpe'), walk6Bp: gv('walk6-bp'), walk6Hr: gv('walk6-hr'), walk6Comment: gv('walk6-comment'),
+        step3Hr: gv('step3-hr'), step3Comment: gv('step3-comment'),
+        sitReach: gv('sit-reach'), flexComment: gv('flex-comment'),
+        handGrip: gv('hand-grip'), sitUp: gv('sit-up'), pushUp: gv('push-up'), ulComment: gv('ul-comment'),
+        sitToStand: gv('sit-to-stand'), llComment: gv('ll-comment'),
+        stork: gv('stork'), balanceComment: gv('balance-comment')
+      },
+```
+Add two tiny compute helpers so `bmi`/`whr` are stored as numbers (reuse `recompute()`'s math): `_bmi()` returns `(h>0&&w>0) ? +(w/((h/100)**2)).toFixed(1) : ''`; `_whr()` returns `(wa>0&&hp>0) ? +(wa/hp).toFixed(2) : ''` (reading `gv('height')` etc.). `recompute()` can call these for the badge text too (DRY).
+
+In `populate(d)`: `var m = d.measurements || {};` then `sv('hr', m.hr); ... sv('balance-comment', m.balanceComment);` for every key (height/weight/waist/hip do NOT need bmi/whr written — those are derived inputs; after filling them call `recompute()` to repaint the badges). In `reset()` add every battery DOM id to the blanket `sv(id,'')` list, then call `recompute()` (clears the badges since inputs are now empty).
 
 - [ ] **Step 6: node --check + smoke-test**
 
@@ -472,9 +498,26 @@ Add sidebar nav items for `s-observation`, `s-impression`, `s-goals`.
 
 `collect()`: `observation`, `impression: gv('pt-impression')`, `patientGoal: gv('patient-goal')`, `stg`, `ltg`, `planOfTreatment: gv('plan')`. `populate()` mirror. `reset()` add ids to blanket list.
 
-- [ ] **Step 3: Finalize the full collect() shape**
+- [ ] **Step 3: Finalize the full collect() shape + FREEZE the battery keys**
 
 Read the entire `collect()` function top-to-bottom and confirm it returns EVERY field from sections 02–09 plus `_form_type:'NCD'`, `meta:{form:'NCD'}`, `patient`. This is the single data contract the PDF and MPIS must mirror. Document it as a comment block at the top of collect() so PDF/MPIS authors cross-reference (WORKFLOW: collect → PDF → MPIS must all three agree, or silent data loss).
+
+**MANDATORY (cold-vet A-rider-1) — emit the frozen battery-key contract.** Above the `measurements:` block in collect(), paste this verbatim comment. Plan B's measurements panel (Task 4) and the trend HEADLINE keys (Task 6) import THIS EXACT list — no guessing, no drift. If you change a key here, it must change in lockstep in Plan B, or the trend plots `null` forever with no error.
+```javascript
+      // ════════════════════════════════════════════════════════════════
+      // PER-VISIT BATTERY KEYS (Plan B trend + measurements panel import these VERBATIM)
+      // FROZEN CONTRACT — do not rename without updating Plan B in lockstep.
+      // vitals:   hr, rr, bp, spo2
+      // bloods:   fbs, hba1c, cholesterol, ldl, hdl, triglycerides
+      // bodycomp: height, weight, bmi, waist, hip, whr,
+      //           subfatWhole, subfatTrunk, subfatArm, subfatLeg,
+      //           muscleWhole, muscleTrunk, muscleArm, muscleLeg,
+      //           visceralFat, rmr
+      // fitness:  walk6Rpe, walk6Bp, walk6Hr, walk6Comment, step3Hr, step3Comment,
+      //           sitReach, flexComment, handGrip, sitUp, pushUp, ulComment,
+      //           sitToStand, llComment, stork, balanceComment
+      // ════════════════════════════════════════════════════════════════
+```
 
 - [ ] **Step 4: node --check + commit**
 
@@ -509,6 +552,8 @@ Run:
 py -c "from database import validate_record; print(validate_record({'meta':{'form':'NCD'},'patient':{'name':'X','date':'2026-06-25','type':'local','nric':'900101015523'},'diagnosis':'','impression':''}))"
 ```
 Expected: `["Doctor's Diagnosis is required", 'PT Impression is required']` (both fired). Then re-run with `'diagnosis':'DM','impression':'obese'` → expected `[]`.
+
+**HARD GATE (cold-vet A-rider-2):** actually RUN both `py -c` invocations and read the output — do NOT eyeball-approve this step. `REQUIRED_FIELDS['NCD']` keys are collect() TOP-LEVEL keys (`diagnosis`, `impression`), NOT DOM ids (`pt-impression`). A wrong key here = the rule never fires (saves "fine" but unvalidated) or always fires (422 on EVERY save). The two-run check — both-fired, then empty-list — is the only thing that distinguishes those. Treat a mismatch as a blocker, not a note.
 
 - [ ] **Step 3: Hand-test the full round-trip (Miruya)**
 
@@ -665,7 +710,7 @@ Copy `pdf_facial.py` to `pdf_ncd.py`. Change the KKM ref string to `fisio / b.pe
 
 - [ ] **Step 2: Build the story to mirror collect()**
 
-Cross-reference every field in the finalized `collect()` (Task 5 comment block) against a render block. Use the primitives: `page_header`, `patient_bar`, `box`/`two_col` for text sections, `data_table` (with `_has_data` guard, DESIGN_SYSTEM-pdf) for the numeric batteries (vitals/bloods/bodycomp/fitness), `body_chart_section(data.get('bodyChart'))` for the chart, `plan_section(impression, stg, ltg, treatment)` for the plan grid, `sign_chop_block()` (via `story +=`, it returns a list) as footer. Guard empty tables so a sparse first visit doesn't print "—" everywhere.
+Cross-reference every field in the finalized `collect()` (Task 5 comment block) against a render block. **The numeric batteries live under `data.get('measurements', {})`** (nested per Task 4 Step 5) — read `m = data.get('measurements', {})` then `m.get('weight')` etc. Use the primitives: `page_header`, `patient_bar`, `box`/`two_col` for text sections, `data_table` (with `_has_data` guard, DESIGN_SYSTEM-pdf) for the numeric batteries (vitals/bloods/bodycomp/fitness from `measurements`), `body_chart_section(data.get('bodyChart'))` for the chart, `plan_section(impression, stg, ltg, treatment)` for the plan grid, `sign_chop_block()` (via `story +=`, it returns a list) as footer. Guard empty tables so a sparse first visit doesn't print "—" everywhere.
 
 - [ ] **Step 3: Body-shape PNG embed (NOVEL)**
 
@@ -742,7 +787,7 @@ git commit -m "NCD-A: pdf_ncd.py + body-shape PNG embed + registry pdf keys + sp
 Mirror `_buildMpisFacial()` (main.js:1022) — same `line()`/`chips()` helpers, same header block, same `MPIS_DIV`/`MPIS_DASH` constants (never redeclare). Structure NCD's content as SOAPIER:
 - Header: NCD ASSESSMENT + patient block (copy facial's header verbatim).
 - SUBJECTIVE: diagnosis, complaint, marital, occupation/recreation/pmhx/family/medication, lifestyle (smoking/alcohol/active flag + comment), current/past history.
-- OBJECTIVE: body shape (the name string — serialises directly, D4/§7), vitals, bloods, body comp incl. computed BMI/WHR (recompute in JS from the collected height/weight/waist/hip, or read the rendered badge text), fitness tests. Guard each sub-block with a `has*` check so blank sections are skipped (WORKFLOW MPIS pattern).
+- OBJECTIVE: body shape (the name string — serialises directly, D4/§7), then the battery from `d.measurements` (`var m = d.measurements || {};`): vitals, bloods, body comp incl. the already-computed `m.bmi`/`m.whr` (no recompute needed — they're stored numerics now), fitness tests. Guard each sub-block with a `has*` check so blank sections are skipped (WORKFLOW MPIS pattern).
 - ANALYSIS: impression.
 - PLAN: patient goal, STG, LTG, plan of treatment.
 Body chart markers: keep MPIS plain-text — list markers as facial/other forms do, or omit (the chart is visual; the PDF carries it). Decide for brevity: list a one-line marker summary if present.

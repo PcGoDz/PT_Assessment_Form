@@ -18,9 +18,11 @@
 
 1. **`ncd_measurements` = JSON blob, not typed columns.** Live `records.data_json` and `soap_notes` patterns both use `json.dumps`/`json.loads` (database.py `save_record`/`save_soap`). The trend reads the whole series and computes deltas in JS anyway. JSON blob keeps the schema stable if the battery changes. (Spec rec, confirmed.)
 2. **Two sequential fetches, NOT one combined endpoint.** `save_soap` (database.py:692) and the `POST /soap` route (app.py:243) + `saveSoap()` (episode.html:678) are shared by all 15 forms. The RED LINE forbids modifying them. So: existing SOAP path untouched + a NEW `POST /ncd-measurements` route, called as a second fetch. (Spec rec, confirmed.)
-3. **Initial-form save auto-writes `session_no=1`** via a second client-side fetch from the NCD form's save flow (the route exists now, in this plan). Forward-only — no backfill (NCD had no real production use pre-Plan-B; see Plan A's closing seam note). (Spec rec, confirmed.)
+3. **Initial-form save auto-writes the visit-1 assessment row** (`soap_id=NULL`) via a second client-side fetch from the NCD form's save flow. Idempotent by upsert on `(episode_id, soap_id IS NULL)`. Forward-only — no backfill (NCD had no real production use pre-Plan-B; see Plan A's closing seam note). (Spec rec, confirmed.)
 
-**Nothing in D1–D10 is technically unbuildable** — the SOAP modal has a clean `.soap-form` container and an `openSoapModal()` populator that accept additive injection without restructure (verified against episode.html:501–584, 627–651). No blocker to flag back.
+**Cold-vet alignment fix folded in (the one real design change this revision):** `ncd_measurements` gains a nullable `soap_id` FK to `soap_notes`. Visit-1 assessment row = `soap_id NULL`; every follow-up row = the SOAP note's id. Editing/prefilling matches by `soap_id` (FK lookup), the trend orders by `note_date` — neither relies on the two tables' independent `session_no` counters agreeing (they can't: visit 1 writes a measurement with no soap note, so the counters are off-by-one from the first follow-up onward). Alignment is now by construction. See the box in Task 1.
+
+**Nothing in D1–D10 is technically unbuildable** — the SOAP modal has a clean `.soap-form` container and an `openSoapModal()` populator that accept additive injection without restructure (verified against episode.html:501–584, 627–651). The `soap_id` column is a one-line additive schema change. No blocker to flag back.
 
 ## Conventions
 
@@ -74,22 +76,31 @@ git worktree add ../PT_Assessment-worktrees/ncd-form-B -b claude/ncd-form-B
 
 - [ ] **Step 2: Add the table create + v3 gate**
 
-In `init_db`, add a `CREATE TABLE IF NOT EXISTS ncd_measurements` alongside the other creates (before the migration block), mirroring soap_notes shape with a JSON blob:
+In `init_db`, add a `CREATE TABLE IF NOT EXISTS ncd_measurements` alongside the other creates (before the migration block), mirroring soap_notes shape with a JSON blob **plus a nullable `soap_id` FK** (the cold-vet alignment fix — see the box below):
 ```python
     # ── NCD per-visit measurements (NCD form only) ────────────
     conn.execute('''
         CREATE TABLE IF NOT EXISTS ncd_measurements (
             id           INTEGER PRIMARY KEY AUTOINCREMENT,
             episode_id   INTEGER NOT NULL,
-            session_no   INTEGER NOT NULL DEFAULT 1,
+            soap_id      INTEGER,            -- FK to the visit's SOAP note; NULL for the visit-1 assessment row
+            session_no   INTEGER NOT NULL DEFAULT 1,  -- informational counter only; NOT the alignment key
             note_date    TEXT    NOT NULL,
             data_json    TEXT    NOT NULL,
             created_at   TEXT    NOT NULL,
             updated_at   TEXT    NOT NULL,
-            FOREIGN KEY (episode_id) REFERENCES episodes(id)
+            FOREIGN KEY (episode_id) REFERENCES episodes(id),
+            FOREIGN KEY (soap_id)    REFERENCES soap_notes(id)
         )
     ''')
 ```
+
+> **═══ THE SESSION_NO ALIGNMENT FIX (cold-vet, confirmed against live code + Miruya) ═══**
+> The original plan aligned `ncd_measurements` to `soap_notes` by parallel `MAX(session_no)+1` counters. That is **FALSE by construction** for NCD's real flow:
+> - **Visit 1 = full assessment.** Writes the `records` row + (Plan A auto-write) a `ncd_measurements` row. It does **NOT** create a SOAP note — SOAP notes start at visit 2 (Miruya: first visit is the assessment we're digitising; follow-ups are SOAP).
+> - After visit 1: `ncd_measurements` has 1 row, `soap_notes` has 0.
+> - **Visit 2 (first follow-up):** `save_soap` → `MAX(0)+1 = 1`; `save_ncd_measurement` → `MAX(1)+1 = 2`. **Misaligned on the first follow-up, for every NCD patient** — the default path, not an edge case. Editing a visit then pulls the WRONG measurement row; the trend's columns desync from the SOAP timeline. Silent.
+> **Fix = alignment BY CONSTRUCTION via the `soap_id` FK.** The assessment row carries `soap_id=NULL`; every follow-up measurement row carries the SOAP note's `id`. Editing fetches/updates by `soap_id` (a clean FK lookup), never by a guessed `session_no`. The trend orders by `note_date`. The two independent counters never have to agree. `session_no` stays as an informational per-row counter only — nothing aligns on it.
 Then bump the version gate. Current code ends the migration block with `conn.execute('PRAGMA user_version = 2')` (database.py:108). Add a v3 gate before it and change the stamp to 3:
 ```python
     if _version < 3:
@@ -106,7 +117,7 @@ Then bump the version gate. Current code ends the migration block with `conn.exe
 ```bash
 py -c "import database, tempfile, os; p=os.path.join(tempfile.gettempdir(),'ncd_v3_test.db'); os.path.exists(p) and os.remove(p); database.init_db(p); import sqlite3; c=sqlite3.connect(p); print('version', c.execute('PRAGMA user_version').fetchone()[0]); print('cols', [r[1] for r in c.execute('PRAGMA table_info(ncd_measurements)')])"
 ```
-Expected: `version 3` and the column list `['id','episode_id','session_no','note_date','data_json','created_at','updated_at']`. Re-run a second time (idempotent) → still `version 3`, no error.
+Expected: `version 3` and the column list `['id','episode_id','soap_id','session_no','note_date','data_json','created_at','updated_at']` (note `soap_id` present). Re-run a second time (idempotent) → still `version 3`, no error.
 
 - [ ] **Step 4: Commit**
 
@@ -122,35 +133,50 @@ git commit -m "NCD-B: v3 migration — ncd_measurements table"
 **Files:**
 - Modify: `database.py`
 
-- [ ] **Step 1: Add `save_ncd_measurement` (mirror `save_soap`)**
+- [ ] **Step 1: Add `save_ncd_measurement` — upsert by the `(episode_id, soap_id)` natural key**
 
+The alignment fix lives here: the row is identified by `soap_id`, NOT by a parallel counter. `soap_id=None` ⇒ the visit-1 assessment row (there is exactly one per episode). `soap_id=<n>` ⇒ the follow-up tied to that SOAP note. Upserting on this natural key means re-saving a visit can never create a duplicate, and editing always lands on the right row.
 ```python
 def save_ncd_measurement(db_path, episode_id, data):
     if not data.get('note_date', '').strip():
         return None, ['Measurement date is required']
-    now = datetime.now().isoformat(timespec='seconds')
-    mid = data.get('id')
-    conn = get_conn(db_path)
+    now     = datetime.now().isoformat(timespec='seconds')
+    soap_id = data.get('soap_id')   # None for the visit-1 assessment row
+    blob    = json.dumps(data.get('measurements', {}))
+    conn    = get_conn(db_path)
     try:
-        if mid:
+        # Find the existing row by the natural key (episode_id + soap_id), NULL-safe.
+        if soap_id is None:
+            existing = conn.execute(
+                'SELECT id FROM ncd_measurements WHERE episode_id=? AND soap_id IS NULL',
+                (episode_id,)
+            ).fetchone()
+        else:
+            existing = conn.execute(
+                'SELECT id FROM ncd_measurements WHERE episode_id=? AND soap_id=?',
+                (episode_id, soap_id)
+            ).fetchone()
+
+        if existing:
+            mid = existing['id']
             conn.execute('''
                 UPDATE ncd_measurements
                 SET note_date=?, data_json=?, updated_at=?
                 WHERE id=?
-            ''', (data.get('note_date',''), json.dumps(data.get('measurements', {})), now, mid))
+            ''', (data.get('note_date',''), blob, now, mid))
         else:
             row = conn.execute(
                 'SELECT MAX(session_no) as mx FROM ncd_measurements WHERE episode_id=?',
                 (episode_id,)
             ).fetchone()
-            next_session = (row['mx'] or 0) + 1
+            next_session = (row['mx'] or 0) + 1   # informational counter only
             cur = conn.execute('''
                 INSERT INTO ncd_measurements
-                    (episode_id, session_no, note_date, data_json, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (episode_id, next_session, data.get('note_date',''),
-                  json.dumps(data.get('measurements', {})), now, now))
+                    (episode_id, soap_id, session_no, note_date, data_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (episode_id, soap_id, next_session, data.get('note_date',''), blob, now, now))
             mid = cur.lastrowid
+
         conn.execute('UPDATE episodes SET updated_at=? WHERE id=?', (now, episode_id))
         conn.commit()
         return mid, []
@@ -159,7 +185,7 @@ def save_ncd_measurement(db_path, episode_id, data):
     finally:
         conn.close()
 ```
-Note: the numeric battery lives under a `measurements` key in the posted payload; `data_json` stores just that sub-dict (the trend reads it directly).
+Notes: the numeric battery lives under a `measurements` key in the posted payload; `data_json` stores just that sub-dict. The upsert-by-natural-key makes BOTH the auto-write idempotency (Task 5) and the SOAP-panel edit (Task 4) fall out for free — neither needs to track a separate measurement-row `id`.
 
 - [ ] **Step 2: Add `get_ncd_measurements` (mirror `get_soap_notes`)**
 
@@ -167,13 +193,15 @@ Note: the numeric battery lives under a `measurements` key in the posted payload
 def get_ncd_measurements(db_path, episode_id):
     conn = get_conn(db_path)
     try:
+        # Order by note_date (the alignment fix orders the trend by real visit date,
+        # NOT by either table's session_no counter). created_at breaks date ties stably.
         rows = conn.execute('''
             SELECT * FROM ncd_measurements WHERE episode_id=?
-            ORDER BY session_no ASC
+            ORDER BY note_date ASC, created_at ASC
         ''', (episode_id,)).fetchall()
         out = []
         for r in rows:
-            d = dict(r)
+            d = dict(r)                       # carries id, episode_id, soap_id, session_no, note_date
             try:
                 d['measurements'] = json.loads(d.get('data_json') or '{}')
             except Exception:
@@ -185,7 +213,7 @@ def get_ncd_measurements(db_path, episode_id):
     finally:
         conn.close()
 ```
-(Parses the JSON blob server-side so the trend JS receives ready dicts.)
+Parses the JSON blob server-side so the trend JS and the SOAP-panel prefill receive ready dicts. Each row carries `soap_id` (the FK the panel matches on) and `note_date` (the trend's column/order key).
 
 - [ ] **Step 3: Add `delete_ncd_measurement` (mirror `delete_soap`)**
 
@@ -219,16 +247,26 @@ p=os.path.join(tempfile.gettempdir(),'ncd_fn_test.db'); os.path.exists(p) and os
 database.init_db(p)
 pid,_=database.create_patient(p,{'name':'Test','nric':'900101015523','type':'local'})
 eid,_=database.create_episode(p,pid,'NCD')
-m1,_=database.save_ncd_measurement(p,eid,{'note_date':'2026-06-25','measurements':{'weight':90,'bmi':31.1}})
-m2,_=database.save_ncd_measurement(p,eid,{'note_date':'2026-07-02','measurements':{'weight':88,'bmi':30.4}})
+# Visit 1 = assessment auto-write: soap_id NULL
+database.save_ncd_measurement(p,eid,{'note_date':'2026-06-25','measurements':{'weight':90,'bmi':31.1}})
+# Re-save the assessment (idempotency): same NULL-soap row UPDATES, no duplicate
+database.save_ncd_measurement(p,eid,{'note_date':'2026-06-25','measurements':{'weight':89,'bmi':30.8}})
+# Visit 2 = first follow-up: a soap note then its linked measurement (soap_id set)
+sid,_=database.save_soap(p,eid,{'note_date':'2026-07-02','subjective':'better'})
+database.save_ncd_measurement(p,eid,{'soap_id':sid,'note_date':'2026-07-02','measurements':{'weight':88,'bmi':30.4}})
+# Edit that follow-up's measurement: same soap_id UPDATES, no duplicate
+database.save_ncd_measurement(p,eid,{'soap_id':sid,'note_date':'2026-07-02','measurements':{'weight':87,'bmi':30.0}})
 rows,_=database.get_ncd_measurements(p,eid)
-print('count', len(rows), 'sessions', [r['session_no'] for r in rows], 'w', [r['measurements'].get('weight') for r in rows])
+print('count', len(rows))
+print('soap_ids', [r['soap_id'] for r in rows])
+print('dates', [r['note_date'] for r in rows])
+print('weights', [r['measurements'].get('weight') for r in rows])
 database.delete_patient(p,pid)
 rows2,_=database.get_ncd_measurements(p,eid)
 print('after cascade', len(rows2))
 "
 ```
-Expected: `count 2 sessions [1, 2] w [90, 88]` then `after cascade 0`.
+Expected: `count 2` (NOT 4 — both re-saves upserted), `soap_ids [None, <sid>]`, `dates ['2026-06-25','2026-07-02']` (note_date order), `weights [89, 87]` (the updated values), then `after cascade 0`. This proves: (a) idempotent assessment row, (b) `soap_id` linkage, (c) per-soap edit upserts, (d) date ordering, (e) cascade delete.
 
 - [ ] **Step 6: Commit**
 
@@ -323,38 +361,40 @@ This is ADDITIVE — it adds one hidden `<div>` and changes nothing existing. Do
 - [ ] **Step 2: Create `static/js/ncd_measure.js` — panel build + guard + save**
 
 Keep the logic OUT of episode.html's inline script (minimise edits to the shared file). The module:
-- `NcdMeasure.maybeShow(formType)` — toggles `#ncd-measure-panel` display based on `formType === 'NCD'`, and builds the grid inputs once (the per-visit battery = the SAME numeric fields as Plan A form sections 04–06: vitals, bloods, body comp incl. derived BMI/WHR, fitness tests). Render them as compact number inputs into `#ncd-measure-grid`.
-- `NcdMeasure.collect()` — returns the `measurements` sub-dict from the panel inputs.
+- `NcdMeasure.maybeShow(formType)` — toggles `#ncd-measure-panel` display based on `formType === 'NCD'`, and builds the grid inputs once (the per-visit battery). Render them as compact number inputs into `#ncd-measure-grid`.
+- `NcdMeasure.collect()` — returns the `measurements` sub-dict from the panel inputs (with `bmi`/`whr` computed numerics, same math as form_ncd.js — reuse the formula).
 - `NcdMeasure.populate(m)` — fills the panel from a measurements dict.
 - `NcdMeasure.clear()` — blanks the panel.
-- `NcdMeasure.save(episodeId, soapId)` — POSTs `{note_date, measurements}` to `/api/episodes/<id>/ncd-measurements`. Called as the SECOND fetch (see Step 4).
+- `NcdMeasure.loadForSoap(episodeId, soapId)` — fetches `/ncd-measurements`, finds the row whose `soap_id === soapId`, populates the panel; clears if none.
+- `NcdMeasure.save(episodeId, soapId)` — POSTs `{soap_id: soapId, note_date, measurements}` to `/api/episodes/<id>/ncd-measurements`. Called as the SECOND fetch (Step 4).
 
-Field set MUST match Plan A's battery keys exactly (so the trend can read a uniform series across initial + follow-ups). Derive BMI/WHR in the panel the same way form_ncd.js does (reuse the formula; the panel can include its own tiny `recompute`).
+**B-rider-2 (FROZEN KEYS — no placeholders):** the panel's field set and key names MUST be the EXACT frozen battery keys emitted by Plan A Task 5 Step 3 (`hr, rr, bp, spo2, fbs, hba1c, cholesterol, ldl, hdl, triglycerides, height, weight, bmi, waist, hip, whr, subfatWhole…subfatLeg, muscleWhole…muscleLeg, visceralFat, rmr, walk6Rpe…balanceComment`). Copy that frozen list verbatim from Plan A — do NOT invent keys like `walk6`/`handGrip` shorthand. A mismatch = the trend reads `null` for that metric across every visit, silently. Cross-check the panel keys against Plan A's frozen comment block before wiring.
 
 - [ ] **Step 3: Include the script + wire the guard**
 
 In episode.html, add `<script src="/static/js/ncd_measure.js"></script>` near the existing `clinical_templates.js` include. Then hook the guard into the EXISTING `openSoapModal()` (episode.html:627) with a single additive line near the end (where it already does the `oBtn` form-type check at line 644–648 — same idiom, null-guarded):
 ```javascript
-  // NCD-only: show measurements panel + prefill if editing an existing visit
+  // NCD-only: show measurements panel + prefill the row linked to THIS soap note (by FK, not session_no)
   if (window.NcdMeasure) {
     NcdMeasure.maybeShow(episode ? episode.form_type : '');
-    if (soap && soap.session_no) NcdMeasure.loadForSession(EPISODE_ID, soap.session_no);
+    if (soap && soap.id) NcdMeasure.loadForSoap(EPISODE_ID, soap.id);
     else NcdMeasure.clear();
   }
 ```
-`loadForSession` fetches `/ncd-measurements`, finds the row whose `session_no` matches the SOAP note's `session_no` (session_no alignment — both auto-number per visit, spec §5.3 "simplest"), and populates the panel. This is purely additive: on non-NCD forms `maybeShow('MS')` keeps the panel hidden and does nothing else.
+`loadForSoap` matches the measurement row by `soap_id === soap.id` — the FK lookup from the alignment fix, NOT a `session_no` guess. (The original session_no-match approach is the bug the cold vet caught; do not reintroduce it.) Purely additive: on non-NCD forms `maybeShow('MS')` keeps the panel hidden and does nothing else.
 
 - [ ] **Step 4: Second-fetch on SOAP save (additive, no change to existing save)**
 
-The existing `saveSoap()` (episode.html:678) POSTs the SOAP note and on success calls `loadSoaps()`. Do NOT modify its payload or route. Add the measurements write as a SECOND fetch AFTER the SOAP save succeeds, guarded by form type. Minimal additive change inside `saveSoap()`'s success branch (right after `closeModal()` / before/after `loadSoaps()`):
+The existing `saveSoap()` (episode.html:678) POSTs the SOAP note and on success gets back `{success, id}` where `id` is the soap note's id. Do NOT modify its payload or route. Add the measurements write as a SECOND fetch AFTER the SOAP save succeeds, guarded by form type, passing the soap note's id as the FK. Minimal additive change inside `saveSoap()`'s success branch (after the response `j` is parsed, before/after `loadSoaps()`):
 ```javascript
     if (window.NcdMeasure && episode && episode.form_type === 'NCD') {
-      // session_no is assigned server-side; refetch isn't needed — post with the note_date,
-      // the measurement row auto-numbers in lockstep with the soap note for a new visit.
-      NcdMeasure.save(EPISODE_ID, j.id);  // j = soap save response
+      // Link the measurement row to THIS soap note via soap_id (the alignment fix).
+      // save_ncd_measurement upserts on (episode_id, soap_id) — new visit inserts,
+      // edited visit updates. No session_no counter is trusted; no duplicate possible.
+      NcdMeasure.save(EPISODE_ID, j.id);  // j.id = saved soap note id
     }
 ```
-**Important alignment note for the executor:** `save_soap` and `save_ncd_measurement` independently `MAX(session_no)+1`. For a brand-new visit both increment together (both at count N→N+1), so they stay aligned. For an EDIT of an existing soap note, `NcdMeasure.save` must pass the existing measurement row's `id` (resolved via `loadForSession`) so it UPDATEs rather than inserting a duplicate. Implement `NcdMeasure.save` to: if the panel was populated from an existing row, send that row's `id`; else insert new. Verify alignment in Step 6.
+**Why this is now correct (was the bug):** the original plan assumed `save_soap` and `save_ncd_measurement` increment `session_no` "in lockstep." They do NOT — visit 1 (assessment) writes a measurement row with no soap note, so the counters are off by one from the first follow-up onward (see the alignment box in Task 1). The fix removes the counter dependency entirely: `NcdMeasure.save` passes `soap_id = j.id`, and `save_ncd_measurement` upserts on `(episode_id, soap_id)`. A brand-new follow-up inserts (no row with that `soap_id` yet); editing an existing follow-up updates (the `soap_id` already has a row). The executor does NOT need to track a measurement-row id — the natural key handles new-vs-edit. Verify in Step 6.
 
 - [ ] **Step 5: Add the "View Trend" breadcrumb link (NCD-only)**
 
@@ -373,8 +413,10 @@ Mirror the neutral-topbar/breadcrumb styling already in episode.html (BACKLOG: n
 
 - [ ] **Step 6: MANDATORY — NCD flow test AND non-NCD regression test (RED LINE)**
 
-On the worktree:
-- **NCD:** open an NCD episode → "+ Follow-up" → the measurements panel appears below the SOAP fields → fill weight/BMI etc. + SOAP text → Save → confirm BOTH a soap note AND a measurement row persisted (check `/api/episodes/N/ncd-measurements` and `/soap`). Edit that visit → panel prefills the saved numbers → change one → Save → confirm it UPDATED (no duplicate row; session count unchanged).
+On the worktree, walk the REAL flow (the one the alignment fix exists for):
+- **Visit 1 (assessment):** with the initial NCD form already saved (Task 5 auto-write), GET `/api/episodes/N/ncd-measurements` → exactly one row, `soap_id: null`.
+- **Visit 2 (first follow-up):** "+ Follow-up" → the measurements panel appears below the SOAP fields → fill weight/BMI etc. + SOAP text → Save → GET measurements → now TWO rows; the new one has `soap_id` = the new soap note's id (NOT null). Confirm a soap note also persisted (`/soap`).
+- **Edit visit 2:** reopen that follow-up → panel PREFILLS the saved numbers (proves `loadForSoap` matched by FK) → change weight → Save → GET measurements → still TWO rows, the follow-up row UPDATED (no duplicate, `soap_id` unchanged). This is the exact case the old session_no-match got wrong.
 - **NON-NCD regression (the RED LINE check):** open an MS (or any non-NCD) episode → "+ Follow-up" → confirm the measurements panel is ABSENT, the modal looks and behaves byte-for-byte as before, SOAP save works unchanged, no console errors, no stray network call to `/ncd-measurements`. This is non-negotiable per spec §5.3.
 
 - [ ] **Step 7: Commit**
@@ -399,13 +441,26 @@ Find where the NCD form's Save Record completes (the shared save in main.js that
 
 - [ ] **Step 2: Add the second fetch (additive, NCD-only)**
 
-After a successful record save, if `_form_type === 'NCD'` and `episode_id` is set, POST the battery sub-dict to `/api/episodes/<episode_id>/ncd-measurements`. Build the `measurements` dict from the same battery keys (vitals/bloods/bodycomp/fitness incl. derived BMI/WHR) the form already collected — extract them from `collect()` into a `measurements` object. Use `note_date = patient.date` (the assessment date) as the visit date.
+After a successful record save, if `_form_type === 'NCD'` and `episode_id` is set, POST the battery to `/api/episodes/<episode_id>/ncd-measurements`. Because Plan A now nests the battery under `collect().measurements` (A-rider-1), this is a literal pass-through — no extraction, no key remapping:
+```javascript
+    if (data._form_type === 'NCD' && data.episode_id) {
+      fetch('/api/episodes/' + data.episode_id + '/ncd-measurements', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          // soap_id omitted (=> null) — this is the visit-1 assessment row
+          note_date:    (data.patient && data.patient.date) || '',
+          measurements: data.measurements || {}
+        })
+      });
+    }
+```
+**Idempotency is now free** — no client-side GET-and-check needed. `save_ncd_measurement` upserts on `(episode_id, soap_id IS NULL)`: re-saving or editing the initial form lands on the SAME assessment row and UPDATEs it. Saving the initial form twice can never create two assessment rows (the upsert natural key guarantees it; verified in Task 2 Step 5).
 
-Idempotency: saving the initial form twice should NOT create two `session_no=1` rows. Guard: before posting, GET `/ncd-measurements`; if a row already exists for this episode (session 1 present), send that row's `id` to UPDATE instead of insert. (Simplest robust approach; avoids duplicate visit-1 rows on re-save/edit of the initial assessment.)
+**B-rider-1 — chosen behaviour, flagged not defaulted:** the visit-1 row uses `note_date = patient.date` (the assessment date), while SOAP-panel follow-up rows use the SOAP modal's date. These are normally the same day. If the clinician back-dates the assessment so `patient.date` ≠ the actual visit date, the trend's first column shows the assessment date, not the visit date. This is a deliberate choice (the assessment date IS the clinically meaningful date for visit 1, and it needs no extra UI). Documented here so it's a decision on record, not an accident. If it ever bites, the fix is to add a visit-date field to the initial form — out of scope for now.
 
 - [ ] **Step 3: Hand-test**
 
-On the worktree: create a fresh NCD episode → fill the initial form including some vitals/weight → Save Record → check `/api/episodes/N/ncd-measurements` shows exactly ONE row, `session_no=1`, carrying the battery values. Edit the initial form, change weight, Save again → still ONE row, updated weight (no duplicate). Then add a follow-up via the SOAP panel → a `session_no=2` row appears.
+On the worktree: create a fresh NCD episode → fill the initial form including some vitals/weight → Save Record → check `/api/episodes/N/ncd-measurements` shows exactly ONE row with `soap_id: null`, carrying the battery values. Edit the initial form, change weight, Save again → still ONE row (soap_id still null), updated weight (no duplicate — the upsert). Then add a follow-up via the SOAP panel → a SECOND row appears with `soap_id` set to the new soap note's id.
 
 - [ ] **Step 4: Commit**
 
@@ -446,18 +501,22 @@ A standalone page (like episode.html — NOT extending base.html's form shell). 
 
 var NcdTrend = (function () {
 
-  // Headline metrics (D7). key = measurements dict key; label = display.
+  // Headline metrics (D7). key = EXACT frozen battery key (Plan A Task 5 Step 3) — B-rider-2.
+  // These are NOT placeholders: every key below must appear verbatim in Plan A's frozen list,
+  // or the metric reads null across all visits and plots nothing, silently.
   var HEADLINE = [
-    { key: 'weight',   label: 'Weight (kg)' },
-    { key: 'bmi',      label: 'BMI' },
-    { key: 'waist',    label: 'Waist (cm)' },
-    { key: 'whr',      label: 'Waist/Hip' },
+    { key: 'weight',      label: 'Weight (kg)' },
+    { key: 'bmi',         label: 'BMI' },
+    { key: 'waist',       label: 'Waist (cm)' },
+    { key: 'whr',         label: 'Waist/Hip' },
     { key: 'visceralFat', label: 'Visceral Fat' },
-    { key: 'walk6',    label: '6-min walk' },   // adjust key to the battery's actual key
-    { key: 'handGrip', label: 'Hand grip (kg)' }
+    { key: 'walk6Hr',     label: '6-min walk HR' },  // this borang's 6MWT tracks HR/RPE/BP, not distance; HR is the headline numeric
+    { key: 'handGrip',    label: 'Hand grip (kg)' }
   ];
 
-  // ── TRANSFORM: ordered series -> { dates:[], metrics:{key:[values...]} } ──
+  // ── TRANSFORM: note_date-ordered series -> { dates:[], metrics:{key:[values...]} } ──
+  // rows arrive already ordered by note_date (get_ncd_measurements ORDER BY note_date) —
+  // the alignment fix orders the trend by real visit date, not by any session_no counter.
   // Missing metric in a visit => null (a GAP, never 0 — clinically wrong to plot blank as 0).
   function transform(rows) {
     var dates = rows.map(function (r) { return r.note_date; });
@@ -579,12 +638,15 @@ git branch -d claude/ncd-form-B
 
 - **§5.1 ncd_measurements table (JSON blob, v3 gate)** → Task 1. ✅
 - **§5.2 DB functions (save/get/delete) + delete_patient cascade** → Task 2. ✅
-- **§5.3 SOAP-modal injection (additive, guarded) + two-fetch save + load-by-session_no** → Task 4. ✅ RED LINE regression test mandatory (Task 4 Step 6, Task 7 Step 2.6).
-- **§3 note / §11.3 auto-write session_no=1 on initial save (idempotent)** → Task 5. ✅
+- **§5.3 SOAP-modal injection (additive, guarded) + two-fetch save + load-by-`soap_id` FK** → Task 4. ✅ RED LINE regression test mandatory (Task 4 Step 6, Task 7 Step 2.6).
+- **SESSION_NO ALIGNMENT FIX (cold vet)** → Task 1 (soap_id FK column), Task 2 (upsert by natural key, order by note_date), Task 4 (loadForSoap + save-by-soap_id, false "lockstep" assumption removed), Task 5 (idempotency via upsert). ✅ The off-by-one that desynced the trend from the SOAP timeline is fixed at the schema level — alignment is now by construction.
+- **§3 note / §11.3 auto-write the visit-1 assessment row on initial save (idempotent via upsert, soap_id=NULL)** → Task 5. ✅
+- **A-rider-1 / B-rider-2 frozen battery keys** → Plan A Task 5 Step 3 emits the contract; Plan B Task 4 Step 2 + Task 6 Step 3 import it verbatim. ✅
+- **B-rider-1 note_date = patient.date (chosen, flagged)** → Task 5 Step 2. ✅
 - **§6 trend page (route, neutral topbar, headline metrics, sparklines, transform/render split, empty/sparse states, gap-not-zero)** → Task 6. ✅
 - **§6 breadcrumb link (NCD-only)** → Task 4 Step 5. ✅
 - **D1 trend never touches PDF/MPIS** → verified Task 6 Step 5, Task 7 Step 2.4–2.5. ✅
 - **Two fetches, JSON blob, auto-write (§11 1–3)** → resolved at top, implemented Tasks 1–5. ✅
-- Placeholder scan: DB functions, routes, sparkline/transform/render given in full code; the panel field-set + trend HEADLINE keys say "align to Plan A's battery keys" (a real cross-plan dependency, not a placeholder — the exact keys come from Plan A's finalized collect()). ✅
-- Type consistency: `measurements` sub-dict key used uniformly across save_ncd_measurement (stores it), get_ncd_measurements (parses it back), the panel collect/save, the auto-write, and the trend transform. ✅
+- Placeholder scan: DB functions, routes, sparkline/transform/render given in full code; the panel field-set + trend HEADLINE keys are now PINNED to Plan A's frozen battery contract (A-rider-1 / B-rider-2), not illustrative — the earlier `walk6`/`handGrip` placeholders are replaced with the frozen `walk6Hr`/`handGrip` keys and a cross-check instruction. ✅
+- Type consistency: `measurements` sub-dict key used uniformly across save_ncd_measurement (stores it), get_ncd_measurements (parses it back), the panel collect/save, the auto-write, and the trend transform. `soap_id` used uniformly as the alignment FK across the table, save (upsert key), loadForSoap (match key), and the auto-write (NULL). ✅
 ```
