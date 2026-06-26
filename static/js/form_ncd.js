@@ -30,6 +30,16 @@ var NcdForm = (function () {
     if (sel) sel.classList.add('sel-' + val);
   }
 
+  // ── Body shape single-select (PNG cards) ──
+  var _shape = '';
+  function pickShape(val) {
+    _shape = val;
+    document.querySelectorAll('#shape-grid .shape-card').forEach(function (c) { c.classList.remove('sel'); });
+    var sel = document.getElementById('shape-' + val);
+    if (sel) sel.classList.add('sel');
+  }
+  function getShape() { return _shape; }
+
   function collect() {
     return {
       _form_type: 'NCD',
@@ -49,7 +59,9 @@ var NcdForm = (function () {
         active:  { flag: _life.active,  comment: gv('active-comment') }
       },
       currentHistory: gv('current-history'),
-      pastHistory:    gv('past-history')
+      pastHistory:    gv('past-history'),
+      bodyChart: BodyChart.getData ? { markers: BodyChart.getData(), notes: gv('chart-notes') } : { markers: [], notes: '' },
+      bodyShape: getShape()
     };
   }
   function populate(d) {
@@ -69,20 +81,28 @@ var NcdForm = (function () {
     var ac = ls.active  || {}; if (ac.flag) pickLife('active',  ac.flag); sv('active-comment',  ac.comment);
     sv('current-history', d.currentHistory);
     sv('past-history', d.pastHistory);
+    var bc = d.bodyChart || {};
+    if (BodyChart.loadData) BodyChart.loadData(bc.markers || []);
+    sv('chart-notes', bc.notes);
+    if (d.bodyShape) pickShape(d.bodyShape);
   }
   function reset(keepPatient) {
     var savedPt = keepPatient ? FormBase.collectPatient() : null;
     FormBase.resetPatient();
     ['diagnosis','complaint','occupation','recreation','pmhx','family-hx','medication',
-     'smoking-comment','alcohol-comment','active-comment','current-history','past-history'
+     'smoking-comment','alcohol-comment','active-comment','current-history','past-history','chart-notes'
     ].forEach(function(id) { sv(id, ''); });
     _marital = ''; pickMarital('');
     _life = { smoking: '', alcohol: '', active: '' };
     ['smoking','alcohol','active'].forEach(function(k) { pickLife(k, ''); });
+    if (BodyChart.clearAll) BodyChart.clearAll();
+    sv('chart-notes', '');
+    _shape = '';
+    document.querySelectorAll('#shape-grid .shape-card').forEach(function (c) { c.classList.remove('sel'); });
     if (savedPt) FormBase.populatePatient(savedPt);
   }
 
-  return { collect: collect, populate: populate, reset: reset, pickMarital: pickMarital, pickLife: pickLife };
+  return { collect: collect, populate: populate, reset: reset, pickMarital: pickMarital, pickLife: pickLife, pickShape: pickShape };
 })();
 
 window.ActiveForm = { collect: NcdForm.collect, populate: NcdForm.populate, reset: NcdForm.reset };
@@ -94,5 +114,6 @@ window.Form = {
   onNricInput:    FormBase.onNricInput,
   onDobChange:    FormBase.onDobChange,
   pickMarital:    NcdForm.pickMarital,
-  pickLife:       NcdForm.pickLife
+  pickLife:       NcdForm.pickLife,
+  pickShape:      NcdForm.pickShape
 };
