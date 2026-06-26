@@ -4,11 +4,17 @@
 
 {% block sidebar_nav %}
 <div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-subjective')"><span class="nav-icon">&#128172;</span> Subjective</div>
 {% endblock %}
 
 {% block content %}
 <style>
   /* NCD form-local CSS — scoped, additive, does not touch shared style.css */
+  .irr-chip.sel-Single, .irr-chip.sel-Married, .irr-chip.sel-Widowed, .irr-chip.sel-Divorced,
+  .irr-chip.sel-Yes, .irr-chip.sel-No {
+    background: var(--accent-light); border-color: var(--accent);
+    color: var(--accent); font-weight: 500;
+  }
 </style>
 <div class="card" id="s-patient">
   <div class="card-header">
@@ -120,6 +126,96 @@
             <label><input type="radio" name="pt-sex" value="F"> Female</label>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-subjective">
+  <div class="card-header"><span class="sec-num">02</span><h2>Subjective</h2></div>
+  <div class="card-body">
+    <!-- Doctor's Diagnosis (REQUIRED) -->
+    <div class="fg">
+      <div class="field">
+        <label>Doctor's Diagnosis <span class="req">*</span></label>
+        <textarea id="diagnosis" rows="2" placeholder="As per referral"></textarea>
+      </div>
+    </div>
+    <!-- Patient's Complaint -->
+    <div class="fg">
+      <div class="field">
+        <label>Patient's Complaint</label>
+        <textarea id="complaint" rows="2"></textarea>
+      </div>
+    </div>
+    <!-- Special Questions -->
+    <div class="fg c2">
+      <div class="field">
+        <label>Marital Status</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="marital-Single"   onclick="Form.pickMarital('Single')">Single</button>
+          <button type="button" class="irr-chip" id="marital-Married"  onclick="Form.pickMarital('Married')">Married</button>
+          <button type="button" class="irr-chip" id="marital-Widowed"  onclick="Form.pickMarital('Widowed')">Widowed</button>
+          <button type="button" class="irr-chip" id="marital-Divorced" onclick="Form.pickMarital('Divorced')">Divorced</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Occupation</label>
+        <input type="text" id="occupation">
+      </div>
+      <div class="field">
+        <label>Recreation</label>
+        <input type="text" id="recreation">
+      </div>
+      <div class="field">
+        <label>PMHX</label>
+        <input type="text" id="pmhx">
+      </div>
+      <div class="field">
+        <label>Family History</label>
+        <input type="text" id="family-hx">
+      </div>
+      <div class="field">
+        <label>Medication</label>
+        <input type="text" id="medication">
+      </div>
+    </div>
+    <!-- Lifestyle -->
+    <div class="fg c2">
+      <div class="field">
+        <label>Smoking</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-smoking-Yes" onclick="Form.pickLife('smoking','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-smoking-No"  onclick="Form.pickLife('smoking','No')">No</button>
+        </div>
+        <input type="text" id="smoking-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Alcohol</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-alcohol-Yes" onclick="Form.pickLife('alcohol','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-alcohol-No"  onclick="Form.pickLife('alcohol','No')">No</button>
+        </div>
+        <input type="text" id="alcohol-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Physically Active</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-active-Yes" onclick="Form.pickLife('active','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-active-No"  onclick="Form.pickLife('active','No')">No</button>
+        </div>
+        <input type="text" id="active-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+    </div>
+    <!-- Histories -->
+    <div class="fg c2">
+      <div class="field">
+        <label>Current History</label>
+        <textarea id="current-history" rows="3"></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="past-history" rows="3"></textarea>
       </div>
     </div>
   </div>
