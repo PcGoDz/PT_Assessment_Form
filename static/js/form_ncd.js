@@ -86,6 +86,25 @@ var NcdForm = (function () {
       pastHistory:    gv('past-history'),
       bodyChart: BodyChart.getData ? { markers: BodyChart.getData(), notes: gv('chart-notes') } : { markers: [], notes: '' },
       bodyShape: getShape(),
+      observation:      gv('observation'),
+      impression:       gv('pt-impression'),
+      patientGoal:      gv('patient-goal'),
+      stg:              gv('stg'),
+      ltg:              gv('ltg'),
+      planOfTreatment:  gv('plan'),
+      // ════════════════════════════════════════════════════════════════
+      // PER-VISIT BATTERY KEYS (Plan B trend + measurements panel import these VERBATIM)
+      // FROZEN CONTRACT — do not rename without updating Plan B in lockstep.
+      // vitals:   hr, rr, bp, spo2
+      // bloods:   fbs, hba1c, cholesterol, ldl, hdl, triglycerides
+      // bodycomp: height, weight, bmi, waist, hip, whr,
+      //           subfatWhole, subfatTrunk, subfatArm, subfatLeg,
+      //           muscleWhole, muscleTrunk, muscleArm, muscleLeg,
+      //           visceralFat, rmr
+      // fitness:  walk6Rpe, walk6Bp, walk6Hr, walk6Comment, step3Hr, step3Comment,
+      //           sitReach, flexComment, handGrip, sitUp, pushUp, ulComment,
+      //           sitToStand, llComment, stork, balanceComment
+      // ════════════════════════════════════════════════════════════════
       measurements: {
         // vitals
         hr: gv('hr'), rr: gv('rr'), bp: gv('bp'), spo2: gv('spo2'),
@@ -133,6 +152,12 @@ var NcdForm = (function () {
     if (BodyChart.loadData) BodyChart.loadData(bc.markers || []);
     sv('chart-notes', bc.notes);
     if (d.bodyShape) pickShape(d.bodyShape);
+    sv('observation', d.observation);
+    sv('pt-impression', d.impression);
+    sv('patient-goal', d.patientGoal);
+    sv('stg', d.stg);
+    sv('ltg', d.ltg);
+    sv('plan', d.planOfTreatment);
     var m = d.measurements || {};
     sv('hr', m.hr); sv('rr', m.rr); sv('bp', m.bp); sv('spo2', m.spo2);
     sv('fbs', m.fbs); sv('hba1c', m.hba1c); sv('cholesterol', m.cholesterol);
@@ -159,6 +184,7 @@ var NcdForm = (function () {
     FormBase.resetPatient();
     ['diagnosis','complaint','occupation','recreation','pmhx','family-hx','medication',
      'smoking-comment','alcohol-comment','active-comment','current-history','past-history','chart-notes',
+     'observation','pt-impression','patient-goal','stg','ltg','plan',
      'hr','rr','bp','spo2','fbs','hba1c','cholesterol','ldl','hdl','triglycerides',
      'height','weight','waist','hip',
      'subfat-whole','subfat-trunk','subfat-arm','subfat-leg',

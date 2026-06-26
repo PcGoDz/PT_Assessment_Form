@@ -9,6 +9,9 @@
 <div class="nav-item" onclick="Main.go('s-vitals')"><span class="nav-icon">&#10084;</span> Vitals &amp; Bloods</div>
 <div class="nav-item" onclick="Main.go('s-bodycomp')"><span class="nav-icon">&#9878;</span> Body Composition</div>
 <div class="nav-item" onclick="Main.go('s-fitness')"><span class="nav-icon">&#127939;</span> Fitness Tests</div>
+<div class="nav-item" onclick="Main.go('s-observation')"><span class="nav-icon">&#128065;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-impression')"><span class="nav-icon">&#129488;</span> PT Impression</div>
+<div class="nav-item" onclick="Main.go('s-goals')"><span class="nav-icon">&#127919;</span> Goals &amp; Plan</div>
 {% endblock %}
 
 {% block content %}
@@ -485,6 +488,32 @@
     </div>
   </div>
 </div>
+
+<div class="card" id="s-observation">
+  <div class="card-header"><span class="sec-num">07</span><h2>Observation</h2></div>
+  <div class="card-body">
+    <div class="fg"><div class="field"><label>Observation / Physical Examination</label><textarea id="observation" rows="4"></textarea></div></div>
+  </div>
+</div>
+
+<div class="card" id="s-impression">
+  <div class="card-header"><span class="sec-num">08</span><h2>PT Impression</h2></div>
+  <div class="card-body">
+    <div class="fg"><div class="field"><label>Physiotherapist's Impression <span class="req">*</span></label><textarea id="pt-impression" rows="3"></textarea></div></div>
+  </div>
+</div>
+
+<div class="card" id="s-goals">
+  <div class="card-header"><span class="sec-num">09</span><h2>Goals &amp; Plan</h2></div>
+  <div class="card-body">
+    <div class="fg"><div class="field"><label>Patient's Goal</label><textarea id="patient-goal" rows="3"></textarea></div></div>
+    <div class="fg c2">
+      <div class="field"><label>Short Term Goals</label><textarea id="stg" rows="3"></textarea></div>
+      <div class="field"><label>Long Term Goals</label><textarea id="ltg" rows="3"></textarea></div>
+    </div>
+    <div class="fg"><div class="field"><label>Plan of Treatment</label><textarea id="plan" rows="3"></textarea></div></div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -492,6 +521,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   BodyChart.init();
+  var FM = 'NCD';
+  ClinicalTemplates.addButton('pt-impression', FM, 'impression');
+  ClinicalTemplates.addButton('patient-goal',  FM, 'goal');
+  ClinicalTemplates.addButton('stg',           FM, 'stg');
+  ClinicalTemplates.addButton('ltg',           FM, 'ltg');
+  ClinicalTemplates.addButton('plan',          FM, 'treatment');
 });
 </script>
 {% endblock %}
