@@ -12,7 +12,7 @@ var NcdForm = (function () {
     _marital = val;
     ['Single','Married','Widowed','Divorced'].forEach(function (v) {
       var el = document.getElementById('marital-' + v);
-      if (el) el.className = el.className.replace(' sel-' + v, '');
+      if (el) el.classList.remove('sel-Single','sel-Married','sel-Widowed','sel-Divorced');
     });
     var sel = document.getElementById('marital-' + val);
     if (sel) sel.classList.add('sel-' + val);
@@ -24,7 +24,7 @@ var NcdForm = (function () {
     _life[key] = val;
     ['Yes','No'].forEach(function (v) {
       var el = document.getElementById('life-' + key + '-' + v);
-      if (el) el.className = el.className.replace(' sel-' + v, '');
+      if (el) el.classList.remove('sel-Yes', 'sel-No');
     });
     var sel = document.getElementById('life-' + key + '-' + val);
     if (sel) sel.classList.add('sel-' + val);
