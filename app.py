@@ -102,6 +102,7 @@ FORM_TEMPLATES = {
     'BURN':        'forms/burn.html',
     'SCI':         'forms/sci.html',
     'FACIAL':      'forms/facial.html',
+    'NCD':         'forms/ncd.html',
 }
 
 @app.route('/patient/<int:patient_id>')
