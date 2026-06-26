@@ -6,6 +6,9 @@
 <div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
 <div class="nav-item" onclick="Main.go('s-subjective')"><span class="nav-icon">&#128172;</span> Subjective</div>
 <div class="nav-item" onclick="Main.go('s-bodychart')"><span class="nav-icon">&#128100;</span> Body Chart &amp; Shape</div>
+<div class="nav-item" onclick="Main.go('s-vitals')"><span class="nav-icon">&#10084;</span> Vitals &amp; Bloods</div>
+<div class="nav-item" onclick="Main.go('s-bodycomp')"><span class="nav-icon">&#9878;</span> Body Composition</div>
+<div class="nav-item" onclick="Main.go('s-fitness')"><span class="nav-icon">&#127939;</span> Fitness Tests</div>
 {% endblock %}
 
 {% block content %}
@@ -389,6 +392,96 @@
         <img src="/static/img/ncd_shapes/ncd_shape_7_full_hourglass.png" alt="Full Hour Glass">
         <span>The Full Hour Glass</span>
       </button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-vitals">
+  <div class="card-header"><span class="sec-num">04</span><h2>Vital Signs &amp; Bloods</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Heart Rate (/min)</label><input type="number" id="hr" min="0"></div>
+      <div class="field"><label>Respiratory Rate (/min)</label><input type="number" id="rr" min="0"></div>
+      <div class="field"><label>Blood Pressure (mmHg)</label><input type="text" id="bp" placeholder="e.g. 120/80"></div>
+      <div class="field"><label>SpO2 (%)</label><input type="number" id="spo2" min="0" max="100"></div>
+    </div>
+    <div class="fg c2">
+      <div class="field"><label>Fasting Blood Sugar (mmol/L)</label><input type="number" id="fbs" step="0.1" min="0"></div>
+      <div class="field"><label>HbA1c (%)</label><input type="number" id="hba1c" step="0.1" min="0"></div>
+      <div class="field"><label>Total Cholesterol (mmol/L)</label><input type="number" id="cholesterol" step="0.1" min="0"></div>
+      <div class="field"><label>LDL (mmol/L)</label><input type="number" id="ldl" step="0.1" min="0"></div>
+      <div class="field"><label>HDL (mmol/L)</label><input type="number" id="hdl" step="0.1" min="0"></div>
+      <div class="field"><label>Triglycerides (mmol/L)</label><input type="number" id="triglycerides" step="0.1" min="0"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-bodycomp">
+  <div class="card-header"><span class="sec-num">05</span><h2>Body Composition</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Height (cm)</label><input type="number" id="height" step="0.1" min="0" oninput="Form.recompute()"></div>
+      <div class="field"><label>Weight (kg)</label><input type="number" id="weight" step="0.1" min="0" oninput="Form.recompute()"></div>
+      <div class="field"><label>Waist (cm)</label><input type="number" id="waist" step="0.1" min="0" oninput="Form.recompute()"></div>
+      <div class="field"><label>Hip (cm)</label><input type="number" id="hip" step="0.1" min="0" oninput="Form.recompute()"></div>
+    </div>
+    <div class="derived-info">
+      <span class="derived-badge hidden" id="derived-bmi"></span>
+      <span class="derived-badge hidden" id="derived-whr"></span>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Segmental Analysis</h3>
+    <div class="fg c2">
+      <div class="field"><label>Subcutaneous Fat % — Whole Body</label><input type="number" id="subfat-whole" step="0.1" min="0"></div>
+      <div class="field"><label>Subcutaneous Fat % — Trunk</label><input type="number" id="subfat-trunk" step="0.1" min="0"></div>
+      <div class="field"><label>Subcutaneous Fat % — Arm</label><input type="number" id="subfat-arm" step="0.1" min="0"></div>
+      <div class="field"><label>Subcutaneous Fat % — Leg</label><input type="number" id="subfat-leg" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Whole Body</label><input type="number" id="muscle-whole" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Trunk</label><input type="number" id="muscle-trunk" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Arm</label><input type="number" id="muscle-arm" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Leg</label><input type="number" id="muscle-leg" step="0.1" min="0"></div>
+      <div class="field"><label>Visceral Fat Rating</label><input type="number" id="visceral-fat" step="0.1" min="0"></div>
+      <div class="field"><label>RMR (Kcal)</label><input type="number" id="rmr" min="0"></div>
+    </div>
+    <div style="font-size:10px;color:var(--text-faint);margin-top:6px;">* for patient below 18 yo please refer Z score</div>
+  </div>
+</div>
+
+<div class="card" id="s-fitness">
+  <div class="card-header"><span class="sec-num">06</span><h2>Fitness Tests</h2></div>
+  <div class="card-body">
+    <h3 style="font-size:13px;margin:0 0 8px">6-Minute Walk Test</h3>
+    <div class="fg c2">
+      <div class="field"><label>RPE</label><input type="number" id="walk6-rpe" min="0" max="20"></div>
+      <div class="field"><label>BP (mmHg)</label><input type="text" id="walk6-bp" placeholder="e.g. 130/85"></div>
+      <div class="field"><label>HR (/min)</label><input type="number" id="walk6-hr" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="walk6-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">3-Minute Step Test</h3>
+    <div class="fg c2">
+      <div class="field"><label>HR (/min)</label><input type="number" id="step3-hr" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="step3-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Flexibility</h3>
+    <div class="fg c2">
+      <div class="field"><label>Sit-and-Reach (cm)</label><input type="number" id="sit-reach" step="0.1"></div>
+      <div class="field"><label>Comment</label><input type="text" id="flex-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Upper Limb Strength</h3>
+    <div class="fg c2">
+      <div class="field"><label>Hand Grip (kg)</label><input type="number" id="hand-grip" step="0.1" min="0"></div>
+      <div class="field"><label>Sit-up (/min)</label><input type="number" id="sit-up" min="0"></div>
+      <div class="field"><label>Push-up (/rep)</label><input type="number" id="push-up" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="ul-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Lower Limb Strength</h3>
+    <div class="fg c2">
+      <div class="field"><label>Sit-to-Stand (/rep)</label><input type="number" id="sit-to-stand" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="ll-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Balance</h3>
+    <div class="fg c2">
+      <div class="field"><label>Stork Test (sec)</label><input type="number" id="stork" step="0.1" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="balance-comment"></div>
     </div>
   </div>
 </div>
