@@ -11,6 +11,14 @@
 runs git, builds). Git is the source of truth that passes work between them. Miruya is NOT a code
 reviewer (see RULES.md) — Cowork does the fidelity checks CC's output needs.
 
+**What Cowork MAY write (Miruya, 2026-06-27).** The brain/muscle split gates CODE, not files in general.
+Cowork may freely write and edit any NON-CODE file — docs, specs, plans, notes, and project `.md` files
+including this one and CLAUDE.md. The only hard line is build CODE: `.py` / `.js` / `.html` source that CC
+compiles, tests, and ships. Cowork does not write build code unless Miruya explicitly asks in that moment.
+**Disk handoff rule:** anything Cowork writes to the mount is an uncommitted loose file — instruct CC to
+`git add` + commit it (Phase 0 of the handoff prompt), or Miruya commits before CC builds. Do not re-tighten
+this to a blanket "don't edit project files" — that over-broad reading was corrected here.
+
 **THE RULE THAT MAKES THIS SAFE — verify via git, never via raw mount read.**
 The Cowork Linux sandbox mounts the Windows working tree over virtiofs/FUSE. A raw read (`cat`/`Read`/
 `ls`) of a file CC just wrote can return a STALE pre-write snapshot — the "time-dilation bubble."
