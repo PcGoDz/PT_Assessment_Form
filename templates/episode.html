@@ -577,7 +577,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="copySOAPtoMpis()" title="Copy this note to clipboard for MPIS">Copy to MPIS</button>
-      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-ghost" onclick="cancelSoapModal()">Cancel</button>
       <button class="btn-primary" onclick="saveSoap()">Save Note</button>
     </div>
   </div>
@@ -720,6 +720,12 @@ function clearSoapDraft() {
   try { localStorage.removeItem(soapDraftKey()); } catch (e) {}
 }
 
+function cancelSoapModal() {
+  // Explicit Cancel = deliberate discard. Clear the draft, then close.
+  clearSoapDraft();
+  closeModal();
+}
+
 // ── Template picker ────────────────────────────────────
 function showSoapTemplate(fieldId, category) {
   var formType = episode ? episode.form_type : 'MS';
@@ -766,6 +772,7 @@ async function saveSoap() {
     });
     var j = await res.json();
     if (!res.ok) { showToast(j.error || 'Failed to save', 'err'); return; }
+    clearSoapDraft();   // note is now persisted in SQLite — draft has done its job
     closeModal();
     showToast(soapId ? 'Note updated' : 'Follow-up note saved', 'ok');
     loadSoaps();
