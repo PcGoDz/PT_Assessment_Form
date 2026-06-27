@@ -35,7 +35,7 @@ Device: Dept PC (Windows). No internet dependency required.
 app.py                  Flask routes, PDF routing dispatch, FORM_REGISTRY (15 forms)
 database.py             All SQLite logic + validation
 pdf_platypus_base.py    Shared Platypus building blocks
-pdf_<form>.py           Per-form PDF generators (ms, spine, geriatric, cr, amputation, neuro, hand, burn, sci, facial)
+pdf_<form>.py           Per-form PDF generators (ms, spine, geriatric, cr, amputation, neuro, hand, burn, sci, facial, ncd)
 pdf_base.py             Legacy canvas primitives (kept for BodyChartFlowable)
 
 static/js/
@@ -78,7 +78,7 @@ templates/
 | GERIATRIC   | Rehabilitation    | YES   |
 | PAEDIATRIC  | Rehabilitation    | NO    |
 | LYMPHOEDEMA | Rehabilitation    | NO    |
-| NCD         | Rehabilitation    | NO    |
+| NCD         | Rehabilitation    | YES   |
 | GENERAL     | Rehabilitation    | NO    |
 
 To add: set ready=True in registry. Follow checklist in WORKFLOW.md.

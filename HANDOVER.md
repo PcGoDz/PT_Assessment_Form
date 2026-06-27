@@ -2,47 +2,43 @@
 
 Last updated: 2026-06-27
 
+---
+
 ## Where we left off
 
-**NCD Plan A SHIPPED.** Merged to main at commit `74c0991` (merge commit) on 2026-06-27. Branch `claude/vigilant-gauss-c07678` deleted; worktree git-record pruned (folder may need manual `rmdir /s /q` if still on disk).
+NCD Plan A SHIPPED and merged to main (`74c0991`, 2026-06-27). Built Tasks 7–12 on top of the committed Tasks 1–6 (worktree `vigilant-gauss-c07678`): registry-drift sweep (5 formLabel sites + 2 icon maps + both picker cards), clinical templates (TEMPLATES.NCD + NCD_SOAP), `pdf_ncd.py` (body-shape PNG WYSIWYG embed, KKM ref `fisio / b.pen. 17 / 2019`), `_buildMpisNcd()` SOAPIER builder, figure top-crop on shapes 1 + 4. Post-build: section reshuffle on the same branch — 9 → 11 sections, MSK-canonical flow (Patient → Subjective → History → Special Questions → Observation → Body Chart & Shape → Vital Signs → Body Composition → Fitness Tests → PT Impression → Goals & Plan). Miruya smoke-tested post-reshuffle and confirmed all green. Branch deleted; worktree git-record pruned.
 
-### What Plan A delivered (15 files, 1221 insertions)
+15 files: `pdf_ncd.py` (new), `templates/forms/ncd.html` (new), `static/js/form_ncd.js` (new), `static/js/main.js` (+98 lines), `static/js/clinical_templates.js` (+70 lines), `templates/episode.html`, `templates/home.html`, `templates/patient.html`, `database.py`, `app.py`, `pt_assessment.spec`, 2 PNG crops, 2 spec docs.
 
-- `templates/forms/ncd.html` — 11-section form (MSK-canonical flow: Patient → Subjective → History → Special Questions → Observation → Body Chart & Shape → Vital Signs → Body Composition → Fitness Tests → PT Impression → Goals & Plan)
-- `static/js/form_ncd.js` — collect/populate/reset, body-shape 7-PNG picker, BMI/WHR derive, marital/lifestyle chips
-- `pdf_ncd.py` — full PDF generator with body-shape PNG embed (WYSIWYG), KKM ref `fisio / b.pen. 17 / 2019`
-- `static/js/main.js` — `_buildMpisNcd()` SOAPIER builder + `copyToMpisAuto()` NCD branch
-- `static/js/clinical_templates.js` — `TEMPLATES.NCD` (impression/goal/stg/ltg/treatment) + `TEMPLATES.NCD_SOAP`
-- `templates/episode.html` — `tplMap` NCD→NCD_SOAP + 2 formLabel maps
-- `templates/home.html` — picker card activated + FORM_LABELS + formLabel + icon maps
-- `templates/patient.html` — picker card activated + Jinja form_labels + form_icons
-- `database.py` — `REQUIRED_FIELDS['NCD']` (diagnosis + impression)
-- `app.py` — `import pdf_ncd` + FORM_REGISTRY NCD `ready=True`
-- `pt_assessment.spec` — `pdf_ncd.py` + `static/img/ncd_shapes` in datas
-- `static/img/ncd_shapes/ncd_shape_1_inverted_triangle.png` + `ncd_shape_4_apple.png` — top-crop cleanup
-- `docs/superpowers/specs/2026-06-24-ncd-form-design.md` + `docs/superpowers/plans/2026-06-25-ncd-form-plan-A.md` — updated to 11-section order (post-build revision 2026-06-27)
+---
 
-### Section reshuffle (post-build, same merge)
+## Half-done
 
-After the initial 12-task Plan A build, a section reshuffle was applied on the same branch to align NCD with MSK canonical flow. Fields were regrouped (not renamed). collect()/populate()/reset() keys, battery keys, PDF order, and MPIS routing all preserved. Miruya smoke-tested the reshuffled form and confirmed all green before merge.
+- Worktree folder `PT_Assessment-worktrees/vigilant-gauss-c07678` may still be on disk (Windows CWD lock). Git-side clean. `rmdir /s /q` once session closes.
+- **git push** — main ahead of origin by NCD work. Miruya's call.
+- **exe build** — deferred. `build.bat` after push; confirm `pdf_ncd.py` + `ncd_shapes` bundle.
+
+---
 
 ## Next session priorities
 
-1. **Plan B** — per-visit measurements + trend page. Plan lives at `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md`. Depends on Plan A's `form_type='NCD'` episodes existing in DB (now satisfied). Key surfaces: v3 `ncd_measurements` migration, additive SOAP-modal injection (form-type-guarded — THE RED LINE), screen-only trend page (inline-SVG sparklines).
-2. **git push** — main is ahead of origin by the NCD commits + merge. Push timing is Miruya's call.
-3. **exe build** — `build.bat` after push, confirm `pdf_ncd.py` + `ncd_shapes` bundle in the .exe.
+1. **Plan B** — per-visit `ncd_measurements` v3 migration, additive SOAP-modal NCD panel (RED LINE: form-type guarded, additive only), screen-only trend page (inline-SVG sparklines). Plan at `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md`. Battery keys FROZEN — `form_ncd.js collect().measurements` is the contract; Plan B imports verbatim.
+2. **+Note / textbox-galore sweep** (lighter palate-cleanser): promote `+Note` collapsible from FACIAL/SCI to a DESIGN_SYSTEM recipe, then apply across NCD/BURN/HAND. Own spec→plan→build cycle. See BACKLOG.
+3. **SOAP modal data-loss bug** (MAJOR, shared) — backdrop click dismisses modal and wipes typed SOAP content. See BACKLOG. Could fold into Plan B (which enters that modal anyway).
+4. **git push** + **build.bat** — Miruya's sequencing call.
 
-## Plan B — critical reminders
+---
 
-- **Session-no alignment (fixed by construction):** `ncd_measurements` uses nullable `soap_id` FK (assessment row = NULL, follow-ups = SOAP note id). Trend orders by `note_date`. Do NOT reintroduce session_no as an alignment key.
-- **Battery keys FROZEN** — the `measurements` sub-dict in collect() (`hr`, `rr`, `bp`, `spo2`, `fbs`, `hba1c`, `cholesterol`, `ldl`, `hdl`, `triglycerides`, `height`, `weight`, `bmi`, `waist`, `hip`, `whr`, `subfat*`, `muscle*`, `visceralFat`, `rmr`, `walk6*`, `step3*`, `sitReach`, `flexComment`, `handGrip`, `sitUp`, `pushUp`, `ulComment`, `sitToStand`, `llComment`, `stork`, `balanceComment`) — Plan B imports these VERBATIM. Do NOT rename without updating Plan B in lockstep.
-- **RED LINE:** episode.html SOAP modal is shared by all 15 forms. NCD panel must be additive + form-type-guarded. If it can't fit additively, STOP and flag.
-- **Plan B Task 4 Step 6 + Task 7** carry the mandatory NON-NCD SOAP-modal regression test (other forms must be unaffected).
+## Gotchas discovered this session
 
-## Half-done / worktree cleanup
+- **SOAP modal backdrop click wipes unsaved data** — clinical data-loss risk at 12-21 patients/day. Shared modal, all 15 forms affected. Added to BACKLOG.
+- **MPIS divider bars smash against text** — `MPIS_DIV`/`MPIS_DASH` house style produces wall-of-text; only obvious on NCD's longer SOAPIER output. Shared across all forms. Added to BACKLOG.
+- **Screen order ≠ PDF order is intentional** — NCD screen (MSK-canonical) diverges from KKM borang paper order. `collect()` is the bridge; PDF renders in borang order. Correct by design. Do NOT reorder the PDF to match the screen.
+- **Rasterizer not installed** — `pdf2image`/poppler unavailable on the build machine; body-shape PNG embed in PDF confirmed by Miruya's visual smoke-test only, not automated rasterization. Note for future PDF tasks.
+- **DESIGN_SYSTEM.md at 247/250 lines** — at ceiling. Next component recipe addition requires either splitting the file or pruning stale content first. Flag for next session touching UI patterns.
 
-- Worktree folder `PT_Assessment-worktrees/vigilant-gauss-c07678` may still exist on disk (Windows CWD lock during session). Safe to `rmdir /s /q` once the old session is closed.
+---
 
 ## What to skip for now
 
-VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL. exe build (deferred). See BACKLOG.md for full deferred list.
+VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL. Don't start Plan B without reading `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md` fresh. See BACKLOG.md for full deferred list.

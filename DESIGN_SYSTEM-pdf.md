@@ -63,6 +63,32 @@ story.append(gap(2))
 - ❌ **Collecting form data without a PDF render block.** Silent data loss. `neuro.muscles` (MMT) was collected by `form_hand.js` for the entire HAND form history and never rendered by `pdf_hand.py`. Undetectable without explicit cross-referencing.
 - ❌ **`story.append()` on a list-returning helper.** `sign_chop_block()` returns a list — use `story +=`. `two_col()` and `box()` return a single Table — use `story.append()`. Mixing these causes NestedFlowable errors.
 
+## Raster Image Embed (PNG/JPEG in PDF body)
+
+Use `reportlab.platypus.Image` (aliased `RLImage`) to embed raster assets. Pattern introduced for NCD body-shape picker (`pdf_ncd.py`):
+
+```python
+from reportlab.platypus import Image as RLImage
+from reportlab.lib.units import mm
+
+def _asset_flowable(name, asset_map, subdir, width=28*mm, height=40*mm):
+    fn = asset_map.get((name or '').strip())
+    if not fn:
+        return None
+    base = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(base, 'static', 'img', subdir, fn)
+    if not os.path.exists(path):
+        return None
+    return RLImage(path, width=width, height=height, kind='proportional')
+```
+
+Rules:
+- Always `os.path.exists()` before constructing `RLImage` — returns `None` silently if missing.
+- Resolve path via `getattr(sys, '_MEIPASS', ...)` so the built .exe finds assets in the bundle.
+- Add `('static/img/<subdir>', 'static/img/<subdir>')` to `pt_assessment.spec` datas — omitting this causes silent missing figure in the .exe build even when dev-mode works.
+- `kind='proportional'` preserves aspect ratio within the declared bounding box.
+- Rasterize a test page to PNG and LOOK at the output — a missing/wrong asset path produces a silent blank spot with a clean exit code.
+
 ## PDF Pre-ship Checklist
 
 - [ ] Module imports cleanly: `py -c "from pdf_X import generate_X_pdf; print('ok')"`
