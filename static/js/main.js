@@ -1124,6 +1124,103 @@ const Main = (function () {
     return parts;
   }
 
+  function _buildMpisNcd() {
+    var d = window.ActiveForm ? window.ActiveForm.collect() : {};
+    var parts = [];
+    var LN = MPIS_LN; var DIV = MPIS_DIV; var dash = MPIS_DASH;
+    var m = d.measurements || {};
+    var ls = d.lifestyle || {};
+
+    function line(label, val) {
+      if (val && String(val).trim()) parts.push(dash + label + ': ' + String(val).trim());
+    }
+    function sec(title) { parts.push(DIV + title + DIV); }
+
+    // Header
+    parts.push('NCD / OBESITY ASSESSMENT');
+    parts.push(LN);
+
+    // SUBJECTIVE
+    sec('SUBJECTIVE');
+    line('Diagnosis', d.diagnosis);
+    line('Complaint', d.complaint);
+    line('Marital Status', d.marital);
+    line('Occupation', d.occupation);
+    line('Recreation', d.recreation);
+    line('PMHx', d.pmhx);
+    line('Family Hx', d.familyHx);
+    line('Medication', d.medication);
+    // Lifestyle
+    var smk = ls.smoking || {}; var alc = ls.alcohol || {}; var act = ls.active || {};
+    if (smk.flag) { var sv = 'Smoking: ' + smk.flag + (smk.comment ? ' (' + smk.comment + ')' : ''); parts.push(dash + sv); }
+    if (alc.flag) { var av = 'Alcohol: ' + alc.flag + (alc.comment ? ' (' + alc.comment + ')' : ''); parts.push(dash + av); }
+    if (act.flag) { var acv = 'Active: ' + act.flag + (act.comment ? ' (' + act.comment + ')' : ''); parts.push(dash + acv); }
+    line('Current History', d.currentHistory);
+    line('Past History', d.pastHistory);
+
+    // OBJECTIVE
+    sec('OBJECTIVE');
+    // Body shape
+    line('Body Shape', d.bodyShape);
+    // Vitals
+    var hasVitals = m.hr || m.rr || m.bp || m.spo2;
+    if (hasVitals) {
+      parts.push(dash + 'Vitals: HR ' + (m.hr||'?') + '/min, RR ' + (m.rr||'?') + '/min, BP ' + (m.bp||'?') + ' mmHg, SpO₂ ' + (m.spo2||'?') + '%');
+    }
+    // Bloods
+    var hasBloods = m.fbs || m.hba1c || m.cholesterol || m.ldl || m.hdl || m.triglycerides;
+    if (hasBloods) {
+      if (m.fbs)          parts.push(dash + 'FBS: ' + m.fbs + ' mmol/L');
+      if (m.hba1c)        parts.push(dash + 'HbA1c: ' + m.hba1c + '%');
+      if (m.cholesterol)  parts.push(dash + 'Cholesterol: ' + m.cholesterol + ' mmol/L');
+      if (m.ldl)          parts.push(dash + 'LDL: ' + m.ldl + ' mmol/L');
+      if (m.hdl)          parts.push(dash + 'HDL: ' + m.hdl + ' mmol/L');
+      if (m.triglycerides) parts.push(dash + 'Triglycerides: ' + m.triglycerides + ' mmol/L');
+    }
+    // Body comp
+    var hasBodyComp = m.height || m.weight || m.waist || m.hip;
+    if (hasBodyComp) {
+      var bc = 'Body Comp:';
+      if (m.height) bc += ' Ht ' + m.height + 'cm';
+      if (m.weight) bc += ' Wt ' + m.weight + 'kg';
+      if (m.bmi)    bc += ' BMI ' + m.bmi;
+      if (m.waist)  bc += ' Waist ' + m.waist + 'cm';
+      if (m.hip)    bc += ' Hip ' + m.hip + 'cm';
+      if (m.whr)    bc += ' WHR ' + m.whr;
+      parts.push(dash + bc);
+      if (m.visceralFat)  parts.push(dash + 'Visceral Fat: ' + m.visceralFat);
+      if (m.rmr)          parts.push(dash + 'RMR: ' + m.rmr + ' Kcal');
+    }
+    // Fitness
+    var hasFitness = m.walk6Hr || m.walk6Rpe || m.walk6Comment || m.step3Hr || m.sitReach || m.handGrip || m.sitToStand || m.stork;
+    if (hasFitness) {
+      parts.push(dash + 'Fitness Tests:');
+      if (m.walk6Rpe || m.walk6Hr || m.walk6Comment) parts.push(dash + '  6MWT: RPE ' + (m.walk6Rpe||'—') + ', HR ' + (m.walk6Hr||'—') + '/min' + (m.walk6Comment ? ' — ' + m.walk6Comment : ''));
+      if (m.step3Hr || m.step3Comment)               parts.push(dash + '  3-Min Step: HR ' + (m.step3Hr||'—') + (m.step3Comment ? ' — ' + m.step3Comment : ''));
+      if (m.sitReach)    parts.push(dash + '  Sit & Reach: ' + m.sitReach + ' cm');
+      if (m.handGrip)    parts.push(dash + '  Hand Grip: ' + m.handGrip + ' kg');
+      if (m.sitToStand)  parts.push(dash + '  Sit-to-Stand: ' + m.sitToStand + ' reps');
+      if (m.stork)       parts.push(dash + '  Stork Balance: ' + m.stork + ' sec');
+    }
+    // Body chart notes
+    var bc2 = d.bodyChart || {};
+    if (bc2.notes) line('Body Chart Notes', bc2.notes);
+    line('Observation', d.observation);
+
+    // ANALYSIS
+    sec('ANALYSIS');
+    line('PT Impression', d.impression);
+
+    // PLAN
+    sec('PLAN');
+    line('Patient Goal', d.patientGoal);
+    line('STG', d.stg);
+    line('LTG', d.ltg);
+    line('Plan of Treatment', d.planOfTreatment);
+
+    return parts;
+  }
+
   // ── MPIS dispatcher — shows modal once, then dispatches ──
   async function copyToMpisAuto() {
     var header = await showMpisHeaderModal();
@@ -1143,6 +1240,7 @@ const Main = (function () {
     else if (formType === 'BURN')       parts = _buildMpisBurn();
     else if (formType === 'SCI')        parts = _buildMpisSci();
     else if (formType === 'FACIAL')     parts = _buildMpisFacial();
+    else if (formType === 'NCD')        parts = _buildMpisNcd();
     else                                parts = _buildMpisMs();
     await _doCopyMpis(parts, header);
   }
