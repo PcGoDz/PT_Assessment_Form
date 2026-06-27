@@ -5,12 +5,14 @@
 {% block sidebar_nav %}
 <div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
 <div class="nav-item" onclick="Main.go('s-subjective')"><span class="nav-icon">&#128172;</span> Subjective</div>
-<div class="nav-item" onclick="Main.go('s-bodychart')"><span class="nav-icon">&#128100;</span> Body Chart &amp; Shape</div>
-<div class="nav-item" onclick="Main.go('s-vitals')"><span class="nav-icon">&#10084;</span> Vitals &amp; Bloods</div>
+<div class="nav-item" onclick="Main.go('s-history')"><span class="nav-icon">&#128203;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-special')"><span class="nav-icon">&#10067;</span> Special Questions</div>
+<div class="nav-item" onclick="Main.go('s-observation')"><span class="nav-icon">&#128269;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-bodychart')"><span class="nav-icon">&#129504;</span> Body Chart &amp; Shape</div>
+<div class="nav-item" onclick="Main.go('s-vitals')"><span class="nav-icon">&#128139;</span> Vital Signs</div>
 <div class="nav-item" onclick="Main.go('s-bodycomp')"><span class="nav-icon">&#9878;</span> Body Composition</div>
 <div class="nav-item" onclick="Main.go('s-fitness')"><span class="nav-icon">&#127939;</span> Fitness Tests</div>
-<div class="nav-item" onclick="Main.go('s-observation')"><span class="nav-icon">&#128065;</span> Observation</div>
-<div class="nav-item" onclick="Main.go('s-impression')"><span class="nav-icon">&#129488;</span> PT Impression</div>
+<div class="nav-item" onclick="Main.go('s-impression')"><span class="nav-icon">&#129504;</span> PT Impression</div>
 <div class="nav-item" onclick="Main.go('s-goals')"><span class="nav-icon">&#127919;</span> Goals &amp; Plan</div>
 {% endblock %}
 
@@ -168,7 +170,55 @@
         <textarea id="complaint" rows="2"></textarea>
       </div>
     </div>
-    <!-- Special Questions -->
+    <!-- Lifestyle -->
+    <div class="fg c2">
+      <div class="field">
+        <label>Smoking</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-smoking-Yes" onclick="Form.pickLife('smoking','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-smoking-No"  onclick="Form.pickLife('smoking','No')">No</button>
+        </div>
+        <input type="text" id="smoking-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Alcohol</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-alcohol-Yes" onclick="Form.pickLife('alcohol','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-alcohol-No"  onclick="Form.pickLife('alcohol','No')">No</button>
+        </div>
+        <input type="text" id="alcohol-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Physically Active</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-active-Yes" onclick="Form.pickLife('active','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-active-No"  onclick="Form.pickLife('active','No')">No</button>
+        </div>
+        <input type="text" id="active-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-history">
+  <div class="card-header"><span class="sec-num">03</span><h2>History</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Current History</label>
+        <textarea id="current-history" rows="3" placeholder="Current history of presenting condition..."></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="past-history" rows="3" placeholder="Past medical/surgical history..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-special">
+  <div class="card-header"><span class="sec-num">04</span><h2>Special Questions</h2></div>
+  <div class="card-body">
     <div class="fg c2">
       <div class="field">
         <label>Marital Status</label>
@@ -200,49 +250,18 @@
         <input type="text" id="medication">
       </div>
     </div>
-    <!-- Lifestyle -->
-    <div class="fg c2">
-      <div class="field">
-        <label>Smoking</label>
-        <div class="irr-chips">
-          <button type="button" class="irr-chip" id="life-smoking-Yes" onclick="Form.pickLife('smoking','Yes')">Yes</button>
-          <button type="button" class="irr-chip" id="life-smoking-No"  onclick="Form.pickLife('smoking','No')">No</button>
-        </div>
-        <input type="text" id="smoking-comment" placeholder="Comment" style="margin-top:6px">
-      </div>
-      <div class="field">
-        <label>Alcohol</label>
-        <div class="irr-chips">
-          <button type="button" class="irr-chip" id="life-alcohol-Yes" onclick="Form.pickLife('alcohol','Yes')">Yes</button>
-          <button type="button" class="irr-chip" id="life-alcohol-No"  onclick="Form.pickLife('alcohol','No')">No</button>
-        </div>
-        <input type="text" id="alcohol-comment" placeholder="Comment" style="margin-top:6px">
-      </div>
-      <div class="field">
-        <label>Physically Active</label>
-        <div class="irr-chips">
-          <button type="button" class="irr-chip" id="life-active-Yes" onclick="Form.pickLife('active','Yes')">Yes</button>
-          <button type="button" class="irr-chip" id="life-active-No"  onclick="Form.pickLife('active','No')">No</button>
-        </div>
-        <input type="text" id="active-comment" placeholder="Comment" style="margin-top:6px">
-      </div>
-    </div>
-    <!-- Histories -->
-    <div class="fg c2">
-      <div class="field">
-        <label>Current History</label>
-        <textarea id="current-history" rows="3"></textarea>
-      </div>
-      <div class="field">
-        <label>Past History</label>
-        <textarea id="past-history" rows="3"></textarea>
-      </div>
-    </div>
+  </div>
+</div>
+
+<div class="card" id="s-observation">
+  <div class="card-header"><span class="sec-num">05</span><h2>Observation</h2></div>
+  <div class="card-body">
+    <div class="fg"><div class="field"><label>Observation / Physical Examination</label><textarea id="observation" rows="4"></textarea></div></div>
   </div>
 </div>
 
 <div class="card" id="s-bodychart">
-  <div class="card-header"><span class="sec-num">03</span><h2>Body Chart &amp; Shape</h2></div>
+  <div class="card-header"><span class="sec-num">06</span><h2>Body Chart &amp; Shape</h2></div>
   <div class="card-body">
     <!-- Body chart: copied from ms.html .body-chart-wrap -->
     <div class="body-chart-wrap">
@@ -400,7 +419,7 @@
 </div>
 
 <div class="card" id="s-vitals">
-  <div class="card-header"><span class="sec-num">04</span><h2>Vital Signs &amp; Bloods</h2></div>
+  <div class="card-header"><span class="sec-num">07</span><h2>Vital Signs &amp; Bloods</h2></div>
   <div class="card-body">
     <div class="fg c2">
       <div class="field"><label>Heart Rate (/min)</label><input type="number" id="hr" min="0"></div>
@@ -420,7 +439,7 @@
 </div>
 
 <div class="card" id="s-bodycomp">
-  <div class="card-header"><span class="sec-num">05</span><h2>Body Composition</h2></div>
+  <div class="card-header"><span class="sec-num">08</span><h2>Body Composition</h2></div>
   <div class="card-body">
     <div class="fg c2">
       <div class="field"><label>Height (cm)</label><input type="number" id="height" step="0.1" min="0" oninput="Form.recompute()"></div>
@@ -450,7 +469,7 @@
 </div>
 
 <div class="card" id="s-fitness">
-  <div class="card-header"><span class="sec-num">06</span><h2>Fitness Tests</h2></div>
+  <div class="card-header"><span class="sec-num">09</span><h2>Fitness Tests</h2></div>
   <div class="card-body">
     <h3 style="font-size:13px;margin:0 0 8px">6-Minute Walk Test</h3>
     <div class="fg c2">
@@ -489,22 +508,15 @@
   </div>
 </div>
 
-<div class="card" id="s-observation">
-  <div class="card-header"><span class="sec-num">07</span><h2>Observation</h2></div>
-  <div class="card-body">
-    <div class="fg"><div class="field"><label>Observation / Physical Examination</label><textarea id="observation" rows="4"></textarea></div></div>
-  </div>
-</div>
-
 <div class="card" id="s-impression">
-  <div class="card-header"><span class="sec-num">08</span><h2>PT Impression</h2></div>
+  <div class="card-header"><span class="sec-num">10</span><h2>PT Impression</h2></div>
   <div class="card-body">
     <div class="fg"><div class="field"><label>Physiotherapist's Impression <span class="req">*</span></label><textarea id="pt-impression" rows="3"></textarea></div></div>
   </div>
 </div>
 
 <div class="card" id="s-goals">
-  <div class="card-header"><span class="sec-num">09</span><h2>Goals &amp; Plan</h2></div>
+  <div class="card-header"><span class="sec-num">11</span><h2>Goals &amp; Plan</h2></div>
   <div class="card-body">
     <div class="fg"><div class="field"><label>Patient's Goal</label><textarea id="patient-goal" rows="3"></textarea></div></div>
     <div class="fg c2">
