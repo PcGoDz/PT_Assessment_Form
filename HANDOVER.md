@@ -1,45 +1,48 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-06-25
+Last updated: 2026-06-27
 
 ## Where we left off
 
-NCD implementation plans **written + cold-vetted + committed** (on main). Design-only session — NO code written yet. The plans split into two build-ready deliverables:
-- **Plan A** — `docs/superpowers/plans/2026-06-25-ncd-form-plan-A.md`. Initial snapshot form (rungs 1–7, 12 tasks). A pure standard form build, zero schema change — saves a normal `records` row, exports PDF + MPIS like every other form. Novel pieces: 7-figure body-shape PNG picker (WYSIWYG screen+PDF) and derived BMI/WHR readouts.
-- **Plan B** — `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md`. Per-visit measurements + trend (rungs 8–10, 7 tasks). The net-new/high-risk surface: v3 `ncd_measurements` migration, additive SOAP-modal injection (form-type guarded — the RED LINE), screen-only trend page (inline-SVG sparklines, never touches PDF/MPIS).
+**NCD Plan A SHIPPED.** Merged to main at commit `74c0991` (merge commit) on 2026-06-27. Branch `claude/vigilant-gauss-c07678` deleted; worktree git-record pruned (folder may need manual `rmdir /s /q` if still on disk).
 
-Split decided via writing-plans Scope Check against live code. Plan A is independently shippable; Plan B depends on Plan A's `form_type='NCD'` episodes existing.
+### What Plan A delivered (15 files, 1221 insertions)
 
-## The one real bug caught + fixed in the cold vet (session_no alignment)
+- `templates/forms/ncd.html` — 11-section form (MSK-canonical flow: Patient → Subjective → History → Special Questions → Observation → Body Chart & Shape → Vital Signs → Body Composition → Fitness Tests → PT Impression → Goals & Plan)
+- `static/js/form_ncd.js` — collect/populate/reset, body-shape 7-PNG picker, BMI/WHR derive, marital/lifestyle chips
+- `pdf_ncd.py` — full PDF generator with body-shape PNG embed (WYSIWYG), KKM ref `fisio / b.pen. 17 / 2019`
+- `static/js/main.js` — `_buildMpisNcd()` SOAPIER builder + `copyToMpisAuto()` NCD branch
+- `static/js/clinical_templates.js` — `TEMPLATES.NCD` (impression/goal/stg/ltg/treatment) + `TEMPLATES.NCD_SOAP`
+- `templates/episode.html` — `tplMap` NCD→NCD_SOAP + 2 formLabel maps
+- `templates/home.html` — picker card activated + FORM_LABELS + formLabel + icon maps
+- `templates/patient.html` — picker card activated + Jinja form_labels + form_icons
+- `database.py` — `REQUIRED_FIELDS['NCD']` (diagnosis + impression)
+- `app.py` — `import pdf_ncd` + FORM_REGISTRY NCD `ready=True`
+- `pt_assessment.spec` — `pdf_ncd.py` + `static/img/ncd_shapes` in datas
+- `static/img/ncd_shapes/ncd_shape_1_inverted_triangle.png` + `ncd_shape_4_apple.png` — top-crop cleanup
+- `docs/superpowers/specs/2026-06-24-ncd-form-design.md` + `docs/superpowers/plans/2026-06-25-ncd-form-plan-A.md` — updated to 11-section order (post-build revision 2026-06-27)
 
-The first plan draft aligned `ncd_measurements` to `soap_notes` by two parallel `MAX(session_no)+1` counters. That is FALSE by construction for NCD's flow:
-- Visit 1 = full assessment → writes the `records` row + a measurement row, but NO SOAP note (SOAP notes start at visit 2; clinically confirmed).
-- After visit 1: measurements has 1 row, soap_notes has 0. First follow-up: `save_soap` → session 1, `save_ncd_measurement` → session 2. **Off-by-one for every patient on the default path**, silently desyncing the trend from the SOAP timeline.
+### Section reshuffle (post-build, same merge)
 
-**Fixed BY CONSTRUCTION** (Plan B Task 1–2, baked in so it can't be re-derived wrong at build time): nullable `soap_id` FK on `ncd_measurements` (assessment row = NULL, follow-ups = the SOAP note's id), `save_ncd_measurement` upserts on the `(episode_id, soap_id)` natural key, trend orders by `note_date`. `session_no` demoted to an informational counter only — nothing aligns on it. Editing/prefilling matches by `soap_id` FK lookup (`loadForSoap`), never a guessed session_no.
-
-Other vet riders folded in: battery keys FROZEN as a contract in Plan A `collect().measurements` (Plan B imports verbatim — no key-guessing); validator `py -c` made a hard gate; `note_date = patient.date` for visit-1 flagged as a deliberate choice.
-
-## Rollout decision (Miruya's clinical/ship call)
-
-Ship NCD `ready=True` the moment Plan A merges — single-user app, he needs the picker to smoke-test, no one else is exposed. Do NOT hold it at `ready=False`. (This resolves the one open seam Plan A left for him.)
+After the initial 12-task Plan A build, a section reshuffle was applied on the same branch to align NCD with MSK canonical flow. Fields were regrouped (not renamed). collect()/populate()/reset() keys, battery keys, PDF order, and MPIS routing all preserved. Miruya smoke-tested the reshuffled form and confirmed all green before merge.
 
 ## Next session priorities
 
-1. **BUILD Plan A first** — the standalone working snapshot form. Smoke-test on the worktree, merge, THEN start Plan B.
-2. **Then Plan B** layers the measurements/trend machinery on top.
-3. Each plan's final task carries the pre-ship smoke-test checklist (Plan A Task 12, Plan B Task 7). Plan B Task 4 Step 6 + Task 7 carry the mandatory NON-NCD SOAP-modal regression test (the RED LINE).
+1. **Plan B** — per-visit measurements + trend page. Plan lives at `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md`. Depends on Plan A's `form_type='NCD'` episodes existing in DB (now satisfied). Key surfaces: v3 `ncd_measurements` migration, additive SOAP-modal injection (form-type-guarded — THE RED LINE), screen-only trend page (inline-SVG sparklines).
+2. **git push** — main is ahead of origin by the NCD commits + merge. Push timing is Miruya's call.
+3. **exe build** — `build.bat` after push, confirm `pdf_ncd.py` + `ncd_shapes` bundle in the .exe.
 
-## Half-done
+## Plan B — critical reminders
 
-- Nothing code-level (planning session).
-- Figure assets 1 + 4 still need the ~2min top-crop (faint leg-bleed smudge at top edge). Folded into Plan A Task 11 — will be done during the build.
+- **Session-no alignment (fixed by construction):** `ncd_measurements` uses nullable `soap_id` FK (assessment row = NULL, follow-ups = SOAP note id). Trend orders by `note_date`. Do NOT reintroduce session_no as an alignment key.
+- **Battery keys FROZEN** — the `measurements` sub-dict in collect() (`hr`, `rr`, `bp`, `spo2`, `fbs`, `hba1c`, `cholesterol`, `ldl`, `hdl`, `triglycerides`, `height`, `weight`, `bmi`, `waist`, `hip`, `whr`, `subfat*`, `muscle*`, `visceralFat`, `rmr`, `walk6*`, `step3*`, `sitReach`, `flexComment`, `handGrip`, `sitUp`, `pushUp`, `ulComment`, `sitToStand`, `llComment`, `stork`, `balanceComment`) — Plan B imports these VERBATIM. Do NOT rename without updating Plan B in lockstep.
+- **RED LINE:** episode.html SOAP modal is shared by all 15 forms. NCD panel must be additive + form-type-guarded. If it can't fit additively, STOP and flag.
+- **Plan B Task 4 Step 6 + Task 7** carry the mandatory NON-NCD SOAP-modal regression test (other forms must be unaffected).
 
-## Gotchas / notes
+## Half-done / worktree cleanup
 
-- **main is ahead of origin** by the local commits: `255410c` (NCD spec + 7 PNGs), `93f2693`/`40b86ae` (plans), plus the merge commit. Push timing is Miruya's call — he said push AFTER NCD ships. Leave unpushed unless told otherwise.
-- Plan B's RED LINE: episode.html's SOAP modal is shared by all 15 forms. The NCD panel is additive + form-type-guarded. If during build the panel ever needs markup that won't fit additively, STOP and flag — do not restructure the shared modal.
+- Worktree folder `PT_Assessment-worktrees/vigilant-gauss-c07678` may still exist on disk (Windows CWD lock during session). Safe to `rmdir /s /q` once the old session is closed.
 
 ## What to skip for now
 
-VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL. exe build (deferred tonight — budget + late). See BACKLOG.md for the full deferred list.
+VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL. exe build (deferred). See BACKLOG.md for full deferred list.
