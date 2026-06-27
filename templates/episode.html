@@ -654,7 +654,11 @@ function closeModal() {
   document.getElementById('soap-modal').classList.remove('open');
 }
 document.getElementById('soap-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+  if (e.target === this) closeModal();   // backdrop click closes WITHOUT clearing the draft
+});
+// Stash a draft on every keystroke / field change inside the modal (new-note path only).
+document.getElementById('soap-modal').addEventListener('input', function() {
+  saveSoapDraft();
 });
 
 // ── SOAP draft recovery (per-episode, survives stray dismissal) ──
