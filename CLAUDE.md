@@ -11,12 +11,13 @@ A local offline web app for KKM Physiotherapy Department staff to fill in standa
 User: Miruya — physiotherapist, KKM dept, ~12-21 patients/day.
 Device: Dept PC (Windows). No internet dependency required.
 
-**Design intent:** Every form should reduce clinician burden, not just digitise paper. Pre-fill what derives (NRIC → DOB/age/gender), template what repeats (Best Statements), stamp what's bulk (NT / N-A), multi-select what's plural. The paper borang is the floor, not the target. This GUIDES design but does NOT override the ship-crude axiom — if a burden-reducer would mean refactoring shared code or inventing an abstraction, ship-crude wins; flag it instead of building it.
+**Design intent:** Every form should reduce clinician burden, not just digitise paper. Pre-fill what derives (NRIC → DOB/age/gender), template what repeats (Best Statements), stamp what's bulk (NT / N-A), multi-select what's plural. The paper borang is the floor, not the target. This GUIDES design but does NOT override the ship-crude axiom — if a burden-reducer would mean refactoring shared code or inventing an abstraction, ship-crude wins; flag it instead of building it. Hold state, don't make the clinician re-enter it: more we hold, the less they drop. Anything the clinician has already typed or derived should survive accidental dismissal, reload, or navigation — persist it rather than demanding re-entry.
 
 ---
 
 ## Project axioms (DO NOT VIOLATE)
 
+- **Data-loss is a ship-stopper.** A bug that destroys clinician work mid-flow — typed notes, in-progress entries, derived values — outranks all feature work and all cosmetic bugs, even shared-code ones. Fix work-destroying bugs before building anything new on top of the surface they live in.
 - **Stack:** Flask + SQLite + vanilla JavaScript only. No frameworks, no jQuery.
 - **Deployment:** PyInstaller .exe on Windows clinical PCs. Every dependency must bundle cleanly.
 - **PDF engine:** ReportLab only. WeasyPrint rejected (needs C libs).

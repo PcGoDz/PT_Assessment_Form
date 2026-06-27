@@ -506,7 +506,7 @@
       <input type="hidden" id="soap-edit-id">
       <div class="soap-form-field">
         <label style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);">Session Date <span style="color:var(--danger)">*</span></label>
-        <input type="date" id="soap-date">
+        <input type="date" id="soap-date" autocomplete="off">
       </div>
 
       <!-- Session Header (POMR / MPIS admin fields) -->
@@ -515,7 +515,7 @@
         <div class="session-info-grid">
           <div class="soap-form-field">
             <label>Nombor Giliran</label>
-            <input type="text" id="soap-queue-no" placeholder="e.g. D003">
+            <input type="text" id="soap-queue-no" placeholder="e.g. D003" autocomplete="off">
           </div>
           <div class="soap-form-field">
             <label>KPI-SS-30 Minit</label>
@@ -528,21 +528,21 @@
           </div>
           <div class="soap-form-field" style="grid-column:span 2">
             <label>Dilihat (Seen By)</label>
-            <input type="text" id="soap-seen-by" placeholder="Therapist name">
+            <input type="text" id="soap-seen-by" placeholder="Therapist name" autocomplete="off">
           </div>
           <div class="soap-form-field">
             <label>Temujanji — Tarikh</label>
-            <input type="date" id="soap-next-appt">
+            <input type="date" id="soap-next-appt" autocomplete="off">
           </div>
           <div class="soap-form-field">
             <label>Temujanji — Masa</label>
-            <input type="time" id="soap-next-appt-time">
+            <input type="time" id="soap-next-appt-time" autocomplete="off">
           </div>
         </div>
       </div>
       <div class="soap-form-field">
         <div class="soap-form-label">S &mdash; Subjective</div>
-        <textarea id="soap-s" placeholder="Patient's report — pain score, symptoms, functional status, patient's own words..."></textarea>
+        <textarea id="soap-s" autocomplete="off" placeholder="Patient's report — pain score, symptoms, functional status, patient's own words..."></textarea>
       </div>
       <div class="soap-form-field">
         <div class="soap-form-label">
@@ -552,7 +552,7 @@
             + template
           </button>
         </div>
-        <textarea id="soap-o" placeholder="Measurements — ROM, muscle strength, VAS pre/post, special test results..."></textarea>
+        <textarea id="soap-o" autocomplete="off" placeholder="Measurements — ROM, muscle strength, VAS pre/post, special test results..."></textarea>
       </div>
       <div class="soap-form-field">
         <div class="soap-form-label">
@@ -562,7 +562,7 @@
             + template
           </button>
         </div>
-        <textarea id="soap-a" placeholder="Clinical reasoning — progress towards goals, response to treatment, problems in order of priority..."></textarea>
+        <textarea id="soap-a" autocomplete="off" placeholder="Clinical reasoning — progress towards goals, response to treatment, problems in order of priority..."></textarea>
       </div>
       <div class="soap-form-field">
         <div class="soap-form-label">
@@ -572,12 +572,12 @@
             + template
           </button>
         </div>
-        <textarea id="soap-p" placeholder="Treatment given this session, HEP review, next session plan, discharge criteria..."></textarea>
+        <textarea id="soap-p" autocomplete="off" placeholder="Treatment given this session, HEP review, next session plan, discharge criteria..."></textarea>
       </div>
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="copySOAPtoMpis()" title="Copy this note to clipboard for MPIS">Copy to MPIS</button>
-      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-ghost" onclick="cancelSoapModal()">Cancel</button>
       <button class="btn-primary" onclick="saveSoap()">Save Note</button>
     </div>
   </div>
@@ -646,6 +646,29 @@ function openSoapModal(soap) {
     var ft = episode ? episode.form_type : '';
     oBtn.style.display = (ft === 'AMPUTATION') ? '' : 'none';
   }
+  // If opening a NEW note (no soap arg) and a draft exists for this episode, rehydrate it.
+  if (!soap) {
+    try {
+      var raw = localStorage.getItem(soapDraftKey());
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d) {
+          if (d.date)           document.getElementById('soap-date').value           = d.date;
+          if (d.s)              document.getElementById('soap-s').value              = d.s;
+          if (d.o)              document.getElementById('soap-o').value              = d.o;
+          if (d.a)              document.getElementById('soap-a').value              = d.a;
+          if (d.p)              document.getElementById('soap-p').value              = d.p;
+          if (d.queue_no)       document.getElementById('soap-queue-no').value       = d.queue_no;
+          if (d.kpi_30min)      document.getElementById('soap-kpi-30min').value      = d.kpi_30min;
+          if (d.seen_by)        document.getElementById('soap-seen-by').value        = d.seen_by;
+          if (d.next_appt)      document.getElementById('soap-next-appt').value      = d.next_appt;
+          if (d.next_appt_time) document.getElementById('soap-next-appt-time').value = d.next_appt_time;
+        }
+      }
+    } catch (e) {
+      console.warn('SOAP draft restore failed:', e);
+    }
+  }
   document.getElementById('soap-modal').classList.add('open');
   setTimeout(function() { document.getElementById('soap-s').focus(); }, 100);
 }
@@ -654,8 +677,54 @@ function closeModal() {
   document.getElementById('soap-modal').classList.remove('open');
 }
 document.getElementById('soap-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+  if (e.target === this) closeModal();   // backdrop click closes WITHOUT clearing the draft
 });
+// Stash a draft on every keystroke / field change inside the modal (new-note path only).
+document.getElementById('soap-modal').addEventListener('input', function() {
+  saveSoapDraft();
+});
+
+// ── SOAP draft recovery (per-episode, survives stray dismissal) ──
+function soapDraftKey() {
+  return 'pt_soap_draft_' + EPISODE_ID;
+}
+
+function saveSoapDraft() {
+  // Only stash drafts for NEW notes, never while editing a saved note.
+  if (document.getElementById('soap-edit-id').value) return;
+  try {
+    var draft = {
+      date:           document.getElementById('soap-date').value,
+      s:              document.getElementById('soap-s').value,
+      o:              document.getElementById('soap-o').value,
+      a:              document.getElementById('soap-a').value,
+      p:              document.getElementById('soap-p').value,
+      queue_no:       document.getElementById('soap-queue-no').value,
+      kpi_30min:      document.getElementById('soap-kpi-30min').value,
+      seen_by:        document.getElementById('soap-seen-by').value,
+      next_appt:      document.getElementById('soap-next-appt').value,
+      next_appt_time: document.getElementById('soap-next-appt-time').value
+    };
+    // Don't persist a draft that is empty apart from the auto-filled date.
+    var hasContent = draft.s || draft.o || draft.a || draft.p ||
+                     draft.queue_no || draft.kpi_30min || draft.seen_by ||
+                     draft.next_appt || draft.next_appt_time;
+    if (!hasContent) { clearSoapDraft(); return; }
+    localStorage.setItem(soapDraftKey(), JSON.stringify(draft));
+  } catch (e) {
+    console.warn('SOAP draft save failed:', e);
+  }
+}
+
+function clearSoapDraft() {
+  try { localStorage.removeItem(soapDraftKey()); } catch (e) {}
+}
+
+function cancelSoapModal() {
+  // Explicit Cancel = deliberate discard. Clear the draft, then close.
+  clearSoapDraft();
+  closeModal();
+}
 
 // ── Template picker ────────────────────────────────────
 function showSoapTemplate(fieldId, category) {
@@ -703,6 +772,7 @@ async function saveSoap() {
     });
     var j = await res.json();
     if (!res.ok) { showToast(j.error || 'Failed to save', 'err'); return; }
+    clearSoapDraft();   // note is now persisted in SQLite — draft has done its job
     closeModal();
     showToast(soapId ? 'Note updated' : 'Follow-up note saved', 'ok');
     loadSoaps();
