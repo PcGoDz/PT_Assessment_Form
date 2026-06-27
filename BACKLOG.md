@@ -4,7 +4,7 @@
 
 ## Open bugs / Cleanup
 
-- **SOAP modal: backdrop click dismisses AND wipes typed data (MAJOR, shared bug, surfaced 2026-06-27).** On a follow-up SOAP entry, clicking outside the modal closes it and loses all typed content. NOT NCD-specific — episode.html SOAP modal is shared by all 15 forms. Clinical data-loss risk at 12-21 patients/day. Fix: prevent backdrop-dismiss when fields are dirty (add dirty-check before `closeModal()`), or confirm-before-discard. Likely folds into Plan B (which already enters the modal) or can be a standalone shared fix. Respect the RED LINE — additive only, no modal restructure.
+- **Intermittent SOAP cross-episode field bleed — WATCH, not a reopen (2026-06-27).** Root-caused to browser autofill on fixed-ID modal fields (`soap-s`, `soap-o`, `soap-a`, `soap-p`). Patched with `autocomplete="off"` on all 9 SOAP modal fields (`75d2a9b`). Reproduced twice then went shy under console instrumentation. Our localStorage draft code was confirmed innocent (correct per-episode key, `localStorage.getItem` returned null during the bleed). If it resurfaces: browser-heuristic timing is the culprit, not our code. Next layer: dynamic ID suffixing or `name` attribute removal.
 
 - **MPIS output readability — divider bars (====  / ----) slam against text with no line breaks (surfaced 2026-06-27).** `MPIS_DIV`/`MPIS_DASH` house style produces wall-of-text output; only became obvious on NCD's longer SOAPIER output. Affects all 15 forms — this is a shared formatting issue, not an NCD one-off. Deserves a dedicated MPIS-readability pass: add blank `parts.push('')` lines before/after section dividers. NOT a one-form patch.
 
