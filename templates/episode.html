@@ -646,6 +646,29 @@ function openSoapModal(soap) {
     var ft = episode ? episode.form_type : '';
     oBtn.style.display = (ft === 'AMPUTATION') ? '' : 'none';
   }
+  // If opening a NEW note (no soap arg) and a draft exists for this episode, rehydrate it.
+  if (!soap) {
+    try {
+      var raw = localStorage.getItem(soapDraftKey());
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d) {
+          if (d.date)           document.getElementById('soap-date').value           = d.date;
+          if (d.s)              document.getElementById('soap-s').value              = d.s;
+          if (d.o)              document.getElementById('soap-o').value              = d.o;
+          if (d.a)              document.getElementById('soap-a').value              = d.a;
+          if (d.p)              document.getElementById('soap-p').value              = d.p;
+          if (d.queue_no)       document.getElementById('soap-queue-no').value       = d.queue_no;
+          if (d.kpi_30min)      document.getElementById('soap-kpi-30min').value      = d.kpi_30min;
+          if (d.seen_by)        document.getElementById('soap-seen-by').value        = d.seen_by;
+          if (d.next_appt)      document.getElementById('soap-next-appt').value      = d.next_appt;
+          if (d.next_appt_time) document.getElementById('soap-next-appt-time').value = d.next_appt_time;
+        }
+      }
+    } catch (e) {
+      console.warn('SOAP draft restore failed:', e);
+    }
+  }
   document.getElementById('soap-modal').classList.add('open');
   setTimeout(function() { document.getElementById('soap-s').focus(); }, 100);
 }
