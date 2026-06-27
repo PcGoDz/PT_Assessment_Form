@@ -92,19 +92,23 @@ Per FORM_PIPELINE step 1 (TRANSCRIBE). Preserve KKM wording/typos. `[chip]` `[te
 
 Per FORM_PIPELINE step 3 (SEQUENCE): regroup paper order into clinical SOAP flow, NOT borang print order. This is the section list + sidebar nav. Each section is a `.card` with `.sec-num` (DESIGN_SYSTEM.md primitives — non-negotiable). Patient card copied from **ms.html** (NOT neuro.html — it's missing required IDs, see WORKFLOW Anti-Repeat).
 
+> *Post-build clinical-flow revision 2026-06-27: section order aligned with MSK canonical flow.*
+
 | # | Section (`s-id`) | SOAP | Contents |
 |---|------------------|------|----------|
-| 01 | Patient | — | Patient card from ms.html (NRIC derive → DOB/age/sex, assessment date) |
-| 02 | Subjective | S | Doctor's Diagnosis, Patient's Complaint, Special Question (marital chip + occupation/recreation/PMHx/family/medication text), Lifestyle (smoking/alcohol/active Yes-No chips + comments), Current/Past History |
-| 03 | Body Chart & Shape | O | bodychart.js (pain location) + 7-figure body-shape picker. Both once-at-initial. |
-| 04 | Vital Signs & Bloods | O | HR/RR/BP/SpO2 + FBS/HbA1c/Chol/LDL/HDL/TG |
-| 05 | Body Composition | O | Height/Weight/BMI(derived)/Waist/Hip/WHR(derived) + optional segmental grid + visceral + RMR |
-| 06 | Fitness Tests | O | 6-min walk, 3-min step, sit-and-reach, hand grip/sit-up/push-up, sit-to-stand, stork balance. All optional. |
-| 07 | Observation / Physical Exam | O | Free-text |
-| 08 | PT Impression | A | Text + template picker |
-| 09 | Goals & Plan | P | Patient's Goal, STG, LTG, Plan of Treatment — each text + template picker |
+| 01 | `s-patient` | — | Patient card from ms.html (NRIC derive → DOB/age/sex, assessment date) |
+| 02 | `s-subjective` | S | Doctor's Diagnosis, Patient's Complaint, Lifestyle (smoking/alcohol/active Yes-No chips + comments) |
+| 03 | `s-history` | S | Current History, Past History (2 narrative textareas) |
+| 04 | `s-special` | S | Special Questions: Marital Status (chips), Occupation, Recreation, PMHx/Surgery, Family Hx, Medication |
+| 05 | `s-observation` | O | Observation / Physical Examination (free-text) |
+| 06 | `s-bodychart` | O | bodychart.js (pain location) + 7-figure body-shape picker. Both once-at-initial. |
+| 07 | `s-vitals` | O | Vital Signs & Bloods: HR/RR/BP/SpO2 + FBS/HbA1c/Chol/LDL/HDL/TG |
+| 08 | `s-bodycomp` | O | Body Composition: Height/Weight/BMI(derived)/Waist/Hip/WHR(derived) + optional segmental grid + visceral + RMR |
+| 09 | `s-fitness` | O | Fitness Tests: 6-min walk, 3-min step, sit-and-reach, hand grip/sit-up/push-up, sit-to-stand, stork balance. All optional. |
+| 10 | `s-impression` | A | PT Impression — text + template picker |
+| 11 | `s-goals` | P | Goals & Plan: Patient's Goal, STG, LTG, Plan of Treatment — each text + template picker |
 
-> **Note on Objective duplication:** ONLY sections 04 (Vital Signs & Bloods), 05 (Body Composition), and 06 (Fitness Tests) are the per-visit recurring battery — these appear BOTH in the initial assessment AND in the per-visit measurements panel (§5), as the SAME field set. Section 03 (Body Chart & Shape) and 07 (Observation) are **initial-only** — they do NOT go in the per-visit panel and do NOT ride the trend. (Body chart/shape captured once at initial per D4/D5.) The initial form's capture writes the FIRST `ncd_measurements` row (session_no=1) in addition to the assessment record. Subsequent visits add rows via the SOAP modal. Implementation detail for the plan: decide whether the initial form writes the measurements row directly on save, or whether visit-1 measurements are entered through the same SOAP-modal panel. **Recommended: initial form save writes session_no=1 measurements row automatically** (one less manual step on the busy first visit), then visits 2+ use the SOAP-modal panel.
+> **Note on Objective duplication:** ONLY sections 07 (Vital Signs & Bloods), 08 (Body Composition), and 09 (Fitness Tests) are the per-visit recurring battery — these appear BOTH in the initial assessment AND in the per-visit measurements panel (§5), as the SAME field set. Section 06 (Body Chart & Shape) and 05 (Observation) are **initial-only** — they do NOT go in the per-visit panel and do NOT ride the trend. (Body chart/shape captured once at initial per D4/D5.) The initial form's capture writes the FIRST `ncd_measurements` row (session_no=1) in addition to the assessment record. Subsequent visits add rows via the SOAP modal. Implementation detail for the plan: decide whether the initial form writes the measurements row directly on save, or whether visit-1 measurements are entered through the same SOAP-modal panel. **Recommended: initial form save writes session_no=1 measurements row automatically** (one less manual step on the busy first visit), then visits 2+ use the SOAP-modal panel.
 
 ---
 

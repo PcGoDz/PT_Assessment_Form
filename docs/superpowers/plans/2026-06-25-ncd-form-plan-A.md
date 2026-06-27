@@ -39,8 +39,10 @@
 
 ## File Structure (Plan A)
 
+> *Post-build clinical-flow revision 2026-06-27: section order aligned with MSK canonical flow — 11 sections (01–11).*
+
 **Create:**
-- `templates/forms/ncd.html` — the form (sections 01–09 per spec §3)
+- `templates/forms/ncd.html` — the form (sections 01–11 per spec §3, revised 2026-06-27)
 - `static/js/form_ncd.js` — collect/populate/reset + body-shape picker + BMI/WHR derive + chip helpers
 - `pdf_ncd.py` — `generate_ncd_pdf(data)` + `generate_episode_pdf(assessment, soaps, ep)`
 
@@ -842,7 +844,7 @@ git commit -m "NCD-A: top-crop cleanup on shape figures 1 + 4"
 
 - [ ] **Step 1: DESIGN_SYSTEM visual checklist**
 
-Confirm: sidebar_nav populated (one item per section 01–09); every section a `.card` with `.sec-num`+`<h2>`+`.card-body`; section ids match `Main.go('s-...')`; paired fields use `.fg.c2`; derived BMI/WHR show as `.derived-badge`; required fields marked `.req`; visual compare to ms.html (same family). Click every `+template` button (Task 8). Confirm chip selected-states paint.
+Confirm: sidebar_nav populated (one item per section 01–11); every section a `.card` with `.sec-num`+`<h2>`+`.card-body`; section ids match `Main.go('s-...')`; paired fields use `.fg.c2`; derived BMI/WHR show as `.derived-badge`; required fields marked `.req`; visual compare to ms.html (same family). Click every `+template` button (Task 8). Confirm chip selected-states paint.
 
 - [ ] **Step 2: Lifecycle + routing checklist**
 
@@ -874,7 +876,7 @@ git branch -d claude/ncd-form-A
 ## Self-Review (against spec)
 
 - **§2 field transcription** → Tasks 2–5 cover every borang field. ✅
-- **§3 SOAPIER sections 01–09** → Tasks 1–5 one card each. ✅
+- **§3 SOAPIER sections 01–11** → Tasks 1–5 one card each (revised to 11-section MSK-aligned order 2026-06-27). ✅
 - **§4.1 chips/derived** → Task 2 (marital/lifestyle), Task 4 (BMI/WHR). ✅
 - **§4.3 templates verbatim** → Task 8. ✅
 - **§4.4 body chart + shape** → Task 3 (screen) + Task 9 Step 3 (PDF WYSIWYG). ✅
