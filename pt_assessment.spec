@@ -21,6 +21,8 @@ a = Analysis(
         ('pdf_burn.py', '.'),
         ('pdf_sci.py', '.'),
         ('pdf_facial.py', '.'),
+        ('pdf_ncd.py', '.'),
+        ('static/img/ncd_shapes', 'static/img/ncd_shapes'),
         ('templates/pdf', 'templates/pdf'),
     ],
     hiddenimports=[

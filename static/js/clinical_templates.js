@@ -619,6 +619,76 @@ const ClinicalTemplates = (function () {
     ],
   };
 
+  TEMPLATES.NCD = {
+    impression: [
+      'Pain in the right knee due to osteoarthritis.',
+      'Reduced range of motion in the right knee due to pain.',
+      'Muscle weakness in the right quadriceps due to reduced activity.',
+      'Impaired balance and gait due to muscle weakness.'
+    ],
+    goal: [
+      'Return to work as a shopkeeper within 3 months.',
+      'Walk independently without an assistive device for daily activities.',
+      'Perform recreational activities, such as gardening, without knee pain.'
+    ],
+    stg: [
+      'Reduce right knee pain from 7 to 4 on the VAS within 2 weeks.',
+      'Achieve 10° improvement in right knee flexion and extension within 2 weeks.',
+      'Increase quadriceps strength from 3/5 to 4/5 within 3 weeks.',
+      'Improve standing balance to maintain 20 seconds on a single leg within 3 weeks.',
+      'Ambulate 10 meters with minimal assistance using a walking frame within 3 weeks.'
+    ],
+    ltg: [
+      'Achieve pain-free functional independence for daily activities within 3-6 months.',
+      'Restore full range of motion and flexibility in the affected joint within 6 months.',
+      'Strengthen affected muscles to 5/5 grade and improve endurance for sustained physical activity within 6 months.',
+      'Improve walking distance to 500 meters without assistive devices within 6 months.',
+      'Maintain an active lifestyle with regular physical activity to reduce the recurrence risk of the condition within 12 months.'
+    ],
+    treatment: [
+      'Explanation and assurance to the patient',
+      'Patient and carer education',
+      'Pain management',
+      'Posture',
+      'Mobilising exercise',
+      'Strengthening exercise',
+      'Balance training',
+      'Ambulation',
+      'Functional exercise'
+    ]
+  };
+
+  TEMPLATES.NCD_SOAP = {
+    subjective: [
+      'Patient reports knee pain rated 7/10 on VAS, worsened with prolonged standing and stair climbing.',
+      'Patient complains of stiffness and swelling of the right knee, lasting 30 minutes in the morning.',
+      'Patient reports difficulty walking distances more than 500 metres due to pain.',
+      'Patient notes fatigue and reduced motivation to perform physical activity.',
+      'Carer reports patient is less mobile compared to previous week.'
+    ],
+    objective: [
+      'Right knee ROM: Flexion 90°, Extension -10° (limited by pain and soft tissue tightness).',
+      'Quadriceps strength: 3/5 MMT bilaterally.',
+      'Single-leg stance: Unable to maintain beyond 5 seconds bilaterally.',
+      'Gait: Antalgic gait pattern, reduced stride length on the right.',
+      'BMI: 32.1 kg/m². Waist circumference: 98 cm. Waist/Hip ratio: 0.95.',
+      '6-Minute Walk Test: 320 metres (RPE 15/20).'
+    ],
+    analysis: [
+      'Patient demonstrates pain-limited ROM and reduced quadriceps strength consistent with osteoarthritis.',
+      'Functional mobility remains impaired; patient requires assistive device for community ambulation.',
+      'Patient is progressing towards STG of 10° ROM improvement; 5° achieved this session.',
+      'Persistent elevated BMI and abdominal obesity contributing to joint load and disease progression.'
+    ],
+    plan: [
+      'Continue hydrotherapy 2× weekly for joint mobility and pain relief.',
+      'Progress strengthening programme: quadriceps sets, SLR, mini-squats.',
+      'Educate patient on weight management strategies and low-impact activity.',
+      'Review blood results with treating physician regarding HbA1c trend.',
+      'Schedule reassessment in 4 weeks for STG review.'
+    ]
+  };
+
   TEMPLATES.FACIAL_SOAP = {
     subjective: [
       'Sudden onset of [R/L] facial weakness, [with/without] pain behind the [R/L] ear.',

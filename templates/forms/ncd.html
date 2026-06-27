@@ -1,0 +1,544 @@
+{% extends "base.html" %}
+
+{% block form_name %}NCD / Obesity Assessment{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-subjective')"><span class="nav-icon">&#128172;</span> Subjective</div>
+<div class="nav-item" onclick="Main.go('s-history')"><span class="nav-icon">&#128203;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-special')"><span class="nav-icon">&#10067;</span> Special Questions</div>
+<div class="nav-item" onclick="Main.go('s-observation')"><span class="nav-icon">&#128269;</span> Observation</div>
+<div class="nav-item" onclick="Main.go('s-bodychart')"><span class="nav-icon">&#129504;</span> Body Chart &amp; Shape</div>
+<div class="nav-item" onclick="Main.go('s-vitals')"><span class="nav-icon">&#128139;</span> Vital Signs</div>
+<div class="nav-item" onclick="Main.go('s-bodycomp')"><span class="nav-icon">&#9878;</span> Body Composition</div>
+<div class="nav-item" onclick="Main.go('s-fitness')"><span class="nav-icon">&#127939;</span> Fitness Tests</div>
+<div class="nav-item" onclick="Main.go('s-impression')"><span class="nav-icon">&#129504;</span> PT Impression</div>
+<div class="nav-item" onclick="Main.go('s-goals')"><span class="nav-icon">&#127919;</span> Goals &amp; Plan</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  /* NCD form-local CSS — scoped, additive, does not touch shared style.css */
+  .irr-chip.sel-Single, .irr-chip.sel-Married, .irr-chip.sel-Widowed, .irr-chip.sel-Divorced,
+  .irr-chip.sel-Yes, .irr-chip.sel-No {
+    background: var(--accent-light); border-color: var(--accent);
+    color: var(--accent); font-weight: 500;
+  }
+  .shape-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px; margin-top: 8px;
+  }
+  .shape-card {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 10px; border: 2px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); cursor: pointer; font-family: inherit;
+    font-size: 11px; color: var(--text-muted); transition: all 0.12s;
+  }
+  .shape-card img { height: 90px; width: auto; object-fit: contain; }
+  .shape-card:hover { border-color: var(--accent-mid); }
+  .shape-card.sel { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 600; }
+</style>
+<div class="card" id="s-patient">
+  <div class="card-header">
+    <span class="sec-num">01</span>
+    <h2>Patient Information</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="FormBase.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="FormBase.onPtTypeChange()"> Foreign (Passport)</label>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="FormBase.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="pt-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+            <optgroup label="ASEAN">
+              <option>Indonesia</option>
+              <option>Myanmar</option>
+              <option>Philippines</option>
+              <option>Thailand</option>
+              <option>Vietnam</option>
+              <option>Cambodia</option>
+              <option>Laos</option>
+              <option>Brunei</option>
+              <option>Singapore</option>
+              <option>Timor-Leste</option>
+            </optgroup>
+            <optgroup label="South Asia">
+              <option>Bangladesh</option>
+              <option>India</option>
+              <option>Pakistan</option>
+              <option>Nepal</option>
+              <option>Sri Lanka</option>
+              <option>Afghanistan</option>
+            </optgroup>
+            <optgroup label="East Asia">
+              <option>China</option>
+              <option>Taiwan</option>
+              <option>Japan</option>
+              <option>South Korea</option>
+              <option>Hong Kong</option>
+            </optgroup>
+            <optgroup label="Middle East">
+              <option>Saudi Arabia</option>
+              <option>Yemen</option>
+              <option>Iraq</option>
+              <option>Iran</option>
+              <option>Jordan</option>
+              <option>Syria</option>
+            </optgroup>
+            <optgroup label="Africa">
+              <option>Nigeria</option>
+              <option>Somalia</option>
+              <option>Ghana</option>
+              <option>Ethiopia</option>
+              <option>Kenya</option>
+              <option>Tanzania</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option>Australia</option>
+              <option>United Kingdom</option>
+              <option>United States</option>
+              <option>France</option>
+              <option>Germany</option>
+              <option>Netherlands</option>
+              <option>Other (not listed)</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="field">
+          <label>Assessment Date <span class="req">*</span></label>
+          <input type="date" id="pt-date">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob" onchange="FormBase.onDobChange(this.value)">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pt-age" placeholder="Years" min="0" max="130">
+        </div>
+        <div class="field" id="sex-field" style="display:none">
+          <label>Sex <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="pt-sex" value="M"> Male</label>
+            <label><input type="radio" name="pt-sex" value="F"> Female</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-subjective">
+  <div class="card-header"><span class="sec-num">02</span><h2>Subjective</h2></div>
+  <div class="card-body">
+    <!-- Doctor's Diagnosis (REQUIRED) -->
+    <div class="fg">
+      <div class="field">
+        <label>Doctor's Diagnosis <span class="req">*</span></label>
+        <textarea id="diagnosis" rows="2" placeholder="As per referral"></textarea>
+      </div>
+    </div>
+    <!-- Patient's Complaint -->
+    <div class="fg">
+      <div class="field">
+        <label>Patient's Complaint</label>
+        <textarea id="complaint" rows="2"></textarea>
+      </div>
+    </div>
+    <!-- Lifestyle -->
+    <div class="fg c2">
+      <div class="field">
+        <label>Smoking</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-smoking-Yes" onclick="Form.pickLife('smoking','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-smoking-No"  onclick="Form.pickLife('smoking','No')">No</button>
+        </div>
+        <input type="text" id="smoking-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Alcohol</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-alcohol-Yes" onclick="Form.pickLife('alcohol','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-alcohol-No"  onclick="Form.pickLife('alcohol','No')">No</button>
+        </div>
+        <input type="text" id="alcohol-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Physically Active</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="life-active-Yes" onclick="Form.pickLife('active','Yes')">Yes</button>
+          <button type="button" class="irr-chip" id="life-active-No"  onclick="Form.pickLife('active','No')">No</button>
+        </div>
+        <input type="text" id="active-comment" placeholder="Comment" style="margin-top:6px">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-history">
+  <div class="card-header"><span class="sec-num">03</span><h2>History</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Current History</label>
+        <textarea id="current-history" rows="3" placeholder="Current history of presenting condition..."></textarea>
+      </div>
+      <div class="field">
+        <label>Past History</label>
+        <textarea id="past-history" rows="3" placeholder="Past medical/surgical history..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-special">
+  <div class="card-header"><span class="sec-num">04</span><h2>Special Questions</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Marital Status</label>
+        <div class="irr-chips">
+          <button type="button" class="irr-chip" id="marital-Single"   onclick="Form.pickMarital('Single')">Single</button>
+          <button type="button" class="irr-chip" id="marital-Married"  onclick="Form.pickMarital('Married')">Married</button>
+          <button type="button" class="irr-chip" id="marital-Widowed"  onclick="Form.pickMarital('Widowed')">Widowed</button>
+          <button type="button" class="irr-chip" id="marital-Divorced" onclick="Form.pickMarital('Divorced')">Divorced</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Occupation</label>
+        <input type="text" id="occupation">
+      </div>
+      <div class="field">
+        <label>Recreation</label>
+        <input type="text" id="recreation">
+      </div>
+      <div class="field">
+        <label>PMHX</label>
+        <input type="text" id="pmhx">
+      </div>
+      <div class="field">
+        <label>Family History</label>
+        <input type="text" id="family-hx">
+      </div>
+      <div class="field">
+        <label>Medication</label>
+        <input type="text" id="medication">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-observation">
+  <div class="card-header"><span class="sec-num">05</span><h2>Observation</h2></div>
+  <div class="card-body">
+    <div class="fg"><div class="field"><label>Observation / Physical Examination</label><textarea id="observation" rows="4"></textarea></div></div>
+  </div>
+</div>
+
+<div class="card" id="s-bodychart">
+  <div class="card-header"><span class="sec-num">06</span><h2>Body Chart &amp; Shape</h2></div>
+  <div class="card-body">
+    <!-- Body chart: copied from ms.html .body-chart-wrap -->
+    <div class="body-chart-wrap">
+      <div class="body-figures">
+        <div class="fig-wrap">
+          <div class="fig-label">Anterior</div>
+          <svg class="bsvg" id="svg-ant" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,120 36,130 Q34,140 38,148 Q50,154 65,154 Q80,154 92,148 Q96,140 94,130 Q92,120 88,115 Z"/>
+              <path d="M38,148 Q32,160 30,178 Q28,196 30,212 Q36,218 44,216 Q50,200 52,182 Q54,164 50,150 Z"/>
+              <path d="M92,148 Q98,160 100,178 Q102,196 100,212 Q94,218 86,216 Q80,200 78,182 Q76,164 80,150 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M28,278 Q24,284 24,292 Q28,300 38,300 Q46,300 48,292 Q48,284 46,278 Z"/>
+              <path d="M102,278 Q106,284 106,292 Q102,300 92,300 Q84,300 82,292 Q82,284 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head"            data-view="ant"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck / Shoulder" data-view="ant"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm"           data-view="ant"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm"           data-view="ant"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Chest"           data-view="ant"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Abdomen"         data-view="ant"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm"       data-view="ant"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm"       data-view="ant"/>
+            <rect class="hit" x="34" y="150" width="34" height="68" rx="3"  data-zone="L thigh"         data-view="ant"/>
+            <rect class="hit" x="62" y="150" width="34" height="68" rx="3"  data-zone="R thigh"         data-view="ant"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L leg"           data-view="ant"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R leg"           data-view="ant"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L foot"          data-view="ant"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R foot"          data-view="ant"/>
+                    <g id="markers-ant"></g>
+          </svg>
+        </div>
+        <div class="fig-wrap">
+          <div class="fig-label">Posterior</div>
+          <svg class="bsvg" id="svg-post" width="130" height="310" viewBox="0 0 130 310">
+            <g stroke="#555" stroke-width="1" fill="white">
+              <ellipse cx="65" cy="18" rx="13" ry="16"/>
+              <rect x="59" y="32" width="12" height="10"/>
+              <path d="M32,42 Q40,38 59,40 L59,52 Q50,50 40,54 Q34,56 30,60 Z"/>
+              <path d="M98,42 Q90,38 71,40 L71,52 Q80,50 90,54 Q96,56 100,60 Z"/>
+              <path d="M40,54 Q38,70 38,90 Q38,105 42,115 L88,115 Q92,105 92,90 Q92,70 90,54 Z"/>
+              <path d="M30,60 Q22,65 18,78 Q16,90 20,102 Q26,106 32,104 Q36,92 38,78 Q36,66 32,60 Z"/>
+              <path d="M100,60 Q108,65 112,78 Q114,90 110,102 Q104,106 98,104 Q94,92 92,78 Q94,66 98,60 Z"/>
+              <path d="M20,102 Q16,114 16,126 Q16,138 20,146 Q26,148 32,146 Q36,138 36,126 Q36,114 32,104 Z"/>
+              <path d="M110,102 Q114,114 114,126 Q114,138 110,146 Q104,148 98,146 Q94,138 94,126 Q94,114 98,104 Z"/>
+              <ellipse cx="24" cy="153" rx="8" ry="10"/>
+              <ellipse cx="106" cy="153" rx="8" ry="10"/>
+              <path d="M42,115 Q38,122 36,132 Q34,144 40,150 Q52,156 65,156 Q78,156 90,150 Q96,144 94,132 Q92,122 88,115 Z"/>
+              <path d="M40,150 Q32,162 30,180 Q28,198 32,214 Q38,220 46,218 Q52,202 54,184 Q56,166 50,152 Z"/>
+              <path d="M90,150 Q98,162 100,180 Q102,198 98,214 Q92,220 84,218 Q78,202 76,184 Q74,166 80,152 Z"/>
+              <ellipse cx="37" cy="219" rx="9" ry="8"/>
+              <ellipse cx="93" cy="219" rx="9" ry="8"/>
+              <path d="M28,226 Q26,244 28,260 Q30,272 34,278 Q40,280 46,278 Q48,266 46,252 Q44,238 40,226 Z"/>
+              <path d="M102,226 Q104,244 102,260 Q100,272 96,278 Q90,280 84,278 Q82,266 84,252 Q86,238 90,226 Z"/>
+              <path d="M34,278 Q28,282 26,290 Q30,298 40,300 Q48,300 48,290 Q48,282 46,278 Z"/>
+              <path d="M96,278 Q102,282 104,290 Q100,298 90,300 Q82,300 82,290 Q82,282 84,278 Z"/>
+            </g>
+            <text x="6" y="172" font-size="8" fill="#888" font-family="sans-serif">R</text>
+            <text x="118" y="172" font-size="8" fill="#888" font-family="sans-serif">L</text>
+            <rect class="hit" x="50" y="2"   width="30" height="32" rx="14" data-zone="Head (post)"       data-view="post"/>
+            <rect class="hit" x="30" y="34"  width="70" height="22" rx="3"  data-zone="Neck (post)"       data-view="post"/>
+            <rect class="hit" x="4"  y="56"  width="34" height="50" rx="3"  data-zone="L arm (post)"      data-view="post"/>
+            <rect class="hit" x="92" y="56"  width="34" height="50" rx="3"  data-zone="R arm (post)"      data-view="post"/>
+            <rect class="hit" x="36" y="56"  width="58" height="60" rx="3"  data-zone="Upper back"        data-view="post"/>
+            <rect class="hit" x="36" y="112" width="58" height="44" rx="3"  data-zone="Lumbar / Lower back" data-view="post"/>
+            <rect class="hit" x="4"  y="102" width="34" height="46" rx="3"  data-zone="L forearm (post)"  data-view="post"/>
+            <rect class="hit" x="92" y="102" width="34" height="46" rx="3"  data-zone="R forearm (post)"  data-view="post"/>
+            <rect class="hit" x="34" y="150" width="34" height="70" rx="3"  data-zone="L hamstring"       data-view="post"/>
+            <rect class="hit" x="62" y="150" width="34" height="70" rx="3"  data-zone="R hamstring"       data-view="post"/>
+            <rect class="hit" x="24" y="222" width="28" height="58" rx="3"  data-zone="L calf"            data-view="post"/>
+            <rect class="hit" x="78" y="222" width="28" height="58" rx="3"  data-zone="R calf"            data-view="post"/>
+            <rect class="hit" x="22" y="276" width="30" height="26" rx="3"  data-zone="L heel / foot (post)" data-view="post"/>
+            <rect class="hit" x="78" y="276" width="30" height="26" rx="3"  data-zone="R heel / foot (post)" data-view="post"/>
+                    <g id="markers-post"></g>
+          </svg>
+        </div>
+      </div>
+      <div class="chart-controls">
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:7px">Select type then click figure</div>
+          <div class="pain-type-sel" id="ptype-sel">
+            <button class="pt-chip ptype-ache active" data-ptype="ache">Ache</button>
+            <button class="pt-chip ptype-sharp"       data-ptype="sharp">Sharp</button>
+            <button class="pt-chip ptype-numb"        data-ptype="numb">Numbness</button>
+            <button class="pt-chip ptype-burn"        data-ptype="burn">Burning</button>
+            <button class="pt-chip ptype-refer"       data-ptype="refer">Referred</button>
+            <button class="pt-chip ptype-tender"      data-ptype="tender">Tenderness</button>
+          </div>
+        </div>
+        <div>
+          <div class="list-header">
+            <span>Marked Locations</span>
+            <button class="btn-sm" onclick="BodyChart.clearAll()">Clear all</button>
+          </div>
+          <div class="marker-list" id="marker-list">
+            <div class="empty-hint" id="empty-hint">No markers yet</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Body Chart Notes</label>
+          <textarea id="chart-notes" placeholder="Distribution, peripheralisation, centralisation..." style="min-height:56px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body shape picker -->
+    <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-muted);margin-top:18px;display:block;">Body Shape</label>
+    <div class="shape-grid" id="shape-grid">
+      <button type="button" class="shape-card" id="shape-The Inverted Triangle" onclick="Form.pickShape('The Inverted Triangle')">
+        <img src="/static/img/ncd_shapes/ncd_shape_1_inverted_triangle.png" alt="Inverted Triangle">
+        <span>The Inverted Triangle</span>
+      </button>
+      <button type="button" class="shape-card" id="shape-The Lean Column" onclick="Form.pickShape('The Lean Column')">
+        <img src="/static/img/ncd_shapes/ncd_shape_2_lean_column.png" alt="Lean Column">
+        <span>The Lean Column</span>
+      </button>
+      <button type="button" class="shape-card" id="shape-The Rectangle" onclick="Form.pickShape('The Rectangle')">
+        <img src="/static/img/ncd_shapes/ncd_shape_3_rectangle.png" alt="Rectangle">
+        <span>The Rectangle</span>
+      </button>
+      <button type="button" class="shape-card" id="shape-The Apple" onclick="Form.pickShape('The Apple')">
+        <img src="/static/img/ncd_shapes/ncd_shape_4_apple.png" alt="Apple">
+        <span>The Apple</span>
+      </button>
+      <button type="button" class="shape-card" id="shape-The Pear" onclick="Form.pickShape('The Pear')">
+        <img src="/static/img/ncd_shapes/ncd_shape_5_pear.png" alt="Pear">
+        <span>The Pear</span>
+      </button>
+      <button type="button" class="shape-card" id="shape-The Neat Hour Glass" onclick="Form.pickShape('The Neat Hour Glass')">
+        <img src="/static/img/ncd_shapes/ncd_shape_6_neat_hourglass.png" alt="Neat Hour Glass">
+        <span>The Neat Hour Glass</span>
+      </button>
+      <button type="button" class="shape-card" id="shape-The Full Hour Glass" onclick="Form.pickShape('The Full Hour Glass')">
+        <img src="/static/img/ncd_shapes/ncd_shape_7_full_hourglass.png" alt="Full Hour Glass">
+        <span>The Full Hour Glass</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-vitals">
+  <div class="card-header"><span class="sec-num">07</span><h2>Vital Signs &amp; Bloods</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Heart Rate (/min)</label><input type="number" id="hr" min="0"></div>
+      <div class="field"><label>Respiratory Rate (/min)</label><input type="number" id="rr" min="0"></div>
+      <div class="field"><label>Blood Pressure (mmHg)</label><input type="text" id="bp" placeholder="e.g. 120/80"></div>
+      <div class="field"><label>SpO2 (%)</label><input type="number" id="spo2" min="0" max="100"></div>
+    </div>
+    <div class="fg c2">
+      <div class="field"><label>Fasting Blood Sugar (mmol/L)</label><input type="number" id="fbs" step="0.1" min="0"></div>
+      <div class="field"><label>HbA1c (%)</label><input type="number" id="hba1c" step="0.1" min="0"></div>
+      <div class="field"><label>Total Cholesterol (mmol/L)</label><input type="number" id="cholesterol" step="0.1" min="0"></div>
+      <div class="field"><label>LDL (mmol/L)</label><input type="number" id="ldl" step="0.1" min="0"></div>
+      <div class="field"><label>HDL (mmol/L)</label><input type="number" id="hdl" step="0.1" min="0"></div>
+      <div class="field"><label>Triglycerides (mmol/L)</label><input type="number" id="triglycerides" step="0.1" min="0"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-bodycomp">
+  <div class="card-header"><span class="sec-num">08</span><h2>Body Composition</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Height (cm)</label><input type="number" id="height" step="0.1" min="0" oninput="Form.recompute()"></div>
+      <div class="field"><label>Weight (kg)</label><input type="number" id="weight" step="0.1" min="0" oninput="Form.recompute()"></div>
+      <div class="field"><label>Waist (cm)</label><input type="number" id="waist" step="0.1" min="0" oninput="Form.recompute()"></div>
+      <div class="field"><label>Hip (cm)</label><input type="number" id="hip" step="0.1" min="0" oninput="Form.recompute()"></div>
+    </div>
+    <div class="derived-info">
+      <span class="derived-badge hidden" id="derived-bmi"></span>
+      <span class="derived-badge hidden" id="derived-whr"></span>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Segmental Analysis</h3>
+    <div class="fg c2">
+      <div class="field"><label>Subcutaneous Fat % — Whole Body</label><input type="number" id="subfat-whole" step="0.1" min="0"></div>
+      <div class="field"><label>Subcutaneous Fat % — Trunk</label><input type="number" id="subfat-trunk" step="0.1" min="0"></div>
+      <div class="field"><label>Subcutaneous Fat % — Arm</label><input type="number" id="subfat-arm" step="0.1" min="0"></div>
+      <div class="field"><label>Subcutaneous Fat % — Leg</label><input type="number" id="subfat-leg" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Whole Body</label><input type="number" id="muscle-whole" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Trunk</label><input type="number" id="muscle-trunk" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Arm</label><input type="number" id="muscle-arm" step="0.1" min="0"></div>
+      <div class="field"><label>Skeletal Muscle % — Leg</label><input type="number" id="muscle-leg" step="0.1" min="0"></div>
+      <div class="field"><label>Visceral Fat Rating</label><input type="number" id="visceral-fat" step="0.1" min="0"></div>
+      <div class="field"><label>RMR (Kcal)</label><input type="number" id="rmr" min="0"></div>
+    </div>
+    <div style="font-size:10px;color:var(--text-faint);margin-top:6px;">* for patient below 18 yo please refer Z score</div>
+  </div>
+</div>
+
+<div class="card" id="s-fitness">
+  <div class="card-header"><span class="sec-num">09</span><h2>Fitness Tests</h2></div>
+  <div class="card-body">
+    <h3 style="font-size:13px;margin:0 0 8px">6-Minute Walk Test</h3>
+    <div class="fg c2">
+      <div class="field"><label>RPE</label><input type="number" id="walk6-rpe" min="0" max="20"></div>
+      <div class="field"><label>BP (mmHg)</label><input type="text" id="walk6-bp" placeholder="e.g. 130/85"></div>
+      <div class="field"><label>HR (/min)</label><input type="number" id="walk6-hr" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="walk6-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">3-Minute Step Test</h3>
+    <div class="fg c2">
+      <div class="field"><label>HR (/min)</label><input type="number" id="step3-hr" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="step3-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Flexibility</h3>
+    <div class="fg c2">
+      <div class="field"><label>Sit-and-Reach (cm)</label><input type="number" id="sit-reach" step="0.1"></div>
+      <div class="field"><label>Comment</label><input type="text" id="flex-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Upper Limb Strength</h3>
+    <div class="fg c2">
+      <div class="field"><label>Hand Grip (kg)</label><input type="number" id="hand-grip" step="0.1" min="0"></div>
+      <div class="field"><label>Sit-up (/min)</label><input type="number" id="sit-up" min="0"></div>
+      <div class="field"><label>Push-up (/rep)</label><input type="number" id="push-up" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="ul-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Lower Limb Strength</h3>
+    <div class="fg c2">
+      <div class="field"><label>Sit-to-Stand (/rep)</label><input type="number" id="sit-to-stand" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="ll-comment"></div>
+    </div>
+    <h3 style="font-size:13px;margin:16px 0 8px">Balance</h3>
+    <div class="fg c2">
+      <div class="field"><label>Stork Test (sec)</label><input type="number" id="stork" step="0.1" min="0"></div>
+      <div class="field"><label>Comment</label><input type="text" id="balance-comment"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card" id="s-impression">
+  <div class="card-header"><span class="sec-num">10</span><h2>PT Impression</h2></div>
+  <div class="card-body">
+    <div class="fg"><div class="field"><label>Physiotherapist's Impression <span class="req">*</span></label><textarea id="pt-impression" rows="3"></textarea></div></div>
+  </div>
+</div>
+
+<div class="card" id="s-goals">
+  <div class="card-header"><span class="sec-num">11</span><h2>Goals &amp; Plan</h2></div>
+  <div class="card-body">
+    <div class="fg"><div class="field"><label>Patient's Goal</label><textarea id="patient-goal" rows="3"></textarea></div></div>
+    <div class="fg c2">
+      <div class="field"><label>Short Term Goals</label><textarea id="stg" rows="3"></textarea></div>
+      <div class="field"><label>Long Term Goals</label><textarea id="ltg" rows="3"></textarea></div>
+    </div>
+    <div class="fg"><div class="field"><label>Plan of Treatment</label><textarea id="plan" rows="3"></textarea></div></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/form_ncd.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  BodyChart.init();
+  var FM = 'NCD';
+  ClinicalTemplates.addButton('pt-impression', FM, 'impression');
+  ClinicalTemplates.addButton('patient-goal',  FM, 'goal');
+  ClinicalTemplates.addButton('stg',           FM, 'stg');
+  ClinicalTemplates.addButton('ltg',           FM, 'ltg');
+  ClinicalTemplates.addButton('plan',          FM, 'treatment');
+});
+</script>
+{% endblock %}
