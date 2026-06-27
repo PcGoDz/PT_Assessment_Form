@@ -657,6 +657,42 @@ document.getElementById('soap-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
+// ── SOAP draft recovery (per-episode, survives stray dismissal) ──
+function soapDraftKey() {
+  return 'pt_soap_draft_' + EPISODE_ID;
+}
+
+function saveSoapDraft() {
+  // Only stash drafts for NEW notes, never while editing a saved note.
+  if (document.getElementById('soap-edit-id').value) return;
+  try {
+    var draft = {
+      date:           document.getElementById('soap-date').value,
+      s:              document.getElementById('soap-s').value,
+      o:              document.getElementById('soap-o').value,
+      a:              document.getElementById('soap-a').value,
+      p:              document.getElementById('soap-p').value,
+      queue_no:       document.getElementById('soap-queue-no').value,
+      kpi_30min:      document.getElementById('soap-kpi-30min').value,
+      seen_by:        document.getElementById('soap-seen-by').value,
+      next_appt:      document.getElementById('soap-next-appt').value,
+      next_appt_time: document.getElementById('soap-next-appt-time').value
+    };
+    // Don't persist a draft that is empty apart from the auto-filled date.
+    var hasContent = draft.s || draft.o || draft.a || draft.p ||
+                     draft.queue_no || draft.kpi_30min || draft.seen_by ||
+                     draft.next_appt || draft.next_appt_time;
+    if (!hasContent) { clearSoapDraft(); return; }
+    localStorage.setItem(soapDraftKey(), JSON.stringify(draft));
+  } catch (e) {
+    console.warn('SOAP draft save failed:', e);
+  }
+}
+
+function clearSoapDraft() {
+  try { localStorage.removeItem(soapDraftKey()); } catch (e) {}
+}
+
 // ── Template picker ────────────────────────────────────
 function showSoapTemplate(fieldId, category) {
   var formType = episode ? episode.form_type : 'MS';
