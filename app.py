@@ -23,6 +23,7 @@ import pdf_hand
 import pdf_burn
 import pdf_sci
 import pdf_facial
+import pdf_ncd
 
 def resource_path(relative):
     if hasattr(sys, '_MEIPASS'):
@@ -67,7 +68,7 @@ FORM_REGISTRY = [
     { 'id': 'GERIATRIC',   'label': 'Geriatric',          'icon': '&#9878;',   'badge': 'GR',  'group': 'Rehabilitation',    'ready': True,  'pdf_episode': pdf_geriatric.generate_episode_pdf,  'pdf_single': pdf_geriatric.generate_geriatric_pdf },
     { 'id': 'PAEDIATRIC',  'label': 'Paediatric',         'icon': '&#128118;', 'badge': 'PD',  'group': 'Rehabilitation',    'ready': False },
     { 'id': 'LYMPHOEDEMA', 'label': 'Lymphoedema',        'icon': '&#128167;', 'badge': 'LY',  'group': 'Rehabilitation',    'ready': False },
-    { 'id': 'NCD',         'label': 'NCD / Obesity',      'icon': '&#129483;', 'badge': 'NC',  'group': 'Rehabilitation',    'ready': False },
+    { 'id': 'NCD',         'label': 'NCD / Obesity',      'icon': '&#129483;', 'badge': 'NC',  'group': 'Rehabilitation',    'ready': True,  'pdf_episode': pdf_ncd.generate_episode_pdf,        'pdf_single': pdf_ncd.generate_ncd_pdf             },
     { 'id': 'GENERAL',     'label': 'General',            'icon': '&#128203;', 'badge': 'GN',  'group': 'Rehabilitation',    'ready': False },
 ]
 _PDF_GENERATORS        = {f['id']: f['pdf_episode'] for f in FORM_REGISTRY if f.get('pdf_episode')}
