@@ -489,6 +489,7 @@
       <div class="field"><label>BP (mmHg)</label><input type="text" id="walk6-bp" placeholder="e.g. 130/85"></div>
       <div class="field"><label>HR (/min)</label><input type="number" id="walk6-hr" min="0"></div>
       <div class="field">
+        <label>Comment</label>
         <button type="button" class="func-note-toggle" onclick="NcdForm.toggleNote('walk6-comment')">+ Note</button>
         <div class="func-note collapsed" id="walk6-comment-wrap">
           <input type="text" id="walk6-comment" placeholder="Comment">
@@ -499,6 +500,7 @@
     <div class="fg c2">
       <div class="field"><label>HR (/min)</label><input type="number" id="step3-hr" min="0"></div>
       <div class="field">
+        <label>Comment</label>
         <button type="button" class="func-note-toggle" onclick="NcdForm.toggleNote('step3-comment')">+ Note</button>
         <div class="func-note collapsed" id="step3-comment-wrap">
           <input type="text" id="step3-comment" placeholder="Comment">
@@ -509,6 +511,7 @@
     <div class="fg c2">
       <div class="field"><label>Sit-and-Reach (cm)</label><input type="number" id="sit-reach" step="0.1"></div>
       <div class="field">
+        <label>Comment</label>
         <button type="button" class="func-note-toggle" onclick="NcdForm.toggleNote('flex-comment')">+ Note</button>
         <div class="func-note collapsed" id="flex-comment-wrap">
           <input type="text" id="flex-comment" placeholder="Comment">
@@ -521,6 +524,7 @@
       <div class="field"><label>Sit-up (/min)</label><input type="number" id="sit-up" min="0"></div>
       <div class="field"><label>Push-up (/rep)</label><input type="number" id="push-up" min="0"></div>
       <div class="field">
+        <label>Comment</label>
         <button type="button" class="func-note-toggle" onclick="NcdForm.toggleNote('ul-comment')">+ Note</button>
         <div class="func-note collapsed" id="ul-comment-wrap">
           <input type="text" id="ul-comment" placeholder="Comment">
@@ -531,6 +535,7 @@
     <div class="fg c2">
       <div class="field"><label>Sit-to-Stand (/rep)</label><input type="number" id="sit-to-stand" min="0"></div>
       <div class="field">
+        <label>Comment</label>
         <button type="button" class="func-note-toggle" onclick="NcdForm.toggleNote('ll-comment')">+ Note</button>
         <div class="func-note collapsed" id="ll-comment-wrap">
           <input type="text" id="ll-comment" placeholder="Comment">
@@ -541,6 +546,7 @@
     <div class="fg c2">
       <div class="field"><label>Stork Test (sec)</label><input type="number" id="stork" step="0.1" min="0"></div>
       <div class="field">
+        <label>Comment</label>
         <button type="button" class="func-note-toggle" onclick="NcdForm.toggleNote('balance-comment')">+ Note</button>
         <div class="func-note collapsed" id="balance-comment-wrap">
           <input type="text" id="balance-comment" placeholder="Comment">
@@ -574,7 +580,6 @@
 <script src="{{ url_for('static', filename='js/form_ncd.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  BodyChart.init();
   var FM = 'NCD';
   ClinicalTemplates.addButton('pt-impression', FM, 'impression');
   ClinicalTemplates.addButton('patient-goal',  FM, 'goal');
