@@ -111,6 +111,12 @@ When a field's value can be derived from another field (NRIC → DOB + Gender, D
 
 `.derived-badge` is a green inline chip (success-coloured). It confirms to the clinician that auto-derivation worked. Toggle `.hidden` to show/hide.
 
+### 7. Optional free-text: +Note collapsible
+
+Optional free-text fields MUST use the +Note collapsible pattern, NOT an always-visible textbox or input. Required free-text fields stay as visible boxes. An always-visible optional comment box is a bug, not a style choice.
+
+See component recipe: [+Note collapsible (optional free-text)](#note-collapsible)
+
 ---
 
 ## Component Recipes (use when applicable)
@@ -146,6 +152,45 @@ Use chip buttons instead of dropdowns when there are 3–6 options and the choic
 ```
 
 Selected state is added via JS as `.sel-<Value>` (e.g. `.sel-High`).
+
+### +Note collapsible (optional free-text) {#note-collapsible}
+
+For any optional free-text input. Keeps the form tidy — content hidden until the clinician needs it.
+
+**HTML** (inside a `.field`, after any chips or content the note supplements):
+```html
+<button type="button" class="func-note-toggle" onclick="FormName.toggleNote('field-id')">+ Note</button>
+<div class="func-note collapsed" id="field-id-wrap">
+  <input type="text" id="field-id" placeholder="Comment" style="margin-top:6px">
+</div>
+```
+
+**CSS** (form-local `<style>` block — do NOT add to shared style.css):
+```css
+.func-note-toggle { font-size:12px; color:var(--accent); background:none; border:none;
+  cursor:pointer; padding:4px 0; align-self:flex-start; }
+.func-note.collapsed { display:none; }
+```
+`align-self:flex-start` is required — without it the button float-centers under a partial-width row (documented anti-pattern below).
+
+**JS contract** (in the form's JS file):
+```js
+var NOTE_IDS = ['field-id', ...];
+
+function toggleNote(noteId) {
+  var w = document.getElementById(noteId + '-wrap');
+  if (w) w.classList.toggle('collapsed');
+}
+
+function autoCollapseIfEmpty(noteId) {
+  var input = document.getElementById(noteId);
+  var w     = document.getElementById(noteId + '-wrap');
+  if (input && w && input.value.trim() === '') w.classList.add('collapsed');
+}
+// on populate: if saved value non-empty, remove 'collapsed' class (auto-expand)
+// on reset: add 'collapsed' to every NOTE_IDS wrapper
+// expose toggleNote on the form's public object
+```
 
 ### Canvas + controls layout (body chart / hand chart / lung chart)
 
@@ -228,5 +273,6 @@ All defined in `style.css`. Do NOT redefine per form — reuse.
 - **Chip selectors:** `.irr-chips`, `.irr-chip` (+ `.sel-<Value>` state classes)
 - **Chart canvas + controls:** `.body-chart-wrap`, `.chart-controls`
 - **Sidebar nav:** `.nav-item`, `.nav-icon`
+- **+Note collapsible (form-local CSS):** `.func-note-toggle`, `.func-note` (+ `.collapsed` state)
 
 Grep `style.css` for any of these to find the exact definitions.
