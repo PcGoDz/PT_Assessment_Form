@@ -30,6 +30,23 @@ var NcdForm = (function () {
     if (sel) sel.classList.add('sel-' + val);
   }
 
+  // ── +Note collapsible toggle ──
+  var NOTE_IDS = [
+    'smoking-comment','alcohol-comment','active-comment',
+    'walk6-comment','step3-comment','flex-comment','ul-comment','ll-comment','balance-comment'
+  ];
+
+  function toggleNote(noteId) {
+    var w = document.getElementById(noteId + '-wrap');
+    if (w) w.classList.toggle('collapsed');
+  }
+
+  function autoCollapseIfEmpty(noteId) {
+    var input = document.getElementById(noteId);
+    var w     = document.getElementById(noteId + '-wrap');
+    if (input && w && input.value.trim() === '') w.classList.add('collapsed');
+  }
+
   // ── Body shape single-select (PNG cards) ──
   var _shape = '';
   function pickShape(val) {
@@ -146,6 +163,12 @@ var NcdForm = (function () {
     var sm = ls.smoking || {}; if (sm.flag) pickLife('smoking', sm.flag); sv('smoking-comment', sm.comment);
     var al = ls.alcohol || {}; if (al.flag) pickLife('alcohol', al.flag); sv('alcohol-comment', al.comment);
     var ac = ls.active  || {}; if (ac.flag) pickLife('active',  ac.flag); sv('active-comment',  ac.comment);
+    // Auto-expand any note that has saved content.
+    NOTE_IDS.forEach(function (id) {
+      var input = document.getElementById(id);
+      var w     = document.getElementById(id + '-wrap');
+      if (input && w && input.value.trim() !== '') w.classList.remove('collapsed');
+    });
     sv('current-history', d.currentHistory);
     sv('past-history', d.pastHistory);
     var bc = d.bodyChart || {};
@@ -197,6 +220,11 @@ var NcdForm = (function () {
      'sit-to-stand','ll-comment',
      'stork','balance-comment'
     ].forEach(function(id) { sv(id, ''); });
+    // Collapse all notes back to tidy +Note default.
+    NOTE_IDS.forEach(function (id) {
+      var w = document.getElementById(id + '-wrap');
+      if (w) w.classList.add('collapsed');
+    });
     _marital = ''; pickMarital('');
     _life = { smoking: '', alcohol: '', active: '' };
     ['smoking','alcohol','active'].forEach(function(k) { pickLife(k, ''); });
@@ -208,7 +236,7 @@ var NcdForm = (function () {
     if (savedPt) FormBase.populatePatient(savedPt);
   }
 
-  return { collect: collect, populate: populate, reset: reset, pickMarital: pickMarital, pickLife: pickLife, pickShape: pickShape, recompute: recompute };
+  return { collect: collect, populate: populate, reset: reset, pickMarital: pickMarital, pickLife: pickLife, pickShape: pickShape, recompute: recompute, toggleNote: toggleNote };
 })();
 
 window.ActiveForm = { collect: NcdForm.collect, populate: NcdForm.populate, reset: NcdForm.reset };
@@ -222,5 +250,6 @@ window.Form = {
   pickMarital:    NcdForm.pickMarital,
   pickLife:       NcdForm.pickLife,
   pickShape:      NcdForm.pickShape,
-  recompute:      NcdForm.recompute
+  recompute:      NcdForm.recompute,
+  toggleNote:     NcdForm.toggleNote
 };
