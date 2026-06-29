@@ -8,15 +8,11 @@ Read this before writing any form HTML. The design system already exists in `sty
 - **Layout primitives** — non-negotiable. Apply to every form regardless of clinical domain.
 - **Section patterns** — form-specific. MS form is the canonical MSK reference; other domains (pelvic floor, paediatric, etc.) adapt the section structure but MUST still use the primitives.
 
-If a primitive is missing from a form, that's a bug, not a design choice.
-
 ---
 
 ## Canonical reference
 
 **`templates/forms/ms.html`** is the visual canon. Read it before writing any new form HTML. Mirror its structure for: section card pattern, sidebar nav block, field grid usage, derived-value chips, required-field marker.
-
-When in doubt about *how something should look*, open ms.html and copy the pattern.
 
 ---
 
@@ -119,11 +115,9 @@ When a field's value can be derived from another field (NRIC → DOB + Gender, D
 
 ## Component Recipes (use when applicable)
 
-These are reusable patterns. Use the exact HTML structure — don't reinvent.
+Use exact HTML structure — don't reinvent.
 
 ### Pain VAS slider with chip readout
-
-For any 0–10 visual analog scale:
 
 ```html
 <div class="pain-score-box">
@@ -176,21 +170,12 @@ Visual marker tools follow a 2-column grid: canvas on left, controls on right. N
 
 ## Form-Specific Structure (MS canonical, others adapt)
 
-MS form's 11 sections are an MSK-specific clinical flow. **Other domains will have different sections.** That's expected.
-
-What MUST stay consistent across all forms:
+Section count, labels, and content are domain-specific. What MUST stay consistent across all forms:
 - Section card pattern (`.card` > `.card-header` > `.card-body`)
 - Numbered `.sec-num` prefix in clinical flow order
 - Sidebar nav populated, one entry per section, with icon
 - All fields wrapped in `.field`
 - `.fg` grid used for layout
-
-What CAN differ per form:
-- Number of sections (MS has 11; a simpler form might have 5)
-- Section labels and content (pelvic floor will have continence/PERFECT/prolapse sections, not body chart)
-- Which component recipes apply (lung chart for CR, hand chart for HAND, neither for pelvic floor)
-
-When implementing a new clinical domain, the question is *which sections does this assessment need clinically*, not *what does MS have*. But once sections are decided, the layout primitives are non-negotiable.
 
 ---
 
