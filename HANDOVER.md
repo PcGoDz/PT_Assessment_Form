@@ -1,41 +1,41 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-06-27
+Last updated: 2026-06-29
 
 ---
 
 ## Where we left off
 
-SOAP modal draft-recovery fix SHIPPED and merged to main (`baaa3f4`, 2026-06-27). Built on worktree `hardcore-khorana-a854b8`. Implementation: per-episode localStorage key `pt_soap_draft_<EPISODE_ID>` — stash on every `input` event, rehydrate inside `openSoapModal()` on the new-note path only (`!soap` guard), clear on `saveSoap()` success and explicit Cancel. Backdrop click and `×` button are soft-dismiss (preserve draft). Cancel button swapped to `cancelSoapModal()` (clears then closes). Five commits: `dbe2f84` (helpers) → `f647b35` (stash wiring) → `4de9fac` (rehydrate) → `ebcd182` (clear on save/cancel) → `75d2a9b` (autocomplete=off).
+NCD +Note sweep SHIPPED and merged to main (`f029ee8`, 2026-06-29). 9 NCD comment inputs converted to +Note collapsibles — IDs preserved (no collect/PDF/MPIS breakage): `smoking-comment`, `alcohol-comment`, `active-comment` (Lifestyle) + `walk6-comment`, `step3-comment`, `flex-comment`, `ul-comment`, `ll-comment`, `balance-comment` (Fitness Tests). Comment labels restored to Fitness cells in a post-sweep fix (floating bare buttons). DESIGN_SYSTEM.md gained Rule 7 (optional free-text MUST use +Note, not always-visible textbox) + full component recipe (HTML/CSS/JS contract). One line over-pruned during prose pass was restored: the "primitive missing = bug" rule (`c9b6bb7`).
 
-During smoke-test, a cross-episode field bleed was observed (home→episode B showed episode A's typed content). Diagnosed via console instrumentation: our localStorage code was confirmed innocent (`soapDraftKey()` returned correct per-episode key, `localStorage.getItem()` returned null during the bleed). Root cause: browser autofill firing on fixed-ID textarea fields (`soap-s`, `soap-o`, `soap-a`, `soap-p`) after `setTimeout` focus. Fix: `autocomplete="off"` on all 9 SOAP modal fields (commit `75d2a9b`). Smoke-test cases 1–7 all green post-fix. Two CLAUDE.md axioms also added this session (`dc0762a`): "Data-loss is a ship-stopper" (first bullet in Project axioms) and "Hold state, don't make the clinician re-enter it" (appended to Design intent). WORKFLOW.md Cowork two-window rule loosened (`ef348ff`).
+Double-marker bug on NCD body chart fixed (`1f27298`): root cause was a redundant `BodyChart.init()` call in ncd.html's DOMContentLoaded — main.js already auto-inits on `#svg-ant` detection, so two listeners bound = two markers per click. Removed the template-side call; ms.html (no template init) confirmed as canonical mirror. WORKFLOW.md Anti-Repeat gained the "double-marker + grey-bleed = two separate bugs" rule (`4816dca`). Miruya smoke-tested all fixes green before merge.
 
 ---
 
 ## Half-done
 
-- Worktree folder `PT_Assessment-worktrees/hardcore-khorana-a854b8` may still be on disk (Windows CWD lock — `git worktree remove --force` got permission denied). Git-side clean (branch deleted, worktree pruned). `rmdir /s /q PT_Assessment-worktrees\hardcore-khorana-a854b8` once session closes.
-- **git push** — main ahead of origin by 31 commits. Miruya's call.
-- **exe build** — deferred. `build.bat` after push.
+- Worktree folder `PT_Assessment-worktrees/infallible-edison-fa5fc5` pending manual delete (Windows CWD lock — git-side clean, branch deleted). `rmdir /s /q PT_Assessment-worktrees\infallible-edison-fa5fc5` once this session closes.
+- **git push** — main now 40 commits ahead of origin. Miruya's call.
+- **exe build** — deferred. `build.bat` after push; confirm `pdf_ncd.py` + `ncd_shapes` bundle.
 
 ---
 
 ## Next session priorities
 
-1. **git push** — 31 commits unpushed. Run when ready.
-2. **NCD Plan B vs +Note sweep** — Miruya picks which goes next. Plan B spec at `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md` (per-visit measurements v3, SOAP-modal NCD panel, trend page). +Note sweep: DESIGN_SYSTEM recipe + apply to NCD/BURN/HAND.
-3. **exe build** — `build.bat` after push; confirm `pdf_ncd.py` + `ncd_shapes` bundle.
+1. **git push** — 40 commits unpushed. Run when ready.
+2. **NCD Plan B (trend page)** — BEEG task. Read `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md` fresh before touching code. Sanity-check charting lib vs `.exe` bundling (vanilla JS + PyInstaller) before any aesthetics. Split pipeline-first then GA-look.
+3. **exe build** — `build.bat` after push.
 
 ---
 
 ## Gotchas discovered this session
 
-- **Browser autofill bleeds across SOAP modal episodes.** Fixed with `autocomplete="off"` on all 9 modal fields (`75d2a9b`). If it resurfaces: root cause is browser-heuristic timing — fills textareas on `focus()` after fixed-ID fields are cleared. The bug reproduced twice then went shy under console instrumentation. `autocomplete="off"` is the correct suppressor; if a future browser ignores it, the next layer is `name` attribute removal or dynamic ID suffixing. Our localStorage draft code was confirmed innocent throughout.
-- **DESIGN_SYSTEM.md at 247/250 lines** — at ceiling. Next component recipe addition requires either splitting the file or pruning stale content first.
-- **Systematic debugging finding:** when `localStorage.getItem(key)` returns null during a visible bleed, the bleed is NOT from your localStorage code — look at browser-side form memory or external autofill sources.
+- **Forms must NOT call `BodyChart.init()` in their DOMContentLoaded block.** main.js auto-fires it on `#svg-ant` detection. A second call binds a second click listener → one click creates two markers. Fix: delete template-side `init()`; mirror ms.html (no init call). Migrated to WORKFLOW.md Anti-Repeat this session.
+- **"Same symptom ≠ same bug."** Double-marker + grey-bleed co-occurred on BURN and read as one bug — both involve markers. Root causes are independent: (a) duplicate init → double placeMarker; (b) get_episode_record cross-loading wrong form's record. Diagnose by which half: same-session duplicate-on-click = (a); markers from a different form = (b).
+- **DESIGN_SYSTEM.md is now at 280 lines** (grew with +Note recipe). User confirmed "no ceiling concern" for this session. If another recipe is added, prune prose again first.
 
 ---
 
 ## What to skip for now
 
-VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL. Don't start Plan B without reading `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md` fresh. See BACKLOG.md for full deferred list.
+VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL. Don't start Plan B without reading the plan doc fresh. See BACKLOG.md for full deferred list.
