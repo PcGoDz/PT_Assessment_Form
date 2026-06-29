@@ -16,8 +16,6 @@ If a primitive is missing from a form, that's a bug, not a design choice.
 
 **`templates/forms/ms.html`** is the visual canon. Read it before writing any new form HTML. Mirror its structure for: section card pattern, sidebar nav block, field grid usage, derived-value chips, required-field marker.
 
-When in doubt about *how something should look*, open ms.html and copy the pattern.
-
 ---
 
 ## Layout Primitives (apply to ALL forms)
@@ -115,15 +113,19 @@ When a field's value can be derived from another field (NRIC → DOB + Gender, D
 
 `.derived-badge` is a green inline chip (success-coloured). It confirms to the clinician that auto-derivation worked. Toggle `.hidden` to show/hide.
 
+### 7. Optional free-text: +Note collapsible
+
+Optional free-text fields MUST use the +Note collapsible pattern, NOT an always-visible textbox or input. Required free-text fields stay as visible boxes. An always-visible optional comment box is a bug, not a style choice.
+
+See component recipe: [+Note collapsible (optional free-text)](#note-collapsible)
+
 ---
 
 ## Component Recipes (use when applicable)
 
-These are reusable patterns. Use the exact HTML structure — don't reinvent.
+Use exact HTML structure — don't reinvent.
 
 ### Pain VAS slider with chip readout
-
-For any 0–10 visual analog scale:
 
 ```html
 <div class="pain-score-box">
@@ -153,6 +155,45 @@ Use chip buttons instead of dropdowns when there are 3–6 options and the choic
 
 Selected state is added via JS as `.sel-<Value>` (e.g. `.sel-High`).
 
+### +Note collapsible (optional free-text) {#note-collapsible}
+
+For any optional free-text input. Keeps the form tidy — content hidden until the clinician needs it.
+
+**HTML** (inside a `.field`, after any chips or content the note supplements):
+```html
+<button type="button" class="func-note-toggle" onclick="FormName.toggleNote('field-id')">+ Note</button>
+<div class="func-note collapsed" id="field-id-wrap">
+  <input type="text" id="field-id" placeholder="Comment" style="margin-top:6px">
+</div>
+```
+
+**CSS** (form-local `<style>` block — do NOT add to shared style.css):
+```css
+.func-note-toggle { font-size:12px; color:var(--accent); background:none; border:none;
+  cursor:pointer; padding:4px 0; align-self:flex-start; }
+.func-note.collapsed { display:none; }
+```
+`align-self:flex-start` is required — without it the button float-centers under a partial-width row (documented anti-pattern below).
+
+**JS contract** (in the form's JS file):
+```js
+var NOTE_IDS = ['field-id', ...];
+
+function toggleNote(noteId) {
+  var w = document.getElementById(noteId + '-wrap');
+  if (w) w.classList.toggle('collapsed');
+}
+
+function autoCollapseIfEmpty(noteId) {
+  var input = document.getElementById(noteId);
+  var w     = document.getElementById(noteId + '-wrap');
+  if (input && w && input.value.trim() === '') w.classList.add('collapsed');
+}
+// on populate: if saved value non-empty, remove 'collapsed' class (auto-expand)
+// on reset: add 'collapsed' to every NOTE_IDS wrapper
+// expose toggleNote on the form's public object
+```
+
 ### Canvas + controls layout (body chart / hand chart / lung chart)
 
 Visual marker tools follow a 2-column grid: canvas on left, controls on right. NOT canvas centred with controls floating elsewhere.
@@ -176,21 +217,12 @@ Visual marker tools follow a 2-column grid: canvas on left, controls on right. N
 
 ## Form-Specific Structure (MS canonical, others adapt)
 
-MS form's 11 sections are an MSK-specific clinical flow. **Other domains will have different sections.** That's expected.
-
-What MUST stay consistent across all forms:
+Section count, labels, and content are domain-specific. What MUST stay consistent across all forms:
 - Section card pattern (`.card` > `.card-header` > `.card-body`)
 - Numbered `.sec-num` prefix in clinical flow order
 - Sidebar nav populated, one entry per section, with icon
 - All fields wrapped in `.field`
 - `.fg` grid used for layout
-
-What CAN differ per form:
-- Number of sections (MS has 11; a simpler form might have 5)
-- Section labels and content (pelvic floor will have continence/PERFECT/prolapse sections, not body chart)
-- Which component recipes apply (lung chart for CR, hand chart for HAND, neither for pelvic floor)
-
-When implementing a new clinical domain, the question is *which sections does this assessment need clinically*, not *what does MS have*. But once sections are decided, the layout primitives are non-negotiable.
 
 ---
 
@@ -243,5 +275,6 @@ All defined in `style.css`. Do NOT redefine per form — reuse.
 - **Chip selectors:** `.irr-chips`, `.irr-chip` (+ `.sel-<Value>` state classes)
 - **Chart canvas + controls:** `.body-chart-wrap`, `.chart-controls`
 - **Sidebar nav:** `.nav-item`, `.nav-icon`
+- **+Note collapsible (form-local CSS):** `.func-note-toggle`, `.func-note` (+ `.collapsed` state)
 
 Grep `style.css` for any of these to find the exact definitions.
