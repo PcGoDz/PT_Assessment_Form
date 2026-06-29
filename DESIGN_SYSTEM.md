@@ -8,6 +8,8 @@ Read this before writing any form HTML. The design system already exists in `sty
 - **Layout primitives** — non-negotiable. Apply to every form regardless of clinical domain.
 - **Section patterns** — form-specific. MS form is the canonical MSK reference; other domains (pelvic floor, paediatric, etc.) adapt the section structure but MUST still use the primitives.
 
+If a primitive is missing from a form, that's a bug, not a design choice.
+
 ---
 
 ## Canonical reference
