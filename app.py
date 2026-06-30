@@ -92,6 +92,13 @@ def episode_detail(episode_id):
     return render_template('episode.html', episode_id=episode_id)
 
 
+@app.route('/episodes/<int:episode_id>/ncd-trend')
+def ncd_trend(episode_id):
+    # Screen-only NCD per-visit trend page. Reads /api/.../ncd-measurements via JS.
+    # NEVER touches PDF or MPIS (D1 axiom).
+    return render_template('ncd_trend.html', episode_id=episode_id)
+
+
 # ── Form templates — add new forms here only ────────────────────
 FORM_TEMPLATES = {
     'MS':          'forms/ms.html',
