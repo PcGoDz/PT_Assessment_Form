@@ -540,6 +540,18 @@
           </div>
         </div>
       </div>
+
+      <!-- NCD-only per-visit measurements panel (ADDITIVE; hidden unless form_type==='NCD').
+           Logic in static/js/ncd_measure.js; grid built on first NCD show. -->
+      <div id="ncd-measure-panel" style="display:none;">
+        <div class="session-info-box">
+          <div class="session-info-title">NCD Measurements (this visit)</div>
+          <div class="session-info-grid" id="ncd-measure-grid">
+            <!-- number/text inputs for the per-visit battery — built by ncd_measure.js -->
+          </div>
+        </div>
+      </div>
+
       <div class="soap-form-field">
         <div class="soap-form-label">S &mdash; Subjective</div>
         <textarea id="soap-s" autocomplete="off" placeholder="Patient's report — pain score, symptoms, functional status, patient's own words..."></textarea>
@@ -584,6 +596,7 @@
 </div>
 
 <script src="/static/js/clinical_templates.js"></script>
+<script src="/static/js/ncd_measure.js"></script>
 <script>
 // ── State ──────────────────────────────────────────────
 var EPISODE_ID = {{ episode_id }};
@@ -645,6 +658,12 @@ function openSoapModal(soap) {
   if (oBtn) {
     var ft = episode ? episode.form_type : '';
     oBtn.style.display = (ft === 'AMPUTATION') ? '' : 'none';
+  }
+  // NCD-only: show measurements panel + prefill the row linked to THIS soap note (by FK).
+  if (window.NcdMeasure) {
+    NcdMeasure.maybeShow(episode ? episode.form_type : '');
+    if (soap && soap.id) NcdMeasure.loadForSoap(EPISODE_ID, soap.id);
+    else NcdMeasure.clear();
   }
   // If opening a NEW note (no soap arg) and a draft exists for this episode, rehydrate it.
   if (!soap) {
@@ -772,6 +791,11 @@ async function saveSoap() {
     });
     var j = await res.json();
     if (!res.ok) { showToast(j.error || 'Failed to save', 'err'); return; }
+    // NCD-only second fetch: link this visit's measurements to the soap note via soap_id.
+    // save_ncd_measurement upserts on (episode_id, soap_id) — new visit inserts, edit updates.
+    if (window.NcdMeasure && episode && episode.form_type === 'NCD') {
+      NcdMeasure.save(EPISODE_ID, j.id);   // j.id = saved soap note id
+    }
     clearSoapDraft();   // note is now persisted in SQLite — draft has done its job
     closeModal();
     showToast(soapId ? 'Note updated' : 'Follow-up note saved', 'ok');
@@ -865,6 +889,20 @@ async function loadEpisode() {
     // Breadcrumb
     document.getElementById('bc-patient').textContent = episode.patient_name;
     document.getElementById('bc-episode').textContent = formLabel + ' (' + (episode.referral_date||'') + ')';
+
+    // NCD-only: a "View Trend" link to the screen-only per-visit trend page.
+    if (episode.form_type === 'NCD' && !document.getElementById('bc-trend-link')) {
+      var bc = document.querySelector('.breadcrumb');
+      if (bc) {
+        var a = document.createElement('a');
+        a.id = 'bc-trend-link';
+        a.textContent = '📈 View Trend';
+        a.style.marginLeft = 'auto';
+        a.style.cursor = 'pointer';
+        a.onclick = function () { window.location.href = '/episodes/' + EPISODE_ID + '/ncd-trend'; };
+        bc.appendChild(a);
+      }
+    }
 
     // Context banner
     document.getElementById('ctx-patient-name').textContent = episode.patient_name;
