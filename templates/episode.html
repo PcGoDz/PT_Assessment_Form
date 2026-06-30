@@ -660,9 +660,12 @@ function openSoapModal(soap) {
     oBtn.style.display = (ft === 'AMPUTATION') ? '' : 'none';
   }
   // NCD-only: show measurements panel + prefill the row linked to THIS soap note (by FK).
+  // The /ncd-measurements fetch MUST stay behind the NCD guard — a non-NCD form editing
+  // an existing note must make ZERO stray calls to it (RED LINE).
   if (window.NcdMeasure) {
-    NcdMeasure.maybeShow(episode ? episode.form_type : '');
-    if (soap && soap.id) NcdMeasure.loadForSoap(EPISODE_ID, soap.id);
+    var isNcd = !!(episode && episode.form_type === 'NCD');
+    NcdMeasure.maybeShow(isNcd ? 'NCD' : '');
+    if (isNcd && soap && soap.id) NcdMeasure.loadForSoap(EPISODE_ID, soap.id);
     else NcdMeasure.clear();
   }
   // If opening a NEW note (no soap arg) and a draft exists for this episode, rehydrate it.
