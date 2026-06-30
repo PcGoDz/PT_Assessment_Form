@@ -343,6 +343,10 @@ def delete_patient(db_path, patient_id):
         ).fetchall()
         for ep in eps:
             eid = ep['id']
+            # Delete NCD measurements BEFORE soap_notes — measurements.soap_id is an
+            # FK to soap_notes, so the child rows must go first or the soap_notes
+            # delete trips a foreign-key violation (foreign_keys=ON) and rolls back.
+            conn.execute('DELETE FROM ncd_measurements WHERE episode_id=?', (eid,))
             # Delete SOAP notes
             conn.execute('DELETE FROM soap_notes WHERE episode_id=?', (eid,))
             # Get record IDs to clean audit log
@@ -798,6 +802,99 @@ def delete_soap(db_path, soap_id):
     conn = get_conn(db_path)
     try:
         conn.execute('DELETE FROM soap_notes WHERE id=?', (soap_id,))
+        conn.commit()
+        return True, None
+    except Exception as e:
+        return False, str(e)
+    finally:
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════
+# NCD PER-VISIT MEASUREMENTS (NCD form only — Plan B)
+# ══════════════════════════════════════════════════════════
+# Alignment is BY CONSTRUCTION via the soap_id FK, NOT by parallel
+# session_no counters (which desync: visit 1 writes a measurement with
+# no soap note). soap_id=None => the visit-1 assessment row (exactly one
+# per episode). soap_id=<n> => the follow-up tied to that SOAP note.
+
+def save_ncd_measurement(db_path, episode_id, data):
+    if not data.get('note_date', '').strip():
+        return None, ['Measurement date is required']
+    now     = datetime.now().isoformat(timespec='seconds')
+    soap_id = data.get('soap_id')   # None for the visit-1 assessment row
+    blob    = json.dumps(data.get('measurements', {}))
+    conn    = get_conn(db_path)
+    try:
+        # Find the existing row by the natural key (episode_id + soap_id), NULL-safe.
+        if soap_id is None:
+            existing = conn.execute(
+                'SELECT id FROM ncd_measurements WHERE episode_id=? AND soap_id IS NULL',
+                (episode_id,)
+            ).fetchone()
+        else:
+            existing = conn.execute(
+                'SELECT id FROM ncd_measurements WHERE episode_id=? AND soap_id=?',
+                (episode_id, soap_id)
+            ).fetchone()
+
+        if existing:
+            mid = existing['id']
+            conn.execute('''
+                UPDATE ncd_measurements
+                SET note_date=?, data_json=?, updated_at=?
+                WHERE id=?
+            ''', (data.get('note_date', ''), blob, now, mid))
+        else:
+            row = conn.execute(
+                'SELECT MAX(session_no) as mx FROM ncd_measurements WHERE episode_id=?',
+                (episode_id,)
+            ).fetchone()
+            next_session = (row['mx'] or 0) + 1   # informational counter only
+            cur = conn.execute('''
+                INSERT INTO ncd_measurements
+                    (episode_id, soap_id, session_no, note_date, data_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (episode_id, soap_id, next_session, data.get('note_date', ''), blob, now, now))
+            mid = cur.lastrowid
+
+        conn.execute('UPDATE episodes SET updated_at=? WHERE id=?', (now, episode_id))
+        conn.commit()
+        return mid, []
+    except Exception as e:
+        return None, [str(e)]
+    finally:
+        conn.close()
+
+
+def get_ncd_measurements(db_path, episode_id):
+    conn = get_conn(db_path)
+    try:
+        # Order by note_date (the alignment fix orders the trend by real visit date,
+        # NOT by either table's session_no counter). created_at breaks date ties stably.
+        rows = conn.execute('''
+            SELECT * FROM ncd_measurements WHERE episode_id=?
+            ORDER BY note_date ASC, created_at ASC
+        ''', (episode_id,)).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)                       # carries id, episode_id, soap_id, session_no, note_date
+            try:
+                d['measurements'] = json.loads(d.get('data_json') or '{}')
+            except Exception:
+                d['measurements'] = {}
+            out.append(d)
+        return out, None
+    except Exception as e:
+        return [], str(e)
+    finally:
+        conn.close()
+
+
+def delete_ncd_measurement(db_path, mid):
+    conn = get_conn(db_path)
+    try:
+        conn.execute('DELETE FROM ncd_measurements WHERE id=?', (mid,))
         conn.commit()
         return True, None
     except Exception as e:
