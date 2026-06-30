@@ -109,9 +109,11 @@ Every form_xxx.js MUST expose `window.Form` with `collect, populate, reset, onPt
 
 Single SQLite file at `pt_data/records.db`. Schema in database.py.
 
-Key tables: `patients`, `episodes`, `records`, `soap_notes`, `audit_log`.
+Key tables: `patients`, `episodes`, `records`, `soap_notes`, `audit_log`, `ncd_measurements`.
 
 SOAP notes carry session header fields: `queue_no`, `kpi_30min`, `seen_by`, `next_appt`, `next_appt_time`. These are shared across ALL forms automatically via episode.html — do NOT add them to individual forms.
+
+`ncd_measurements` (v3) is **NCD-only** per-visit measurement rows (one JSON blob per visit, nullable `soap_id` FK = visit-1 assessment row when NULL, follow-up's soap note id otherwise). It is the ONLY break from "one record per episode" and feeds the screen-only trend page (`/episodes/<id>/ncd-trend`). Never touches PDF/MPIS. JS: `static/js/ncd_measure.js` (SOAP-modal panel) + `static/js/ncd_trend.js` (trend) + `templates/ncd_trend.html`.
 
 ---
 

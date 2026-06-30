@@ -1,41 +1,43 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-06-29
+Last updated: 2026-06-30
 
 ---
 
 ## Where we left off
 
-NCD +Note sweep SHIPPED and merged to main (`f029ee8`, 2026-06-29). 9 NCD comment inputs converted to +Note collapsibles — IDs preserved (no collect/PDF/MPIS breakage): `smoking-comment`, `alcohol-comment`, `active-comment` (Lifestyle) + `walk6-comment`, `step3-comment`, `flex-comment`, `ul-comment`, `ll-comment`, `balance-comment` (Fitness Tests). Comment labels restored to Fitness cells in a post-sweep fix (floating bare buttons). DESIGN_SYSTEM.md gained Rule 7 (optional free-text MUST use +Note, not always-visible textbox) + full component recipe (HTML/CSS/JS contract). One line over-pruned during prose pass was restored: the "primitive missing = bug" rule (`c9b6bb7`).
+NCD **Plan B** shipped, merged, and **pushed** — the per-visit measurements machine is live on `main`. Built across 7 tasks: v3 migration (`ncd_measurements` table with a **nullable `soap_id` FK** = alignment by construction, the cold-vet fix), DB functions (`save/get/delete_ncd_measurement`, upsert on the `(episode_id, soap_id)` natural key) + `delete_patient` cascade, Flask save/get/delete routes mirroring soap_notes, an **additive NCD-only measurements panel injected into the shared SOAP modal** (RED LINE held — non-NCD modal byte-for-byte unchanged), auto-write of the visit-1 assessment row on initial form save (idempotent via the NULL-soap_id upsert), and a **screen-only trend page** (`/episodes/<id>/ncd-trend`, transform/render split, inline-SVG sparklines, gap=null=break never zero). New files: `static/js/ncd_measure.js`, `static/js/ncd_trend.js`, `templates/ncd_trend.html`. Modified: `database.py`, `app.py`, `static/js/main.js`, `templates/episode.html`.
 
-Double-marker bug on NCD body chart fixed (`1f27298`): root cause was a redundant `BodyChart.init()` call in ncd.html's DOMContentLoaded — main.js already auto-inits on `#svg-ant` detection, so two listeners bound = two markers per click. Removed the template-side call; ms.html (no template init) confirmed as canonical mirror. WORKFLOW.md Anti-Repeat gained the "double-marker + grey-bleed = two separate bugs" rule (`4816dca`). Miruya smoke-tested all fixes green before merge.
+Commits `542c583`→`79a6df0`, trend `4d55df7`, RED-LINE hardening `49293fe`, merge **`2bb479c`**. `git push origin main` succeeded — origin/main now in sync at `2bb479c` (the whole 49-commit backlog is backed up). D1 verified structurally: the episode-PDF route hands the generator only (assessment, soaps, episode) — `get_ncd_measurements` is never in the PDF/MPIS path; export routes byte-for-byte untouched from Plan A.
 
 ---
 
 ## Half-done
 
-- Worktree folder `PT_Assessment-worktrees/infallible-edison-fa5fc5` pending manual delete (Windows CWD lock — git-side clean, branch deleted). `rmdir /s /q PT_Assessment-worktrees\infallible-edison-fa5fc5` once this session closes.
-- **git push** — main now 40 commits ahead of origin. Miruya's call.
-- **exe build** — deferred. `build.bat` after push; confirm `pdf_ncd.py` + `ncd_shapes` bundle.
+- **Worktree `competent-hodgkin-2ec56c` pending manual folder delete** — branch `claude/competent-hodgkin-2ec56c` IS merged to main, but it's checked out in this live session's worktree, so git-side branch delete + `git worktree remove` both refuse while the session is open (Windows CWD lock). Once this session closes: `git worktree remove --force PT_Assessment-worktrees/competent-hodgkin-2ec56c && git worktree prune && git branch -d claude/competent-hodgkin-2ec56c`.
+- **exe build deferred** — `build.bat`, then confirm the v3 migration runs cleanly on an existing v2 `pt_data/records.db` (launch exe → `PRAGMA user_version` becomes 3, `ncd_measurements` exists). `ncd_trend.html`/`ncd_trend.js`/`ncd_measure.js` bundle via the existing `('templates','templates')`/`('static','static')` globs — no `.spec` edit needed.
+
+(`infallible-edison-fa5fc5` from prior sessions is now fully gone — folder deleted, not git-tracked. Resolved.)
 
 ---
 
 ## Next session priorities
 
-1. **git push** — 40 commits unpushed. Run when ready.
-2. **NCD Plan B (trend page)** — BEEG task. Read `docs/superpowers/plans/2026-06-25-ncd-form-plan-B.md` fresh before touching code. Sanity-check charting lib vs `.exe` bundling (vanilla JS + PyInstaller) before any aesthetics. Split pipeline-first then GA-look.
-3. **exe build** — `build.bat` after push.
+1. **NCD measurements panel — density redesign (BURDEN-REDUCER, not cosmetic).** Current panel is a wall of bare full-width textboxes; the real use case (logging a ~10-patient group exercise cohort) makes it a scroll-marathon per visit. Group by Vitals/Bloods/BodyComp/Fitness, compact grid, NT/N-A stamps. See BACKLOG.
+2. **New-follow-up panel draft-loss fix.** `saveSoapDraft` protects S/O/A/P + MPIS fields but NOT un-saved panel numbers — dismissing a brand-new follow-up loses typed measurements (SOAP text survives; editing a saved visit is fine, reloads by soap_id). Touches shared `saveSoapDraft`. See BACKLOG.
+3. **exe build** + v3 migration check on a real v2 db (see Half-done).
 
 ---
 
 ## Gotchas discovered this session
 
-- **Forms must NOT call `BodyChart.init()` in their DOMContentLoaded block.** main.js auto-fires it on `#svg-ant` detection. A second call binds a second click listener → one click creates two markers. Fix: delete template-side `init()`; mirror ms.html (no init call). Migrated to WORKFLOW.md Anti-Repeat this session.
-- **"Same symptom ≠ same bug."** Double-marker + grey-bleed co-occurred on BURN and read as one bug — both involve markers. Root causes are independent: (a) duplicate init → double placeMarker; (b) get_episode_record cross-loading wrong form's record. Diagnose by which half: same-session duplicate-on-click = (a); markers from a different form = (b).
-- **DESIGN_SYSTEM.md is now at 280 lines** (grew with +Note recipe). User confirmed "no ceiling concern" for this session. If another recipe is added, prune prose again first.
+- **Form-type guards in the shared SOAP modal must cover BOTH entry paths — new-note AND edit-existing-note.** Task 4's panel guarded `maybeShow` but NOT the `loadForSoap` fetch, so editing an EXISTING non-NCD note fired a stray `GET /ncd-measurements` (harmless, but violates "zero stray calls on non-NCD"). New-note passed the hands-on gate because no `soap.id` → fetch never fired; the edit path was the unguarded hole. Caught by reviewing own work against the literal criterion, fixed `49293fe`. **Migrated to WORKFLOW.md Anti-Repeat.**
+- **Cascade delete order with a child FK:** `ncd_measurements.soap_id` → `soap_notes` means `delete_patient` must delete measurements BEFORE soap_notes, or the soap_notes delete trips a FK violation (`foreign_keys=ON`) and the whole transaction rolls back silently. Fixed in Task 2 (`8bf5fc8`).
+- **`validate_patient` rejects names containing digits** — bit a smoke test named "Task5" (404 via NULL episode id). Test-data only; real clinical names are fine.
+- **Doc line-count watch:** `DESIGN_SYSTEM.md` is at 280 (OVER the 250 ceiling, pre-existing + user-accepted "no ceiling concern" — prune prose before adding the next recipe). `WORKFLOW.md` now at 245 (approaching ceiling after this session's Anti-Repeat addition — prune candidate next time a rule lands).
 
 ---
 
 ## What to skip for now
 
-VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL. Don't start Plan B without reading the plan doc fresh. See BACKLOG.md for full deferred list.
+VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL forms — still not ready. See BACKLOG.md for the full deferred list (panel density redesign + draft-loss fix are the two fresh NCD items).
