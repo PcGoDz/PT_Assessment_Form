@@ -76,6 +76,22 @@ def init_db(db_path):
         )
     ''')
 
+    # ── NCD per-visit measurements (NCD form only) ────────────
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS ncd_measurements (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            episode_id   INTEGER NOT NULL,
+            soap_id      INTEGER,            -- FK to the visit's SOAP note; NULL for the visit-1 assessment row
+            session_no   INTEGER NOT NULL DEFAULT 1,  -- informational counter only; NOT the alignment key
+            note_date    TEXT    NOT NULL,
+            data_json    TEXT    NOT NULL,
+            created_at   TEXT    NOT NULL,
+            updated_at   TEXT    NOT NULL,
+            FOREIGN KEY (episode_id) REFERENCES episodes(id),
+            FOREIGN KEY (soap_id)    REFERENCES soap_notes(id)
+        )
+    ''')
+
     # ── Schema migrations (PRAGMA user_version gated) ────────
     _version = conn.execute('PRAGMA user_version').fetchone()[0]
 
@@ -105,7 +121,12 @@ def init_db(db_path):
             except sqlite3.OperationalError:
                 pass  # column already exists (mid-air DB transition)
 
-    conn.execute('PRAGMA user_version = 2')
+    if _version < 3:
+        # v3: ncd_measurements table (created above via CREATE TABLE IF NOT EXISTS).
+        # No ALTER needed — the CREATE IF NOT EXISTS handles both fresh and mid-air DBs.
+        pass
+
+    conn.execute('PRAGMA user_version = 3')
 
     # ── Audit log ─────────────────────────────────
     conn.execute('''
