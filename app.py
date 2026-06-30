@@ -9,6 +9,7 @@ from database import (
     create_episode, get_patient_episodes, get_episode, update_episode_status,
     update_episode_appt,
     get_episode_record, save_soap, get_soap_notes, delete_soap,
+    save_ncd_measurement, get_ncd_measurements, delete_ncd_measurement,
     get_dashboard_seen_today, get_active_patients_summary
 )
 
@@ -89,6 +90,13 @@ def index():
 @app.route('/episode/<int:episode_id>')
 def episode_detail(episode_id):
     return render_template('episode.html', episode_id=episode_id)
+
+
+@app.route('/episodes/<int:episode_id>/ncd-trend')
+def ncd_trend(episode_id):
+    # Screen-only NCD per-visit trend page. Reads /api/.../ncd-measurements via JS.
+    # NEVER touches PDF or MPIS (D1 axiom).
+    return render_template('ncd_trend.html', episode_id=episode_id)
 
 
 # ── Form templates — add new forms here only ────────────────────
@@ -256,6 +264,34 @@ def api_save_soap(episode_id):
 @app.route('/api/soap/<int:soap_id>', methods=['DELETE'])
 def api_delete_soap(soap_id):
     ok, err = delete_soap(DB_PATH, soap_id)
+    if not ok:
+        return jsonify({'error': err}), 500
+    return jsonify({'success': True})
+
+
+# ── NCD per-visit measurements API (NCD form only — Plan B) ──────
+@app.route('/api/episodes/<int:episode_id>/ncd-measurements', methods=['GET'])
+def api_get_ncd_measurements(episode_id):
+    rows, err = get_ncd_measurements(DB_PATH, episode_id)
+    if err:
+        return jsonify({'error': err}), 500
+    return jsonify(rows)
+
+
+@app.route('/api/episodes/<int:episode_id>/ncd-measurements', methods=['POST'])
+def api_save_ncd_measurement(episode_id):
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    mid, errors = save_ncd_measurement(DB_PATH, episode_id, data)
+    if errors:
+        return jsonify({'error': errors}), 422
+    return jsonify({'success': True, 'id': mid})
+
+
+@app.route('/api/ncd-measurements/<int:mid>', methods=['DELETE'])
+def api_delete_ncd_measurement(mid):
+    ok, err = delete_ncd_measurement(DB_PATH, mid)
     if not ok:
         return jsonify({'error': err}), 500
     return jsonify({'success': True})

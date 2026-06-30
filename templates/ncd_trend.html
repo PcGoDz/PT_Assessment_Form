@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NCD Trend — PT Assessment System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .tr-shell { min-height:100vh; display:flex; flex-direction:column; background:var(--bg); }
+
+    /* ── Neutral M3 context bar (no accent — BACKLOG: standalone pages stay neutral) ── */
+    .tr-ctx-bar {
+      height:56px; background:var(--m3-surface-container, var(--surface));
+      border-bottom:1px solid var(--border); display:flex; align-items:center;
+      padding:0 16px; gap:12px; flex-shrink:0; position:sticky; top:0; z-index:100;
+    }
+    .tr-ctx-back {
+      font-size:18px; color:var(--text-muted); text-decoration:none; display:flex;
+      align-items:center; justify-content:center; width:36px; height:36px;
+      border-radius:var(--radius); transition:background .12s;
+    }
+    .tr-ctx-back:hover { background:var(--surface2); }
+    .tr-ctx-title { font-size:15px; font-weight:600; color:var(--text); }
+    .tr-ctx-spacer { flex:1; }
+
+    .tr-main { padding:24px; max-width:1000px; margin:0 auto; width:100%; }
+    .tr-heading { font-size:18px; font-weight:600; color:var(--text); margin:0 0 4px; }
+    .tr-sub { font-size:12px; color:var(--text-muted); margin:0 0 20px; }
+
+    /* ── Trend table (form-local, neutral) ── */
+    .trend-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .trend-table th, .trend-table td {
+      padding:8px 12px; border-bottom:1px solid var(--border); text-align:center;
+    }
+    .trend-table thead th {
+      background:var(--surface2); color:var(--text-muted); font-weight:600;
+      font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+      font-family:'IBM Plex Mono', monospace;
+    }
+    .trend-table th:first-child, .trend-table td.trend-metric { text-align:left; }
+    .trend-metric { font-weight:500; color:var(--text); }
+    .trend-spark { text-align:right; width:96px; }
+    .trend-gap { color:var(--text-faint); }
+    .trend-empty, .trend-note {
+      padding:20px; color:var(--text-muted); font-size:13px; background:var(--surface);
+      border:1px solid var(--border); border-radius:var(--radius);
+    }
+    .trend-note { margin-bottom:16px; }
+  </style>
+</head>
+<body>
+<div class="tr-shell">
+
+  <!-- ── Neutral context bar ── -->
+  <header class="tr-ctx-bar">
+    <a href="/episode/{{ episode_id }}" class="tr-ctx-back" title="Back to Episode">&#8592;</a>
+    <div class="tr-ctx-title">&#128200; NCD Trend</div>
+    <div class="tr-ctx-spacer"></div>
+    <a href="/episode/{{ episode_id }}" class="tr-ctx-back" title="Back to Episode"
+       style="width:auto;padding:0 12px;font-size:13px;">Back to Episode</a>
+  </header>
+
+  <main class="tr-main">
+    <h1 class="tr-heading">Per-Visit Measurement Trend</h1>
+    <p class="tr-sub">Headline metrics across visits. Screen-only — never exported to PDF or MPIS.</p>
+    <div id="trend-root"></div>
+  </main>
+
+</div>
+
+<script>
+  var EPISODE_ID = {{ episode_id }};
+  // Persist dark mode chosen elsewhere in the app.
+  if (localStorage.getItem('pt_dark') === '1') document.body.classList.add('dark');
+</script>
+<script src="/static/js/ncd_trend.js"></script>
+</body>
+</html>
