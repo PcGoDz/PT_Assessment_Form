@@ -213,11 +213,29 @@ const Main = (function () {
   }
 
   // ── Save ──────────────────────────────────────
+  // ── NCD Plan B: auto-write the visit-1 assessment measurement row ──────
+  // Fires only for NCD + when an episode_id is present. soap_id omitted => NULL,
+  // the visit-1 assessment row. Idempotent: save_ncd_measurement upserts on
+  // (episode_id, soap_id IS NULL), so re-saving the initial form UPDATEs the same
+  // row, never duplicates. Fire-and-forget — never blocks or fails the record save.
+  function autoWriteNcdMeasurement(data) {
+    if (!data || data._form_type !== 'NCD' || !data.episode_id) return;
+    fetch('/api/episodes/' + data.episode_id + '/ncd-measurements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        note_date:    (data.patient && data.patient.date) || '',
+        measurements: data.measurements || {}
+      })
+    }).catch(function (e) { console.warn('NCD measurement auto-write failed:', e); });
+  }
+
   async function saveRecord() {
     try {
       var data = window.ActiveForm.collect(currentId);
       var j    = await API.saveRecord(data);
       currentId = j.id;
+      autoWriteNcdMeasurement(data);
       markClean();
       showToast('Record saved', 'ok');
       loadRecordsList();
@@ -268,6 +286,7 @@ const Main = (function () {
         var data = window.ActiveForm.collect(currentId);
         var j    = await API.saveRecord(data);
         currentId = j.id;
+        autoWriteNcdMeasurement(data);
         showToast('Saved — ready for next patient', 'ok');
         loadRecordsList();
       } catch (e) {
@@ -991,6 +1010,7 @@ const Main = (function () {
         var data = window.ActiveForm.collect(currentId);
         var j    = await API.saveRecord(data);
         currentId = j.id;
+        autoWriteNcdMeasurement(data);
         markClean();
         loadRecordsList();
         API.exportPdf(currentId, formType);
