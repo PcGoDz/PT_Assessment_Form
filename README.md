@@ -22,41 +22,50 @@ settings with MPIS (Malaysian Patient Information System) integration.
 
 ## Features
 
-### Assessment Forms (5 implemented, 10 planned)
-| Form | KKM Reference | Status |
-|------|--------------|--------|
-| Musculoskeletal (MS) | fisio/b.pen.14/Pind.1/2019 | ✅ Ready |
-| Spine | fisio/b.pen.6/Pind.2/2019 | ✅ Ready |
-| Geriatric | fisio/b.pen.15/2019 | ✅ Ready |
-| Cardiorespiratory (CR) | fisio/b.pen.11/Pind.2/2019 | ✅ Ready |
-| Amputation | fisio/b.pen.16/2019 | ✅ Ready |
-| Hand | — | 🔜 Planned |
-| Neurological | — | 🔜 Planned |
-| Paediatric | — | 🔜 Planned |
-| Burn | — | 🔜 Planned |
-| Spinal Cord Injury | — | 🔜 Planned |
-| Vestibular | — | 🔜 Planned |
-| Facial | — | 🔜 Planned |
-| Lymphoedema | — | 🔜 Planned |
-| NCD / Obesity | — | 🔜 Planned |
-| General | — | 🔜 Planned |
+### Assessment Forms
+
+11 of 15 forms are ready for clinical use. `FORM_REGISTRY` in `app.py` is the
+single source of truth for form status — the table below is a snapshot.
+
+| Form | Group | KKM Reference | Status |
+|------|-------|--------------|--------|
+| Musculoskeletal (MS) | Musculoskeletal | fisio/b.pen.14/Pind.1/2019 | ✅ Ready |
+| Spine | Musculoskeletal | fisio/b.pen.6/Pind.2/2019 | ✅ Ready |
+| Hand | Musculoskeletal | fisio/b.pen.12/Pind.2/2019 | ✅ Ready |
+| Amputation | Musculoskeletal | fisio/b.pen.16/2019 | ✅ Ready |
+| Burn | Musculoskeletal | — | ✅ Ready |
+| Neurology | Neurological | — | ✅ Ready |
+| Spinal Cord Injury | Neurological | — | ✅ Ready |
+| Facial | Neurological | — | ✅ Ready |
+| Vestibular | Neurological | — | 🔜 Planned |
+| Cardiorespiratory (CR) | Cardiorespiratory | fisio/b.pen.11/Pind.2/2019 | ✅ Ready |
+| Geriatric | Rehabilitation | fisio/b.pen.15/2019 | ✅ Ready |
+| NCD / Obesity | Rehabilitation | — | ✅ Ready |
+| Paediatric | Rehabilitation | — | 🔜 Planned |
+| Lymphoedema | Rehabilitation | — | 🔜 Planned |
+| General | Rehabilitation | — | 🔜 Planned |
 
 ### Clinical Features
-- **Interactive body chart** — anterior/posterior SVG, 6 pain types, markers in PDF
+- **Interactive body chart** — anterior/posterior SVG, 6 pain types, markers rendered in PDF
+- **Hand chart** (Hand) — right + left palmar SVG, click-to-mark
 - **Lung auscultation diagram** (CR) — 6-zone radiological view, click-to-mark
-- **SOAP follow-up notes** — session timeline, per-form clinical templates
-- **Session header** — Nombor Giliran, KPI-SS-30 min, Dilihat, Temujanji (all SOAP notes)
+- **NCD per-visit tracking** — the NCD/Obesity form is the only one that follows a patient
+  *across visits*: a per-visit measurement battery (vitals, blood work, body composition,
+  fitness tests) captured against each session, plus a screen-only **trend page** with
+  inline sparklines showing how each metric moves over time
+- **SOAP follow-up notes** — session timeline with per-form clinical templates
+- **Session header** — Nombor Giliran, KPI-SS-30 min, Dilihat, Temujanji (shared by all SOAP notes)
 - **MPIS integration** — assessment copy (assessment format) + SOAP copy (POMR format)
 - **PDF export** — KKM-compliant borang PDF per form
-- **Clinical templates** — Best Statement-aligned templates for all 5 forms
+- **Clinical templates** — Best Statement-aligned templates for each ready form
 
 ### System Features
 - **Fully offline** — no internet required, all data local
 - **Dark mode** — CSS variables, persisted to localStorage
-- **Dynamic sidebar** — 15 forms in 4 groups, collapsible
+- **Dynamic sidebar** — 15 forms in 4 clinical groups, collapsible
 - **Episode management** — multiple referrals per patient, discharge/reactivate
 - **Patient management** — NRIC auto-derive (DOB/age/sex), foreign patient support
-- **Autosave** — 3-second debounce to localStorage, draft recovery on reload
+- **Autosave** — debounced draft to localStorage, draft recovery on reload
 
 ---
 
@@ -68,23 +77,31 @@ pt_data/
   records.db            — SQLite database (auto-created on first run)
 
 Source:
-app.py                  — Flask routes, PDF routing, FORM_REGISTRY
-database.py             — SQLite logic, validation
-pdf_platypus_base.py    — Shared PDF building blocks (sign_chop_block etc.)
-pdf_ms.py / pdf_spine.py / pdf_geriatric.py / pdf_cr.py / pdf_amputation.py
+app.py                  — Flask routes, PDF routing dispatch, FORM_REGISTRY
+database.py             — SQLite logic + validation (schema versioned via PRAGMA user_version)
+pdf_platypus_base.py    — Shared PDF building blocks (sign_chop_block, two_col, etc.)
+pdf_base.py             — Legacy canvas primitives (BodyChartFlowable)
+pdf_<form>.py           — Per-form PDF generators
+                          (ms, spine, hand, amputation, burn, neuro, sci, facial, cr, geriatric, ncd)
 static/js/
-  form_base.js          — Shared patient fields, NRIC logic
-  form_ms/spine/geriatric/cr/amputation.js — Per-form collect/populate/reset
-  bodychart.js          — Body chart SVG markers
-  lungchart.js          — Lung auscultation diagram
-  clinical_templates.js — Best Statement templates (all forms)
-  main.js               — Init, autosave, MPIS, dark mode
   api.js                — All fetch calls to Flask
+  form_base.js          — Shared patient fields, NRIC derive, age calc
+  form_<form>.js        — Per-form collect/populate/reset (window.Form contract)
+  bodychart.js          — Body chart SVG markers (anterior/posterior)
+  handchart.js          — Hand chart SVG markers (right + left palmar)
+  lungchart.js          — Lung auscultation diagram (6-zone radiological)
+  assessment_grid.js    — Fixed-row grid factory (config-driven, multi-instance)
+  movement_table.js     — Dynamic ROM table
+  clinical_templates.js — Best Statement templates (per form + SOAP variants)
+  ncd_measure.js        — NCD per-visit measurements panel (SOAP-modal injection)
+  ncd_trend.js          — NCD trend view (data transform + inline-SVG sparklines)
+  main.js               — Init, autosave, MPIS copy, dark mode, initFormContext()
 templates/
-  base.html             — Shell: topbar, sidebar, progress bar
-  home.html             — Patient dashboard
-  episode.html          — Episode detail + SOAP timeline + session header
-  forms/                — Individual assessment form templates
+  base.html             — Shell: context bar, section rail, progress bar
+  home.html             — Patient dashboard, search, episode list
+  episode.html          — Episode detail, SOAP timeline, export
+  ncd_trend.html        — NCD per-visit trend page (screen-only)
+  forms/                — Per-form assessment templates
 ```
 
 ---
@@ -105,7 +122,7 @@ Requirements: Python 3.12+, Flask 3.x, ReportLab, PyInstaller
 
 - **Offline-first** — SQLite + local exe. No cloud dependency. Works during internet outages.
 - **JSON blob for assessment data** — no schema migration when adding form fields.
-  Only session-level fields use proper DB columns.
+  Only session-level and per-visit series data use proper DB columns/tables.
 - **ReportLab Platypus** — PDF engine. WeasyPrint rejected (C libs incompatible with PyInstaller).
 - **Shared helpers** — `sign_chop_block()`, `initFormContext()`, session header fields
   are shared infrastructure. New forms get them for free.
@@ -126,8 +143,8 @@ Requirements: Python 3.12+, Flask 3.x, ReportLab, PyInstaller
 ## For Developers
 
 See `CLAUDE.md` for full development documentation, architecture decisions,
-lessons learned, and the checklist for adding new forms.
+and the checklist for adding new forms.
 
 ---
 
-*Last updated: 2026-04-26 | Forms: 5/15 implemented*
+*Forms: 11 of 15 ready — authoritative status lives in `FORM_REGISTRY` (`app.py`).*
