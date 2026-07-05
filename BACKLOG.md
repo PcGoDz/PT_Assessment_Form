@@ -132,6 +132,12 @@
 - MS as MPIS source-of-truth refactor: after HAND SOAPIER ships and proves itself in clinical use, propagate SOAPIER flow to MS / SPINE / GERIATRIC / CR / AMPUTATION / NEURO builders. Then document in DESIGN_SYSTEM.md as MPIS Layout canon. Do NOT do this until HAND has shipped + been used.
 - Dummy patient + burn seed record for smoke-testing — extend `seed_db.py` so a realistic test record loads with one click instead of hand-filling `test` into every field each smoke test. Requested 2026-06-01.
 
+- **Standalone pages have no dark-mode toggle of their own (surfaced 2026-07-05).** `templates/ncd_trend.html` (and sibling standalone pages — the ones not hosted by `base.html`) only READ `pt_dark` from localStorage on load; there is no in-page toggle button. Dark mode can therefore only be *set* from a page that has the toggle (base.html-hosted forms, home). Real gap, confirmed low priority (Miruya). If addressed, add a shared neutral toggle to the standalone context bars (`.tr-ctx-bar` and equivalents).
+
+- **home.html dashboard needs a UI pass (red-teamed 2026-07-05, 5 findings).** Distinct from the patient.html "Patient profile page improvements" nice-to-have below — this is the home *dashboard*, a different page. (a) the 4 stat cards are static counts with no trend/comparison/click-through; (b) "Seen Today" list rows are visually identical except a small badge — no hierarchy; (c) "Active Patients" grid gives every card equal visual weight — no urgency/recency signal; (d) the empty "No visits" state repeats with no action attached — FIRST verify whether that's dummy data or a real empty state; (e) the 4 stat numbers share identical size/weight regardless of which is actually actionable. Needs its own UX-led design pass.
+
+- **NCD Trend card / chip-row / semantic-history pattern — promotion candidate (one consumer).** The trend-card + quiet-chip-row + semantic visit-history-table pattern in `static/js/ncd_trend.js` (`trendCard` / `visitHistory` / `chartGeometry` / `metricChart`) is currently used ONLY by the NCD trend page. Do NOT promote it into DESIGN_SYSTEM.md yet — same rule as `pair_box()` and the multi-select chip helper: needs a second consumer first. When a second screen-only trend/summary view appears, extract the shared card/chart recipe then.
+
 ---
 
 ## Nice-to-haves
