@@ -29,25 +29,55 @@
     .tr-heading { font-size:18px; font-weight:600; color:var(--text); margin:0 0 4px; }
     .tr-sub { font-size:12px; color:var(--text-muted); margin:0 0 20px; }
 
-    /* ── Trend table (form-local, neutral) ── */
-    .trend-table { width:100%; border-collapse:collapse; font-size:13px; }
-    .trend-table th, .trend-table td {
-      padding:8px 12px; border-bottom:1px solid var(--border); text-align:center;
+    /* ── Trend cards (form-local, M3 surface tokens) ── */
+    .tr-card-grid {
+      display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
+      gap:16px; margin-bottom:24px;
     }
-    .trend-table thead th {
-      background:var(--surface2); color:var(--text-muted); font-weight:600;
-      font-size:11px; text-transform:uppercase; letter-spacing:.04em;
-      font-family:'IBM Plex Mono', monospace;
+    .tr-card {
+      background:var(--m3-surface-container, var(--surface));
+      border:1px solid var(--border); border-radius:var(--radius);
+      padding:14px 16px; box-shadow:var(--m3-elev-1, none);
+      display:flex; flex-direction:column; gap:4px;
     }
-    .trend-table th:first-child, .trend-table td.trend-metric { text-align:left; }
-    .trend-metric { font-weight:500; color:var(--text); }
-    .trend-spark { text-align:right; width:96px; }
-    .trend-gap { color:var(--text-faint); }
-    .trend-empty, .trend-note {
+    .tr-card-label {
+      font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+      color:var(--text-muted); font-family:'IBM Plex Mono', monospace;
+    }
+    .tr-card-value { font-size:26px; font-weight:600; color:var(--text); line-height:1.1; }
+    .tr-delta { font-size:12px; color:var(--text-muted); margin-bottom:2px; }
+    .tr-card-chart { margin-top:2px; }
+
+    /* ── Under-tracked metrics: quiet chip row ── */
+    .tr-chip-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+    .tr-chip {
+      font-size:12px; color:var(--text-muted); background:var(--surface2);
+      border:1px solid var(--border); border-radius:999px; padding:4px 12px;
+    }
+
+    /* ── Visit history (semantic table) ── */
+    .tr-hist-wrap { overflow-x:auto; }
+    .tr-hist { width:100%; border-collapse:collapse; font-size:13px; }
+    .tr-hist .tr-hist-cap {
+      text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+      color:var(--text-muted); font-family:'IBM Plex Mono', monospace; padding:0 0 8px;
+    }
+    .tr-hist th, .tr-hist td {
+      padding:8px 12px; border-bottom:1px solid var(--border); text-align:center; white-space:nowrap;
+    }
+    .tr-hist thead th {
+      background:var(--surface2); color:var(--text-muted); font-weight:600; font-size:11px;
+      text-transform:uppercase; letter-spacing:.04em; font-family:'IBM Plex Mono', monospace;
+    }
+    .tr-hist th[scope="row"] { text-align:left; font-weight:500; color:var(--text); }
+    .tr-miss { color:var(--text-faint); }
+
+    /* ── Empty / single-visit states ── */
+    .tr-empty, .tr-note {
       padding:20px; color:var(--text-muted); font-size:13px; background:var(--surface);
       border:1px solid var(--border); border-radius:var(--radius);
     }
-    .trend-note { margin-bottom:16px; }
+    .tr-note { margin-bottom:16px; }
   </style>
 </head>
 <body>
