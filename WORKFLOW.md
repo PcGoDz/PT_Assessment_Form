@@ -45,6 +45,9 @@ or archive the CC session (archiving wipes the worktree folder; commits survive 
 don't). Miruya verifies with his own eyes — respect it. Cull the worktree only AFTER a deliberate
 merge to main.
 
+**WORKFLOW-176 — merge is human-gated.** CC handoff prompts stop at "push the branch"; merge is
+never written into the prompt — Miruya eyeballs the worktree, then we merge together.
+
 **Loose files are the recurring bite.** Plans, incident notes, anything written to the worktree is an
 uncommitted working file until CC commits it — exactly what got truncated 2026-06-09. Have CC commit
 docs/notes FIRST, then build.
