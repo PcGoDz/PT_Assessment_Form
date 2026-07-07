@@ -685,6 +685,11 @@ function openSoapModal(soap) {
           if (d.seen_by)        document.getElementById('soap-seen-by').value        = d.seen_by;
           if (d.next_appt)      document.getElementById('soap-next-appt').value      = d.next_appt;
           if (d.next_appt_time) document.getElementById('soap-next-appt-time').value = d.next_appt_time;
+          // NCD-only: rehydrate the measurements panel. Runs after NcdMeasure.clear()
+          // and maybeShow() above, so this populate wins and the grid already exists.
+          if (d.measurements && window.NcdMeasure && episode && episode.form_type === 'NCD') {
+            NcdMeasure.populate(d.measurements);
+          }
         }
       }
     } catch (e) {
@@ -727,11 +732,18 @@ function saveSoapDraft() {
       next_appt:      document.getElementById('soap-next-appt').value,
       next_appt_time: document.getElementById('soap-next-appt-time').value
     };
+    // NCD-only: stash the measurements panel too, so numbers typed into a brand-new
+    // follow-up survive a stray dismissal (backdrop click) before Save.
+    if (window.NcdMeasure && episode && episode.form_type === 'NCD') {
+      draft.measurements = NcdMeasure.collect();
+    }
     // Don't persist a draft that is empty apart from the auto-filled date.
     var hasContent = draft.s || draft.o || draft.a || draft.p ||
                      draft.queue_no || draft.kpi_30min || draft.seen_by ||
                      draft.next_appt || draft.next_appt_time;
-    if (!hasContent) { clearSoapDraft(); return; }
+    var hasMeasure = draft.measurements &&
+      Object.values(draft.measurements).some(function (v) { return v !== '' && v != null; });
+    if (!hasContent && !hasMeasure) { clearSoapDraft(); return; }
     localStorage.setItem(soapDraftKey(), JSON.stringify(draft));
   } catch (e) {
     console.warn('SOAP draft save failed:', e);
