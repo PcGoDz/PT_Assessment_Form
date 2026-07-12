@@ -1,65 +1,69 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-07-07
+Last updated: 2026-07-12
 
 ---
 
 ## Where we left off
 
-NCD new-follow-up draft-loss bug FIXED, merged (`7d5caed`), pushed. 3 additive NCD-guarded
-edits in `templates/episode.html`, ZERO `ncd_measure.js` changes: `saveSoapDraft()` now
-stashes `NcdMeasure.collect()` for NCD episodes and counts non-empty measurements as content
-(numbers-only draft no longer wiped as empty); `openSoapModal()`'s new-note path rehydrates via
-`NcdMeasure.populate()` after the grid builds. Fix commit `c7d6028`, merge `7d5caed`. 5 CC
-smoke tests passed against a live dev server: measurements survive backdrop-dismiss alone;
-measurements+SOAP text survive together; a real save clears the draft; MS (non-NCD) red-line
-made zero stray `/ncd-measurements` calls; editing an existing saved visit loads by `soap_id`
-untouched by a stray draft.
+NCD SOAP-modal measurements panel DENSITY REDESIGN shipped + merged (`513c05b`). Full cycle in
+one session: brainstorm → spec → plan → CC build (3 commits, `static/js/ncd_measure.js` ONLY) →
+dual-gate review per task → CC browser smoke → Miruya feel-pass 8/8 → merge. Design: flat dense
+inline-label grid (`repeat(auto-fill,minmax(150px,1fr))` → 3-col at modal width), 4 battery bands
+kept, the 6 fitness comment fields (walk6Comment/step3Comment/flexComment/ulComment/llComment/
+balanceComment) render as `+Note` chips via new `_buildNoteChip()`; `populate()` auto-expands a
+filled note, `clear()` re-collapses. BMI/WHR read-only + live-recompute. Labels kept FULL —
+research confirmed no standard shorthand for segmental body-comp terms; 3-col fits because values
+are short. NT/N-A stamp and collapsible-groups both REJECTED in spec (recorded so they aren't
+re-litigated). Docs authored: docs/superpowers/specs/2026-07-12-ncd-panel-density-design.md +
+plans/2026-07-12-ncd-panel-density.md. FACIAL specs/plans relocated root → docs/superpowers/
+(Miruya tidy), committed with the NCD docs as `e334cd1`.
 
 ---
 
 ## Half-done
 
-- **Miruya's OWN break-it pass on the fix is OWED.** Merge happened via a CC prompt that said
-  "merge to main", skipping the WORKFLOW-176 worktree eyeball gate. Verified at git + CC-smoke
-  level, not by his hands. Run next session vs main `7d5caed`; if it finds something → fix-
-  forward on a NEW branch.
-- **exe build + v3 migration check on a real v2 db** — deferred (carried from 2026-07-05).
-- **Lingering worktree folder:** `PT_Assessment-worktrees/frosty-torvalds-5e6f9c` — git-side
-  removed (`git worktree remove --force` + branch deleted + pruned), but the folder itself
-  wouldn't `rmdir` (Windows CWD lock — this session's shell was still inside it). Needs a
-  manual `rmdir /s /q` once the session closes.
+- **Lingering worktree folders (Windows CWD lock):** `PT_Assessment-worktrees/ncd-page-ui-fix-5e9e46/`
+  — git-side fully removed (worktree deregistered, branch deleted local+remote), empty folder
+  won't `rmdir` until the CC session that owned it closes. Also re-confirm the older
+  `frosty-torvalds-5e6f9c` from the 2026-07-07 handover is gone. Manual `rmdir /s /q` both.
+- **exe build + v3 migration check on a real v2 db** — still deferred (carried).
 
 ---
 
 ## Next session priorities
 
-1. **NCD measurements panel DENSITY REDESIGN (the beeg, untouched).** Do it in a FRESH Cowork
-   session — this session's mount went stale. Decision locked: panel lives INSIDE the SOAP
-   modal → design in the modal's vocabulary (`session-info-grid` / `-box` / `soap-form-field`),
-   NOT the form `.fg`/`.card` primitives. Group by the 4 BATTERY headers (Vitals/Bloods/
-   BodyComp/Fitness), compact multi-col, borrow NT/N-A grid-stamp for bulk-empty rows. See
-   BACKLOG.
-2. **Miruya's break-it pass on the shipped fix** (see Half-done above).
-3. **exe build.**
+1. **NCD template content** — still generic knee-OA boilerplate, NOT obesity/metabolic. Author NCD
+   SMART statements for the 5 clinical categories + 4 SOAP categories. Content-only, no code. The
+   realest remaining NCD gap.
+2. **exe build** + v3 migration check on a real v2 db.
+3. NCD cosmetic tail: boba-cup icon swap, faint body-shape PNGs; and the shared MPIS-readability
+   pass (divider bars slam text — all forms, worst on NCD's longer output).
 
 ---
 
 ## Gotchas discovered this session
 
-- **Merge-gate slip: CC handoff prompts must NEVER say "merge to main"** — stop at "push the
-  BRANCH". Merge is human-gated (WORKFLOW-176), done together after Miruya eyeballs the
-  worktree. Added to WORKFLOW two-window section + Cowork memory.
-- **CC force-moved the checked-out main ref from the worktree to complete that merge**
-  (guardrail-dodge, born from the bad prompt). Landed clean but sketchy. Correct mechanics: CC
-  pushes the branch, merge from the main checkout.
-- **Cowork mount went stale-behind-HEAD** (torn `episode.html` snapshot — session started
-  before CC finished). Verify CC work via `git show <commit>:<file>`, never a raw read of a
-  file CC just touched. Miruya's real git status came back clean.
+- **Cowork mount stale-on-WORKING-FILE (nastier variant of the known lag).** Post-merge, the Cowork
+  window's on-disk `ncd_measure.js` was 88 lines SHORT of HEAD (pre-redesign snapshot) and showed
+  as ` M`, while HEAD was correct. A blind `git add -A && commit` from stale Cowork would have
+  REVERTED the ship. Guard: verify with `git show HEAD:<file> | grep`, commit ONLY from CC's live
+  window, never `git-restore` from stale Cowork. → migrated to WORKFLOW two-window section.
+- **Verification split banked.** CC smoke = code truth only (boots-clean, console, structure, dual
+  gates) → push; Miruya owns the browser UI/feel + round-trip break-it (merge already human-gated).
+  CC burned ~24 calls pixel-hunting a layout it can't judge. → migrated to WORKFLOW two-window.
+- Browser smoke tooling flaky (viewport/click) → CC drove UI via DOM events + computed-style reads,
+  not screenshots. Environment quirk, not code.
+- **WORKFLOW.md at 248 lines — the two 2026-07-12 rules (stale-mount guard, smoke split) don't fit
+  under the 250 ceiling.** NOT appended this session per the flag-instead-of-exceed instruction.
+  Next session: split WORKFLOW.md (candidate: hive off "Cowork two-window workflow" into its own
+  file) THEN add both rules — stale-mount guard (verify `git show HEAD:<file> | grep`, commit only
+  from CC's live window, never `git-restore` from stale Cowork) and smoke split (CC = code-truth
+  smoke only, push, STOP; Miruya owns browser feel + round-trip break-it).
 
 ---
 
 ## What to skip for now
 
-VESTIBULAR/PAEDIATRIC/LYMPHOEDEMA/GENERAL still not ready. home.html dashboard UI pass (5
-findings) parked in BACKLOG. Full deferred list in BACKLOG.
+VESTIBULAR / PAEDIATRIC / LYMPHOEDEMA / GENERAL still not ready. NCD polish tail (templates /
+cosmetic / shared MPIS). home.html dashboard UI pass. Full deferred list in BACKLOG.
