@@ -43,19 +43,19 @@ var NcdMeasure = (function () {
     { key: 'walk6Rpe',      label: '6MWT RPE',        type: 'number' },
     { key: 'walk6Bp',       label: '6MWT BP',         type: 'text'   },
     { key: 'walk6Hr',       label: '6MWT HR',         type: 'number' },
-    { key: 'walk6Comment',  label: '6MWT Note',       type: 'text'   },
+    { key: 'walk6Comment',  label: '6MWT Note',        type: 'text', note: true },
     { key: 'step3Hr',       label: '3-min Step HR',   type: 'number' },
-    { key: 'step3Comment',  label: '3-min Step Note', type: 'text'   },
+    { key: 'step3Comment',  label: '3-min Step Note',  type: 'text', note: true },
     { key: 'sitReach',      label: 'Sit & Reach',     type: 'number' },
-    { key: 'flexComment',   label: 'Flexibility Note',type: 'text'   },
+    { key: 'flexComment',   label: 'Flexibility Note', type: 'text', note: true },
     { key: 'handGrip',      label: 'Hand Grip (kg)',  type: 'number' },
     { key: 'sitUp',         label: 'Sit-up',          type: 'number' },
     { key: 'pushUp',        label: 'Push-up',         type: 'number' },
-    { key: 'ulComment',     label: 'UL Strength Note',type: 'text'   },
+    { key: 'ulComment',     label: 'UL Strength Note', type: 'text', note: true },
     { key: 'sitToStand',    label: 'Sit-to-Stand',    type: 'number' },
-    { key: 'llComment',     label: 'LL Strength Note',type: 'text'   },
+    { key: 'llComment',     label: 'LL Strength Note', type: 'text', note: true },
     { key: 'stork',         label: 'Stork Balance',   type: 'number' },
-    { key: 'balanceComment',label: 'Balance Note',    type: 'text'   }
+    { key: 'balanceComment',label: 'Balance Note',     type: 'text', note: true }
   ];
 
   var _built = false;
