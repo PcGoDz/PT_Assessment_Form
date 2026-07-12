@@ -77,35 +77,103 @@ var NcdMeasure = (function () {
     if (w) { var wv = _whr(); w.value = (wv === '') ? '' : wv; }
   }
 
-  // ── Build the grid once ───────────────────────────────────────────────
+  // ── Build one +Note chip: button toggles a collapsed input (same id contract) ──
+  function _buildNoteChip(f, strip) {
+    var wrap = document.createElement('span');
+    wrap.style.cssText = 'display:inline-flex;flex-direction:column;';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = '+ ' + f.label;
+    btn.style.cssText = 'font-size:11px;color:var(--accent);background:none;' +
+      'border:1px solid var(--border);border-radius:14px;padding:2px 10px;' +
+      'cursor:pointer;align-self:flex-start;font-family:inherit;';
+
+    var box = document.createElement('div');
+    box.id = 'ncdm-' + f.key + '-wrap';
+    box.style.display = 'none';
+
+    var inp = document.createElement('input');
+    inp.id = 'ncdm-' + f.key;
+    inp.type = 'text';
+    inp.autocomplete = 'off';
+    inp.placeholder = f.label;
+    inp.style.cssText = 'margin-top:4px;height:28px;font-size:12px;padding:2px 8px;' +
+      'border:1px solid var(--border);border-radius:6px;min-width:180px;' +
+      'background:var(--m3-surface-container, var(--surface));color:var(--text);' +
+      'font-family:inherit;outline:none;';
+
+    btn.addEventListener('click', function () {
+      box.style.display = (box.style.display === 'none') ? '' : 'none';
+    });
+
+    box.appendChild(inp);
+    wrap.appendChild(btn);
+    wrap.appendChild(box);
+    strip.appendChild(wrap);
+  }
+
+  // ── Build the grid once — dense inline-label layout ────────────────────
   function buildGrid() {
     if (_built) return;
     var grid = document.getElementById('ncd-measure-grid');
     if (!grid) return;
+
+    // Override the inherited 2-col session-info-grid → dense auto-fill (lands 3-col at modal width).
+    grid.style.display = 'grid';
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(150px, 1fr))';
+    grid.style.gap = '6px 10px';
+    grid.style.alignItems = 'center';
+
+    var pendingNotes = [];
+    function flushNotes() {
+      if (!pendingNotes.length) return;
+      var strip = document.createElement('div');
+      strip.style.cssText = 'grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;';
+      pendingNotes.forEach(function (nf) { _buildNoteChip(nf, strip); });
+      grid.appendChild(strip);
+      pendingNotes = [];
+    }
+
     BATTERY.forEach(function (f) {
       if (f.group) {
+        flushNotes();
         var h = document.createElement('div');
         h.textContent = f.group;
         h.style.cssText = 'grid-column:1/-1;font-size:10px;font-weight:600;text-transform:uppercase;' +
-                          'letter-spacing:0.05em;color:var(--text-muted);margin-top:4px;';
+          'letter-spacing:0.05em;color:var(--text-muted);margin-top:6px;';
         grid.appendChild(h);
         return;
       }
+      if (f.note) { pendingNotes.push(f); return; }
+
       var cell = document.createElement('div');
-      cell.className = 'soap-form-field';
+      cell.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
       var lab = document.createElement('label');
       lab.textContent = f.label;
+      lab.style.cssText = 'font-size:12px;color:var(--text-muted);white-space:nowrap;';
+
       var inp = document.createElement('input');
       inp.id = 'ncdm-' + f.key;
       inp.autocomplete = 'off';
+      inp.style.cssText = 'flex:1;min-width:0;height:28px;font-size:12px;padding:2px 8px;' +
+        'border:1px solid var(--border);border-radius:6px;' +
+        'background:var(--m3-surface-container, var(--surface));color:var(--text);' +
+        'font-family:inherit;outline:none;';
+
       if (f.type === 'number') { inp.type = 'text'; inp.inputMode = 'decimal'; }
-      else if (f.type === 'computed') { inp.type = 'text'; inp.readOnly = true; inp.style.background = 'var(--surface2)'; inp.style.color = 'var(--text-muted)'; }
-      else { inp.type = 'text'; }
+      else if (f.type === 'computed') {
+        inp.type = 'text'; inp.readOnly = true;
+        inp.style.background = 'var(--surface2)'; inp.style.color = 'var(--text-muted)';
+      } else { inp.type = 'text'; }
+
       cell.appendChild(lab);
       cell.appendChild(inp);
       grid.appendChild(cell);
     });
-    // Live recompute of bmi/whr when their inputs change.
+    flushNotes();
+
     ['height', 'weight', 'waist', 'hip'].forEach(function (k) {
       var i = el(k);
       if (i) i.addEventListener('input', recompute);
