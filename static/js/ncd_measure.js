@@ -215,16 +215,24 @@ var NcdMeasure = (function () {
       if (f.group || f.type === 'computed') return;
       var i = el(f.key);
       if (i) i.value = (m[f.key] != null) ? m[f.key] : '';
+      if (f.note) {
+        var w = document.getElementById('ncdm-' + f.key + '-wrap');
+        if (w) w.style.display = (i && i.value.trim() !== '') ? '' : 'none';
+      }
     });
     recompute();   // bmi/whr reflect populated height/weight/waist/hip
   }
 
-  // ── Public: blank the panel ─────────────────────────────────────────────
+  // ── Public: blank the panel + re-collapse all note chips ────────────────
   function clear() {
     BATTERY.forEach(function (f) {
       if (f.group) return;
       var i = el(f.key);
       if (i) i.value = '';
+      if (f.note) {
+        var w = document.getElementById('ncdm-' + f.key + '-wrap');
+        if (w) w.style.display = 'none';
+      }
     });
   }
 
