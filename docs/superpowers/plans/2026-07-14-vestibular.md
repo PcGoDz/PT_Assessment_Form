@@ -191,6 +191,14 @@ This task defines the CSS block content that Task 3 embeds. Per DESIGN_SYSTEM.md
 .vb-chip.sel-No, .vb-chip.sel-Neg  { background: var(--success-light); border-color: var(--success); color: var(--success); font-weight: 500; }
 .vb-chip.sel-Yes, .vb-chip.sel-Pos { background: var(--danger-light);  border-color: var(--danger);  color: var(--danger);  font-weight: 500; }
 
+/* Generic single-select paint for every pick3()-driven chip group (marital, smoking, alcohol,
+   sleep, vertigo/disequilibrium fields, soma/coord status, side selectors, gait chips, ...).
+   style.css only paints .irr-chip via .sel-High/Medium/Low — .active alone does NOT paint
+   (the FACIAL invisible-selection trap, WORKFLOW Anti-Repeat). Scoped :not(.vb-chip) so this
+   does NOT fight the battery .sel-Yes/No/Pos/Neg colors above (same specificity + source
+   order would otherwise let this rule win and flatten every battery chip to accent blue). */
+.irr-chip.active:not(.vb-chip) { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
 .vb-battery { margin-bottom: 4px; }
 .vb-battery-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .vb-battery-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -1430,20 +1438,17 @@ var VestibularForm = (function () {
     if (scaffolds.lRoll)        scaffolds.lRoll.setData(pos.lRoll);
 
     var rom = d.rom || {};
-    ['neck','rUl','lUl','rLl','lLl'].forEach(function (k) {
+    var romIdMap = { neck: 'neck', rUl: 'rul', lUl: 'lul', rLl: 'rll', lLl: 'lll' };
+    Object.keys(romIdMap).forEach(function (k) {
       var r = rom[k] || {};
-      var prefix = 'vb-rom-' + k.replace(/([A-Z])/g, function(m){return m.toLowerCase();});
-      sv(prefix + '-range', r.range); sv(prefix + '-quality', r.quality); sv(prefix + '-pain', r.pain);
+      var id = romIdMap[k];
+      sv('vb-rom-' + id + '-range', r.range); sv('vb-rom-' + id + '-quality', r.quality); sv('vb-rom-' + id + '-pain', r.pain);
     });
     var strength = d.strength || {};
     sv('vb-str-ul-r', strength.ulR); sv('vb-str-ul-l', strength.ulL);
     sv('vb-str-ll-r', strength.llR); sv('vb-str-ll-l', strength.llL);
 
     var soma = d.somatosensory || {};
-    ['propUlR','propUlL','propLlR','propLlL'].forEach(function (k) {
-      var v = soma[k] || {};
-      var id = 'vb-prop-' + k.replace('prop','').toLowerCase().replace(/ul/,'ul-').replace(/ll/,'ll-');
-    });
     set3('vb-prop-ul-r', (soma.propUlR||{}).status); sv('vb-prop-ul-r-note', (soma.propUlR||{}).note);
     set3('vb-prop-ul-l', (soma.propUlL||{}).status); sv('vb-prop-ul-l-note', (soma.propUlL||{}).note);
     set3('vb-prop-ll-r', (soma.propLlR||{}).status); sv('vb-prop-ll-r-note', (soma.propLlR||{}).note);
@@ -1543,19 +1548,9 @@ window.Form = {
 };
 ```
 
-**Note on the `rom` populate-loop key mapping (dead code left in on purpose to flag during review):** the `['neck','rUl','lUl','rLl','lLl'].forEach` block computes `prefix` via a regex that does NOT match the actual `vb-rom-rul-*`/`vb-rom-lul-*` id scheme (ids are lowercase `rul`/`lul`/`rll`/`lll`, not camelCase-split). **Fix before shipping:** replace that block with an explicit map, same style as the `postural` block below it:
-```js
-    var rom = d.rom || {};
-    var romIdMap = { neck: 'neck', rUl: 'rul', lUl: 'lul', rLl: 'rll', lLl: 'lll' };
-    Object.keys(romIdMap).forEach(function (k) {
-      var r = rom[k] || {};
-      var id = romIdMap[k];
-      sv('vb-rom-' + id + '-range', r.range); sv('vb-rom-' + id + '-quality', r.quality); sv('vb-rom-' + id + '-pain', r.pain);
-    });
-```
-Also delete the unused `soma`-block `id` variable loop above the four explicit `set3`/`sv` calls (leftover scaffolding, does nothing — dead code, remove it). Use the explicit map version in the actual file; the broken regex version above is included in this plan only to make the exact bug visible so it isn't silently reintroduced by a careless copy-paste of the whole `populate()` block.
+**Note on the `rom` populate-loop key mapping (fixed during vet, 2026-07-14):** an earlier draft of this block computed `prefix` via a regex (`k.replace(/([A-Z])/g, ...)`) that did NOT match the actual `vb-rom-rul-*`/`vb-rom-lul-*` id scheme (ids are lowercase `rul`/`lul`/`rll`/`lll`, not camelCase-split). The main code block above now uses the explicit `romIdMap` version instead, same style as the `postural` block below it. The dead `soma`-block `id` variable loop (leftover scaffolding above the four explicit `set3`/`sv` calls, computed a value nothing used) has also been removed from the code block above. When implementing: copy the `populate()` block exactly as written above — no further edit needed here.
 
-- [ ] **Step 2: Apply the rom-populate fix and dead-code removal from the note above before saving the file.**
+- [ ] **Step 2: Syntax-verify the pasted `populate()` matches the code block above exactly (no stray regex, no unused `soma` id-loop) before saving the file.**
 
 - [ ] **Step 3: Syntax check**
 
@@ -2474,6 +2469,6 @@ git push -u origin worktree-vestibular-form
 - §11 axiom compliance — no new deps, ReportLab only, MPIS plain-text SOAPIER, ship-crude (one new component only), KKM ref preserved, topbar unchanged.
 - §12 open items — scaffold location decided (own file, per spec recommendation), chip-helper promotion deferred (BACKLOG, Task 14), KIV UI decided (per-battery `+Note`-style toggle), section count deferred to polish, AROM/PROM row shape flagged for clinical confirm (BACKLOG), templates authored as their own rung (Task 7, separate from Task 3's form rung).
 
-**Placeholder scan:** no "TBD"/"implement later"/"add appropriate X" strings in any code block. The one intentionally-flagged issue (Task 5's broken `rom` populate regex) is called out with the ACTUAL fix code inline, not deferred — included so a careless full-block copy-paste doesn't silently reintroduce it.
+**Placeholder scan:** no "TBD"/"implement later"/"add appropriate X" strings in any code block. Task 5's `rom` populate regex bug (found during vet) and the dead `soma` id-loop are both fixed directly in the main `populate()` code block — no separate patch step remains.
 
 **Type/key consistency check:** `collect()` (Task 5) and `_build_story()`/`_battery_block()` (Task 9) and `_buildMpisVestibular()` (Task 12) all key off the same field names — `d.pmhx`, `d.recentSymptoms`, `d.functionalStatus`, `d.oculomotor` (all `{items, kiv}` shape), `d.positional.{rDixHallpike,lDixHallpike,rRoll,lRoll}` (all `{result, direction, latency, duration, intensity, note}` shape), `d.rom.{neck,rUl,lUl,rLl,lLl}` (all `{range, quality, pain}`), `d.postural.{rhomberg,rSharpened,lSharpened,rSls,lSls}` (all `{eo, ec}`), `d.somatosensory.{propUlR,propUlL,propLlR,propLlL}` and `d.coordination.{ftnR,ftnL,htsR,htsL}` (all `{status, note}`). Verified matching across all three consumers during drafting.
