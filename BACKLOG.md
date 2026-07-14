@@ -116,16 +116,16 @@
   jolly-hodgkin, magical-swartz, frosty-hodgkin, upbeat-einstein) are now removed from disk —
   `PT_Assessment-worktrees/` is empty. Git side was already clean. Keep the Step-0 cull habit so this
   list never regrows.
-- **Multi-select chip helper promotion** — `toggleChip/getChips/setChips` now has 2 local copies (NEURO, FACIAL). On a 3rd consumer, promote to FormBase (cf. `pair_box` promotion rule from `pdf_sci.py`). Do NOT promote speculatively.
+- **Multi-select chip helper promotion — 3rd consumer confirmed, promotion still deferred (2026-07-14).** `toggleChip/getChips/setChips` now has 3 local copies (NEURO, FACIAL, and VESTIBULAR per its 2026-07-14 design spec/plan — build not yet started). Miruya explicitly decided to defer promotion even at the 3rd-consumer trigger point: keep VESTIBULAR's copy form-local for its build, promote NEURO/FACIAL/VESTIBULAR together as their own dedicated small pass afterward (cf. `pair_box` promotion rule from `pdf_sci.py`). Do NOT promote inside the VESTIBULAR build itself.
 
 - **FACIAL full-clickfest pilot (deferred)** — Per FACIAL_SPEC.md Build Note #5: once FACIAL is stable in clinical use, use it as the pilot form to flip full intake to clickfest (Observation/Palpation/General Health/Problem chip sets). If good, roll across all forms as its own spec→plan→build cycle. Defer until post-pilot.
 
 - **pdf_facial.py page-1 empty intake labels (low priority)** — blank fields (Doctor's Mgmt, Problem, histories, Hot/Cold/Pin-prick, Irritability, Hearing Aid/Pacemaker) render with empty string beside their label. Same behavior as `pdf_ms.py` clone; likely consistent-by-design. Confirm against `pdf_ms.py` during Phase 1.2 PDF polish pass; guard if undesired.
 
-- VESTIBULAR form (Neurological group, NO ready). FACIAL now shipped (ready=True).
+- **VESTIBULAR form (Neurological group, NO ready) — design spec + implementation plan on main (2026-07-14), build NOT started.** `docs/superpowers/specs/2026-07-14-vestibular-form-design.md` (D1-D10 locked) + `docs/superpowers/plans/2026-07-14-vestibular.md` (14 tasks, milestone ladder, 2 vet fixes folded in) merged `--no-ff` to main. Next session: execute the plan task by task.
 - PAEDIATRIC / LYMPHOEDEMA / GENERAL (Rehabilitation group, all NO ready).
 - **NCD Plan A SHIPPED 2026-06-27** (merged `74c0991`). `ready=True`. 11-section form (MSK-canonical), PDF with body-shape PNG WYSIWYG embed, MPIS SOAPIER builder, clinical templates. **Plan B SHIPPED 2026-06-30** (merged `2bb479c`): per-visit `ncd_measurements` v3 table (nullable `soap_id` FK) + DB functions/routes + additive SOAP-modal measurements panel + auto-write visit-1 row + screen-only trend page (`/episodes/<id>/ncd-trend`, transform/render split, inline-SVG sparklines). Battery keys FROZEN (`form_ncd.js collect()` comment block). Panel density redesign SHIPPED 2026-07-12 (`513c05b`) — marked done below.
-- **TEMPLATES.NCD content is generic knee-OA boilerplate (polish, surfaced 2026-06-27).** Template wiring works correctly (buttons fire, statements insert, survive reload). Content sourced from Best Statement doc which used OA as the exemplar — NOT obesity/metabolic-specific. Needs NCD-appropriate SMART statements authored for the 5 categories (impression/goal/stg/ltg/treatment) and 4 SOAP categories. Own content-only polish pass — no code changes needed.
+- **TEMPLATES.NCD content is generic knee-OA boilerplate — content authored, code swap pending (2026-07-14).** Template wiring works correctly (buttons fire, statements insert, survive reload). Content sourced from Best Statement doc which used OA as the exemplar — NOT obesity/metabolic-specific. NCD-appropriate SMART statements for the 5 categories (impression/goal/stg/ltg/treatment) and 4 SOAP categories are now authored and on main: `docs/superpowers/specs/2026-07-14-ncd-template-content.md`. Remaining work is a code-only swap into `TEMPLATES.NCD` / `TEMPLATES.NCD_SOAP` in `clinical_templates.js` — next session priority #1.
 - ~~**DESIGN_SYSTEM gap — "textbox galore" / +Note collapsible pattern (DONE 2026-06-29).**~~ `+Note` rule added to DESIGN_SYSTEM.md as Rule 7 (optional free-text hard default) + component recipe. NCD form swept: all 9 comment inputs (smoking-comment, alcohol-comment, active-comment, walk6-comment, step3-comment, flex-comment, ul-comment, ll-comment, balance-comment) converted to +Note collapsibles. Note: scope was NCD-only — BURN and HAND had their UI-polish sweep in prior sessions; the earlier "3 consumers = NCD/BURN/HAND" wording was a wind-down misread.
 - ~~**NCD measurements panel — density redesign (BURDEN-REDUCER. Surfaced 2026-06-30.**~~ DONE
   2026-07-12 (merged `513c05b`). Flat dense inline-label grid + 4 battery bands + 6 fitness
@@ -147,6 +147,21 @@
   by the NCD SOAP-modal panel. Same rule as `pair_box()`/trend-card/chip-helper: do NOT promote
   to DESIGN_SYSTEM until a 2nd screen needs a dense modal measurement grid. It's modal-vocabulary
   (all-JS inline styles), not a form `.fg`/`.card` primitive.
+
+- **≤10 template-statements-per-category — candidate rule for DESIGN_SYSTEM.md (surfaced authoring
+  the VESTIBULAR + NCD Best Statement content, 2026-07-14).** Every `TEMPLATES.<FORM>` array
+  authored so far (SCI, FACIAL, and now VESTIBULAR/NCD) naturally lands at 4-7 discrete SMART
+  statements per category — long enough to cover the clinical range, short enough that the
+  template picker modal doesn't need its own scroll-and-search UX. Not yet written down anywhere
+  as a rule; worth formalizing in DESIGN_SYSTEM.md's template guidance once a 3rd form's author
+  independently converges on the same range (would confirm it's a real pattern, not coincidence).
+
+- **WORKFLOW.md still at 248/250 lines — split still pending, now blocking on VESTIBULAR
+  priority (carried from 2026-07-12, re-confirmed 2026-07-14).** The two 2026-07-12 rules
+  (Cowork stale-mount-on-working-file guard, CC/Miruya verification split) remain un-migrated
+  because the file has no headroom. Candidate split: hive off "Cowork two-window workflow" into
+  its own file, then add both banked rules. Lower priority than the VESTIBULAR build and NCD
+  template swap — pick up after those two ship.
 
 ---
 
