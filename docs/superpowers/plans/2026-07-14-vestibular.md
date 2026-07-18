@@ -1728,7 +1728,7 @@ In `templates/episode.html`, in `showSoapTemplate()` (~line 766), add `'VESTIBUL
   };
 ```
 
-- [ ] **Step 2: Click-test every template button** (spec §8 warning — FACIAL shipped template buttons that didn't fire). In the browser: open the Vestibular form, click "+ template" next to PT Impression, STG, LTG, and Plan of Treatment. Confirm the modal opens and lists the arrays from Task 7. Then open the SOAP modal on an episode (Vestibular form type) and confirm the SOAP template buttons show the `VESTIBULAR_SOAP` categories.
+- [ ] **Step 2: Miruya click-tests every template button** (spec §8 warning — FACIAL shipped template buttons that didn't fire). In the browser: open the Vestibular form, click "+ template" next to PT Impression, STG, LTG, and Plan of Treatment. Confirm the modal opens and lists the arrays from Task 7. Then open the SOAP modal on an episode (Vestibular form type) and confirm the SOAP template buttons show the `VESTIBULAR_SOAP` categories.
 
 - [ ] **Step 3: Commit**
 
@@ -2400,7 +2400,7 @@ git commit -m "vestibular: add MPIS builder (SOAPIER, positives + roll-up, trunc
 
 **Files:** none (manual verification)
 
-- [ ] **Step 1:** Fill a realistic Vestibular record in the browser (patient info, at least 2 batteries with mixed Yes/No, one battery left as KIV, one positive positioning test, impression + goals).
+- [ ] **Step 1: Miruya fills a realistic Vestibular record in the browser** (patient info, at least 2 batteries with mixed Yes/No, one battery left as KIV, one positive positioning test, impression + goals).
 - [ ] **Step 2:** Click "Copy to MPIS" on the topbar. Confirm the header modal appears, then copy completes.
 - [ ] **Step 3:** Paste the clipboard content somewhere visible (e.g. a scratch text file). Verify:
   - [ ] SOAPIER dash-delimited sections (SUBJECTIVE / OBJECTIVE / ANALYSIS / PLAN) present
