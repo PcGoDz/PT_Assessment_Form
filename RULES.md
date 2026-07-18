@@ -21,8 +21,7 @@ Miruya is NOT a senior dev. Self-described bad coder — failed OOP in degree, d
 
 ## Miruya's job
 
-- Clinically test the running app (does the form load, does Save work, does the PDF look right, does the workflow feel right for a physio)
-- The browser pass on a running form. Not as a courtesy — it is the only pass that answers the question that matters (does this read and feel like something a physio would actually write and use at patient 19). No amount of automated clicking reaches that.
+- Clinically test the running app — the browser pass on a running form is his, always. Does the form load, does Save work, does the PDF look right, and does it read like something a physio would actually write at patient 19. No amount of automated clicking reaches that last one.
 - UI/UX feedback (button placement, layout feel, "this is off", "this doesn't match how I'd use it")
 - Clinical domain knowledge (workflow, KKM borang conventions, what fields mean)
 - Final ship/no-ship call
