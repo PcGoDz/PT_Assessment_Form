@@ -33,14 +33,10 @@ the explicit `romIdMap` version, dead `soma` id-loop deleted. On main now (merge
 
 ## Next session priorities
 
-1. **NCD template swap** — apply `docs/superpowers/specs/2026-07-14-ncd-template-content.md`'s
-   authored SMART content into `TEMPLATES.NCD` / `TEMPLATES.NCD_SOAP` in `clinical_templates.js`.
-   Code-only swap; content is already written and reviewed. Swap prompt already drafted in the
-   Cowork window — use it.
-2. **VESTIBULAR build** — execute `docs/superpowers/plans/2026-07-14-vestibular.md` task by task.
+1. **VESTIBULAR build** — execute `docs/superpowers/plans/2026-07-14-vestibular.md` task by task.
    Both vet fixes are already folded into the plan text; no further doc edit needed before
    starting Task 1.
-3. exe build + v3 migration check on a real v2 db (carried, lower priority than 1-2).
+2. exe build + v3 migration check on a real v2 db (carried, lower priority than 1).
 
 ---
 
@@ -66,6 +62,5 @@ the explicit `romIdMap` version, dead `soma` id-loop deleted. On main now (merge
 
 ## What to skip for now
 
-VESTIBULAR build (plan ready, not started), NCD template swap (doc ready, not started). PAEDIATRIC
-/ LYMPHOEDEMA / GENERAL still not ready. home.html dashboard UI pass. Full deferred list in
-BACKLOG.md.
+VESTIBULAR build (plan ready, not started). PAEDIATRIC / LYMPHOEDEMA / GENERAL still not ready.
+home.html dashboard UI pass. Full deferred list in BACKLOG.md.
