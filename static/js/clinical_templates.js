@@ -621,71 +621,66 @@ const ClinicalTemplates = (function () {
 
   TEMPLATES.NCD = {
     impression: [
-      'Pain in the right knee due to osteoarthritis.',
-      'Reduced range of motion in the right knee due to pain.',
-      'Muscle weakness in the right quadriceps due to reduced activity.',
-      'Impaired balance and gait due to muscle weakness.'
+      'Deconditioning and reduced exercise tolerance secondary to Type 2 diabetes and obesity.',
+      'Elevated cardiovascular risk associated with hypertension and central adiposity (raised waist circumference / waist-hip ratio).',
+      'Suboptimal glycaemic control with a sedentary lifestyle contributing to disease progression.',
+      'Reduced functional capacity and muscular endurance limiting activities of daily living.',
+      'Low physical activity level and impaired balance increasing long-term morbidity and fall risk.'
     ],
     goal: [
-      'Return to work as a shopkeeper within 3 months.',
-      'Walk independently without an assistive device for daily activities.',
-      'Perform recreational activities, such as gardening, without knee pain.'
+      'Lose weight and reduce waist size to feel more comfortable in daily activities.',
+      'Climb stairs and walk longer distances without getting breathless.',
+      'Reduce reliance on medication through lifestyle change, as advised by the doctor.',
+      'Return to recreational activities and an active family life.'
     ],
     stg: [
-      'Reduce right knee pain from 7 to 4 on the VAS within 2 weeks.',
-      'Achieve 10° improvement in right knee flexion and extension within 2 weeks.',
-      'Increase quadriceps strength from 3/5 to 4/5 within 3 weeks.',
-      'Improve standing balance to maintain 20 seconds on a single leg within 3 weeks.',
-      'Ambulate 10 meters with minimal assistance using a walking frame within 3 weeks.'
+      'Increase 6-minute walk distance by 50 metres within 4 weeks.',
+      'Establish a structured aerobic routine of 150 minutes per week within 4 weeks.',
+      'Reduce waist circumference by 2 cm within 6 weeks.',
+      'Improve sit-to-stand by 5 repetitions within 4 weeks.',
+      'Lower resting blood pressure toward target (<140/90 mmHg) with regular exercise within 6 weeks.'
     ],
     ltg: [
-      'Achieve pain-free functional independence for daily activities within 3-6 months.',
-      'Restore full range of motion and flexibility in the affected joint within 6 months.',
-      'Strengthen affected muscles to 5/5 grade and improve endurance for sustained physical activity within 6 months.',
-      'Improve walking distance to 500 meters without assistive devices within 6 months.',
-      'Maintain an active lifestyle with regular physical activity to reduce the recurrence risk of the condition within 12 months.'
+      'Achieve 5-10% body-weight reduction within 3-6 months.',
+      'Improve HbA1c toward target (<7%) through sustained exercise, with the medical team, within 3-6 months.',
+      'Independently sustain 150 minutes per week of moderate activity within 3 months.',
+      'Improve cardiorespiratory fitness for unrestricted daily activities within 6 months.',
+      'Maintain an active lifestyle to reduce long-term cardiovascular and metabolic risk within 12 months.'
     ],
     treatment: [
-      'Explanation and assurance to the patient',
-      'Patient and carer education',
-      'Pain management',
-      'Posture',
-      'Mobilising exercise',
-      'Strengthening exercise',
-      'Balance training',
-      'Ambulation',
-      'Functional exercise'
+      'Patient and carer education on NCD self-management',
+      'Structured aerobic / cardiovascular exercise programme',
+      'Progressive resistance / strengthening exercise',
+      'Weight management and lifestyle modification advice',
+      'Exercise safety education (BP / glucose monitoring, warning signs)',
+      'Balance and functional training',
+      'Home exercise programme with activity-level goal setting',
+      'Progress review and reassessment'
     ]
   };
 
   TEMPLATES.NCD_SOAP = {
     subjective: [
-      'Patient reports knee pain rated 7/10 on VAS, worsened with prolonged standing and stair climbing.',
-      'Patient complains of stiffness and swelling of the right knee, lasting 30 minutes in the morning.',
-      'Patient reports difficulty walking distances more than 500 metres due to pain.',
-      'Patient notes fatigue and reduced motivation to perform physical activity.',
-      'Carer reports patient is less mobile compared to previous week.'
+      'Reports [improved/reduced] exercise tolerance; walks [distance] before breathlessness.',
+      'Reports adherence to home programme [X sessions/week] and [dietary change].',
+      'Home readings: BP [X], glucose [X]; motivation [good/low].'
     ],
     objective: [
-      'Right knee ROM: Flexion 90°, Extension -10° (limited by pain and soft tissue tightness).',
-      'Quadriceps strength: 3/5 MMT bilaterally.',
-      'Single-leg stance: Unable to maintain beyond 5 seconds bilaterally.',
-      'Gait: Antalgic gait pattern, reduced stride length on the right.',
-      'BMI: 32.1 kg/m². Waist circumference: 98 cm. Waist/Hip ratio: 0.95.',
-      '6-Minute Walk Test: 320 metres (RPE 15/20).'
+      'Weight [X] kg, BMI [X] kg/m2, Waist [X] cm, WHR [X].',
+      'Resting BP [X] mmHg, HR [X]/min, SpO2 [X]%.',
+      '6-Minute Walk Test [X] m (RPE [X]/20); sit-to-stand [X] reps; hand grip [X] kg.'
     ],
     analysis: [
-      'Patient demonstrates pain-limited ROM and reduced quadriceps strength consistent with osteoarthritis.',
-      'Functional mobility remains impaired; patient requires assistive device for community ambulation.',
-      'Patient is progressing towards STG of 10° ROM improvement; 5° achieved this session.',
-      'Persistent elevated BMI and abdominal obesity contributing to joint load and disease progression.'
+      'Improving - aerobic capacity and endurance progressing toward short-term goals.',
+      'Weight and waist trending down; on track for target reduction.',
+      'Glycaemic / lipid profile [improving/static] - continue exercise, liaise with medical team.',
+      'Plateau - review exercise intensity and adherence barriers.'
     ],
     plan: [
-      'Continue hydrotherapy 2× weekly for joint mobility and pain relief.',
-      'Progress strengthening programme: quadriceps sets, SLR, mini-squats.',
-      'Educate patient on weight management strategies and low-impact activity.',
-      'Review blood results with treating physician regarding HbA1c trend.',
-      'Schedule reassessment in 4 weeks for STG review.'
+      'Progress aerobic intensity / duration per tolerance.',
+      'Advance resistance programme.',
+      'Reinforce weight-management and dietary adherence with patient / carer.',
+      'Reassess anthropometry and fitness battery in [X] weeks; liaise re: HbA1c / BP.'
     ]
   };
 
