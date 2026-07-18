@@ -22,6 +22,7 @@ Miruya is NOT a senior dev. Self-described bad coder — failed OOP in degree, d
 ## Miruya's job
 
 - Clinically test the running app (does the form load, does Save work, does the PDF look right, does the workflow feel right for a physio)
+- The browser pass on a running form. Not as a courtesy — it is the only pass that answers the question that matters (does this read and feel like something a physio would actually write and use at patient 19). No amount of automated clicking reaches that.
 - UI/UX feedback (button placement, layout feel, "this is off", "this doesn't match how I'd use it")
 - Clinical domain knowledge (workflow, KKM borang conventions, what fields mean)
 - Final ship/no-ship call
@@ -51,6 +52,7 @@ Miruya is NOT a senior dev. Self-described bad coder — failed OOP in degree, d
 - Don't manage Miruya's emotional state.
 - Don't propose abstractions or refactors unless explicitly asked. Ship-crude.
 - Don't push TDD on UI layer. Backend smoke checks OK if quick.
+- Never write browser steps, click-tests, or "open the form and check" instructions into a CC prompt. CC driving a browser is slow (~14 min for a 2-block string swap, 2026-07-18), unreliable (mis-clicks, coordinate drift it then debugs on the clock), low-yield (it can only confirm the string it just wrote appeared where it wrote it), and it is the agent grading its own work. CC's verification stops at node --check / does-it-boot / structure-and-diff. If a source spec or plan contains a browser verify step, strip it before the prompt goes to CC.
 
 ---
 

@@ -1,32 +1,23 @@
 # HANDOVER.md — Current Session State
 
-Last updated: 2026-07-14
+Last updated: 2026-07-18
 
 ---
 
 ## Where we left off
 
-VESTIBULAR form activation — front half only, DOCS-ONLY, no build. Cowork-brain wrote the design
-spec (D1-D10 locked) + vetted the plan; CC-muscle wrote the durable implementation plan (14 tasks,
-milestone ladder `form → polish → templates → PDF → polish → MPIS → polish`) and folded in 2 vet
-fixes before merge: (1) `.irr-chip.active:not(.vb-chip)` paint rule in Task 2's CSS block — style.css
-only paints `.irr-chip` via `.sel-High/Medium/Low`, `.active` alone doesn't paint (the FACIAL
-invisible-selection trap), scoped `:not(.vb-chip)` so it can't fight the battery Yes/No/Pos/Neg
-colors; (2) Task 5's `populate()` had a broken regex mapping `rom` keys to DOM ids — replaced with
-the explicit `romIdMap` version, dead `soma` id-loop deleted. On main now (merged `--no-ff`,
-`ccc7323`): `docs/superpowers/specs/2026-07-14-vestibular-form-design.md`,
-`docs/superpowers/plans/2026-07-14-vestibular.md`, and `docs/superpowers/specs/2026-07-14-ncd-template-content.md`
-(loose Cowork doc, committed explicitly). No source code touched.
+NCD template swap SHIPPED. `038f9f4` merged into main as `ae807ec`. `TEMPLATES.NCD` and
+`TEMPLATES.NCD_SOAP` in `clinical_templates.js` re-aimed from knee-OA to obesity/metabolic —
+content-only, keys unchanged, verbatim from `docs/superpowers/specs/2026-07-14-ncd-template-content.md`
+(verified by string-match against the spec, not eyeball).
 
 ---
 
 ## Half-done
 
-- **Lingering worktree folders (Windows CWD lock), both git-side fully removed** (worktree
-  deregistered, branches deleted via `git branch -D` after confirming `--merged main`):
-  `PT_Assessment-worktrees/busy-mendeleev-5e834c/` and `.claude/worktrees/vestibular-form/`.
-  Neither folder would `rmdir` while this session held it open. Manual `rmdir /s /q` both once no
-  Claude Code session has them as CWD.
+- **`PT_Assessment-worktrees/upbeat-haslett-1fb10a` — git-side pruned, folder lingers (Windows
+  CWD lock).** Branch `claude/upbeat-haslett-1fb10a` already deleted local + remote. Manual
+  `rmdir /s /q` once no session holds the folder as CWD.
 - **exe build + v3 migration check on a real v2 db** — still deferred (carried from 2026-07-12).
 
 ---
@@ -36,27 +27,32 @@ the explicit `romIdMap` version, dead `soma` id-loop deleted. On main now (merge
 1. **VESTIBULAR build** — execute `docs/superpowers/plans/2026-07-14-vestibular.md` task by task.
    Both vet fixes are already folded into the plan text; no further doc edit needed before
    starting Task 1.
-2. exe build + v3 migration check on a real v2 db (carried, lower priority than 1).
+2. **DESIGN_SYSTEM.md / WORKFLOW.md split** — DESIGN_SYSTEM.md is 30 lines over its 250 cap;
+   WORKFLOW.md is 248/250 and blocked on the same unresolved split. Two docs now stuck behind
+   one file-split job.
+3. exe build + v3 migration check on a real v2 db (carried, lower priority than 1-2).
 
 ---
 
 ## Gotchas discovered this session
 
-- **Write-tool absolute paths don't follow `EnterWorktree` switches automatically.** Mid-session,
-  a `Write` call using a path typed earlier in the conversation landed a file in the OLD worktree
-  (`busy-mendeleev-5e834c`) after the session had already `EnterWorktree`'d into a NEW one
-  (`vestibular-form`). Caught via `git status --short` showing the file untracked in the wrong
-  location; fixed by copying to the correct worktree and deleting the stray. Rule: after any
-  `EnterWorktree` switch, re-verify the target path of the next `Write`/`Edit` call rather than
-  reusing a path string composed before the switch.
-- **`git branch -d` can refuse a branch it just confirmed via `--merged main`.** When a local
-  branch has a remote tracking ref, `-d` also checks merge status against `@{upstream}`, not just
-  the comparison ref you passed to `--merged`. If `--merged main` already confirmed the branch is
-  an ancestor of main, the refusal is upstream-sync pedantry, not a real safety signal — `-D` is
-  fine there. Don't treat the refusal itself as proof the branch is unmerged.
-- **WORKFLOW.md still at 248/250 lines** — the two 2026-07-12 rules (stale-mount guard, smoke
-  split) remain un-migrated, blocked on the file-split that was flagged last session. Not touched
-  this session either (docs-only, no WORKFLOW-worthy pattern emerged). Still pending.
+- **A rule banked only in session memory is not a rule.** The CC/Miruya smoke split was agreed
+  2026-07-12 but never landed in a bible — blocked on the WORKFLOW.md 250-line cap, left in
+  memory instead. It regressed this session: the CC prompt contained a browser click-test, CC
+  spent ~14 min driving Claude Browser through the NCD form, and Miruya sat watching a robot do
+  his half of the job. Fixed properly this session — migrated to RULES.md (both halves: Miruya's
+  job gains the browser pass, Claude's "Don't do" gains the ban on writing browser steps into CC
+  prompts).
+- **Second leak: spec docs written before the split rule carry browser-verify instructions in
+  their own "verify" sections.** Building a CC prompt from a spec inherits the violation. Check
+  verify blocks against the split before handing any spec-derived prompt to CC. Fixed this
+  session in `docs/superpowers/plans/2026-07-14-vestibular.md` Task 8 Step 2 and Task 13 Step 1 —
+  both now attribute the browser click-test to Miruya, matching every other browser step in that
+  plan.
+- **DESIGN_SYSTEM.md is at 280 lines — already 30 over its 250 cap.** Newly discovered, not
+  previously flagged. Needs a split. WORKFLOW.md still 248/250 and still blocked on the same
+  problem. Two files now stuck behind one unresolved split.
+- **BACKLOG.md at 227/250 — approaching the cap.**
 
 ---
 

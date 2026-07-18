@@ -163,6 +163,9 @@
   its own file, then add both banked rules. Lower priority than the VESTIBULAR build and NCD
   template swap — pick up after those two ship.
 
+- **DESIGN_SYSTEM.md is 280 lines, over the 250 cap — needs split. WORKFLOW.md 248/250, same
+  blocker. Two docs now waiting on one file-split job.**
+
 ---
 
 ## Nice-to-haves

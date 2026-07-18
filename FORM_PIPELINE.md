@@ -35,7 +35,7 @@ form → polish → templates → PDF → polish → MPIS → polish
 
 - **form** — HTML + `form_xxx.js`, following the implementation checklist below.
 - **polish** — UI feel, layout, derived badges, chip states. Miruya smoke-tests.
-- **templates** — Best Statement templates from the KKM Best Statement doc → `clinical_templates.js` (assessment arrays + SOAP variant).
+- **templates** — Best Statement templates from the KKM Best Statement doc → `clinical_templates.js` (assessment arrays + SOAP variant). Cap each Best Statement / SOAP template category at ≤10 statements (fewer is fine; the field stays free-text, the clinician can type). Applies to all forms.
 - **PDF** — work from the KKM borang's REAL shape; target ~90% look-and-feel. See DESIGN_SYSTEM-pdf.md.
 - **MPIS** — builder/wrapper/finalizer (SOAPIER structure). See WORKFLOW.md → MPIS Pattern.
 
