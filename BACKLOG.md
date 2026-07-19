@@ -181,6 +181,8 @@
 - MMT label spacing in MPIS: rows with `+` suffix on L value (e.g. `L: 2+`) render with inconsistent spacing before R label. Cosmetic.
 - STRENGTH block empty-row policy: currently renders `— / — kg` for empty rows instead of skipping. Pick canonical skip-vs-em-dash behavior when MS-as-canon SOAPIER refactor happens.
 - BURN depth palette is the recycled pain palette, not severity-ordered — colour doesn't encode depth severity (full-thickness currently reads calmer than deep-partial). Good-to-have: ramp the four depths cool/light→hot/dark by severity (e.g. yellow→orange→red→dark-brown for full thickness; dark-brown also resembles eschar). Donor site + Grafted are surgical-status, NOT burn depths — keep them off the depth ramp as distinct hues. Both-sides change: browser configure() + PDF MARKER_COLORS must move in lockstep. Low priority.
+- **VESTIBULAR KIV toggle renders as plain red text, doesn't read as a toggle/button (deferred — future UI/UX polish pass).** The `.vb-kiv-toggle` button (`templates/forms/vestibular.html`) is currently unstyled beyond `color: var(--danger)` — no border, background, or affordance distinguishing it as an interactive control. Restyle in the UI/UX pass.
+- **VESTIBULAR Oculomotor "Head Thrusts" row — awkward chip arrangement (deferred — future UI/UX polish pass).** The +Ve / −Ve / R / L / BIL chips all sit on one line (`templates/forms/vestibular.html`, `#battery-oculomotor` "Head Thrusts" row), which reads visually cramped/confusing compared to the rest of the battery. Revisit layout in the UI/UX pass.
 
 ---
 
