@@ -374,6 +374,8 @@ var VestibularForm = (function () {
     document.querySelectorAll('.irr-chip.active').forEach(function (c) {
       c.classList.remove('active');
     });
+    set3('vb-headthrust-side', '');
+    set3('vb-gait-deviation-side', '');
     document.querySelectorAll('#vb-diseq-worsein .chip.active').forEach(function (c) { c.classList.remove('active'); });
 
     resetBattery('battery-pmhx');
