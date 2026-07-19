@@ -472,7 +472,7 @@
       {% if episodes %}
       <div class="episodes-list">
         {% for ep in episodes %}
-        {% set form_labels = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric','CR':'Cardiorespiratory','AMPUTATION':'Amputation','NEURO':'Neurological','HAND':'Hand','BURN':'Burn','SCI':'Spinal Cord Injury','FACIAL':'Facial','NCD':'NCD / Obesity'} %}
+        {% set form_labels = {'MS':'Musculoskeletal','SPINE':'Spine','GERIATRIC':'Geriatric','CR':'Cardiorespiratory','AMPUTATION':'Amputation','NEURO':'Neurological','HAND':'Hand','BURN':'Burn','SCI':'Spinal Cord Injury','FACIAL':'Facial','VESTIBULAR':'Vestibular','NCD':'NCD / Obesity'} %}
         {% set form_icons  = {'MS':'&#129460;','SPINE':'&#128279;','GERIATRIC':'&#9878;','CR':'&#129728;','AMPUTATION':'&#129452;','NEURO':'&#9889;','SCI':'&#9855;','FACIAL':'&#128580;','NCD':'&#129483;'} %}
         {% set label = form_labels.get(ep.form_type, ep.form_type) %}
         {% set icon  = form_icons.get(ep.form_type, '&#128203;') %}
@@ -556,8 +556,7 @@
         <div class="form-card-name">Spinal Cord Injury</div>
         <div class="form-card-sub">SCI, paraplegia, tetraplegia</div>
       </div>
-      <div class="form-card soon" data-form="VESTIBULAR">
-        <div class="form-card-badge">Soon</div>
+      <div class="form-card" data-form="VESTIBULAR" onclick="selectEpForm(this)">
         <div class="form-card-icon">&#128260;</div>
         <div class="form-card-name">Vestibular</div>
         <div class="form-card-sub">Vertigo, balance disorders</div>

@@ -1,0 +1,791 @@
+{% extends "base.html" %}
+
+{% block form_name %}Vestibular Assessment{% endblock %}
+
+{% block sidebar_nav %}
+<div class="nav-item" onclick="Main.go('s-patient')"><span class="nav-icon">&#128100;</span> Patient Info</div>
+<div class="nav-item" onclick="Main.go('s-referral')"><span class="nav-icon">&#128203;</span> Referral</div>
+<div class="nav-item" onclick="Main.go('s-history')"><span class="nav-icon">&#128214;</span> History</div>
+<div class="nav-item" onclick="Main.go('s-pmhx')"><span class="nav-icon">&#127973;</span> Past Medical Hx</div>
+<div class="nav-item" onclick="Main.go('s-social')"><span class="nav-icon">&#128101;</span> Social &amp; Function</div>
+<div class="nav-item" onclick="Main.go('s-falls')"><span class="nav-icon">&#9888;</span> Falls</div>
+<div class="nav-item" onclick="Main.go('s-vertigo')"><span class="nav-icon">&#128260;</span> Vertigo &amp; Disequilibrium</div>
+<div class="nav-item" onclick="Main.go('s-measures')"><span class="nav-icon">&#128202;</span> Measures</div>
+<div class="nav-item" onclick="Main.go('s-oculomotor')"><span class="nav-icon">&#128065;</span> Oculomotor</div>
+<div class="nav-item" onclick="Main.go('s-positional')"><span class="nav-icon">&#128260;</span> Positioning Tests</div>
+<div class="nav-item" onclick="Main.go('s-rom')"><span class="nav-icon">&#128260;</span> AROM/PROM &amp; Strength</div>
+<div class="nav-item" onclick="Main.go('s-neuro')"><span class="nav-icon">&#9889;</span> Somatosensory &amp; Coordination</div>
+<div class="nav-item" onclick="Main.go('s-balance')"><span class="nav-icon">&#9878;</span> Postural Control</div>
+<div class="nav-item" onclick="Main.go('s-gait')"><span class="nav-icon">&#128694;</span> Gait</div>
+<div class="nav-item" onclick="Main.go('s-impression')"><span class="nav-icon">&#127919;</span> PT Impression</div>
+<div class="nav-item" onclick="Main.go('s-goals')"><span class="nav-icon">&#127775;</span> Goals &amp; Plan</div>
+{% endblock %}
+
+{% block content %}
+
+<style>
+/* VESTIBULAR form-local CSS — battery chips, scaffold, KIV note. Do NOT move to style.css. */
+
+/* Battery chip pairs — reuse .irr-chip base, add form-local .sel-* states.
+   Clinical convention: No/−Ve (baseline, reassuring) = success green;
+   Yes/+Ve (positive finding, needs attention) = danger red. */
+.vb-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.vb-row:last-child { border-bottom: none; }
+.vb-label { font-size: 13px; color: var(--text); flex: 1; }
+.vb-chips { display: flex; gap: 6px; flex-shrink: 0; }
+.vb-chip.sel-No, .vb-chip.sel-Neg  { background: var(--success-light); border-color: var(--success); color: var(--success); font-weight: 500; }
+.vb-chip.sel-Yes, .vb-chip.sel-Pos { background: var(--danger-light);  border-color: var(--danger);  color: var(--danger);  font-weight: 500; }
+
+/* Generic single-select paint for every pick3()-driven chip group (marital, smoking, alcohol,
+   sleep, vertigo/disequilibrium fields, soma/coord status, side selectors, gait chips, ...).
+   style.css only paints .irr-chip via .sel-High/Medium/Low — .active alone does NOT paint
+   (the FACIAL invisible-selection trap, WORKFLOW Anti-Repeat). Scoped :not(.vb-chip) so this
+   does NOT fight the battery .sel-Yes/No/Pos/Neg colors above (same specificity + source
+   order would otherwise let this rule win and flatten every battery chip to accent blue). */
+.irr-chip.active:not(.vb-chip) { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+.vb-battery { margin-bottom: 4px; }
+.vb-battery-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.vb-battery-title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.vb-stamp { font-size: 11px; padding: 3px 10px; border-radius: 12px; border: 1px solid var(--accent-mid); background: var(--accent-light); color: var(--accent); cursor: pointer; font-family: inherit; }
+.vb-stamp:hover { background: var(--accent-mid); color: white; }
+
+/* KIV remark — reuses +Note collapsible pattern, form-local label text */
+.vb-kiv-toggle { font-size: 11px; color: var(--danger); background: none; border: none; cursor: pointer; padding: 3px 0; align-self: flex-start; }
+.vb-kiv-wrap.collapsed { display: none; }
+.vb-kiv-wrap input { margin-top: 4px; width: 100%; }
+/* Element-level KIV lock — form_vestibular.js applies this class + [disabled] directly to
+   each control (stamp button, chip buttons) when KIV is on. Not a section-level ancestor/
+   compound selector — that approach (two prior attempts) never actually disabled anything. */
+.vb-locked { opacity: 0.5; pointer-events: none; }
+
+/* Side selector (Head Thrusts R/L/BIL, Gait Deviation R/L) — reuse .irr-chip */
+.irr-chip.sel-R   { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.irr-chip.sel-L   { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+.irr-chip.sel-BIL { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+/* Scaffold chip (vestibular_scaffold.js renders into these containers) */
+.vsc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.vsc-label { font-size: 13px; color: var(--text); flex: 1; }
+.vsc-chips { display: flex; gap: 6px; }
+.vsc-chip.sel-pos { background: var(--danger-light); border-color: var(--danger); color: var(--danger); font-weight: 500; }
+.vsc-chip.sel-neg { background: var(--success-light); border-color: var(--success); color: var(--success); font-weight: 500; }
+.vsc-detail { padding: 8px 0 4px 0; border-top: 1px dashed var(--border); margin-top: 4px; }
+.vsc-detail.collapsed { display: none; }
+.vsc-directions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.vsc-dir.sel-dir { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }
+
+/* Fixed-row light tables (AROM/PROM, Postural Control, CTSIB) — no grid chrome (D9) */
+.vb-fixed-row { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.vb-fixed-row:last-child { border-bottom: none; }
+.vb-fixed-row-label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+.vb-fixed-row-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+.vb-fixed-row-fields .field { flex: 1; min-width: 90px; margin: 0; }
+.vb-fixed-row-fields label { font-size: 10px; }
+</style>
+
+<!-- 01 PATIENT INFO — copied verbatim from ms.html lines 22-135 (WORKFLOW Anti-Repeat: do NOT copy from neuro.html, it's missing #pt-age / #sex-field) -->
+<div class="card" id="s-patient">
+  <div class="card-header">
+    <span class="sec-num">01</span>
+    <h2>Patient Information</h2>
+  </div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Patient Type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="pt-type" value="local" onchange="FormBase.onPtTypeChange()"> Malaysian (NRIC)</label>
+          <label><input type="radio" name="pt-type" value="foreign" onchange="FormBase.onPtTypeChange()"> Foreign (Passport)</label>
+        </div>
+      </div>
+      <div class="fg c2">
+        <div class="field" style="grid-column:span 2">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" id="pt-name" placeholder="Patient full name">
+        </div>
+        <div class="field" id="nric-field">
+          <label>NRIC No. <span class="req">*</span></label>
+          <input type="text" id="pt-nric" placeholder="e.g. 661010071234" maxlength="12" oninput="FormBase.onNricInput(this.value)">
+          <div class="derived-info">
+            <span class="derived-badge hidden" id="derived-dob"></span>
+            <span class="derived-badge hidden" id="derived-gender"></span>
+          </div>
+        </div>
+        <div class="field" id="passport-field" style="display:none">
+          <label>Passport No. <span class="req">*</span></label>
+          <input type="text" id="pt-passport" placeholder="Passport number">
+        </div>
+        <div class="field" id="country-field" style="display:none">
+          <label>Country of Origin</label>
+          <select id="pt-country">
+            <option value="">— Select —</option>
+            <option value="No Information">No Information</option>
+            <option value="Stateless">Stateless</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Assessment Date <span class="req">*</span></label>
+          <input type="date" id="pt-date">
+        </div>
+        <div class="field">
+          <label>Date of Birth</label>
+          <input type="date" id="pt-dob" onchange="FormBase.onDobChange(this.value)">
+        </div>
+        <div class="field">
+          <label>Age</label>
+          <input type="number" id="pt-age" placeholder="Years" min="0" max="130">
+        </div>
+        <div class="field" id="sex-field" style="display:none">
+          <label>Sex <span class="req">*</span></label>
+          <div class="radio-group">
+            <label><input type="radio" name="pt-sex" value="M"> Male</label>
+            <label><input type="radio" name="pt-sex" value="F"> Female</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 REFERRAL -->
+<div class="card" id="s-referral">
+  <div class="card-header"><span class="sec-num">02</span><h2>Referral</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Doctor Diagnosis <span class="req">*</span></label>
+        <textarea id="vb-dx" rows="2" placeholder="Refer to diagnosis in medical referral"></textarea>
+      </div>
+      <div class="field">
+        <label>Doctor Management</label>
+        <textarea id="vb-mgmt" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 HISTORY -->
+<div class="card" id="s-history">
+  <div class="card-header"><span class="sec-num">03</span><h2>History</h2></div>
+  <div class="card-body">
+    <div class="fg">
+      <div class="field">
+        <label>Current Hx <button type="button" class="ct-trigger-anchor"></button></label>
+        <textarea id="vb-hx-current" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label>Past Hx</label>
+        <textarea id="vb-hx-past" rows="2"></textarea>
+      </div>
+      <div class="field">
+        <label>Problem</label>
+        <textarea id="vb-problem" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 PAST MEDICAL HX -->
+<div class="card" id="s-pmhx">
+  <div class="card-header"><span class="sec-num">04</span><h2>Past Medical History</h2></div>
+  <div class="card-body">
+
+    <div class="vb-battery" id="battery-pmhx">
+      <div class="vb-battery-head">
+        <span class="vb-battery-title">Past Medical Hx</span>
+        <button type="button" class="vb-stamp" onclick="VestibularForm.stampBattery('battery-pmhx','No')">Stamp remaining &rarr; No</button>
+      </div>
+      <button type="button" class="vb-kiv-toggle" onclick="VestibularForm.toggleKiv('battery-pmhx')">KIV &mdash; unable to answer this visit</button>
+      <div class="vb-kiv-wrap collapsed" id="battery-pmhx-kiv-wrap">
+        <input type="text" id="battery-pmhx-kiv" placeholder="Reason (optional)" oninput="VestibularForm.onKivInput('battery-pmhx')">
+      </div>
+      <div id="battery-pmhx-rows">
+        <div class="vb-row" data-item="Heart Disease"><span class="vb-label">Heart Disease</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Hypertension"><span class="vb-label">Hypertension</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Diabetes"><span class="vb-label">Diabetes</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Migraine Headaches"><span class="vb-label">Migraine Headaches</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Head Trauma"><span class="vb-label">Head Trauma</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Stroke / TIA"><span class="vb-label">Stroke / TIA</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="vb-battery" id="battery-recent-symptoms" style="margin-top:16px">
+      <div class="vb-battery-head">
+        <span class="vb-battery-title">Recent Symptoms or Problems</span>
+        <button type="button" class="vb-stamp" onclick="VestibularForm.stampBattery('battery-recent-symptoms','No')">Stamp remaining &rarr; No</button>
+      </div>
+      <button type="button" class="vb-kiv-toggle" onclick="VestibularForm.toggleKiv('battery-recent-symptoms')">KIV &mdash; unable to answer this visit</button>
+      <div class="vb-kiv-wrap collapsed" id="battery-recent-symptoms-kiv-wrap">
+        <input type="text" id="battery-recent-symptoms-kiv" placeholder="Reason (optional)" oninput="VestibularForm.onKivInput('battery-recent-symptoms')">
+      </div>
+      <div id="battery-recent-symptoms-rows">
+        <div class="vb-row" data-item="Neck Pain"><span class="vb-label">Neck Pain</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Blackouts / Fainting"><span class="vb-label">Blackouts / Fainting</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Weakness or Paralysis"><span class="vb-label">Weakness or Paralysis</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Hearing Loss"><span class="vb-label">Hearing Loss</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Blurred Vision"><span class="vb-label">Blurred Vision</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Ear Infection or drainage"><span class="vb-label">Ear Infection or drainage</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Tinnitus"><span class="vb-label">Tinnitus</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="fg c2" style="margin-top:16px">
+      <div class="field">
+        <label>Ix : MRI / CT Scan</label>
+        <textarea id="vb-ix" rows="2" placeholder="Date, type, results; note hearing tests"></textarea>
+      </div>
+      <div class="field">
+        <label>Medication / Steroid</label>
+        <textarea id="vb-medication" rows="2" placeholder="Name, dosage, frequency, date started"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 05 SOCIAL & FUNCTION -->
+<div class="card" id="s-social">
+  <div class="card-header"><span class="sec-num">05</span><h2>Social History &amp; Current Functional Status</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Occupation / Job</label>
+        <input type="text" id="vb-occupation">
+      </div>
+      <div class="field">
+        <label>Marital Status</label>
+        <div class="irr-chips" id="vb-marital">
+          <button type="button" class="irr-chip" data-val="Single" onclick="VestibularForm.pick3('vb-marital', this)">Single</button>
+          <button type="button" class="irr-chip" data-val="Married" onclick="VestibularForm.pick3('vb-marital', this)">Married</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Smoking</label>
+        <div class="irr-chips" id="vb-smoking">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-smoking', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-smoking', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Alcohol</label>
+        <div class="irr-chips" id="vb-alcohol">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-alcohol', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-alcohol', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Trouble Sleeping</label>
+        <div class="irr-chips" id="vb-sleep">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-sleep', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-sleep', this)">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vb-battery" id="battery-functional" style="margin-top:16px">
+      <div class="vb-battery-head">
+        <span class="vb-battery-title">Current Functional Status</span>
+        <button type="button" class="vb-stamp" onclick="VestibularForm.stampBattery('battery-functional','No')">Stamp remaining &rarr; No</button>
+      </div>
+      <button type="button" class="vb-kiv-toggle" onclick="VestibularForm.toggleKiv('battery-functional')">KIV &mdash; unable to answer this visit</button>
+      <div class="vb-kiv-wrap collapsed" id="battery-functional-kiv-wrap">
+        <input type="text" id="battery-functional-kiv" placeholder="Reason (optional)" oninput="VestibularForm.onKivInput('battery-functional')">
+      </div>
+      <div id="battery-functional-rows">
+        <div class="vb-row" data-item="Independent in self-care activities"><span class="vb-label">Independent in self-care activities</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Drive: Daytime"><span class="vb-label">Drive: Daytime</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Drive: Night time"><span class="vb-label">Drive: Night time</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Reading"><span class="vb-label">Reading</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Crowded Area"><span class="vb-label">Crowded Area</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Escalator / Stairs"><span class="vb-label">Escalator / Stairs</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+        <div class="vb-row" data-item="Watch TV / Movie"><span class="vb-label">Watch TV / Movie</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="Yes" onclick="VestibularForm.pickBattery(this)">Yes</button>
+          <button type="button" class="irr-chip vb-chip" data-val="No" onclick="VestibularForm.pickBattery(this)">No</button>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 06 FALLS -->
+<div class="card" id="s-falls">
+  <div class="card-header"><span class="sec-num">06</span><h2>Falls</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Frequency of Falls</label>
+        <input type="text" id="vb-falls-freq" placeholder="e.g. 2x in past month">
+      </div>
+      <div class="field">
+        <label>Injury from Fall</label>
+        <input type="text" id="vb-falls-injury" placeholder="Date, number, area of injury">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 07 VERTIGO & DISEQUILIBRIUM -->
+<div class="card" id="s-vertigo">
+  <div class="card-header"><span class="sec-num">07</span><h2>Vertigo &amp; Disequilibrium</h2></div>
+  <div class="card-body">
+    <div class="vb-battery-title" style="margin-bottom:8px">Vertigo (a sense of spinning)</div>
+    <div class="fg">
+      <div class="field">
+        <label>Spontaneous</label>
+        <div class="irr-chips" id="vb-vert-spont">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-vert-spont', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-vert-spont', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Induced by motion</label>
+        <div class="irr-chips" id="vb-vert-motion">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-vert-motion', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-vert-motion', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Induced by position changes</label>
+        <div class="irr-chips" id="vb-vert-position">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-vert-position', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-vert-position', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tempo</label>
+        <div class="irr-chips" id="vb-vert-tempo">
+          <button type="button" class="irr-chip" data-val="&lt; 3 days" onclick="VestibularForm.pick3('vb-vert-tempo', this)">&lt; 3 days</button>
+          <button type="button" class="irr-chip" data-val="&gt; 3 days" onclick="VestibularForm.pick3('vb-vert-tempo', this)">&gt; 3 days</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Spells</label>
+        <div class="irr-chips" id="vb-vert-spells">
+          <button type="button" class="irr-chip" data-val="seconds" onclick="VestibularForm.pick3('vb-vert-spells', this)">Seconds</button>
+          <button type="button" class="irr-chip" data-val="minute" onclick="VestibularForm.pick3('vb-vert-spells', this)">Minute</button>
+          <button type="button" class="irr-chip" data-val="hours" onclick="VestibularForm.pick3('vb-vert-spells', this)">Hours</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="vb-battery-title" style="margin:16px 0 8px">Disequilibrium (sense of being off-balance)</div>
+    <div class="fg">
+      <div class="field">
+        <label>Constant</label>
+        <div class="irr-chips" id="vb-diseq-constant">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-diseq-constant', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-diseq-constant', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Spontaneous</label>
+        <div class="irr-chips" id="vb-diseq-spont">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-diseq-spont', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-diseq-spont', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Induced by motion</label>
+        <div class="irr-chips" id="vb-diseq-motion">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-diseq-motion', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-diseq-motion', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Induced by position changes</label>
+        <div class="irr-chips" id="vb-diseq-position">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-diseq-position', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-diseq-position', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Worse in the dark</label>
+        <div class="irr-chips" id="vb-diseq-dark">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-diseq-dark', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-diseq-dark', this)">No</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Worse in</label>
+        <div class="chip-group" id="vb-diseq-worsein">
+          <button type="button" class="chip" onclick="VestibularForm.toggleChip(this)">Lying</button>
+          <button type="button" class="chip" onclick="VestibularForm.toggleChip(this)">Standing</button>
+          <button type="button" class="chip" onclick="VestibularForm.toggleChip(this)">Sitting</button>
+          <button type="button" class="chip" onclick="VestibularForm.toggleChip(this)">Walking</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 08 MEASURES -->
+<div class="card" id="s-measures">
+  <div class="card-header"><span class="sec-num">08</span><h2>Measures</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field">
+        <label>Dizziness Handicap Inventory (DHI)</label>
+        <input type="number" id="vb-dhi" min="0" max="100">
+      </div>
+      <div class="field">
+        <label>Activities Specific Balance Confidence Scale (ABC)</label>
+        <input type="number" id="vb-abc" min="0" max="100">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 09 OCULOMOTOR -->
+<div class="card" id="s-oculomotor">
+  <div class="card-header"><span class="sec-num">09</span><h2>Objective Examination / Oculomotor Examination</h2></div>
+  <div class="card-body">
+    <div class="vb-battery" id="battery-oculomotor">
+      <div class="vb-battery-head">
+        <span class="vb-battery-title">Oculomotor Examination</span>
+        <button type="button" class="vb-stamp" onclick="VestibularForm.stampBattery('battery-oculomotor','&minus;Ve')">Stamp remaining &rarr; &minus;Ve</button>
+      </div>
+      <button type="button" class="vb-kiv-toggle" onclick="VestibularForm.toggleKiv('battery-oculomotor')">KIV &mdash; unable to answer this visit</button>
+      <div class="vb-kiv-wrap collapsed" id="battery-oculomotor-kiv-wrap">
+        <input type="text" id="battery-oculomotor-kiv" placeholder="Reason (optional)" oninput="VestibularForm.onKivInput('battery-oculomotor')">
+      </div>
+      <div id="battery-oculomotor-rows">
+        <div class="vb-row" data-item="Spontaneous Nystagmus"><span class="vb-label">Spontaneous Nystagmus</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+          <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+        </div></div>
+        <div class="vb-row" data-item="Smooth pursuit"><span class="vb-label">Smooth pursuit</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+          <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+        </div></div>
+        <div class="vb-row" data-item="Saccades"><span class="vb-label">Saccades</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+          <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+        </div></div>
+        <div class="vb-row" data-item="Gaze Holding Nystagmus"><span class="vb-label">Gaze Holding Nystagmus</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+          <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+        </div></div>
+        <div class="vb-row" data-item="VOR Cancellation"><span class="vb-label">VOR Cancellation</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+          <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+        </div></div>
+        <div class="vb-row" data-item="Head Thrusts">
+          <span class="vb-label">Head Thrusts</span>
+          <div class="vb-chips">
+            <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+            <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+            <span class="irr-chips" id="vb-headthrust-side" style="margin-left:8px">
+              <button type="button" class="irr-chip" data-val="R" onclick="VestibularForm.pick3('vb-headthrust-side', this)">R</button>
+              <button type="button" class="irr-chip" data-val="L" onclick="VestibularForm.pick3('vb-headthrust-side', this)">L</button>
+              <button type="button" class="irr-chip" data-val="BIL" onclick="VestibularForm.pick3('vb-headthrust-side', this)">BIL</button>
+            </span>
+          </div>
+        </div>
+        <div class="vb-row" data-item="Dynamic Visual Acuity"><span class="vb-label">Dynamic Visual Acuity</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+          <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+        </div></div>
+        <div class="vb-row" data-item="Head Shaking"><span class="vb-label">Head Shaking</span><div class="vb-chips">
+          <button type="button" class="irr-chip vb-chip" data-val="+Ve" onclick="VestibularForm.pickBattery(this)">+Ve</button>
+          <button type="button" class="irr-chip vb-chip" data-val="&minus;Ve" onclick="VestibularForm.pickBattery(this)">&minus;Ve</button>
+        </div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10 POSITIONING TESTS — scaffold chip, JS-rendered by vestibular_scaffold.js -->
+<div class="card" id="s-positional">
+  <div class="card-header"><span class="sec-num">10</span><h2>Positioning Tests</h2></div>
+  <div class="card-body">
+    <div id="scaffold-r-dixhallpike"></div>
+    <div id="scaffold-l-dixhallpike"></div>
+    <div id="scaffold-r-roll"></div>
+    <div id="scaffold-l-roll"></div>
+  </div>
+</div>
+
+<!-- 11 AROM/PROM & STRENGTH -->
+<div class="card" id="s-rom">
+  <div class="card-header"><span class="sec-num">11</span><h2>AROM / PROM &amp; Strength</h2></div>
+  <div class="card-body">
+    <div class="vb-battery-title" style="margin-bottom:8px">AROM / PROM</div>
+    <div class="vb-fixed-row">
+      <span class="vb-fixed-row-label">Neck</span>
+      <div class="vb-fixed-row-fields">
+        <div class="field"><label>Range</label><input type="text" id="vb-rom-neck-range"></div>
+        <div class="field"><label>Quality / Symptom</label><input type="text" id="vb-rom-neck-quality"></div>
+        <div class="field"><label>Pain (0&ndash;10)</label><input type="number" id="vb-rom-neck-pain" min="0" max="10"></div>
+      </div>
+    </div>
+    <div class="vb-fixed-row">
+      <span class="vb-fixed-row-label">R UL</span>
+      <div class="vb-fixed-row-fields">
+        <div class="field"><label>Range</label><input type="text" id="vb-rom-rul-range"></div>
+        <div class="field"><label>Quality / Symptom</label><input type="text" id="vb-rom-rul-quality"></div>
+        <div class="field"><label>Pain (0&ndash;10)</label><input type="number" id="vb-rom-rul-pain" min="0" max="10"></div>
+      </div>
+    </div>
+    <div class="vb-fixed-row">
+      <span class="vb-fixed-row-label">L UL</span>
+      <div class="vb-fixed-row-fields">
+        <div class="field"><label>Range</label><input type="text" id="vb-rom-lul-range"></div>
+        <div class="field"><label>Quality / Symptom</label><input type="text" id="vb-rom-lul-quality"></div>
+        <div class="field"><label>Pain (0&ndash;10)</label><input type="number" id="vb-rom-lul-pain" min="0" max="10"></div>
+      </div>
+    </div>
+    <div class="vb-fixed-row">
+      <span class="vb-fixed-row-label">R LL</span>
+      <div class="vb-fixed-row-fields">
+        <div class="field"><label>Range</label><input type="text" id="vb-rom-rll-range"></div>
+        <div class="field"><label>Quality / Symptom</label><input type="text" id="vb-rom-rll-quality"></div>
+        <div class="field"><label>Pain (0&ndash;10)</label><input type="number" id="vb-rom-rll-pain" min="0" max="10"></div>
+      </div>
+    </div>
+    <div class="vb-fixed-row">
+      <span class="vb-fixed-row-label">L LL</span>
+      <div class="vb-fixed-row-fields">
+        <div class="field"><label>Range</label><input type="text" id="vb-rom-lll-range"></div>
+        <div class="field"><label>Quality / Symptom</label><input type="text" id="vb-rom-lll-quality"></div>
+        <div class="field"><label>Pain (0&ndash;10)</label><input type="number" id="vb-rom-lll-pain" min="0" max="10"></div>
+      </div>
+    </div>
+
+    <div class="vb-battery-title" style="margin:16px 0 8px">Strength (MMT grade)</div>
+    <div class="fg c2">
+      <div class="field"><label>UL &mdash; R</label><input type="text" id="vb-str-ul-r"></div>
+      <div class="field"><label>UL &mdash; L</label><input type="text" id="vb-str-ul-l"></div>
+      <div class="field"><label>LL &mdash; R</label><input type="text" id="vb-str-ll-r"></div>
+      <div class="field"><label>LL &mdash; L</label><input type="text" id="vb-str-ll-l"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 12 SOMATOSENSORY & COORDINATION -->
+<div class="card" id="s-neuro">
+  <div class="card-header"><span class="sec-num">12</span><h2>Somatosensory &amp; Coordination</h2></div>
+  <div class="card-body">
+    <div class="vb-battery-title" style="margin-bottom:8px">Somatosensory (Proprioception)</div>
+    <div class="fg c2">
+      <div class="field">
+        <label>Proprioception UL &mdash; R</label>
+        <div class="irr-chips" id="vb-prop-ul-r"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-prop-ul-r', this)">Intact</button><button type="button" class="irr-chip" data-val="Impaired" onclick="VestibularForm.pick3('vb-prop-ul-r', this)">Impaired</button></div>
+        <input type="text" id="vb-prop-ul-r-note" placeholder="Impaired joint (if applicable)" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Proprioception UL &mdash; L</label>
+        <div class="irr-chips" id="vb-prop-ul-l"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-prop-ul-l', this)">Intact</button><button type="button" class="irr-chip" data-val="Impaired" onclick="VestibularForm.pick3('vb-prop-ul-l', this)">Impaired</button></div>
+        <input type="text" id="vb-prop-ul-l-note" placeholder="Impaired joint (if applicable)" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Proprioception LL &mdash; R</label>
+        <div class="irr-chips" id="vb-prop-ll-r"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-prop-ll-r', this)">Intact</button><button type="button" class="irr-chip" data-val="Impaired" onclick="VestibularForm.pick3('vb-prop-ll-r', this)">Impaired</button></div>
+        <input type="text" id="vb-prop-ll-r-note" placeholder="Impaired joint (if applicable)" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Proprioception LL &mdash; L</label>
+        <div class="irr-chips" id="vb-prop-ll-l"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-prop-ll-l', this)">Intact</button><button type="button" class="irr-chip" data-val="Impaired" onclick="VestibularForm.pick3('vb-prop-ll-l', this)">Impaired</button></div>
+        <input type="text" id="vb-prop-ll-l-note" placeholder="Impaired joint (if applicable)" style="margin-top:6px">
+      </div>
+    </div>
+
+    <div class="vb-battery-title" style="margin:16px 0 8px">Coordination</div>
+    <div class="fg c2">
+      <div class="field">
+        <label>Finger to Nose &mdash; R</label>
+        <div class="irr-chips" id="vb-coord-ftn-r"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-coord-ftn-r', this)">Intact</button><button type="button" class="irr-chip" data-val="Dysmetria" onclick="VestibularForm.pick3('vb-coord-ftn-r', this)">Dysmetria</button><button type="button" class="irr-chip" data-val="Ataxia" onclick="VestibularForm.pick3('vb-coord-ftn-r', this)">Ataxia</button><button type="button" class="irr-chip" data-val="Tremor" onclick="VestibularForm.pick3('vb-coord-ftn-r', this)">Tremor</button></div>
+        <input type="text" id="vb-coord-ftn-r-note" placeholder="Note" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Finger to Nose &mdash; L</label>
+        <div class="irr-chips" id="vb-coord-ftn-l"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-coord-ftn-l', this)">Intact</button><button type="button" class="irr-chip" data-val="Dysmetria" onclick="VestibularForm.pick3('vb-coord-ftn-l', this)">Dysmetria</button><button type="button" class="irr-chip" data-val="Ataxia" onclick="VestibularForm.pick3('vb-coord-ftn-l', this)">Ataxia</button><button type="button" class="irr-chip" data-val="Tremor" onclick="VestibularForm.pick3('vb-coord-ftn-l', this)">Tremor</button></div>
+        <input type="text" id="vb-coord-ftn-l-note" placeholder="Note" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Heel to Shin &mdash; R</label>
+        <div class="irr-chips" id="vb-coord-hts-r"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-coord-hts-r', this)">Intact</button><button type="button" class="irr-chip" data-val="Dysmetria" onclick="VestibularForm.pick3('vb-coord-hts-r', this)">Dysmetria</button><button type="button" class="irr-chip" data-val="Ataxia" onclick="VestibularForm.pick3('vb-coord-hts-r', this)">Ataxia</button><button type="button" class="irr-chip" data-val="Tremor" onclick="VestibularForm.pick3('vb-coord-hts-r', this)">Tremor</button></div>
+        <input type="text" id="vb-coord-hts-r-note" placeholder="Note" style="margin-top:6px">
+      </div>
+      <div class="field">
+        <label>Heel to Shin &mdash; L</label>
+        <div class="irr-chips" id="vb-coord-hts-l"><button type="button" class="irr-chip" data-val="Intact" onclick="VestibularForm.pick3('vb-coord-hts-l', this)">Intact</button><button type="button" class="irr-chip" data-val="Dysmetria" onclick="VestibularForm.pick3('vb-coord-hts-l', this)">Dysmetria</button><button type="button" class="irr-chip" data-val="Ataxia" onclick="VestibularForm.pick3('vb-coord-hts-l', this)">Ataxia</button><button type="button" class="irr-chip" data-val="Tremor" onclick="VestibularForm.pick3('vb-coord-hts-l', this)">Tremor</button></div>
+        <input type="text" id="vb-coord-hts-l-note" placeholder="Note" style="margin-top:6px">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 13 POSTURAL CONTROL / CTSIB -->
+<div class="card" id="s-balance">
+  <div class="card-header"><span class="sec-num">13</span><h2>Postural Control</h2></div>
+  <div class="card-body">
+    <div class="vb-battery-title" style="margin-bottom:8px">Postural Control ( : +ve / &minus;ve / sec )</div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">Rhomberg</span><div class="vb-fixed-row-fields">
+      <div class="field"><label>EO</label><input type="text" id="vb-post-rhomberg-eo"></div>
+      <div class="field"><label>EC</label><input type="text" id="vb-post-rhomberg-ec"></div>
+    </div></div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">R Sharpened Rhomberg</span><div class="vb-fixed-row-fields">
+      <div class="field"><label>EO</label><input type="text" id="vb-post-rsharp-eo"></div>
+      <div class="field"><label>EC</label><input type="text" id="vb-post-rsharp-ec"></div>
+    </div></div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">L Sharpened Rhomberg</span><div class="vb-fixed-row-fields">
+      <div class="field"><label>EO</label><input type="text" id="vb-post-lsharp-eo"></div>
+      <div class="field"><label>EC</label><input type="text" id="vb-post-lsharp-ec"></div>
+    </div></div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">R Single Leg Stand</span><div class="vb-fixed-row-fields">
+      <div class="field"><label>EO</label><input type="text" id="vb-post-rsls-eo"></div>
+      <div class="field"><label>EC</label><input type="text" id="vb-post-rsls-ec"></div>
+    </div></div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">L Single Leg Stand</span><div class="vb-fixed-row-fields">
+      <div class="field"><label>EO</label><input type="text" id="vb-post-lsls-eo"></div>
+      <div class="field"><label>EC</label><input type="text" id="vb-post-lsls-ec"></div>
+    </div></div>
+    <div class="fg c2" style="margin-top:12px">
+      <div class="field"><label>Time Up &amp; Go Test (seconds)</label><input type="number" id="vb-tug" min="0" step="0.1"></div>
+    </div>
+
+    <div class="vb-battery-title" style="margin:16px 0 8px">Clinical Test of Sensory Interaction for Balance (CTSIB)</div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">EO Firm surface</span><div class="vb-fixed-row-fields"><div class="field"><label>Seconds</label><input type="number" id="vb-ctsib-eo-firm" min="0" step="0.1"></div></div></div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">EC Firm surface</span><div class="vb-fixed-row-fields"><div class="field"><label>Seconds</label><input type="number" id="vb-ctsib-ec-firm" min="0" step="0.1"></div></div></div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">EO Foam surface</span><div class="vb-fixed-row-fields"><div class="field"><label>Seconds</label><input type="number" id="vb-ctsib-eo-foam" min="0" step="0.1"></div></div></div>
+    <div class="vb-fixed-row"><span class="vb-fixed-row-label">EC Foam surface</span><div class="vb-fixed-row-fields"><div class="field"><label>Seconds</label><input type="number" id="vb-ctsib-ec-foam" min="0" step="0.1"></div></div></div>
+  </div>
+</div>
+
+<!-- 14 GAIT -->
+<div class="card" id="s-gait">
+  <div class="card-header"><span class="sec-num">14</span><h2>Gait Assessment</h2></div>
+  <div class="card-body">
+    <div class="fg c2">
+      <div class="field"><label>Velocity (Sec / 20 ft)</label><input type="number" id="vb-gait-velocity" min="0" step="0.1"></div>
+      <div class="field"><label>Dynamic Gait Index Score</label><input type="number" id="vb-gait-dgi" min="0" max="24"></div>
+      <div class="field">
+        <label>Deviation</label>
+        <div class="irr-chips" id="vb-gait-deviation">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-gait-deviation', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-gait-deviation', this)">No</button>
+        </div>
+        <div class="irr-chips" id="vb-gait-deviation-side" style="margin-top:6px">
+          <button type="button" class="irr-chip" data-val="R" onclick="VestibularForm.pick3('vb-gait-deviation-side', this)">R</button>
+          <button type="button" class="irr-chip" data-val="L" onclick="VestibularForm.pick3('vb-gait-deviation-side', this)">L</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Device</label>
+        <div class="irr-chips" id="vb-gait-device">
+          <button type="button" class="irr-chip" data-val="Yes" onclick="VestibularForm.pick3('vb-gait-device', this)">Yes</button>
+          <button type="button" class="irr-chip" data-val="No" onclick="VestibularForm.pick3('vb-gait-device', this)">No</button>
+        </div>
+      </div>
+    </div>
+    <div class="field" style="margin-top:12px">
+      <label>Clearance Test</label>
+      <textarea id="vb-clearance" rows="2" placeholder="VBI, cervical spine screening, cranial nerve exam"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 15 PT IMPRESSION -->
+<div class="card" id="s-impression">
+  <div class="card-header"><span class="sec-num">15</span><h2>Physiotherapy Impression</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>PT Impression</label>
+      <textarea id="pt-impression" rows="4" placeholder="ICF-based, in order of priority"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 16 GOALS & PLAN -->
+<div class="card" id="s-goals">
+  <div class="card-header"><span class="sec-num">16</span><h2>Goals &amp; Plan of Treatment</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label>Short Term Goals</label>
+      <textarea id="stg" rows="3"></textarea>
+    </div>
+    <div class="field">
+      <label>Long Term Goals</label>
+      <textarea id="ltg" rows="3"></textarea>
+    </div>
+    <div class="field">
+      <label>Plan of Treatment</label>
+      <textarea id="plan" rows="4"></textarea>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/vestibular_scaffold.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form_vestibular.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  VestibularForm.initScaffolds();
+
+  var FM = 'VESTIBULAR';
+  ClinicalTemplates.addButton('pt-impression', FM, 'impression');
+  ClinicalTemplates.addButton('stg',           FM, 'stg');
+  ClinicalTemplates.addButton('ltg',           FM, 'ltg');
+  ClinicalTemplates.addButton('plan',          FM, 'treatment');
+});
+</script>
+{% endblock %}

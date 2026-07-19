@@ -1241,6 +1241,232 @@ const Main = (function () {
     return parts;
   }
 
+  function _buildMpisVestibular() {
+    var d    = window.ActiveForm ? window.ActiveForm.collect() : {};
+    var p    = d.patient || {};
+    var dash = MPIS_DASH;
+    var parts = [];
+
+    parts.push('VESTIBULAR ASSESSMENT');
+    parts.push(MPIS_DIV);
+    parts.push('Name  : ' + (p.name||'') + '   Date : ' + (p.date||''));
+    if (p.type === 'local') {
+      parts.push('IC    : ' + (p.nric||'') + '   Age  : ' + (p.age||''));
+    } else {
+      parts.push('Passport : ' + (p.passport||'') + '   Country : ' + (p.country||'') + '   Age : ' + (p.age||''));
+      parts.push('Sex   : ' + (p.sex||''));
+    }
+    parts.push('');
+
+    // ── Battery roll-up helper: positives spelled out, rest = compact roll-up (D8) ──
+    function batteryLines(label, battery) {
+      var out = [];
+      if (!battery) return out; // blank = N/A, omitted (D3)
+      if (battery.kiv) {
+        out.push(label + ': KIV — unable to answer this visit. ' + battery.kiv);
+        return out;
+      }
+      var items = battery.items || {};
+      var keys = Object.keys(items);
+      if (!keys.length) return out;
+      var positives = keys.filter(function (k) { return items[k] === 'Yes' || items[k] === '+Ve'; });
+      var negCount  = keys.length - positives.length;
+      if (positives.length) out.push(label + ': ' + positives.join(', ') + '.');
+      if (negCount > 0) out.push('Other ' + label + ': ' + negCount + ' item(s) negative.');
+      if (!positives.length && !negCount) out.push(label + ': all negative.');
+      return out;
+    }
+
+    // ── SUBJECTIVE ──────────────────────────────────────────────────────
+    parts.push(dash);
+    parts.push('SUBJECTIVE');
+    parts.push('');
+    var referral = d.referral || {};
+    if (referral.dx)   parts.push('Doctor Diagnosis : ' + referral.dx);
+    if (referral.mgmt) parts.push('Doctor Management: ' + referral.mgmt);
+    var history = d.history || {};
+    if (history.current) parts.push('Current Hx: ' + history.current);
+    if (history.past)    parts.push('Past Hx   : ' + history.past);
+    if (history.problem) parts.push('Problem   : ' + history.problem);
+    parts.push('');
+
+    batteryLines('PMHx', d.pmhx).forEach(function (l) { parts.push(l); });
+    batteryLines('Recent Symptoms', d.recentSymptoms).forEach(function (l) { parts.push(l); });
+    if (d.ix)         parts.push('Ix: ' + d.ix);
+    if (d.medication) parts.push('Medication: ' + d.medication);
+
+    var social = d.social || {};
+    if (social.occupation || social.marital || social.smoking || social.alcohol || social.sleep) {
+      var socialBits = [];
+      if (social.occupation) socialBits.push('Occupation: ' + social.occupation);
+      if (social.marital)    socialBits.push('Marital: ' + social.marital);
+      if (social.smoking)    socialBits.push('Smoking: ' + social.smoking);
+      if (social.alcohol)    socialBits.push('Alcohol: ' + social.alcohol);
+      if (social.sleep)      socialBits.push('Sleep issues: ' + social.sleep);
+      parts.push(socialBits.join(' \xb7 '));
+    }
+    batteryLines('Functional Status', d.functionalStatus).forEach(function (l) { parts.push(l); });
+
+    var falls = d.falls || {};
+    if (falls.frequency || falls.injury) {
+      parts.push('Falls: ' + (falls.frequency||'') + (falls.injury ? ' — Injury: ' + falls.injury : ''));
+    }
+    parts.push('');
+
+    // ── OBJECTIVE ───────────────────────────────────────────────────────
+    var vertigo = d.vertigo || {};
+    var diseq   = d.disequilibrium || {};
+    var hasVestib = Object.keys(vertigo).some(function(k){return vertigo[k];}) ||
+                    Object.keys(diseq).some(function(k){return diseq[k] && (!Array.isArray(diseq[k]) || diseq[k].length);});
+    var measures = d.measures || {};
+    var pos = d.positional || {};
+    var hasPos = pos.rDixHallpike || pos.lDixHallpike || pos.rRoll || pos.lRoll;
+    var rom = d.rom || {};
+    var hasRom = Object.keys(rom).some(function(k){ var r=rom[k]||{}; return r.range||r.quality||r.pain; });
+    var strength = d.strength || {};
+    var hasStrength = strength.ulR||strength.ulL||strength.llR||strength.llL;
+    var soma = d.somatosensory || {}, coord = d.coordination || {};
+    var hasNeuro = Object.keys(soma).some(function(k){return (soma[k]||{}).status;}) ||
+                   Object.keys(coord).some(function(k){return (coord[k]||{}).status;});
+    var postural = d.postural || {}, ctsib = d.ctsib || {};
+    var hasBalance = Object.keys(postural).some(function(k){ var v=postural[k]; return v && typeof v==='object' && (v.eo||v.ec); }) ||
+                     postural.tug || Object.keys(ctsib).some(function(k){return ctsib[k];});
+    var gait = d.gait || {};
+    var hasGait = gait.velocity||gait.deviation||gait.device||gait.dgi||d.clearance;
+    var hasObj = hasVestib || measures.dhi || measures.abc || d.oculomotor || d.headThrustSide || hasPos ||
+                 hasRom || hasStrength || hasNeuro || hasBalance || hasGait;
+
+    if (hasObj) {
+      parts.push(dash);
+      parts.push('OBJECTIVE');
+      parts.push('');
+
+      if (hasVestib) {
+        var vLine = [];
+        if (vertigo.spontaneous) vLine.push('Spontaneous: ' + vertigo.spontaneous);
+        if (vertigo.motion)      vLine.push('Motion: ' + vertigo.motion);
+        if (vertigo.position)    vLine.push('Position: ' + vertigo.position);
+        if (vertigo.tempo)       vLine.push('Tempo: ' + vertigo.tempo);
+        if (vertigo.spells)      vLine.push('Spells: ' + vertigo.spells);
+        if (vLine.length) parts.push('Vertigo — ' + vLine.join(', '));
+        var dLine = [];
+        if (diseq.constant)    dLine.push('Constant: ' + diseq.constant);
+        if (diseq.spontaneous) dLine.push('Spontaneous: ' + diseq.spontaneous);
+        if (diseq.motion)      dLine.push('Motion: ' + diseq.motion);
+        if (diseq.position)    dLine.push('Position: ' + diseq.position);
+        if (diseq.dark)        dLine.push('Dark: ' + diseq.dark);
+        if (diseq.worseIn && diseq.worseIn.length) dLine.push('Worse in: ' + diseq.worseIn.join('/'));
+        if (dLine.length) parts.push('Disequilibrium — ' + dLine.join(', '));
+        parts.push('');
+      }
+
+      if (measures.dhi || measures.abc) {
+        parts.push('DHI: ' + (measures.dhi||'—') + '   ABC: ' + (measures.abc||'—') + '%');
+        parts.push('');
+      }
+
+      batteryLines('Oculomotor', d.oculomotor).forEach(function (l) { parts.push(l); });
+      if (d.headThrustSide) parts.push('Head Thrusts side: ' + d.headThrustSide);
+      if (d.oculomotor || d.headThrustSide) parts.push('');
+
+      if (hasPos) {
+        parts.push('POSITIONING TESTS');
+        [['R Dix Hallpike', pos.rDixHallpike], ['L Dix Hallpike', pos.lDixHallpike],
+         ['R Roll', pos.rRoll], ['L Roll', pos.lRoll]].forEach(function (pair) {
+          var label = pair[0], v = pair[1];
+          if (!v) return;
+          if (v.result === 'neg') { parts.push(label + ': −Ve'); return; }
+          var dirs = (v.direction||[]).join(', ');
+          parts.push(label + ': +Ve' + (dirs ? ' (' + dirs + ')' : '') +
+            (v.intensity ? ', intensity ' + v.intensity + '/10' : ''));
+        });
+        parts.push('');
+      }
+
+      if (hasRom) {
+        parts.push('AROM/PROM');
+        [['Neck','neck'],['R UL','rUl'],['L UL','lUl'],['R LL','rLl'],['L LL','lLl']].forEach(function (pair) {
+          var r = rom[pair[1]] || {};
+          if (r.range || r.quality || r.pain) {
+            parts.push(pair[0] + ': ' + (r.range||'') + (r.quality ? ' — ' + r.quality : '') + (r.pain ? ' (pain ' + r.pain + '/10)' : ''));
+          }
+        });
+        parts.push('');
+      }
+
+      if (hasStrength) {
+        parts.push('Strength (MMT) — UL: R ' + (strength.ulR||'—') + ' / L ' + (strength.ulL||'—') +
+          '   LL: R ' + (strength.llR||'—') + ' / L ' + (strength.llL||'—'));
+        parts.push('');
+      }
+
+      if (hasNeuro) {
+        var somaLine = [];
+        ['propUlR','propUlL','propLlR','propLlL'].forEach(function (k) {
+          var v = soma[k] || {};
+          if (v.status) somaLine.push(k + ': ' + v.status + (v.note ? ' (' + v.note + ')' : ''));
+        });
+        if (somaLine.length) parts.push('Somatosensory — ' + somaLine.join(', '));
+        var coordLine = [];
+        ['ftnR','ftnL','htsR','htsL'].forEach(function (k) {
+          var v = coord[k] || {};
+          if (v.status) coordLine.push(k + ': ' + v.status + (v.note ? ' (' + v.note + ')' : ''));
+        });
+        if (coordLine.length) parts.push('Coordination — ' + coordLine.join(', '));
+        parts.push('');
+      }
+
+      if (hasBalance) {
+        parts.push('Postural Control / CTSIB');
+        [['Rhomberg','rhomberg'], ['R Sharpened Rhomberg','rSharpened'], ['L Sharpened Rhomberg','lSharpened'],
+         ['R Single Leg Stand','rSls'], ['L Single Leg Stand','lSls']].forEach(function (pair) {
+          var v = postural[pair[1]] || {};
+          if (v.eo || v.ec) parts.push(pair[0] + ': EO ' + (v.eo||'—') + ' / EC ' + (v.ec||'—'));
+        });
+        if (postural.tug) parts.push('TUG: ' + postural.tug + 's');
+        var ctsibBits = [];
+        if (ctsib.eoFirm) ctsibBits.push('EO Firm ' + ctsib.eoFirm + 's');
+        if (ctsib.ecFirm) ctsibBits.push('EC Firm ' + ctsib.ecFirm + 's');
+        if (ctsib.eoFoam) ctsibBits.push('EO Foam ' + ctsib.eoFoam + 's');
+        if (ctsib.ecFoam) ctsibBits.push('EC Foam ' + ctsib.ecFoam + 's');
+        if (ctsibBits.length) parts.push('CTSIB: ' + ctsibBits.join(', '));
+        parts.push('');
+      }
+
+      if (hasGait) {
+        var gLine = [];
+        if (gait.velocity) gLine.push('Velocity: ' + gait.velocity + 's/20ft');
+        if (gait.deviation) gLine.push('Deviation: ' + gait.deviation + (gait.deviationSide ? ' (' + gait.deviationSide + ')' : ''));
+        if (gait.device) gLine.push('Device: ' + gait.device);
+        if (gait.dgi) gLine.push('DGI: ' + gait.dgi);
+        if (gLine.length) parts.push('Gait — ' + gLine.join(', '));
+        if (d.clearance) parts.push('Clearance Test: ' + d.clearance);
+        parts.push('');
+      }
+    }
+
+    // ── ANALYSIS ────────────────────────────────────────────────────────
+    if (d.impression) {
+      parts.push(dash);
+      parts.push('ANALYSIS');
+      parts.push('');
+      parts.push(d.impression);
+      parts.push('');
+    }
+
+    // ── PLAN ────────────────────────────────────────────────────────────
+    if (d.stg || d.ltg || d.plan) {
+      parts.push(dash);
+      parts.push('PLAN');
+      parts.push('');
+      if (d.stg)  parts.push('STG : ' + d.stg);
+      if (d.ltg)  parts.push('LTG : ' + d.ltg);
+      if (d.plan) parts.push('Plan: ' + d.plan);
+    }
+
+    return parts;
+  }
+
   // ── MPIS dispatcher — shows modal once, then dispatches ──
   async function copyToMpisAuto() {
     var header = await showMpisHeaderModal();
@@ -1261,6 +1487,7 @@ const Main = (function () {
     else if (formType === 'SCI')        parts = _buildMpisSci();
     else if (formType === 'FACIAL')     parts = _buildMpisFacial();
     else if (formType === 'NCD')        parts = _buildMpisNcd();
+    else if (formType === 'VESTIBULAR') parts = _buildMpisVestibular();
     else                                parts = _buildMpisMs();
     await _doCopyMpis(parts, header);
   }

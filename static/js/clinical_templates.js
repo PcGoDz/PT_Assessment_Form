@@ -619,6 +619,42 @@ const ClinicalTemplates = (function () {
     ],
   };
 
+  // Vestibular assessment templates
+  TEMPLATES.VESTIBULAR = {
+    impression: [
+      'Impaired vestibular function secondary to [BPPV / unilateral vestibular hypofunction / bilateral vestibular loss], contributing to vertigo and disequilibrium.',
+      'Reduced dynamic balance and gait stability secondary to vestibular dysfunction, increasing fall risk.',
+      'Positive [R/L] Dix-Hallpike consistent with [posterior/horizontal] canal BPPV.',
+      'Reduced gaze stability (positive head thrust / abnormal VOR) affecting functional tasks requiring head movement.',
+      'Activity avoidance and reduced participation (driving, crowded areas) secondary to dizziness-related anxiety and reduced balance confidence (low ABC score).',
+      'Cervicogenic component contributing to dizziness — reduced neck AROM/PROM with symptom reproduction on positional testing.',
+    ],
+    stg: [
+      'Reduce vertigo intensity from [7]/10 to [3]/10 on positional testing within [2] weeks.',
+      'Resolve positive [R/L] Dix-Hallpike (canalith repositioning) within [1-2] sessions.',
+      'Improve DHI score from [_] to [_] within [4] weeks.',
+      'Improve DGI score from [12] to [19] within [4] weeks.',
+      'Improve static single-leg-stand time on the affected side from [_]s to [_]s (eyes open) within [2] weeks.',
+      'Reduce Time Up & Go from [_]s to [_]s within [4] weeks.',
+    ],
+    ltg: [
+      'Achieve independent community ambulation without dizziness-related falls within [3] months.',
+      'Return to driving (daytime and/or night time) without dizziness-related restriction within [2-3] months.',
+      'Improve ABC score to [_]% or greater, reflecting restored balance confidence, within [3] months.',
+      'Return to premorbid functional activities (work, crowded areas, escalators/stairs) without symptom limitation within [3] months.',
+      'Maintain resolution of positional vertigo with no recurrence at [3]-month review.',
+    ],
+    treatment: [
+      'Canalith repositioning manoeuvre ([Epley / Semont / Barbecue roll]) for [R/L] [posterior/horizontal] canal BPPV.',
+      'Vestibular rehabilitation therapy (VRT) — gaze stabilisation exercises (VOR x1/x2), habituation exercises for [_] reps x [_]/day.',
+      'Balance retraining — static and dynamic balance tasks progressing surface/base of support, [_] min x [_]/week.',
+      'Gait training with head turns / dual-task progression to address dynamic gait deficits.',
+      'Cervical spine treatment (mobilisation / AROM exercises) if cervicogenic component identified.',
+      'Patient education — BPPV recurrence signs, fall-prevention strategies, home exercise programme (HEP) issued.',
+      'Graded exposure to symptom-provoking environments (crowded areas, escalators) as tolerated.',
+    ],
+  };
+
   TEMPLATES.NCD = {
     impression: [
       'Deconditioning and reduced exercise tolerance secondary to Type 2 diabetes and obesity.',
@@ -707,6 +743,34 @@ const ClinicalTemplates = (function () {
       'PNF, ice stroking, brushing, STM; facial exercises [10] reps x [3]/day; handout provided.',
       'Progress neuromuscular re-education as control returns; reassess movement grades at [_] weeks.',
       'Continue current plan; sensory retraining; review in [timeframe].',
+    ],
+  };
+
+  TEMPLATES.VESTIBULAR_SOAP = {
+    subjective: [
+      'Reports episodic vertigo triggered by [position changes / head movement], lasting [seconds/minutes], [with/without] nausea.',
+      'Reports constant disequilibrium/unsteadiness, worse in [the dark / on uneven surfaces / crowded areas].',
+      'History of [_] falls in the past [month], [with/without] injury.',
+      'Reports difficulty with [driving / reading / crowded areas / escalators] secondary to dizziness.',
+      'DHI [_]/100, ABC [_]%, indicating [mild/moderate/severe] perceived handicap and [low/moderate/high] balance confidence.',
+    ],
+    objective: [
+      'Positive [R/L] Dix-Hallpike with [upbeat/torsional] nystagmus, latency [_]s, duration [_]s.',
+      '[Positive/Negative] head thrust test [R/L/bilateral]; [positive/negative] head shaking nystagmus.',
+      'DGI [_]/24; TUG [_]s; single leg stance [R/L] [_]s (EO) / [_]s (EC).',
+      'Reduced cervical AROM with symptom reproduction; CTSIB shows increased sway on foam surface with eyes closed.',
+    ],
+    analysis: [
+      '[R/L] [posterior/horizontal] canal BPPV, responding to canalith repositioning — [resolved/residual symptoms].',
+      'Vestibular hypofunction with ongoing gaze and gait instability; on track for VRT goals.',
+      'Improving — DHI/ABC trending toward [target], balance and gait measures improving session to session.',
+      'Plateau in symptom resolution — reviewing VRT progression / considering ENT referral if red flags present.',
+    ],
+    plan: [
+      'Repeat canalith repositioning manoeuvre; reassess Dix-Hallpike next visit.',
+      'Progress VRT — gaze stabilisation and habituation exercises, advance balance/gait training difficulty.',
+      'Continue HEP; review fall-prevention strategies and home safety.',
+      'Reassess DHI/ABC/DGI at [_] weeks to track functional progress.',
     ],
   };
 
