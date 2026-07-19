@@ -1078,8 +1078,7 @@
         <div class="form-card-name">Spinal Cord Injury</div>
         <div class="form-card-sub">SCI, paraplegia, tetraplegia</div>
       </div>
-      <div class="form-card soon" data-form="VESTIBULAR">
-        <div class="form-card-badge">Soon</div>
+      <div class="form-card" data-form="VESTIBULAR" onclick="selectForm(this)">
         <div class="form-card-icon">&#128260;</div>
         <div class="form-card-name">Vestibular</div>
         <div class="form-card-sub">Vertigo, balance disorders</div>
@@ -1205,7 +1204,7 @@ var fabSearchTimer   = null;
 var FORM_LABELS = {
   MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric',
   CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand', BURN:'Burn',
-  SCI:'Spinal Cord Injury', FACIAL:'Facial', NCD:'NCD / Obesity'
+  SCI:'Spinal Cord Injury', FACIAL:'Facial', VESTIBULAR:'Vestibular', NCD:'NCD / Obesity'
 };
 
 // ── Settings menu ────────────────────────────────
@@ -1917,7 +1916,7 @@ async function loadEpisodes(patientId) {
     }
 
     wrap.innerHTML = episodes.map(function(ep) {
-      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand', BURN:'Burn', SCI:'Spinal Cord Injury', FACIAL:'Facial', NCD:'NCD / Obesity' }[ep.form_type] || ep.form_type;
+      var formLabel  = { MS:'Musculoskeletal', SPINE:'Spine', GERIATRIC:'Geriatric', CR:'Cardiorespiratory', AMPUTATION:'Amputation', NEURO:'Neurological', HAND:'Hand', BURN:'Burn', SCI:'Spinal Cord Injury', FACIAL:'Facial', VESTIBULAR:'Vestibular', NCD:'NCD / Obesity' }[ep.form_type] || ep.form_type;
       var icon       = { MS:'&#129460;', SPINE:'&#128279;', GERIATRIC:'&#9878;', CR:'&#129728;', AMPUTATION:'&#129452;', NEURO:'&#9889;', HAND:'&#9995;', SCI:'&#9855;', FACIAL:'&#128580;', NCD:'&#129483;' }[ep.form_type] || '&#128203;';
       var rawStatus  = ep.status || 'active';
       var statusBase = rawStatus.split('|')[0];

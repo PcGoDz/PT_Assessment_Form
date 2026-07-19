@@ -895,7 +895,7 @@ async function loadEpisode() {
     var res = await fetch('/api/episodes/' + EPISODE_ID);
     episode  = await res.json();
 
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological',HAND:'Hand',BURN:'Burn',SCI:'Spinal Cord Injury',FACIAL:'Facial',NCD:'NCD / Obesity'}[episode.form_type] || episode.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological',HAND:'Hand',BURN:'Burn',SCI:'Spinal Cord Injury',FACIAL:'Facial',VESTIBULAR:'Vestibular',NCD:'NCD / Obesity'}[episode.form_type] || episode.form_type;
 
     // Context bar
     document.getElementById('topbar-episode-label').textContent =
@@ -950,7 +950,7 @@ async function loadAssessment(ep) {
   try {
     var res  = await fetch('/api/episodes/' + EPISODE_ID + '/record');
     var data = await res.json();
-    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological',HAND:'Hand',BURN:'Burn',SCI:'Spinal Cord Injury',FACIAL:'Facial',NCD:'NCD / Obesity'}[ep.form_type] || ep.form_type;
+    var formLabel = {MS:'Musculoskeletal',SPINE:'Spine',GERIATRIC:'Geriatric',CR:'Cardiorespiratory',AMPUTATION:'Amputation',NEURO:'Neurological',HAND:'Hand',BURN:'Burn',SCI:'Spinal Cord Injury',FACIAL:'Facial',VESTIBULAR:'Vestibular',NCD:'NCD / Obesity'}[ep.form_type] || ep.form_type;
     var formPath  = '/form/' + ep.form_type.toLowerCase();
     var btnWrap   = document.getElementById('assess-btn-wrap');
     var actions   = document.getElementById('assess-actions');

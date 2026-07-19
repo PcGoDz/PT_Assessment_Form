@@ -162,6 +162,7 @@ REQUIRED_FIELDS = {
     'BURN':        [('diagnosis', 'Diagnosis is required')],
     'SCI':         [('diagnosis', "Doctor's Diagnosis is required"), ('pt_impression', 'PT Impression is required')],
     'FACIAL':      [('diagnosis', "Doctor's Diagnosis is required"), ('pt_impression', 'PT Impression is required')],
+    'VESTIBULAR':  [('referral.dx', "Doctor's Diagnosis is required")],
     'NCD':         [('diagnosis', "Doctor's Diagnosis is required"), ('impression', 'PT Impression is required')],
 }
 
