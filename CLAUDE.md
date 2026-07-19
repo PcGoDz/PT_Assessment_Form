@@ -36,7 +36,7 @@ Device: Dept PC (Windows). No internet dependency required.
 app.py                  Flask routes, PDF routing dispatch, FORM_REGISTRY (15 forms)
 database.py             All SQLite logic + validation
 pdf_platypus_base.py    Shared Platypus building blocks
-pdf_<form>.py           Per-form PDF generators (ms, spine, geriatric, cr, amputation, neuro, hand, burn, sci, facial, ncd)
+pdf_<form>.py           Per-form PDF generators (ms, spine, geriatric, cr, amputation, neuro, hand, burn, sci, facial, ncd, vestibular)
 pdf_base.py             Legacy canvas primitives (kept for BodyChartFlowable)
 
 static/js/
@@ -73,7 +73,7 @@ templates/
 | BURN        | Musculoskeletal   | YES   |
 | NEURO       | Neurological      | YES   |
 | SCI         | Neurological      | YES   |
-| VESTIBULAR  | Neurological      | NO    |
+| VESTIBULAR  | Neurological      | YES   |
 | FACIAL      | Neurological      | YES   |
 | CR          | Cardiorespiratory | YES   |
 | GERIATRIC   | Rehabilitation    | YES   |

@@ -83,6 +83,8 @@
 
 - **pdf_vestibular.py: a somatosensory/coordination note typed without a status chip picked silently doesn't render in the PDF (2026-07-19).** `_build_story()`'s soma/coord row-building only appends a row `if v.get('status')` — a clinician who types a note (`v.note`) without first picking Intact/Dysmetria/Ataxia/Tremor loses that text from the PDF entirely, even though it's still saved correctly in the record. REAL bug (typed clinical data missing from output), not cosmetic. Fix: `if v.get('status') or v.get('note')`. Deferred to the PDF polish session — baked into the vetted plan's own code, not an implementer error.
 
+- **MPIS Somatosensory/Coordination sub-blocks print raw `collect()` keys instead of human labels (2026-07-19).** `_buildMpisVestibular()` in `main.js` renders `propUlR: Intact`, `ftnR: Intact` etc. — the raw JS field names, not `Proprioception UL R`, `Finger to Nose R` like the rest of the builder's output. Clinician-facing gibberish in the POMR paste. REAL (not cosmetic) but not data-loss — the data itself is present and correct, just mislabeled. Fix in the PDF/MPIS polish session.
+
 - **Worktree churn can corrupt `.git/config` (panic-preventer).** Seen 2026-06-12: heavy worktree add/remove/prune/force-delete left (a) Windows-CWD-locked worktree folders that won't `rmdir` until the CC session closes, AND (b) torn `.git/config` write — trailing whitespace then null-byte (`\x00`) padding — causing `fatal: bad config line N`. Commits safe in `.git/objects`; config is only settings. Fix Windows-side: rewrite the whole file fresh via `open('.git/config','wb').write(content.encode('utf-8'))` (15 lines, single trailing newline); verify: `python -c "print(b'\x00' in open('.git/config','rb').read())"` → `False`. Cowork sandbox config reads lag behind CC's fix — tiebreak via CC's authoritative `git status`.
 
 ---
@@ -92,6 +94,7 @@
 - Age auto-calculation (NRIC→age, DOB→age) — unresolved.
 - No ARIA attributes anywhere — low clinical priority.
 - **App-wide 2-column PDF layout to mirror the KKM borangs (2026-07-19).** All 15 forms' PDFs currently render single-column via the shared `pdf_platypus_base.py` builder; the source borangs are 2-column. This is a dedicated cross-form project (own spec/plan, touches every `pdf_<form>.py` + the shared base), not a per-form fix. Explicitly deferred out of the VESTIBULAR build — do NOT attempt inside any single form's PDF task.
+- **MPIS positioning-test line keeps direction+intensity but drops latency/duration/symptoms (2026-07-19).** `_buildMpisVestibular()`'s POSITIONING TESTS block only prints `label: +Ve (directions), intensity X/10` — latency, duration, and symptom-note fields collected by the scaffold are omitted from the MPIS paste (still present in the record + PDF). DECIDE in the PDF/MPIS polish session whether the POMR actually needs them, or the current summary is intentionally tighter (D8 tight-output rule).
 - **pair_box() equal-height helper — promotion candidate.** `pdf_sci.py` has a LOCAL `_pair_half()` + `pair_box()` that renders side-by-side sections as one outer box + centre divider (kills staircase on lopsided pairs). Pattern is reusable for other form PDFs but currently lives only in `pdf_sci.py`. When a second form needs the same layout, promote to `pdf_platypus_base.py`. Do NOT move it speculatively — one confirmed consumer is not enough.
 - ~~**SCI stamp button cosmetic**~~ DONE 2026-06-11. Filled-tonal M3 restyle of `.grid-stamp-btn` (accent-light fill, accent text, pill radius, hover→accent-mid, active scale, `margin:-10px 0 16px` optical). CSS-only, merged `33887fe`.
 - ~~**No DB schema version tracking — `try: ALTER / except: pass` migrations.**~~ DONE 2026-06-13. Replaced with `PRAGMA user_version` gates in `database.py` lines 79–108. v0→v1 adds soap_notes session-header cols; v1→v2 adds episodes next-appt/discharge cols. Inner `try/except` retained inside each gate as one-time transition net for mid-air DBs. Stamps to `user_version=2`. Verified live: 0→2 and 2→2 (idempotent). Branch: `claude/jolly-hodgkin-245daf`, merge `943cde7`.
@@ -119,13 +122,13 @@
   jolly-hodgkin, magical-swartz, frosty-hodgkin, upbeat-einstein) are now removed from disk —
   `PT_Assessment-worktrees/` is empty. Git side was already clean. Keep the Step-0 cull habit so this
   list never regrows.
-- **Multi-select chip helper promotion — 3rd consumer confirmed, promotion still deferred (2026-07-14).** `toggleChip/getChips/setChips` now has 3 local copies (NEURO, FACIAL, and VESTIBULAR per its 2026-07-14 design spec/plan — build not yet started). Miruya explicitly decided to defer promotion even at the 3rd-consumer trigger point: keep VESTIBULAR's copy form-local for its build, promote NEURO/FACIAL/VESTIBULAR together as their own dedicated small pass afterward (cf. `pair_box` promotion rule from `pdf_sci.py`). Do NOT promote inside the VESTIBULAR build itself.
+- **Multi-select chip helper promotion — 3rd consumer now built and shipped, promotion still deferred (2026-07-14, updated 2026-07-19).** `toggleChip/getChips/setChips` now has 3 local copies (NEURO, FACIAL, VESTIBULAR — VESTIBULAR's build shipped 2026-07-19, merged `235a241`). Miruya explicitly decided to defer promotion even at the 3rd-consumer trigger point: keep each copy form-local, promote NEURO/FACIAL/VESTIBULAR together as their own dedicated small pass (cf. `pair_box` promotion rule from `pdf_sci.py`). Still not done — do not promote piecemeal inside an unrelated task.
 
 - **FACIAL full-clickfest pilot (deferred)** — Per FACIAL_SPEC.md Build Note #5: once FACIAL is stable in clinical use, use it as the pilot form to flip full intake to clickfest (Observation/Palpation/General Health/Problem chip sets). If good, roll across all forms as its own spec→plan→build cycle. Defer until post-pilot.
 
 - **pdf_facial.py page-1 empty intake labels (low priority)** — blank fields (Doctor's Mgmt, Problem, histories, Hot/Cold/Pin-prick, Irritability, Hearing Aid/Pacemaker) render with empty string beside their label. Same behavior as `pdf_ms.py` clone; likely consistent-by-design. Confirm against `pdf_ms.py` during Phase 1.2 PDF polish pass; guard if undesired.
 
-- **VESTIBULAR form (Neurological group, NO ready) — design spec + implementation plan on main (2026-07-14), build NOT started.** `docs/superpowers/specs/2026-07-14-vestibular-form-design.md` (D1-D10 locked) + `docs/superpowers/plans/2026-07-14-vestibular.md` (14 tasks, milestone ladder, 2 vet fixes folded in) merged `--no-ff` to main. Next session: execute the plan task by task.
+- ~~**VESTIBULAR form (Neurological group, NO ready) — design spec + implementation plan on main (2026-07-14), build NOT started.**~~ DONE 2026-07-19. Full 14-task plan executed — form (16 sections, battery chips + KIV clear-on-engage lock, positioning scaffold), Best Statement templates, KKM PDF, MPIS SOAPIER export. All 4 milestones (FORM/TEMPLATES/PDF/MPIS) browser-smoke-tested by Miruya. Merged `--no-ff` to main at `235a241`. `ready=True`.
 - PAEDIATRIC / LYMPHOEDEMA / GENERAL (Rehabilitation group, all NO ready).
 - **NCD Plan A SHIPPED 2026-06-27** (merged `74c0991`). `ready=True`. 11-section form (MSK-canonical), PDF with body-shape PNG WYSIWYG embed, MPIS SOAPIER builder, clinical templates. **Plan B SHIPPED 2026-06-30** (merged `2bb479c`): per-visit `ncd_measurements` v3 table (nullable `soap_id` FK) + DB functions/routes + additive SOAP-modal measurements panel + auto-write visit-1 row + screen-only trend page (`/episodes/<id>/ncd-trend`, transform/render split, inline-SVG sparklines). Battery keys FROZEN (`form_ncd.js collect()` comment block). Panel density redesign SHIPPED 2026-07-12 (`513c05b`) — marked done below.
 - ~~**TEMPLATES.NCD content is generic knee-OA boilerplate (DONE 2026-07-18).**~~ Swapped `TEMPLATES.NCD` / `TEMPLATES.NCD_SOAP` in `clinical_templates.js` to the obesity/metabolic content authored in `docs/superpowers/specs/2026-07-14-ncd-template-content.md`. Content-only swap, keys unchanged. Verified via `node --check` + browser click-test (all 5 form buttons + SOAP picker on a live NCD episode insert the new statements).
@@ -159,12 +162,18 @@
   as a rule; worth formalizing in DESIGN_SYSTEM.md's template guidance once a 3rd form's author
   independently converges on the same range (would confirm it's a real pattern, not coincidence).
 
-- **WORKFLOW.md still at 248/250 lines — split still pending, now blocking on VESTIBULAR
-  priority (carried from 2026-07-12, re-confirmed 2026-07-14).** The two 2026-07-12 rules
-  (Cowork stale-mount-on-working-file guard, CC/Miruya verification split) remain un-migrated
-  because the file has no headroom. Candidate split: hive off "Cowork two-window workflow" into
-  its own file, then add both banked rules. Lower priority than the VESTIBULAR build and NCD
-  template swap — pick up after those two ship.
+- **WORKFLOW.md still at 248/250 lines — split still pending, now 4 rules deep in the backlog
+  (carried from 2026-07-12, re-confirmed 2026-07-14, +2 more banked 2026-07-19).** The two
+  2026-07-12 rules (Cowork stale-mount-on-working-file guard, CC/Miruya verification split) plus
+  two from the VESTIBULAR build — (a) verify the serving layer (curl the live route) before
+  diagnosing a UI bug as code, and restart the Flask dev server after any template/JS/py edit
+  before browser testing (`debug=False` + no `TEMPLATES_AUTO_RELOAD` means it serves frozen
+  templates AND frozen imported modules until restart — cost 2 wasted fix-rounds on the KIV lock
+  bug); (b) MPIS builders output plain clipboard text, never `escapeHtml()` (it corrupts `<`/`>`/`&`
+  in clinical values — confirmed no sibling `_buildMpisXxx()` escapes) — remain un-migrated because
+  the file has no headroom. Candidate split: hive off "Cowork two-window workflow" into its own
+  file, then add all four banked rules. Pick up as its own small pass — do not let it block the
+  next feature session either.
 
 - **DESIGN_SYSTEM.md is 280 lines, over the 250 cap — needs split. WORKFLOW.md 248/250, same
   blocker. Two docs now waiting on one file-split job.**
