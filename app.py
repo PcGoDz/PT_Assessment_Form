@@ -25,6 +25,7 @@ import pdf_burn
 import pdf_sci
 import pdf_facial
 import pdf_ncd
+import pdf_vestibular
 
 def resource_path(relative):
     if hasattr(sys, '_MEIPASS'):
@@ -61,7 +62,7 @@ FORM_REGISTRY = [
     # ── Neurological ─────────────────────────────────
     { 'id': 'NEURO',       'label': 'Neurology',          'icon': '&#9889;',   'badge': 'NR',  'group': 'Neurological',      'ready': True,  'pdf_episode': pdf_neuro.generate_episode_pdf,      'pdf_single': pdf_neuro.generate_neuro_pdf         },
     { 'id': 'SCI',         'label': 'Spinal Cord Injury', 'icon': '&#9855;',   'badge': 'SC',  'group': 'Neurological',      'ready': True,  'pdf_episode': pdf_sci.generate_episode_pdf,        'pdf_single': pdf_sci.generate_sci_pdf             },
-    { 'id': 'VESTIBULAR',  'label': 'Vestibular',         'icon': '&#128260;', 'badge': 'VB',  'group': 'Neurological',      'ready': True  },
+    { 'id': 'VESTIBULAR',  'label': 'Vestibular',         'icon': '&#128260;', 'badge': 'VB',  'group': 'Neurological',      'ready': True,  'pdf_episode': pdf_vestibular.generate_episode_pdf, 'pdf_single': pdf_vestibular.generate_vestibular_pdf },
     { 'id': 'FACIAL',      'label': 'Facial',             'icon': '&#128580;', 'badge': 'FC',  'group': 'Neurological',      'ready': True,  'pdf_episode': pdf_facial.generate_episode_pdf,    'pdf_single': pdf_facial.generate_facial_pdf       },
     # ── Cardiorespiratory ─────────────────────────────
     { 'id': 'CR',          'label': 'Cardiorespiratory',  'icon': '&#129728;', 'badge': 'CR',  'group': 'Cardiorespiratory',  'ready': True,  'pdf_episode': pdf_cr.generate_episode_pdf,         'pdf_single': pdf_cr.generate_cr_pdf               },

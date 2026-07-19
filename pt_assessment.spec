@@ -22,6 +22,7 @@ a = Analysis(
         ('pdf_sci.py', '.'),
         ('pdf_facial.py', '.'),
         ('pdf_ncd.py', '.'),
+        ('pdf_vestibular.py', '.'),
         ('static/img/ncd_shapes', 'static/img/ncd_shapes'),
         ('templates/pdf', 'templates/pdf'),
     ],
