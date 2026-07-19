@@ -102,6 +102,22 @@ var VestibularForm = (function () {
   // Lock/unlock is applied element-by-element (disabled attr + .vb-locked class) directly
   // on each control, not via a CSS ancestor/compound selector keyed off a class on the
   // battery wrapper — two earlier selector-based attempts silently disabled nothing.
+  //
+  // Clinical rule (2026-07-19): reaching for KIV means the section was NOT assessed, so it
+  // must hold no answers — not locked answers. Engaging KIV therefore CLEARS every control
+  // in the battery (chip selections + any text/number fields) before locking. Disengaging
+  // leaves everything empty and unlocked — no stash, no restore. This makes a stray
+  // pre-KIV selection leaking into collect()/PDF/MPIS impossible at the source: the data is
+  // genuinely gone, not just hidden.
+  function clearBatteryControls(containerId) {
+    clearBatteryData(containerId); // .vb-chip pairs (Yes/No, +Ve/−Ve) — existing helper
+    var rows = document.getElementById(containerId + '-rows');
+    if (!rows) return;
+    rows.querySelectorAll('.irr-chip:not(.vb-chip)').forEach(function (c) {
+      c.classList.remove('active', 'sel-' + cssVal(c.getAttribute('data-val')));
+    });
+    rows.querySelectorAll('input, select, textarea').forEach(function (el) { el.value = ''; });
+  }
   function lockBatteryControls(containerId, locked) {
     var battery = document.getElementById(containerId);
     if (!battery) return;
@@ -120,17 +136,21 @@ var VestibularForm = (function () {
     var wrap = document.getElementById(containerId + '-kiv-wrap');
     var battery = document.getElementById(containerId);
     if (!wrap) return;
+    var wasActive = battery ? battery.classList.contains('vb-kiv-active') : false;
     wrap.classList.toggle('collapsed');
     var active = !wrap.classList.contains('collapsed');
     if (battery) battery.classList.toggle('vb-kiv-active', active);
+    if (active && !wasActive) clearBatteryControls(containerId);
     lockBatteryControls(containerId, active);
   }
   function onKivInput(containerId) {
     var battery = document.getElementById(containerId);
     var input   = document.getElementById(containerId + '-kiv');
     if (!battery || !input) return;
+    var wasActive = battery.classList.contains('vb-kiv-active');
     var active = input.value.trim() !== '';
     battery.classList.toggle('vb-kiv-active', active);
+    if (active && !wasActive) clearBatteryControls(containerId);
     lockBatteryControls(containerId, active);
   }
   function getKiv(containerId) {
@@ -145,6 +165,7 @@ var VestibularForm = (function () {
     var active = !!(text && text.trim());
     if (wrap) wrap.classList.toggle('collapsed', !active);
     if (battery) battery.classList.toggle('vb-kiv-active', active);
+    if (active) clearBatteryControls(containerId);
     lockBatteryControls(containerId, active);
   }
 
