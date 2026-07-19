@@ -1333,7 +1333,7 @@ const Main = (function () {
                      postural.tug || Object.keys(ctsib).some(function(k){return ctsib[k];});
     var gait = d.gait || {};
     var hasGait = gait.velocity||gait.deviation||gait.device||gait.dgi||d.clearance;
-    var hasObj = hasVestib || measures.dhi || measures.abc || d.oculomotor || hasPos ||
+    var hasObj = hasVestib || measures.dhi || measures.abc || d.oculomotor || d.headThrustSide || hasPos ||
                  hasRom || hasStrength || hasNeuro || hasBalance || hasGait;
 
     if (hasObj) {
@@ -1418,6 +1418,11 @@ const Main = (function () {
 
       if (hasBalance) {
         parts.push('Postural Control / CTSIB');
+        [['Rhomberg','rhomberg'], ['R Sharpened Rhomberg','rSharpened'], ['L Sharpened Rhomberg','lSharpened'],
+         ['R Single Leg Stand','rSls'], ['L Single Leg Stand','lSls']].forEach(function (pair) {
+          var v = postural[pair[1]] || {};
+          if (v.eo || v.ec) parts.push(pair[0] + ': EO ' + (v.eo||'—') + ' / EC ' + (v.ec||'—'));
+        });
         if (postural.tug) parts.push('TUG: ' + postural.tug + 's');
         var ctsibBits = [];
         if (ctsib.eoFirm) ctsibBits.push('EO Firm ' + ctsib.eoFirm + 's');
