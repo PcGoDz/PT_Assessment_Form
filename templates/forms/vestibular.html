@@ -54,11 +54,10 @@
 .vb-kiv-toggle { font-size: 11px; color: var(--danger); background: none; border: none; cursor: pointer; padding: 3px 0; align-self: flex-start; }
 .vb-kiv-wrap.collapsed { display: none; }
 .vb-kiv-wrap input { margin-top: 4px; width: 100%; }
-.vb-battery.vb-kiv-active .vb-stamp,
-.vb-battery.vb-kiv-active [id$="-rows"] {
-  opacity: 0.4;
-  pointer-events: none;
-}
+/* Element-level KIV lock — form_vestibular.js applies this class + [disabled] directly to
+   each control (stamp button, chip buttons) when KIV is on. Not a section-level ancestor/
+   compound selector — that approach (two prior attempts) never actually disabled anything. */
+.vb-locked { opacity: 0.5; pointer-events: none; }
 
 /* Side selector (Head Thrusts R/L/BIL, Gait Deviation R/L) — reuse .irr-chip */
 .irr-chip.sel-R   { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 500; }

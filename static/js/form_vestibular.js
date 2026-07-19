@@ -99,17 +99,39 @@ var VestibularForm = (function () {
   }
 
   // ── KIV remark (D4) — section-level (per battery), overrides item list on collect ──
+  // Lock/unlock is applied element-by-element (disabled attr + .vb-locked class) directly
+  // on each control, not via a CSS ancestor/compound selector keyed off a class on the
+  // battery wrapper — two earlier selector-based attempts silently disabled nothing.
+  function lockBatteryControls(containerId, locked) {
+    var battery = document.getElementById(containerId);
+    if (!battery) return;
+    var controls = [];
+    var stamp = battery.querySelector('.vb-stamp');
+    if (stamp) controls.push(stamp);
+    var rows = document.getElementById(containerId + '-rows');
+    if (rows) controls = controls.concat(Array.prototype.slice.call(rows.querySelectorAll('button, input, select, textarea')));
+    controls.forEach(function (el) {
+      el.classList.toggle('vb-locked', locked);
+      if (locked) el.setAttribute('disabled', 'disabled');
+      else el.removeAttribute('disabled');
+    });
+  }
   function toggleKiv(containerId) {
     var wrap = document.getElementById(containerId + '-kiv-wrap');
     var battery = document.getElementById(containerId);
     if (!wrap) return;
     wrap.classList.toggle('collapsed');
-    if (battery) battery.classList.toggle('vb-kiv-active', !wrap.classList.contains('collapsed'));
+    var active = !wrap.classList.contains('collapsed');
+    if (battery) battery.classList.toggle('vb-kiv-active', active);
+    lockBatteryControls(containerId, active);
   }
   function onKivInput(containerId) {
     var battery = document.getElementById(containerId);
     var input   = document.getElementById(containerId + '-kiv');
-    if (battery && input) battery.classList.toggle('vb-kiv-active', input.value.trim() !== '');
+    if (!battery || !input) return;
+    var active = input.value.trim() !== '';
+    battery.classList.toggle('vb-kiv-active', active);
+    lockBatteryControls(containerId, active);
   }
   function getKiv(containerId) {
     var input = document.getElementById(containerId + '-kiv');
@@ -123,6 +145,7 @@ var VestibularForm = (function () {
     var active = !!(text && text.trim());
     if (wrap) wrap.classList.toggle('collapsed', !active);
     if (battery) battery.classList.toggle('vb-kiv-active', active);
+    lockBatteryControls(containerId, active);
   }
 
   // ── Battery collect/populate — reads KIV first (overrides item list per D4) ──
