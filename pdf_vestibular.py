@@ -4,7 +4,7 @@
 from reportlab.platypus import Paragraph
 
 from pdf_platypus_base import (
-    CW, S_BOLD, S_NORMAL, S_SMALL, BLACK, LGREY,
+    CW, S_BOLD, S_NORMAL, S_SMALL,
     gap, page_header, patient_bar, two_col, data_table, sign_chop_block, ensure_dict,
     build_pdf, generate_episode_pdf_base,
 )
@@ -17,7 +17,7 @@ def _has_text(*vals):
     return any(str(v or '').strip() for v in vals)
 
 
-def _battery_block(story, title, battery, baseline_label):
+def _battery_block(story, title, battery):
     """
     battery: {'items': {label: 'Yes'/'No'/'+Ve'/'−Ve', ...}} or {'kiv': 'reason'} or None/{}.
     Renders full documented Yes/No list (D8) or the KIV remark (D4). Omitted if blank (D3).
@@ -88,8 +88,8 @@ def _build_story(d):
         if history.get('problem'): story.append(Paragraph(f'Problem: {history["problem"]}', S_NORMAL))
         story.append(gap(2))
 
-    _battery_block(story, 'PAST MEDICAL HISTORY', d.get('pmhx'), 'No')
-    _battery_block(story, 'RECENT SYMPTOMS OR PROBLEMS', d.get('recentSymptoms'), 'No')
+    _battery_block(story, 'PAST MEDICAL HISTORY', d.get('pmhx'))
+    _battery_block(story, 'RECENT SYMPTOMS OR PROBLEMS', d.get('recentSymptoms'))
 
     if _has_text(d.get('ix'), d.get('medication')):
         story.append(Paragraph('INVESTIGATIONS / MEDICATION', S_BOLD)); story.append(gap(1))
@@ -107,7 +107,7 @@ def _build_story(d):
         if social.get('sleep'):      story.append(Paragraph(f'Trouble Sleeping: {social["sleep"]}', S_NORMAL))
         story.append(gap(2))
 
-    _battery_block(story, 'CURRENT FUNCTIONAL STATUS', d.get('functionalStatus'), 'No')
+    _battery_block(story, 'CURRENT FUNCTIONAL STATUS', d.get('functionalStatus'))
 
     falls = d.get('falls') or {}
     if _has_text(falls.get('frequency'), falls.get('injury')):
@@ -148,7 +148,7 @@ def _build_story(d):
         ))
         story.append(gap(2))
 
-    _battery_block(story, 'OCULOMOTOR EXAMINATION', d.get('oculomotor'), '−Ve')
+    _battery_block(story, 'OCULOMOTOR EXAMINATION', d.get('oculomotor'))
     if d.get('headThrustSide'):
         story.append(Paragraph(f'Head Thrusts side : {d["headThrustSide"]}', S_SMALL))
         story.append(gap(1))
@@ -184,7 +184,7 @@ def _build_story(d):
     for label, key in [('Proprioception UL R','propUlR'), ('Proprioception UL L','propUlL'),
                         ('Proprioception LL R','propLlR'), ('Proprioception LL L','propLlL')]:
         v = soma.get(key) or {}
-        if v.get('status'):
+        if v.get('status') or v.get('note'):
             soma_rows.append([label, v.get('status',''), v.get('note','')])
     if soma_rows:
         story.append(Paragraph('SOMATOSENSORY', S_BOLD)); story.append(gap(1))
@@ -196,7 +196,7 @@ def _build_story(d):
     for label, key in [('Finger to Nose R','ftnR'), ('Finger to Nose L','ftnL'),
                         ('Heel to Shin R','htsR'), ('Heel to Shin L','htsL')]:
         v = coord.get(key) or {}
-        if v.get('status'):
+        if v.get('status') or v.get('note'):
             coord_rows.append([label, v.get('status',''), v.get('note','')])
     if coord_rows:
         story.append(Paragraph('COORDINATION', S_BOLD)); story.append(gap(1))

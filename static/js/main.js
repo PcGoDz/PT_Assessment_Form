@@ -1326,8 +1326,8 @@ const Main = (function () {
     var strength = d.strength || {};
     var hasStrength = strength.ulR||strength.ulL||strength.llR||strength.llL;
     var soma = d.somatosensory || {}, coord = d.coordination || {};
-    var hasNeuro = Object.keys(soma).some(function(k){return (soma[k]||{}).status;}) ||
-                   Object.keys(coord).some(function(k){return (coord[k]||{}).status;});
+    var hasNeuro = Object.keys(soma).some(function(k){var v=soma[k]||{};return v.status||v.note;}) ||
+                   Object.keys(coord).some(function(k){var v=coord[k]||{};return v.status||v.note;});
     var postural = d.postural || {}, ctsib = d.ctsib || {};
     var hasBalance = Object.keys(postural).some(function(k){ var v=postural[k]; return v && typeof v==='object' && (v.eo||v.ec); }) ||
                      postural.tug || Object.keys(ctsib).some(function(k){return ctsib[k];});
@@ -1376,9 +1376,15 @@ const Main = (function () {
           var label = pair[0], v = pair[1];
           if (!v) return;
           if (v.result === 'neg') { parts.push(label + ': −Ve'); return; }
+          parts.push(label + ': +Ve');
+          var bits = [];
           var dirs = (v.direction||[]).join(', ');
-          parts.push(label + ': +Ve' + (dirs ? ' (' + dirs + ')' : '') +
-            (v.intensity ? ', intensity ' + v.intensity + '/10' : ''));
+          if (dirs)        bits.push('Direction: ' + dirs);
+          if (v.latency)   bits.push('Latency: ' + v.latency + 's');
+          if (v.duration)  bits.push('Duration: ' + v.duration + 's');
+          if (v.intensity) bits.push('Intensity: ' + v.intensity + '/10');
+          if (v.note)      bits.push('Symptoms: ' + v.note);
+          if (bits.length) parts.push('  ' + bits.join(' \xb7 '));
         });
         parts.push('');
       }
@@ -1402,15 +1408,17 @@ const Main = (function () {
 
       if (hasNeuro) {
         var somaLine = [];
-        ['propUlR','propUlL','propLlR','propLlL'].forEach(function (k) {
-          var v = soma[k] || {};
-          if (v.status) somaLine.push(k + ': ' + v.status + (v.note ? ' (' + v.note + ')' : ''));
+        [['Proprioception UL R','propUlR'], ['Proprioception UL L','propUlL'],
+         ['Proprioception LL R','propLlR'], ['Proprioception LL L','propLlL']].forEach(function (pair) {
+          var v = soma[pair[1]] || {};
+          if (v.status || v.note) somaLine.push(pair[0] + ': ' + (v.status||'') + (v.note ? ' (' + v.note + ')' : ''));
         });
         if (somaLine.length) parts.push('Somatosensory — ' + somaLine.join(', '));
         var coordLine = [];
-        ['ftnR','ftnL','htsR','htsL'].forEach(function (k) {
-          var v = coord[k] || {};
-          if (v.status) coordLine.push(k + ': ' + v.status + (v.note ? ' (' + v.note + ')' : ''));
+        [['Finger to Nose R','ftnR'], ['Finger to Nose L','ftnL'],
+         ['Heel to Shin R','htsR'], ['Heel to Shin L','htsL']].forEach(function (pair) {
+          var v = coord[pair[1]] || {};
+          if (v.status || v.note) coordLine.push(pair[0] + ': ' + (v.status||'') + (v.note ? ' (' + v.note + ')' : ''));
         });
         if (coordLine.length) parts.push('Coordination — ' + coordLine.join(', '));
         parts.push('');
